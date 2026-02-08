@@ -245,6 +245,9 @@ let LabelService = class LabelService2 extends Disposable {
   }
   getWorkspaceLabel(workspace, options) {
     if (isWorkspace(workspace)) {
+      if (workspace.isAgentSessionsWorkspace) {
+        return localize("agentSessionsWorkspace", "Agent Sessions");
+      }
       const identifier = toWorkspaceIdentifier(workspace);
       if (isSingleFolderWorkspaceIdentifier(identifier) || isWorkspaceIdentifier(identifier)) {
         return this.getWorkspaceLabel(identifier, options);

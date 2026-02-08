@@ -15,7 +15,8 @@ var AgentSessionRenderer_1, AgentSessionSectionRenderer_1;
 import "./media/agentsessionsviewer.css";
 import { h } from "../../../../../base/browser/dom.js";
 import { localize } from "../../../../../nls.js";
-import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { NotSelectableGroupId } from "../../../../../base/browser/ui/list/list.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
 import { getAgentChangesSummary, hasValidDiff, isAgentSession, isAgentSessionSection, isAgentSessionsModel, isSessionInProgressStatus } from "./agentSessionsModel.js";
 import { IconLabel } from "../../../../../base/browser/ui/iconLabel/iconLabel.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
@@ -37,7 +38,10 @@ import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
 import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
 import { MarkdownString } from "../../../../../base/common/htmlContent.js";
-let AgentSessionRenderer = class AgentSessionRenderer2 {
+import { AgentSessionHoverWidget } from "./agentSessionHoverWidget.js";
+import { AgentSessionProviders, getAgentSessionTime } from "./agentSessions.js";
+import { AgentSessionsGrouping } from "./agentSessionsFilter.js";
+let AgentSessionRenderer = class AgentSessionRenderer2 extends Disposable {
   static {
     __name(this, "AgentSessionRenderer");
   }
@@ -48,6 +52,7 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
     this.TEMPLATE_ID = "agent-session";
   }
   constructor(options, markdownRendererService, productService, hoverService, instantiationService, contextKeyService) {
+    super();
     this.options = options;
     this.markdownRendererService = markdownRendererService;
     this.productService = productService;
@@ -55,6 +60,7 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
     this.instantiationService = instantiationService;
     this.contextKeyService = contextKeyService;
     this.templateId = AgentSessionRenderer_1.TEMPLATE_ID;
+    this.sessionHover = this._register(new MutableDisposable());
   }
   renderTemplate(container) {
     const disposables = new DisposableStore();
@@ -70,7 +76,6 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
         ]),
         h("div.agent-session-details-row", [
           h("div.agent-session-diff-container@diffContainer", [
-            h("span.agent-session-diff-files@filesSpan"),
             h("span.agent-session-diff-added@addedSpan"),
             h("span.agent-session-diff-removed@removedSpan")
           ]),
@@ -95,7 +100,6 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
       title: disposables.add(new IconLabel(elements.title, { supportHighlights: true, supportIcons: true })),
       titleToolbar,
       diffContainer: elements.diffContainer,
-      diffFilesSpan: elements.filesSpan,
       diffAddedSpan: elements.addedSpan,
       diffRemovedSpan: elements.removedSpan,
       badge: elements.badge,
@@ -110,7 +114,6 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
   }
   renderElement(session, index, template, details) {
     template.elementDisposable.clear();
-    template.diffFilesSpan.textContent = "";
     template.diffAddedSpan.textContent = "";
     template.diffRemovedSpan.textContent = "";
     template.badge.textContent = "";
@@ -131,10 +134,14 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
       }
     }
     template.diffContainer.classList.toggle("has-diff", hasDiff);
-    let hasBadge = false;
-    if (!isSessionInProgressStatus(session.element.status)) {
-      hasBadge = this.renderBadge(session, template);
+    let hasAgentSessionChanges = false;
+    if (session.element.providerType === AgentSessionProviders.Background || session.element.providerType === AgentSessionProviders.Cloud) {
+      hasAgentSessionChanges = Array.isArray(diff) && diff.length > 0;
+    } else {
+      hasAgentSessionChanges = hasDiff;
     }
+    ChatContextKeys.hasAgentSessionChanges.bindTo(template.contextKeyService).set(hasAgentSessionChanges);
+    const hasBadge = this.renderBadge(session, template);
     template.badge.classList.toggle("has-badge", hasBadge);
     if (!hasDiff) {
       this.renderDescription(session, template, hasBadge);
@@ -168,9 +175,6 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
     const diff = getAgentChangesSummary(session.element.changes);
     if (!diff) {
       return false;
-    }
-    if (diff.files > 0) {
-      template.diffFilesSpan.textContent = diff.files === 1 ? localize("diffFile", "1 file") : localize("diffFiles", "{0} files", diff.files);
     }
     if (diff.insertions >= 0) {
       template.diffAddedSpan.textContent = `+${diff.insertions}`;
@@ -206,33 +210,44 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
         template.description.textContent = localize("chat.session.status.needsInput", "Input needed.");
       } else if (hasBadge && session.element.status === 1) {
         template.description.textContent = "";
-      } else if (session.element.timing.finishedOrFailedTime && session.element.timing.inProgressTime && session.element.timing.finishedOrFailedTime > session.element.timing.inProgressTime) {
-        const duration = this.toDuration(session.element.timing.inProgressTime, session.element.timing.finishedOrFailedTime, false);
-        template.description.textContent = session.element.status === 0 ? localize("chat.session.status.failedAfter", "Failed after {0}.", duration ?? "1s") : localize("chat.session.status.completedAfter", "Completed in {0}.", duration ?? "1s");
+      } else if (session.element.timing.lastRequestEnded && session.element.timing.lastRequestStarted && session.element.timing.lastRequestEnded > session.element.timing.lastRequestStarted) {
+        const duration = this.toDuration(session.element.timing.lastRequestStarted, session.element.timing.lastRequestEnded, false, true);
+        template.description.textContent = session.element.status === 0 ? localize("chat.session.status.failedAfter", "Failed after {0}.", duration) : localize("chat.session.status.completedAfter", "Completed in {0}.", duration);
       } else {
         template.description.textContent = session.element.status === 0 ? localize("chat.session.status.failed", "Failed") : localize("chat.session.status.completed", "Completed");
       }
     }
   }
-  toDuration(startTime, endTime, useFullTimeWords) {
-    const elapsed = Math.round((endTime - startTime) / 1e3) * 1e3;
-    if (elapsed < 1e3) {
-      return void 0;
+  toDuration(startTime, endTime, useFullTimeWords, disallowNow) {
+    const elapsed = Math.max(
+      Math.round((endTime - startTime) / 1e3) * 1e3,
+      1e3
+      /* clamp to 1s */
+    );
+    if (!disallowNow && elapsed < 6e4) {
+      return localize("secondsDuration", "now");
     }
     return getDurationString(elapsed, useFullTimeWords);
   }
   renderStatus(session, template) {
     const getTimeLabel = /* @__PURE__ */ __name((session2) => {
       let timeLabel;
-      if (session2.status === 2 && session2.timing.inProgressTime) {
-        timeLabel = this.toDuration(session2.timing.inProgressTime, Date.now(), false);
+      if (session2.status === 2 && session2.timing.lastRequestStarted) {
+        timeLabel = this.toDuration(session2.timing.lastRequestStarted, Date.now(), false, false);
       }
       if (!timeLabel) {
-        timeLabel = fromNow(session2.timing.lastRequestEnded ?? session2.timing.lastRequestStarted ?? session2.timing.created);
+        const date = getAgentSessionTime(session2.timing);
+        const seconds = Math.round(((/* @__PURE__ */ new Date()).getTime() - date) / 1e3);
+        if (seconds < 60) {
+          timeLabel = localize("secondsDuration", "now");
+        } else {
+          timeLabel = sessionDateFromNow(date);
+        }
       }
       return timeLabel;
     }, "getTimeLabel");
-    template.statusProviderIcon.className = `agent-session-status-provider-icon ${ThemeIcon.asClassName(session.element.icon)}`;
+    const isLocal = session.element.providerType === AgentSessionProviders.Local;
+    template.statusProviderIcon.className = isLocal ? "" : `agent-session-status-provider-icon ${ThemeIcon.asClassName(session.element.icon)}`;
     template.statusTime.textContent = getTimeLabel(session.element);
     const timer = template.elementDisposable.add(new IntervalTimer());
     timer.cancelAndSet(
@@ -242,63 +257,26 @@ let AgentSessionRenderer = class AgentSessionRenderer2 {
     );
   }
   renderHover(session, template) {
-    template.elementDisposable.add(this.hoverService.setupDelayedHover(template.element, () => ({
-      content: this.buildTooltip(session.element),
+    if (!isSessionInProgressStatus(session.element.status) && session.element.isRead()) {
+      return;
+    }
+    const reducedDelay = session.element.status === 3;
+    template.elementDisposable.add(this.hoverService.setupDelayedHover(template.element, () => this.buildHoverContent(session.element), { groupId: "agent.sessions", reducedDelay }));
+  }
+  buildHoverContent(session) {
+    if (this.sessionHover.value?.session.resource.toString() !== session.resource.toString()) {
+      this.sessionHover.value = this.instantiationService.createInstance(AgentSessionHoverWidget, session);
+    }
+    const widget = this.sessionHover.value;
+    return {
+      id: `agent.session.hover.${session.resource.toString()}`,
+      content: widget.domNode,
       style: 1,
+      onDidShow: /* @__PURE__ */ __name(() => widget.onRendered(), "onDidShow"),
       position: {
         hoverPosition: this.options.getHoverPosition()
       }
-    }), { groupId: "agent.sessions" }));
-  }
-  buildTooltip(session) {
-    const lines = [];
-    lines.push(`**${session.label}**`);
-    if (session.tooltip) {
-      const tooltip = typeof session.tooltip === "string" ? session.tooltip : session.tooltip.value;
-      lines.push(tooltip);
-    } else {
-      if (session.description) {
-        const description = typeof session.description === "string" ? session.description : session.description.value;
-        lines.push(description);
-      }
-      if (session.badge) {
-        const badge = typeof session.badge === "string" ? session.badge : session.badge.value;
-        lines.push(badge);
-      }
-    }
-    const details = [];
-    details.push(toStatusLabel(session.status));
-    details.push(session.providerLabel);
-    if (session.timing.finishedOrFailedTime && session.timing.inProgressTime) {
-      const duration = this.toDuration(session.timing.inProgressTime, session.timing.finishedOrFailedTime, true);
-      if (duration) {
-        details.push(duration);
-      }
-    } else {
-      const startTime = session.timing.lastRequestStarted ?? session.timing.created;
-      details.push(fromNow(startTime, true, true));
-    }
-    lines.push(details.join(" \u2022 "));
-    const diff = getAgentChangesSummary(session.changes);
-    if (diff && hasValidDiff(session.changes)) {
-      const diffParts = [];
-      if (diff.files > 0) {
-        diffParts.push(diff.files === 1 ? localize("tooltip.file", "1 file") : localize("tooltip.files", "{0} files", diff.files));
-      }
-      if (diff.insertions > 0) {
-        diffParts.push(`+${diff.insertions}`);
-      }
-      if (diff.deletions > 0) {
-        diffParts.push(`-${diff.deletions}`);
-      }
-      if (diffParts.length > 0) {
-        lines.push(`$(diff) ${diffParts.join(", ")}`);
-      }
-    }
-    if (session.isArchived()) {
-      lines.push(`$(archive) ${localize("tooltip.archived", "Archived")}`);
-    }
-    return new MarkdownString(lines.join("\n\n"), { supportThemeIcons: true });
+    };
   }
   renderCompressedElements(node, index, templateData, details) {
     throw new Error("Should never happen since session is incompressible");
@@ -415,6 +393,12 @@ class AgentSessionsAccessibilityProvider {
   static {
     __name(this, "AgentSessionsAccessibilityProvider");
   }
+  getWidgetRole() {
+    return "list";
+  }
+  getRole(element) {
+    return "listitem";
+  }
   getWidgetAriaLabel() {
     return localize("agentSessions", "Agent Sessions");
   }
@@ -428,6 +412,9 @@ class AgentSessionsAccessibilityProvider {
 class AgentSessionsDataSource {
   static {
     __name(this, "AgentSessionsDataSource");
+  }
+  static {
+    this.CAPPED_SESSIONS_LIMIT = 3;
   }
   constructor(filter, sorter) {
     this.filter = filter;
@@ -464,20 +451,44 @@ class AgentSessionsDataSource {
     }
   }
   groupSessionsIntoSections(sessions) {
-    const result = [];
     const sortedSessions = sessions.sort(this.sorter.compare.bind(this.sorter));
-    const groupedSessions = groupAgentSessions(sortedSessions);
-    for (const { sessions: sessions2, section, label } of groupedSessions.values()) {
-      if (sessions2.length === 0) {
+    if (this.filter?.groupResults?.() === AgentSessionsGrouping.Capped) {
+      if (this.filter?.getExcludes().read) {
+        return sortedSessions;
+      }
+      return this.groupSessionsCapped(sortedSessions);
+    } else {
+      return this.groupSessionsByDate(sortedSessions);
+    }
+  }
+  groupSessionsCapped(sortedSessions) {
+    const result = [];
+    const firstArchivedIndex = sortedSessions.findIndex((session) => session.isArchived());
+    const nonArchivedCount = firstArchivedIndex === -1 ? sortedSessions.length : firstArchivedIndex;
+    const topSessions = sortedSessions.slice(0, Math.min(AgentSessionsDataSource.CAPPED_SESSIONS_LIMIT, nonArchivedCount));
+    const othersSessions = sortedSessions.slice(topSessions.length);
+    result.push(...topSessions);
+    if (othersSessions.length > 0) {
+      result.push({
+        section: "more",
+        label: localize("agentSessions.moreSectionWithCount", "More ({0})", othersSessions.length),
+        sessions: othersSessions
+      });
+    }
+    return result;
+  }
+  groupSessionsByDate(sortedSessions) {
+    const result = [];
+    const groupedSessions = groupAgentSessionsByDate(sortedSessions);
+    for (const { sessions, section, label } of groupedSessions.values()) {
+      if (sessions.length === 0) {
         continue;
       }
-      result.push({ section, label, sessions: sessions2 });
+      result.push({ section, label, sessions });
     }
     return result;
   }
 }
-const DAY_THRESHOLD = 24 * 60 * 60 * 1e3;
-const WEEK_THRESHOLD = 7 * DAY_THRESHOLD;
 const AgentSessionSectionLabels = {
   [
     "inProgress"
@@ -494,7 +505,7 @@ const AgentSessionSectionLabels = {
   [
     "week"
     /* AgentSessionSection.Week */
-  ]: localize("agentSessions.weekSection", "Last Week"),
+  ]: localize("agentSessions.weekSection", "Last 7 Days"),
   [
     "older"
     /* AgentSessionSection.Older */
@@ -502,9 +513,15 @@ const AgentSessionSectionLabels = {
   [
     "archived"
     /* AgentSessionSection.Archived */
-  ]: localize("agentSessions.archivedSection", "Archived")
+  ]: localize("agentSessions.archivedSection", "Archived"),
+  [
+    "more"
+    /* AgentSessionSection.More */
+  ]: localize("agentSessions.moreSection", "More")
 };
-function groupAgentSessions(sessions) {
+const DAY_THRESHOLD = 24 * 60 * 60 * 1e3;
+const WEEK_THRESHOLD = 7 * DAY_THRESHOLD;
+function groupAgentSessionsByDate(sessions) {
   const now = Date.now();
   const startOfToday = new Date(now).setHours(0, 0, 0, 0);
   const startOfYesterday = startOfToday - DAY_THRESHOLD;
@@ -516,12 +533,12 @@ function groupAgentSessions(sessions) {
   const olderSessions = [];
   const archivedSessions = [];
   for (const session of sessions) {
-    if (isSessionInProgressStatus(session.status)) {
-      inProgressSessions.push(session);
-    } else if (session.isArchived()) {
+    if (session.isArchived()) {
       archivedSessions.push(session);
+    } else if (isSessionInProgressStatus(session.status)) {
+      inProgressSessions.push(session);
     } else {
-      const sessionTime = session.timing.lastRequestEnded ?? session.timing.lastRequestStarted ?? session.timing.created;
+      const sessionTime = getAgentSessionTime(session.timing);
       if (sessionTime >= startOfToday) {
         todaySessions.push(session);
       } else if (sessionTime >= startOfYesterday) {
@@ -557,7 +574,21 @@ function groupAgentSessions(sessions) {
     ["archived", { section: "archived", label: localize("agentSessions.archivedSectionWithCount", "Archived ({0})", archivedSessions.length), sessions: archivedSessions }]
   ]);
 }
-__name(groupAgentSessions, "groupAgentSessions");
+__name(groupAgentSessionsByDate, "groupAgentSessionsByDate");
+function sessionDateFromNow(sessionTime) {
+  const now = Date.now();
+  const startOfToday = new Date(now).setHours(0, 0, 0, 0);
+  const startOfYesterday = startOfToday - DAY_THRESHOLD;
+  const startOfTwoDaysAgo = startOfYesterday - DAY_THRESHOLD;
+  if (sessionTime < startOfToday && sessionTime >= startOfYesterday) {
+    return localize("date.fromNow.days.singular.ago", "1 day ago");
+  }
+  if (sessionTime < startOfYesterday && sessionTime >= startOfTwoDaysAgo) {
+    return localize("date.fromNow.days.multiple.ago", "2 days ago");
+  }
+  return fromNow(sessionTime, true);
+}
+__name(sessionDateFromNow, "sessionDateFromNow");
 class AgentSessionsIdentityProvider {
   static {
     __name(this, "AgentSessionsIdentityProvider");
@@ -570,6 +601,12 @@ class AgentSessionsIdentityProvider {
       return element.resource.toString();
     }
     return "agent-sessions-id";
+  }
+  getGroupId(element) {
+    if (isAgentSessionSection(element) || isAgentSessionsModel(element)) {
+      return NotSelectableGroupId;
+    }
+    return 1;
   }
 }
 class AgentSessionsCompressionDelegate {
@@ -616,8 +653,8 @@ class AgentSessionsSorter {
     if (typeof override === "number") {
       return override;
     }
-    const timeA = sessionA.timing.lastRequestEnded ?? sessionA.timing.lastRequestStarted ?? sessionA.timing.created;
-    const timeB = sessionB.timing.lastRequestEnded ?? sessionB.timing.lastRequestStarted ?? sessionB.timing.created;
+    const timeA = getAgentSessionTime(sessionA.timing);
+    const timeB = getAgentSessionTime(sessionB.timing);
     return timeB - timeA;
   }
 }
@@ -682,6 +719,8 @@ export {
   AgentSessionsKeyboardNavigationLabelProvider,
   AgentSessionsListDelegate,
   AgentSessionsSorter,
-  groupAgentSessions
+  groupAgentSessionsByDate,
+  sessionDateFromNow,
+  toStatusLabel
 };
 //# sourceMappingURL=agentSessionsViewer.js.map

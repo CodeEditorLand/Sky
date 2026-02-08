@@ -9,8 +9,6 @@ import { IChatContentPart, IChatContentPartRenderContext } from './chatContentPa
 export declare class ChatErrorConfirmationContentPart extends Disposable implements IChatContentPart {
     private readonly errorDetails;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     constructor(kind: ChatErrorLevel, content: IMarkdownString, errorDetails: IChatErrorDetailsPart, confirmationButtons: IChatResponseErrorDetailsConfirmationButton[], renderer: IMarkdownRenderer, context: IChatContentPartRenderContext, instantiationService: IInstantiationService, chatWidgetService: IChatWidgetService, chatService: IChatService);
     hasSameContent(other: IChatRendererContent): boolean;
     addDisposable(disposable: IDisposable): void;

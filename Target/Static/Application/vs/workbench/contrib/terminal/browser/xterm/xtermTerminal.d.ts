@@ -163,6 +163,7 @@ export declare class XtermTerminal extends Disposable implements IXtermTerminal,
     scrollToTop(): void;
     scrollToLine(line: number, position?: ScrollPosition): void;
     clearBuffer(): void;
+    reset(): void;
     hasSelection(): boolean;
     clearSelection(): void;
     selectMarkedRange(fromMarkerId: string, toMarkerId: string, scrollIntoView?: boolean): void;

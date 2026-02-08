@@ -20,6 +20,7 @@ var TerminalChatCommandId;
   TerminalChatCommandId2["FocusMostRecentChatTerminal"] = "workbench.action.terminal.chat.focusMostRecentChatTerminal";
   TerminalChatCommandId2["ToggleChatTerminalOutput"] = "workbench.action.terminal.chat.toggleChatTerminalOutput";
   TerminalChatCommandId2["FocusChatInstanceAction"] = "workbench.action.terminal.chat.focusChatInstance";
+  TerminalChatCommandId2["ContinueInBackground"] = "workbench.action.terminal.chat.continueInBackground";
 })(TerminalChatCommandId || (TerminalChatCommandId = {}));
 const MENU_TERMINAL_CHAT_WIDGET_INPUT_SIDE_TOOLBAR = MenuId.for("terminalChatWidget");
 const MENU_TERMINAL_CHAT_WIDGET_STATUS = MenuId.for("terminalChatWidget.status");

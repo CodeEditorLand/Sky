@@ -709,14 +709,6 @@ const terminalConfiguration = {
     default: "inherited"
   },
   [
-    "terminal.integrated.windowsEnableConpty"
-    /* TerminalSettingId.WindowsEnableConpty */
-  ]: {
-    description: localize("terminal.integrated.windowsEnableConpty", "Whether to use ConPTY for Windows terminal process communication (requires Windows 10 build number 18309+). Winpty will be used if this is false."),
-    type: "boolean",
-    default: true
-  },
-  [
     "terminal.integrated.wordSeparators"
     /* TerminalSettingId.WordSeparators */
   ]: {

@@ -28,9 +28,9 @@ const mapExtToMediaMimes = {
   ".flv": "video/x-flv",
   ".gif": "image/gif",
   ".ico": "image/x-icon",
-  ".jpe": "image/jpg",
-  ".jpeg": "image/jpg",
-  ".jpg": "image/jpg",
+  ".jpe": ["image/jpg", "image/jpeg"],
+  ".jpeg": ["image/jpg", "image/jpeg"],
+  ".jpg": ["image/jpg", "image/jpeg"],
   ".m1v": "video/mpeg",
   ".m2a": "audio/mpeg",
   ".m2v": "video/mpeg",
@@ -84,12 +84,14 @@ function getMediaOrTextMime(path) {
 __name(getMediaOrTextMime, "getMediaOrTextMime");
 function getMediaMime(path) {
   const ext = extname(path);
-  return mapExtToMediaMimes[ext.toLowerCase()];
+  const mimeType = mapExtToMediaMimes[ext.toLowerCase()];
+  return Array.isArray(mimeType) ? mimeType[0] : mimeType;
 }
 __name(getMediaMime, "getMediaMime");
 function getExtensionForMimeType(mimeType) {
   for (const extension in mapExtToMediaMimes) {
-    if (mapExtToMediaMimes[extension] === mimeType) {
+    const value = mapExtToMediaMimes[extension];
+    if (Array.isArray(value) ? value.includes(mimeType) : value === mimeType) {
       return extension;
     }
   }

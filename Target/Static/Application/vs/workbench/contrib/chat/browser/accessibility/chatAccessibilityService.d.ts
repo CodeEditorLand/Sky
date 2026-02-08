@@ -17,9 +17,8 @@ export declare class ChatAccessibilityService extends Disposable implements ICha
     private readonly _chatService;
     readonly _serviceBrand: undefined;
     private _pendingSignalMap;
-    private readonly notifications;
+    private readonly toasts;
     constructor(_accessibilitySignalService: IAccessibilitySignalService, _instantiationService: IInstantiationService, _configurationService: IConfigurationService, _hostService: IHostService, _widgetService: IChatWidgetService, _chatService: IChatService);
-    dispose(): void;
     acceptRequest(uri: URI, skipRequestSignal?: boolean): void;
     disposeRequest(requestId: URI): void;
     acceptResponse(widget: ChatWidget, container: HTMLElement, response: IChatResponseViewModel | string | undefined, requestId: URI, isVoiceInput?: boolean): void;

@@ -41,7 +41,12 @@ const extensionPoint = ExtensionsRegistry.registerExtensionPoint({
       },
       required: ["id", "icon", "displayName"]
     }
-  }
+  },
+  activationEventsGenerator: /* @__PURE__ */ __name(function* (contributions) {
+    for (const contrib of contributions) {
+      yield `onChatContextProvider:${contrib.id}`;
+    }
+  }, "activationEventsGenerator")
 });
 let ChatContextContribution = class ChatContextContribution2 extends Disposable {
   static {
@@ -63,6 +68,10 @@ let ChatContextContribution = class ChatContextContribution2 extends Disposable 
         }
         for (const contribution of ext.value) {
           const icon = contribution.icon ? ThemeIcon.fromString(contribution.icon) : void 0;
+          if (!icon && contribution.icon) {
+            ext.collector.error(localize("chatContextExtPoint.invalidIcon", "Invalid icon format for chat context contribution '{0}'. Icon must be in the format '$(iconId)' or '$(iconId~spin)', e.g. '$(copilot)'.", contribution.id));
+            continue;
+          }
           if (!icon) {
             continue;
           }

@@ -22,9 +22,7 @@ import { Disposable, MutableDisposable } from "../../../../../../base/common/lif
 import { localize } from "../../../../../../nls.js";
 import { MenuWorkbenchToolBar } from "../../../../../../platform/actions/browser/toolbar.js";
 import { Action2, MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
-import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
-import { ChatConfiguration } from "../../../common/constants.js";
 import { ActionViewItem } from "../../../../../../base/browser/ui/actionbar/actionViewItems.js";
 import { AgentSessionsPicker } from "../../agentSessions/agentSessionsPicker.js";
 let ChatViewTitleControl = class ChatViewTitleControl2 extends Disposable {
@@ -40,11 +38,10 @@ let ChatViewTitleControl = class ChatViewTitleControl2 extends Disposable {
   static {
     this.PICK_AGENT_SESSION_ACTION_ID = "workbench.action.chat.pickAgentSession";
   }
-  constructor(container, delegate, configurationService, instantiationService) {
+  constructor(container, delegate, instantiationService) {
     super();
     this.container = container;
     this.delegate = delegate;
-    this.configurationService = configurationService;
     this.instantiationService = instantiationService;
     this._onDidChangeHeight = this._register(new Emitter());
     this.onDidChangeHeight = this._onDidChangeHeight.event;
@@ -53,15 +50,7 @@ let ChatViewTitleControl = class ChatViewTitleControl2 extends Disposable {
     this.modelDisposables = this._register(new MutableDisposable());
     this.lastKnownHeight = 0;
     this.render(this.container);
-    this.registerListeners();
     this.registerActions();
-  }
-  registerListeners() {
-    this._register(this.configurationService.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration(ChatConfiguration.ChatViewTitleEnabled)) {
-        this.doUpdate();
-      }
-    }));
   }
   registerActions() {
     this._register(registerAction2(class extends Action2 {
@@ -152,13 +141,7 @@ let ChatViewTitleControl = class ChatViewTitleControl2 extends Disposable {
     }
   }
   shouldRender() {
-    if (!this.isEnabled()) {
-      return false;
-    }
     return !!this.model?.title;
-  }
-  isEnabled() {
-    return this.configurationService.getValue(ChatConfiguration.ChatViewTitleEnabled) === true;
   }
   getHeight() {
     if (!this.titleContainer || this.titleContainer.style.display === "none") {
@@ -168,8 +151,7 @@ let ChatViewTitleControl = class ChatViewTitleControl2 extends Disposable {
   }
 };
 ChatViewTitleControl = ChatViewTitleControl_1 = __decorate([
-  __param(2, IConfigurationService),
-  __param(3, IInstantiationService)
+  __param(2, IInstantiationService)
 ], ChatViewTitleControl);
 class ChatViewTitleLabel extends ActionViewItem {
   static {

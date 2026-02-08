@@ -43,6 +43,9 @@ let EditorPool = class EditorPool2 extends Disposable {
       }, "dispose")
     };
   }
+  clear() {
+    this._pool.clear();
+  }
 };
 EditorPool = __decorate([
   __param(4, IInstantiationService)
@@ -73,6 +76,9 @@ let DiffEditorPool = class DiffEditorPool2 extends Disposable {
         this._pool.release(codeBlock);
       }, "dispose")
     };
+  }
+  clear() {
+    this._pool.clear();
   }
 };
 DiffEditorPool = __decorate([

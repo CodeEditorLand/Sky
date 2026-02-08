@@ -3,7 +3,7 @@ import { Emitter } from '../../../../../base/common/event.js';
 import { Disposable } from '../../../../../base/common/lifecycle.js';
 import { IObservable, ITransaction } from '../../../../../base/common/observable.js';
 import { URI } from '../../../../../base/common/uri.js';
-import { Location, TextEdit } from '../../../../../editor/common/languages.js';
+import { TextEdit } from '../../../../../editor/common/languages.js';
 import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
 import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
@@ -12,9 +12,9 @@ import { IEditorPane } from '../../../../common/editor.js';
 import { IFilesConfigurationService } from '../../../../services/filesConfiguration/common/filesConfigurationService.js';
 import { IAiEditTelemetryService } from '../../../editTelemetry/browser/telemetry/aiEditTelemetry/aiEditTelemetryService.js';
 import { ICellEditOperation } from '../../../notebook/common/notebookCommon.js';
+import { ChatUserAction, IChatService } from '../../common/chatService/chatService.js';
 import { ChatEditKind, IModifiedEntryTelemetryInfo, IModifiedFileEntry, IModifiedFileEntryEditorIntegration, ISnapshotEntry, ModifiedFileEntryState } from '../../common/editing/chatEditingService.js';
 import { IChatResponseModel } from '../../common/model/chatModel.js';
-import { ChatUserAction, IChatService } from '../../common/chatService/chatService.js';
 declare class AutoAcceptControl {
     readonly total: number;
     readonly remaining: number;
@@ -71,7 +71,6 @@ export declare abstract class AbstractChatEditingModifiedFileEntry extends Dispo
     protected readonly _userEditScheduler: RunOnceScheduler;
     constructor(modifiedURI: URI, _telemetryInfo: IModifiedEntryTelemetryInfo, kind: ChatEditKind, configService: IConfigurationService, _fileConfigService: IFilesConfigurationService, _chatService: IChatService, _fileService: IFileService, _undoRedoService: IUndoRedoService, _instantiationService: IInstantiationService, _aiEditTelemetryService: IAiEditTelemetryService);
     dispose(): void;
-    abstract hasModificationAt(location: Location): boolean;
     acquire(): this;
     enableReviewModeUntilSettled(): void;
     updateTelemetryInfo(telemetryInfo: IModifiedEntryTelemetryInfo): void;

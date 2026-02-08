@@ -139,8 +139,7 @@ class ChatToolInvocation {
     }, "confirm");
     if (autoConfirmed) {
       confirm(autoConfirmed);
-    }
-    if (!this.confirmationMessages?.title) {
+    } else if (!this.confirmationMessages?.title) {
       this._state.set({
         type: 2,
         confirmed: { type: 1, reason: this.confirmationMessages?.confirmationNotNeededReason },
@@ -180,25 +179,30 @@ class ChatToolInvocation {
       confirmationMessages: this.confirmationMessages
     }, void 0);
   }
-  didExecuteTool(result, final) {
+  async didExecuteTool(result, final, checkIfResultAutoApproved) {
     if (result?.toolResultMessage) {
       this.pastTenseMessage = result.toolResultMessage;
     } else if (this._progress.get().message) {
       this.pastTenseMessage = this._progress.get().message;
     }
     if (this.confirmationMessages?.confirmResults && !result?.toolResultError && result?.confirmResults !== false && !final) {
-      this._state.set({
-        type: 3,
-        confirmed: IChatToolInvocation.executionConfirmedOrDenied(this) || {
-          type: 1
-          /* ToolConfirmKind.ConfirmationNotNeeded */
-        },
-        resultDetails: result?.toolResultDetails,
-        contentForModel: result?.content || [],
-        confirm: /* @__PURE__ */ __name((reason) => this._setCompleted(result, reason), "confirm"),
-        parameters: this.parameters,
-        confirmationMessages: this.confirmationMessages
-      }, void 0);
+      const autoApproved = await checkIfResultAutoApproved?.();
+      if (autoApproved) {
+        this._setCompleted(result, autoApproved);
+      } else {
+        this._state.set({
+          type: 3,
+          confirmed: IChatToolInvocation.executionConfirmedOrDenied(this) || {
+            type: 1
+            /* ToolConfirmKind.ConfirmationNotNeeded */
+          },
+          resultDetails: result?.toolResultDetails,
+          contentForModel: result?.content || [],
+          confirm: /* @__PURE__ */ __name((reason) => this._setCompleted(result, reason), "confirm"),
+          parameters: this.parameters,
+          confirmationMessages: this.confirmationMessages
+        }, void 0);
+      }
     } else {
       this._setCompleted(result);
     }

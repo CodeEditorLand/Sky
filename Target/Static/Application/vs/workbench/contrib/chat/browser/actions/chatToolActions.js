@@ -1,34 +1,17 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var __decorate = function(decorators, target, key, desc) {
-  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __param = function(paramIndex, decorator) {
-  return function(target, key) {
-    decorator(target, key, paramIndex);
-  };
-};
-import { $ } from "../../../../../base/browser/dom.js";
 import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
 import { Iterable } from "../../../../../base/common/iterator.js";
-import { markAsSingleton } from "../../../../../base/common/lifecycle.js";
 import { autorun } from "../../../../../base/common/observable.js";
-import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { localize, localize2 } from "../../../../../nls.js";
-import { IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
-import { MenuEntryActionViewItem } from "../../../../../platform/actions/browser/menuEntryActionViewItem.js";
-import { Action2, MenuId, MenuItemAction, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
 import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
-import { registerWorkbenchContribution2 } from "../../../../common/contributions.js";
 import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { isResponseVM } from "../../common/model/chatViewModel.js";
-import { ChatModeKind } from "../../common/constants.js";
+import { ChatConfiguration, ChatModeKind } from "../../common/constants.js";
 import { IChatWidgetService } from "../chat.js";
 import { ToolsScope } from "../widget/input/chatSelectedTools.js";
 import { CHAT_CATEGORY } from "./chatActions.js";
@@ -41,9 +24,9 @@ class ToolConfirmationAction extends Action2 {
   static {
     __name(this, "ToolConfirmationAction");
   }
-  run(accessor, ...args) {
+  run(accessor, context) {
     const chatWidgetService = accessor.get(IChatWidgetService);
-    const widget = chatWidgetService.lastFocusedWidget;
+    const widget = context?.sessionResource ? chatWidgetService.getWidgetBySessionResource(context.sessionResource) : chatWidgetService.lastFocusedWidget;
     const lastItem = widget?.viewModel?.getItems().at(-1);
     if (!isResponseVM(lastItem)) {
       return;
@@ -124,7 +107,7 @@ class ConfigureToolsAction extends Action2 {
       category: CHAT_CATEGORY,
       precondition: ChatContextKeys.chatModeKind.isEqualTo(ChatModeKind.Agent),
       menu: [{
-        when: ContextKeyExpr.and(ChatContextKeys.chatModeKind.isEqualTo(ChatModeKind.Agent), ChatContextKeys.lockedToCodingAgent.negate()),
+        when: ContextKeyExpr.and(ChatContextKeys.chatModeKind.isEqualTo(ChatModeKind.Agent), ChatContextKeys.lockedToCodingAgent.negate(), ContextKeyExpr.notEquals(`config.${ChatConfiguration.AlternativeToolAction}`, true)),
         id: MenuId.ChatInput,
         group: "navigation",
         order: 100
@@ -137,19 +120,12 @@ class ConfigureToolsAction extends Action2 {
     const telemetryService = accessor.get(ITelemetryService);
     let widget = chatWidgetService.lastFocusedWidget;
     if (!widget) {
-      let isChatActionContext2 = function(obj) {
-        return !!obj && typeof obj === "object" && !!obj.widget;
-      };
-      var isChatActionContext = isChatActionContext2;
-      __name(isChatActionContext2, "isChatActionContext");
-      const context = args[0];
-      if (isChatActionContext2(context)) {
-        widget = context.widget;
-      }
+      widget = this.extractWidget(args);
     }
     if (!widget) {
       return;
     }
+    const source = this.extractSource(args) ?? "chatInput";
     let placeholder;
     let description;
     const { entriesScope, entriesMap } = widget.input.selectedToolsModel;
@@ -179,7 +155,7 @@ class ConfigureToolsAction extends Action2 {
       }
     });
     try {
-      const result = await instaService.invokeFunction(showToolsPicker, placeholder, description, () => entriesMap.get(), cts.token);
+      const result = await instaService.invokeFunction(showToolsPicker, placeholder, source, description, () => entriesMap.get(), widget.input.selectedLanguageModel.get()?.metadata, cts.token);
       if (result) {
         widget.input.selectedToolsModel.set(result, false);
       }
@@ -193,77 +169,35 @@ class ConfigureToolsAction extends Action2 {
       enabled: Iterable.reduce(tools, (prev, [_, enabled]) => enabled ? prev + 1 : prev, 0)
     });
   }
-}
-let ConfigureToolsActionRendering = class ConfigureToolsActionRendering2 {
-  static {
-    __name(this, "ConfigureToolsActionRendering");
-  }
-  static {
-    this.ID = "chat.configureToolsActionRendering";
-  }
-  constructor(actionViewItemService) {
-    const disposable = actionViewItemService.register(MenuId.ChatInput, ConfigureToolsAction.ID, (action, _opts, instantiationService) => {
-      if (!(action instanceof MenuItemAction)) {
-        return void 0;
+  extractWidget(args) {
+    function isChatActionContext(obj) {
+      return !!obj && typeof obj === "object" && !!obj.widget;
+    }
+    __name(isChatActionContext, "isChatActionContext");
+    for (const arg of args) {
+      if (isChatActionContext(arg)) {
+        return arg.widget;
       }
-      return instantiationService.createInstance(class extends MenuEntryActionViewItem {
-        render(container) {
-          super.render(container);
-          this.warningElement = $(`.tool-warning-indicator${ThemeIcon.asCSSSelector(Codicon.warning)}`);
-          this.warningElement.style.display = "none";
-          container.appendChild(this.warningElement);
-          container.style.position = "relative";
-          this.updateWarningState();
-          this._register(this._contextKeyService.onDidChangeContext(() => {
-            this.updateWarningState();
-          }));
-        }
-        updateWarningState() {
-          const wasShown = this.warningElement.style.display === "block";
-          const shouldBeShown = this.isAboveToolLimit();
-          if (!wasShown && shouldBeShown) {
-            this.warningElement.style.display = "block";
-            this.updateTooltip();
-          } else if (wasShown && !shouldBeShown) {
-            this.warningElement.style.display = "none";
-            this.updateTooltip();
-          }
-        }
-        getTooltip() {
-          if (this.isAboveToolLimit()) {
-            const warningMessage = localize("chatTools.tooManyEnabled", "More than {0} tools are enabled, you may experience degraded tool calling.", this._contextKeyService.getContextKeyValue(ChatContextKeys.chatToolGroupingThreshold.key));
-            return `${warningMessage}`;
-          }
-          return super.getTooltip();
-        }
-        isAboveToolLimit() {
-          const rawToolLimit = this._contextKeyService.getContextKeyValue(ChatContextKeys.chatToolGroupingThreshold.key);
-          const rawToolCount = this._contextKeyService.getContextKeyValue(ChatContextKeys.chatToolCount.key);
-          if (rawToolLimit === void 0 || rawToolCount === void 0) {
-            return false;
-          }
-          const toolLimit = Number(rawToolLimit || 0);
-          const toolCount = Number(rawToolCount || 0);
-          return toolCount > toolLimit;
-        }
-      }, action, void 0);
-    });
-    markAsSingleton(disposable);
+    }
+    return void 0;
   }
-};
-ConfigureToolsActionRendering = __decorate([
-  __param(0, IActionViewItemService)
-], ConfigureToolsActionRendering);
+  extractSource(args) {
+    function isChatActionSource(obj) {
+      return !!obj && typeof obj === "object" && !!obj.source;
+    }
+    __name(isChatActionSource, "isChatActionSource");
+    for (const arg of args) {
+      if (isChatActionSource(arg)) {
+        return arg.source;
+      }
+    }
+    return void 0;
+  }
+}
 function registerChatToolActions() {
   registerAction2(AcceptToolConfirmation);
   registerAction2(SkipToolConfirmation);
   registerAction2(ConfigureToolsAction);
-  registerWorkbenchContribution2(
-    ConfigureToolsActionRendering.ID,
-    ConfigureToolsActionRendering,
-    2
-    /* WorkbenchPhase.BlockRestore */
-  );
 }
 __name(registerChatToolActions, "registerChatToolActions");
 export {

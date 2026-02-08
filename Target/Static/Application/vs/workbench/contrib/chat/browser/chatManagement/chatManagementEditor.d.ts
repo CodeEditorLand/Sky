@@ -28,6 +28,7 @@ export declare class ModelsManagementEditor extends EditorPane {
     focus(): void;
     clearInput(): void;
     clearSearch(): void;
+    search(query: string): void;
 }
 export declare const chatManagementSashBorder: string;
 export declare class ChatManagementEditor extends EditorPane {

@@ -1,5 +1,5 @@
 import { Event } from '../../../../base/common/event.js';
-import { IHostService } from './host.js';
+import { IHostService, IToastOptions, IToastResult } from './host.js';
 import { ILayoutService } from '../../../../platform/layout/browser/layoutService.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IWindowOpenable, IOpenWindowOptions, IOpenEmptyWindowOptions, IOpenedMainWindow, IOpenedAuxiliaryWindow } from '../../../../platform/window/common/window.js';
@@ -14,6 +14,7 @@ import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IUserDataProfilesService } from '../../../../platform/userDataProfile/common/userDataProfile.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
+import { CancellationToken } from '../../../../base/common/cancellation.js';
 export declare class BrowserHostService extends Disposable implements IHostService {
     private readonly layoutService;
     private readonly configurationService;
@@ -68,4 +69,7 @@ export declare class BrowserHostService extends Disposable implements IHostServi
     getScreenshot(): Promise<VSBuffer | undefined>;
     getBrowserId(): Promise<string | undefined>;
     getNativeWindowHandle(_windowId: number): Promise<undefined>;
+    private readonly activeToasts;
+    showToast(options: IToastOptions, token: CancellationToken): Promise<IToastResult>;
+    private clearToasts;
 }

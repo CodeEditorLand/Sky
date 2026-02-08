@@ -1,7 +1,6 @@
 import { Disposable, DisposableStore } from '../../../../../../base/common/lifecycle.js';
 import { IObservable } from '../../../../../../base/common/observable.js';
 import { URI } from '../../../../../../base/common/uri.js';
-import { IRange } from '../../../../../../editor/common/core/range.js';
 import { IDocumentDiff } from '../../../../../../editor/common/diff/documentDiffProvider.js';
 import { DetailedLineRangeMapping } from '../../../../../../editor/common/diff/rangeMapping.js';
 import { TextEdit } from '../../../../../../editor/common/languages.js';
@@ -34,7 +33,6 @@ export declare class ChatEditingNotebookCellEntry extends Disposable {
     private readonly initialContent;
     private readonly _textModelChangeService;
     constructor(notebookUri: URI, cell: NotebookCellTextModel, modifiedModel: ITextModel, originalModel: ITextModel, isExternalEditInProgress: (() => boolean) | undefined, disposables: DisposableStore, notebookEditorService: INotebookEditorService, instantiationService: IInstantiationService);
-    hasModificationAt(range: IRange): boolean;
     clearCurrentEditLineDecoration(): void;
     acceptAgentEdits(textEdits: TextEdit[], isLastEdits: boolean, responseModel: IChatResponseModel | undefined): Promise<void>;
     revertMarkdownPreviewState(): void;

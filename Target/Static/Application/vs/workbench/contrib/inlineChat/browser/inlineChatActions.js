@@ -7,7 +7,7 @@ import { EmbeddedDiffEditorWidget } from "../../../../editor/browser/widget/diff
 import { EmbeddedCodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
 import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
 import { InlineChatController, InlineChatRunOptions } from "./inlineChatController.js";
-import { ACTION_ACCEPT_CHANGES, CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_VISIBLE, CTX_INLINE_CHAT_OUTER_CURSOR_POSITION, CTX_INLINE_CHAT_POSSIBLE, ACTION_START, CTX_INLINE_CHAT_V2_ENABLED, CTX_INLINE_CHAT_V1_ENABLED } from "../common/inlineChat.js";
+import { ACTION_ACCEPT_CHANGES, CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_VISIBLE, CTX_INLINE_CHAT_OUTER_CURSOR_POSITION, CTX_INLINE_CHAT_POSSIBLE, ACTION_START, CTX_INLINE_CHAT_V2_ENABLED, CTX_INLINE_CHAT_V1_ENABLED, CTX_HOVER_MODE } from "../common/inlineChat.js";
 import { ctxHasEditorModification, ctxHasRequestInProgress } from "../../chat/browser/chatEditing/chatEditingEditorContextKeys.js";
 import { localize, localize2 } from "../../../../nls.js";
 import { Action2, MenuId } from "../../../../platform/actions/common/actions.js";
@@ -37,6 +37,7 @@ class StartSessionAction extends Action2 {
     super({
       id: ACTION_START,
       title: localize2("run", "Open Inline Chat"),
+      shortTitle: localize2("runShort", "Inline Chat"),
       category: AbstractInlineChatAction.category,
       f1: true,
       precondition: inlineChatContextKey,
@@ -56,6 +57,15 @@ class StartSessionAction extends Action2 {
         id: MenuId.ChatTitleBarMenu,
         group: "a_open",
         order: 3
+      }, {
+        id: MenuId.ChatEditorInlineGutter,
+        group: "1_chat",
+        order: 1
+      }, {
+        id: MenuId.InlineChatEditorAffordance,
+        group: "1_chat",
+        order: 1,
+        when: EditorContextKeys.hasNonEmptySelection
       }]
     });
   }
@@ -230,6 +240,31 @@ class KeepSessionAction2 extends KeepOrUndoSessionAction {
     });
   }
 }
+class UndoSessionAction2 extends KeepOrUndoSessionAction {
+  static {
+    __name(this, "UndoSessionAction2");
+  }
+  constructor() {
+    super(false, {
+      id: "inlineChat2.undo",
+      title: localize2("undo", "Undo"),
+      f1: true,
+      icon: Codicon.discard,
+      precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_VISIBLE, CTX_HOVER_MODE),
+      keybinding: [{
+        when: ContextKeyExpr.or(ContextKeyExpr.and(EditorContextKeys.focus, ctxHasEditorModification.negate()), ChatContextKeys.inputHasFocus),
+        weight: 200 + 1,
+        primary: 9
+      }],
+      menu: [{
+        id: MenuId.ChatEditorInlineExecute,
+        group: "navigation",
+        order: 100,
+        when: ContextKeyExpr.and(CTX_HOVER_MODE, ctxHasRequestInProgress.negate(), ctxHasEditorModification)
+      }]
+    });
+  }
+}
 class UndoAndCloseSessionAction2 extends KeepOrUndoSessionAction {
   static {
     __name(this, "UndoAndCloseSessionAction2");
@@ -240,7 +275,7 @@ class UndoAndCloseSessionAction2 extends KeepOrUndoSessionAction {
       title: localize2("close2", "Close"),
       f1: true,
       icon: Codicon.close,
-      precondition: CTX_INLINE_CHAT_VISIBLE,
+      precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_VISIBLE, CTX_HOVER_MODE.negate()),
       keybinding: [{
         when: ContextKeyExpr.or(ContextKeyExpr.and(EditorContextKeys.focus, ctxHasEditorModification.negate()), ChatContextKeys.inputHasFocus),
         weight: 200 + 1,
@@ -249,7 +284,8 @@ class UndoAndCloseSessionAction2 extends KeepOrUndoSessionAction {
       menu: [{
         id: MenuId.ChatEditorInlineExecute,
         group: "navigation",
-        order: 100
+        order: 100,
+        when: ContextKeyExpr.or(CTX_HOVER_MODE.negate(), ContextKeyExpr.and(CTX_HOVER_MODE, ctxHasEditorModification.negate(), ctxHasRequestInProgress.negate()))
       }]
     });
   }
@@ -261,6 +297,7 @@ export {
   START_INLINE_CHAT,
   StartSessionAction,
   UndoAndCloseSessionAction2,
+  UndoSessionAction2,
   setHoldForSpeech
 };
 //# sourceMappingURL=inlineChatActions.js.map

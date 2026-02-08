@@ -130,14 +130,14 @@ let TrackedDocumentInfo = class TrackedDocumentInfo2 extends Disposable {
         return void 0;
       }
       focusResetSignal.read(reader);
-      reader.store.add(this._userAttentionService.fireAfterGivenFocusTimePassed(10 * 60 * 1e3, () => {
+      reader.store.add(this._userAttentionService.fireAfterGivenFocusTimePassed(20 * 60 * 1e3, () => {
         focusResetSignal.trigger(void 0);
       }));
       const t = reader.store.add(new DocumentEditSourceTracker(docWithJustReason, void 0));
       const startFocusTime = this._userAttentionService.totalFocusTimeMs;
       const startTime = Date.now();
       reader.store.add(toDisposable(async () => {
-        this.sendTelemetry("10minFocusWindow", "time", t, this._userAttentionService.totalFocusTimeMs - startFocusTime, Date.now() - startTime);
+        this.sendTelemetry("20minFocusWindow", "time", t, this._userAttentionService.totalFocusTimeMs - startFocusTime, Date.now() - startTime);
         t.dispose();
       }));
       return t;

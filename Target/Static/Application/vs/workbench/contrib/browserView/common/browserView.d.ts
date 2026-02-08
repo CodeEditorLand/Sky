@@ -1,7 +1,7 @@
 import { Event } from '../../../../base/common/event.js';
 import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
 import { VSBuffer } from '../../../../base/common/buffer.js';
-import { IBrowserViewBounds, IBrowserViewNavigationEvent, IBrowserViewLoadingEvent, IBrowserViewLoadError, IBrowserViewFocusEvent, IBrowserViewKeyDownEvent, IBrowserViewTitleChangeEvent, IBrowserViewFaviconChangeEvent, IBrowserViewNewPageRequest, IBrowserViewDevToolsStateEvent, IBrowserViewService, BrowserViewStorageScope, IBrowserViewCaptureScreenshotOptions } from '../../../../platform/browserView/common/browserView.js';
+import { IBrowserViewBounds, IBrowserViewNavigationEvent, IBrowserViewLoadingEvent, IBrowserViewLoadError, IBrowserViewFocusEvent, IBrowserViewKeyDownEvent, IBrowserViewTitleChangeEvent, IBrowserViewFaviconChangeEvent, IBrowserViewNewPageRequest, IBrowserViewDevToolsStateEvent, IBrowserViewService, BrowserViewStorageScope, IBrowserViewCaptureScreenshotOptions, IBrowserViewFindInPageOptions, IBrowserViewFindInPageResult, IBrowserViewVisibilityEvent } from '../../../../platform/browserView/common/browserView.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
@@ -39,6 +39,8 @@ export interface IBrowserViewModel extends IDisposable {
     readonly favicon: string | undefined;
     readonly screenshot: VSBuffer | undefined;
     readonly loading: boolean;
+    readonly focused: boolean;
+    readonly visible: boolean;
     readonly canGoBack: boolean;
     readonly isDevToolsOpen: boolean;
     readonly canGoForward: boolean;
@@ -52,6 +54,8 @@ export interface IBrowserViewModel extends IDisposable {
     readonly onDidChangeTitle: Event<IBrowserViewTitleChangeEvent>;
     readonly onDidChangeFavicon: Event<IBrowserViewFaviconChangeEvent>;
     readonly onDidRequestNewPage: Event<IBrowserViewNewPageRequest>;
+    readonly onDidFindInPage: Event<IBrowserViewFindInPageResult>;
+    readonly onDidChangeVisibility: Event<IBrowserViewVisibilityEvent>;
     readonly onDidClose: Event<void>;
     readonly onWillDispose: Event<void>;
     initialize(): Promise<void>;
@@ -65,6 +69,10 @@ export interface IBrowserViewModel extends IDisposable {
     captureScreenshot(options?: IBrowserViewCaptureScreenshotOptions): Promise<VSBuffer>;
     dispatchKeyEvent(keyEvent: IBrowserViewKeyDownEvent): Promise<void>;
     focus(): Promise<void>;
+    findInPage(text: string, options?: IBrowserViewFindInPageOptions): Promise<void>;
+    stopFindInPage(keepSelection?: boolean): Promise<void>;
+    getSelectedText(): Promise<string>;
+    clearStorage(): Promise<void>;
 }
 export declare class BrowserViewModel extends Disposable implements IBrowserViewModel {
     readonly id: string;
@@ -78,6 +86,8 @@ export declare class BrowserViewModel extends Disposable implements IBrowserView
     private _favicon;
     private _screenshot;
     private _loading;
+    private _focused;
+    private _visible;
     private _isDevToolsOpen;
     private _canGoBack;
     private _canGoForward;
@@ -90,6 +100,8 @@ export declare class BrowserViewModel extends Disposable implements IBrowserView
     get title(): string;
     get favicon(): string | undefined;
     get loading(): boolean;
+    get focused(): boolean;
+    get visible(): boolean;
     get isDevToolsOpen(): boolean;
     get canGoBack(): boolean;
     get canGoForward(): boolean;
@@ -104,6 +116,8 @@ export declare class BrowserViewModel extends Disposable implements IBrowserView
     get onDidChangeTitle(): Event<IBrowserViewTitleChangeEvent>;
     get onDidChangeFavicon(): Event<IBrowserViewFaviconChangeEvent>;
     get onDidRequestNewPage(): Event<IBrowserViewNewPageRequest>;
+    get onDidFindInPage(): Event<IBrowserViewFindInPageResult>;
+    get onDidChangeVisibility(): Event<IBrowserViewVisibilityEvent>;
     get onDidClose(): Event<void>;
     /**
      * Initialize the model with the current state from the main process
@@ -119,6 +133,10 @@ export declare class BrowserViewModel extends Disposable implements IBrowserView
     captureScreenshot(options?: IBrowserViewCaptureScreenshotOptions): Promise<VSBuffer>;
     dispatchKeyEvent(keyEvent: IBrowserViewKeyDownEvent): Promise<void>;
     focus(): Promise<void>;
+    findInPage(text: string, options?: IBrowserViewFindInPageOptions): Promise<void>;
+    stopFindInPage(keepSelection?: boolean): Promise<void>;
+    getSelectedText(): Promise<string>;
+    clearStorage(): Promise<void>;
     /**
      * Log navigation telemetry event
      */

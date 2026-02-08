@@ -1,5 +1,6 @@
 import type { CancellationToken } from '../../../../../../base/common/cancellation.js';
 import { Event } from '../../../../../../base/common/event.js';
+import { Disposable } from '../../../../../../base/common/lifecycle.js';
 import type { ICommandDetectionCapability } from '../../../../../../platform/terminal/common/capabilities/capabilities.js';
 import { ITerminalLogService } from '../../../../../../platform/terminal/common/terminal.js';
 import type { ITerminalInstance } from '../../../../terminal/browser/terminal.js';
@@ -12,7 +13,7 @@ import type { IMarker as IXtermMarker } from '@xterm/xterm';
  * wrong in this state, minimal verification is done in this mode since rich command detection is a
  * strong signal that it's behaving correctly.
  */
-export declare class RichExecuteStrategy implements ITerminalExecuteStrategy {
+export declare class RichExecuteStrategy extends Disposable implements ITerminalExecuteStrategy {
     private readonly _instance;
     private readonly _commandDetection;
     private readonly _logService;

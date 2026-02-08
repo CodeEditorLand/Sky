@@ -18,6 +18,7 @@ export interface IWorkbenchButtonBarOptions {
     telemetrySource?: string;
     buttonConfigProvider?: IButtonConfigProvider;
     small?: boolean;
+    disableWhileRunning?: boolean;
 }
 export declare class WorkbenchButtonBar extends ButtonBar {
     private readonly _options;

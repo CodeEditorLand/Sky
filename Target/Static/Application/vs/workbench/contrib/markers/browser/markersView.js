@@ -235,7 +235,7 @@ let MarkersView = class MarkersView2 extends FilterViewPane {
         if (markerOrChange instanceof Marker) {
           this.widget.updateMarker(markerOrChange);
         } else {
-          if (markerOrChange.added.size || markerOrChange.removed.size) {
+          if (markerOrChange.added.size || markerOrChange.removed.size || this.filters.activeFile) {
             this.resetWidget();
           } else {
             this.widget.update([...markerOrChange.updated]);

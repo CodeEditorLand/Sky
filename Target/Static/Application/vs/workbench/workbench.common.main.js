@@ -225,7 +225,7 @@ registerSingleton(
   1
   /* InstantiationType.Delayed */
 );
-import "./services/accounts/common/defaultAccount.js";
+import "./services/accounts/browser/defaultAccount.js";
 import "./contrib/telemetry/browser/telemetry.contribution.js";
 import "./contrib/preferences/browser/preferences.contribution.js";
 import "./contrib/preferences/browser/keybindingsEditorContribution.js";
@@ -248,6 +248,7 @@ import "./contrib/files/browser/fileActions.contribution.js";
 import "./contrib/files/browser/files.contribution.js";
 import "./contrib/bulkEdit/browser/bulkEditService.js";
 import "./contrib/bulkEdit/browser/preview/bulkEdit.contribution.js";
+import "./contrib/inlineCompletions/browser/renameSymbolTrackerService.js";
 import "./contrib/search/browser/search.contribution.js";
 import "./contrib/search/browser/searchView.js";
 import "./contrib/searchEditor/browser/searchEditor.contribution.js";

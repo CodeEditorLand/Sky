@@ -4,15 +4,7 @@ import { ServicesAccessor } from '../../../../../editor/browser/editorExtensions
 import { AgentSessionsViewerOrientation, IAgentSessionsControl } from './agentSessions.js';
 import { IChatEditorOptions } from '../widgetHosts/editor/chatEditor.js';
 import { PreferredGroup } from '../../../../services/editor/common/editorService.js';
-export declare class ShowAllAgentSessionsAction extends Action2 {
-    constructor();
-    run(accessor: ServicesAccessor): Promise<void>;
-}
-export declare class ShowRecentAgentSessionsAction extends Action2 {
-    constructor();
-    run(accessor: ServicesAccessor): Promise<void>;
-}
-export declare class HideAgentSessionsAction extends Action2 {
+export declare class ToggleShowAgentSessionsAction extends Action2 {
     constructor();
     run(accessor: ServicesAccessor): Promise<void>;
 }
@@ -32,6 +24,10 @@ export declare class ArchiveAllAgentSessionsAction extends Action2 {
     constructor();
     run(accessor: ServicesAccessor): Promise<void>;
 }
+export declare class MarkAllAgentSessionsReadAction extends Action2 {
+    constructor();
+    run(accessor: ServicesAccessor): Promise<void>;
+}
 export declare class ArchiveAgentSessionSectionAction extends Action2 {
     constructor();
     run(accessor: ServicesAccessor, context?: IAgentSessionSection): Promise<void>;
@@ -46,38 +42,38 @@ export declare class MarkAgentSessionSectionReadAction extends Action2 {
 }
 declare abstract class BaseAgentSessionAction extends Action2 {
     run(accessor: ServicesAccessor, context?: IAgentSession | IMarshalledAgentSessionContext): Promise<void>;
-    abstract runWithSession(session: IAgentSession, accessor: ServicesAccessor): Promise<void> | void;
+    abstract runWithSessions(sessions: IAgentSession[], accessor: ServicesAccessor): Promise<void> | void;
 }
 export declare class MarkAgentSessionUnreadAction extends BaseAgentSessionAction {
     constructor();
-    runWithSession(session: IAgentSession): void;
+    runWithSessions(sessions: IAgentSession[]): void;
 }
 export declare class MarkAgentSessionReadAction extends BaseAgentSessionAction {
     constructor();
-    runWithSession(session: IAgentSession): void;
+    runWithSessions(sessions: IAgentSession[]): void;
 }
 export declare class ArchiveAgentSessionAction extends BaseAgentSessionAction {
     constructor();
-    runWithSession(session: IAgentSession, accessor: ServicesAccessor): Promise<void>;
+    runWithSessions(sessions: IAgentSession[], accessor: ServicesAccessor): Promise<void>;
 }
 export declare class UnarchiveAgentSessionAction extends BaseAgentSessionAction {
     constructor();
-    runWithSession(session: IAgentSession): void;
+    runWithSessions(sessions: IAgentSession[]): void;
 }
 export declare class RenameAgentSessionAction extends BaseAgentSessionAction {
     constructor();
-    runWithSession(session: IAgentSession, accessor: ServicesAccessor): Promise<void>;
+    runWithSessions(sessions: IAgentSession[], accessor: ServicesAccessor): Promise<void>;
 }
 export declare class DeleteAgentSessionAction extends BaseAgentSessionAction {
     constructor();
-    runWithSession(session: IAgentSession, accessor: ServicesAccessor): Promise<void>;
+    runWithSessions(sessions: IAgentSession[], accessor: ServicesAccessor): Promise<void>;
 }
 export declare class DeleteAllLocalSessionsAction extends Action2 {
     constructor();
     run(accessor: ServicesAccessor, ...args: unknown[]): Promise<void>;
 }
 declare abstract class BaseOpenAgentSessionAction extends BaseAgentSessionAction {
-    runWithSession(session: IAgentSession, accessor: ServicesAccessor): Promise<void>;
+    runWithSessions(sessions: IAgentSession[], accessor: ServicesAccessor): Promise<void>;
     protected abstract getTargetGroup(): PreferredGroup;
     protected abstract getOptions(): IChatEditorOptions;
 }

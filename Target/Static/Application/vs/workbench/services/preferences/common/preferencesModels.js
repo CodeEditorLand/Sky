@@ -616,6 +616,7 @@ class DefaultSettings extends Disposable {
     const objectProperties = prop.type === "object" ? prop.properties : void 0;
     const objectPatternProperties = prop.type === "object" ? prop.patternProperties : void 0;
     const objectAdditionalProperties = prop.type === "object" ? prop.additionalProperties : void 0;
+    const propertyNames = prop.type === "object" ? prop.propertyNames : void 0;
     let enumToUse = prop.enum;
     let enumDescriptions = prop.markdownEnumDescriptions ?? prop.enumDescriptions;
     let enumDescriptionsAreMarkdown = !!prop.markdownEnumDescriptions;
@@ -660,6 +661,7 @@ class DefaultSettings extends Disposable {
       objectProperties,
       objectPatternProperties,
       objectAdditionalProperties,
+      propertyNames,
       enum: enumToUse,
       enumDescriptions,
       enumDescriptionsAreMarkdown,

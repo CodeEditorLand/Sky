@@ -15,6 +15,7 @@ export interface CodeBlockEntry {
     readonly vulns: readonly IMarkdownVulnerability[];
     readonly codemapperUri?: URI;
     readonly isEdit?: boolean;
+    readonly subAgentInvocationId?: string;
 }
 export declare class CodeBlockModelCollection extends Disposable {
     private readonly tag;

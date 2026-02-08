@@ -1,5 +1,4 @@
 import { IObservable, ITransaction } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
 import { ISingleEditOperation } from '../../../../common/core/editOperation.js';
 import { StringEdit } from '../../../../common/core/edits/stringEdit.js';
@@ -13,9 +12,10 @@ import { InlineCompletionViewData, InlineCompletionViewKind } from '../view/inli
 import { InlineSuggestionEditKind } from './editKind.js';
 import { IInlineSuggestDataAction, IInlineSuggestDataActionEdit, InlineSuggestData, InlineSuggestionList, PartialAcceptance, RenameInfo, SnippetInfo } from './provideInlineCompletions.js';
 import { InlineSuggestAlternativeAction } from './InlineSuggestAlternativeAction.js';
+import { TextModelValueReference } from './textModelValueReference.js';
 export type InlineSuggestionItem = InlineEditItem | InlineCompletionItem;
 export declare namespace InlineSuggestionItem {
-    function create(data: InlineSuggestData, textModel: ITextModel, shouldDiffEdit?: boolean): InlineSuggestionItem;
+    function create(data: InlineSuggestData, textModel: TextModelValueReference, shouldDiffEdit?: boolean): InlineSuggestionItem;
 }
 export type InlineSuggestionAction = IInlineSuggestionActionEdit | IInlineSuggestionActionJumpTo;
 export interface IInlineSuggestionActionEdit {
@@ -23,20 +23,30 @@ export interface IInlineSuggestionActionEdit {
     textReplacement: TextReplacement;
     snippetInfo: SnippetInfo | undefined;
     stringEdit: StringEdit;
-    uri: URI | undefined;
+    target: TextModelValueReference;
     alternativeAction: InlineSuggestAlternativeAction | undefined;
 }
 export interface IInlineSuggestionActionJumpTo {
     kind: 'jumpTo';
     position: Position;
     offset: number;
-    uri: URI | undefined;
+    target: TextModelValueReference;
 }
 declare abstract class InlineSuggestionItemBase {
     protected readonly _data: InlineSuggestData;
     readonly identity: InlineSuggestionIdentity;
     readonly hint: InlineSuggestHint | undefined;
-    constructor(_data: InlineSuggestData, identity: InlineSuggestionIdentity, hint: InlineSuggestHint | undefined);
+    /**
+     * Reference to the text model this item targets.
+     * For cross-file edits, this may differ from the current editor's model.
+     */
+    readonly originalTextRef: TextModelValueReference;
+    constructor(_data: InlineSuggestData, identity: InlineSuggestionIdentity, hint: InlineSuggestHint | undefined, 
+    /**
+     * Reference to the text model this item targets.
+     * For cross-file edits, this may differ from the current editor's model.
+     */
+    originalTextRef: TextModelValueReference);
     abstract get action(): InlineSuggestionAction | undefined;
     /**
      * A reference to the original inline completion list this inline completion has been constructed from.
@@ -109,7 +119,7 @@ export declare class InlineCompletionItem extends InlineSuggestionItemBase {
     private readonly _originalRange;
     readonly snippetInfo: SnippetInfo | undefined;
     readonly additionalTextEdits: readonly ISingleEditOperation[];
-    static create(data: InlineSuggestData, textModel: ITextModel, action: IInlineSuggestDataActionEdit): InlineCompletionItem;
+    static create(data: InlineSuggestData, textModel: TextModelValueReference, action: IInlineSuggestDataActionEdit): InlineCompletionItem;
     readonly isInlineEdit = false;
     private constructor();
     get action(): IInlineSuggestionActionEdit;
@@ -128,7 +138,8 @@ export declare class InlineEditItem extends InlineSuggestionItemBase {
     private readonly _edits;
     private readonly _lastChangePartOfInlineEdit;
     private readonly _inlineEditModelVersion;
-    static create(data: InlineSuggestData, textModel: ITextModel, shouldDiffEdit?: boolean): InlineEditItem;
+    static createForTest(textModel: TextModelValueReference, range: Range, newText: string): InlineEditItem;
+    static create(data: InlineSuggestData, textModel: TextModelValueReference, shouldDiffEdit?: boolean): InlineEditItem;
     readonly snippetInfo: SnippetInfo | undefined;
     readonly additionalTextEdits: readonly ISingleEditOperation[];
     readonly isInlineEdit = true;

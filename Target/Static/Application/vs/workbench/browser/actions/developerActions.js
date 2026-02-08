@@ -234,7 +234,7 @@ class ToggleScreencastModeAction extends Action2 {
         keyboardMarker.innerText = "";
         append(keyboardMarker, $("span.key", {}, `Backspace`));
       }
-      clearKeyboardScheduler.schedule();
+      clearKeyboardScheduler.schedule(keyboardMarkerTimeout);
     }));
     disposables.add(onCompositionEnd.event((e) => {
       composing = void 0;
@@ -250,7 +250,7 @@ class ToggleScreencastModeAction extends Action2 {
         } else {
           imeBackSpace = true;
         }
-        clearKeyboardScheduler.schedule();
+        clearKeyboardScheduler.schedule(keyboardMarkerTimeout);
         return;
       }
       if (e.isComposing) {
@@ -289,7 +289,7 @@ class ToggleScreencastModeAction extends Action2 {
         append(keyboardMarker, $("span.key", {}, keyLabel ?? ""));
       }
       length++;
-      clearKeyboardScheduler.schedule();
+      clearKeyboardScheduler.schedule(keyboardMarkerTimeout);
     }));
     ToggleScreencastModeAction.disposable = disposables;
   }
@@ -610,6 +610,9 @@ class PolicyDiagnosticsAction extends Action2 {
 `;
           }
         }
+        const policyData = defaultAccountService.policyData;
+        content += `| policyData | ${policyData ? JSON.stringify(policyData) : "No Policy Data"} |
+`;
         content += "\n";
       } else {
         content += "*No default account configured*\n\n";

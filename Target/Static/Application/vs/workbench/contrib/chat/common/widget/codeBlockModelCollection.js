@@ -60,7 +60,8 @@ let CodeBlockModelCollection = class CodeBlockModelCollection2 extends Disposabl
       model: entry.model.then((ref) => ref.object.textEditorModel),
       vulns: entry.vulns,
       codemapperUri: entry.codemapperUri,
-      isEdit: entry.isEdit
+      isEdit: entry.isEdit,
+      subAgentInvocationId: entry.subAgentInvocationId
     };
   }
   getOrCreate(sessionResource, chat, codeBlockIndex) {
@@ -150,6 +151,7 @@ let CodeBlockModelCollection = class CodeBlockModelCollection2 extends Disposabl
       if (entry) {
         entry.codemapperUri = codeblockUri.uri;
         entry.isEdit = codeblockUri.isEdit;
+        entry.subAgentInvocationId = codeblockUri.subAgentInvocationId;
       }
       newText = codeblockUri.textWithoutResult;
     }

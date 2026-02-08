@@ -26,6 +26,10 @@ function isResponseVM(item) {
   return !!item && typeof item.setVote !== "undefined";
 }
 __name(isResponseVM, "isResponseVM");
+function isPendingDividerVM(item) {
+  return !!item && typeof item === "object" && item.kind === "pendingDivider";
+}
+__name(isPendingDividerVM, "isPendingDividerVM");
 function isChatTreeItem(item) {
   return isRequestVM(item) || isResponseVM(item);
 }
@@ -57,10 +61,11 @@ let ChatViewModel = class ChatViewModel2 extends Disposable {
   get sessionResource() {
     return this._model.sessionResource;
   }
-  constructor(_model, codeBlockModelCollection, instantiationService) {
+  constructor(_model, codeBlockModelCollection, _options, instantiationService) {
     super();
     this._model = _model;
     this.codeBlockModelCollection = codeBlockModelCollection;
+    this._options = _options;
     this.instantiationService = instantiationService;
     this._onDidDisposeModel = this._register(new Emitter());
     this.onDidDisposeModel = this._onDidDisposeModel.event;
@@ -77,6 +82,7 @@ let ChatViewModel = class ChatViewModel2 extends Disposable {
       }
     });
     this._register(_model.onDidDispose(() => this._onDidDisposeModel.fire()));
+    this._register(_model.onDidChangePendingRequests(() => this._onDidChange.fire(null)));
     this._register(_model.onDidChange((e) => {
       if (e.kind === "addRequest") {
         const requestModel = this.instantiationService.createInstance(ChatRequestViewModel, e.request);
@@ -112,7 +118,36 @@ let ChatViewModel = class ChatViewModel2 extends Disposable {
     this._items.push(response);
   }
   getItems() {
-    return this._items.filter((item) => !item.shouldBeRemovedOnSend || item.shouldBeRemovedOnSend.afterUndoStop);
+    let items = this._items.filter((item) => !item.shouldBeRemovedOnSend || item.shouldBeRemovedOnSend.afterUndoStop);
+    if (this._options?.maxVisibleItems !== void 0 && items.length > this._options.maxVisibleItems) {
+      items = items.slice(-this._options.maxVisibleItems);
+    }
+    const pendingRequests = this._model.getPendingRequests();
+    if (pendingRequests.length > 0) {
+      const steeringRequests = pendingRequests.filter(
+        (p) => p.kind === "steering"
+        /* ChatRequestQueueKind.Steering */
+      );
+      const queuedRequests = pendingRequests.filter(
+        (p) => p.kind === "queued"
+        /* ChatRequestQueueKind.Queued */
+      );
+      if (steeringRequests.length > 0) {
+        items.push({ kind: "pendingDivider", id: "pending-divider-steering", sessionResource: this._model.sessionResource, isComplete: true, dividerKind: "steering", currentRenderedHeight: void 0 });
+        for (const pending of steeringRequests) {
+          const requestVM = this.instantiationService.createInstance(ChatRequestViewModel, pending.request, pending.kind);
+          items.push(requestVM);
+        }
+      }
+      if (queuedRequests.length > 0) {
+        items.push({ kind: "pendingDivider", id: "pending-divider-queued", sessionResource: this._model.sessionResource, isComplete: true, dividerKind: "queued", currentRenderedHeight: void 0 });
+        for (const pending of queuedRequests) {
+          const requestVM = this.instantiationService.createInstance(ChatRequestViewModel, pending.request, pending.kind);
+          items.push(requestVM);
+        }
+      }
+    }
+    return items;
   }
   get editing() {
     return this._editing;
@@ -129,7 +164,7 @@ let ChatViewModel = class ChatViewModel2 extends Disposable {
   }
 };
 ChatViewModel = __decorate([
-  __param(2, IInstantiationService)
+  __param(3, IInstantiationService)
 ], ChatViewModel);
 class ChatRequestViewModel {
   static {
@@ -143,10 +178,6 @@ class ChatRequestViewModel {
    */
   get dataId() {
     return `${this.id}_${this._model.version + (this._model.response?.isComplete ? 1 : 0)}`;
-  }
-  /** @deprecated */
-  get sessionId() {
-    return this._model.session.sessionId;
   }
   get sessionResource() {
     return this._model.session.sessionResource;
@@ -196,8 +227,15 @@ class ChatRequestViewModel {
   get modelId() {
     return this._model.modelId;
   }
-  constructor(_model) {
+  get timestamp() {
+    return this._model.timestamp;
+  }
+  get pendingKind() {
+    return this._pendingKind;
+  }
+  constructor(_model, _pendingKind) {
     this._model = _model;
+    this._pendingKind = _pendingKind;
   }
 }
 let ChatResponseViewModel = class ChatResponseViewModel2 extends Disposable {
@@ -212,10 +250,6 @@ let ChatResponseViewModel = class ChatResponseViewModel2 extends Disposable {
   }
   get dataId() {
     return this._model.id + `_${this._modelChangeCount}` + (this.isLast ? "_last" : "");
-  }
-  /** @deprecated */
-  get sessionId() {
-    return this._model.session.sessionId;
   }
   get sessionResource() {
     return this._model.session.sessionResource;
@@ -358,6 +392,7 @@ export {
   ChatViewModel,
   assertIsResponseVM,
   isChatTreeItem,
+  isPendingDividerVM,
   isRequestVM,
   isResponseVM
 };

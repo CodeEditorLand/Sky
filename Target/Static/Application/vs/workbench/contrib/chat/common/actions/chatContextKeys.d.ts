@@ -12,6 +12,7 @@ export declare namespace ChatContextKeys {
     const currentlyEditingInput: RawContextKey<boolean>;
     const isResponse: RawContextKey<boolean>;
     const isRequest: RawContextKey<boolean>;
+    const isPendingRequest: RawContextKey<boolean>;
     const itemId: RawContextKey<string>;
     const lastItemId: RawContextKey<string[]>;
     const editApplied: RawContextKey<boolean>;
@@ -22,14 +23,18 @@ export declare namespace ChatContextKeys {
     const inChatEditor: RawContextKey<boolean>;
     const inChatTerminalToolOutput: RawContextKey<boolean>;
     const chatModeKind: RawContextKey<ChatModeKind>;
-    const chatToolCount: RawContextKey<number>;
-    const chatToolGroupingThreshold: RawContextKey<number>;
+    const chatModeName: RawContextKey<string>;
     const supported: import("../../../../../platform/contextkey/common/contextkey.js").ContextKeyExpression | undefined;
     const enabled: RawContextKey<boolean>;
     /**
      * True when the chat widget is locked to the coding agent session.
      */
     const lockedToCodingAgent: RawContextKey<boolean>;
+    /**
+     * True when the chat session has a customAgentTarget defined in its contribution,
+     * which means the mode picker should be shown with filtered custom agents.
+     */
+    const chatSessionHasCustomAgentTarget: RawContextKey<boolean>;
     const agentSupportsAttachments: RawContextKey<boolean>;
     const withinEditSessionDiff: RawContextKey<boolean>;
     const filePartOfEditSession: RawContextKey<boolean>;
@@ -49,6 +54,7 @@ export declare namespace ChatContextKeys {
     const chatSessionType: RawContextKey<string>;
     const hasFileAttachments: RawContextKey<boolean>;
     const chatSessionIsEmpty: RawContextKey<boolean>;
+    const hasPendingRequests: RawContextKey<boolean>;
     const remoteJobCreating: RawContextKey<boolean>;
     const hasRemoteCodingAgent: RawContextKey<boolean>;
     const hasCanDelegateProviders: RawContextKey<boolean>;
@@ -90,7 +96,6 @@ export declare namespace ChatContextKeys {
     };
     const panelLocation: RawContextKey<ViewContainerLocation>;
     const agentSessionsViewerFocused: RawContextKey<boolean>;
-    const agentSessionsViewerLimited: RawContextKey<boolean>;
     const agentSessionsViewerOrientation: RawContextKey<number>;
     const agentSessionsViewerPosition: RawContextKey<number>;
     const agentSessionsViewerVisible: RawContextKey<boolean>;
@@ -98,10 +103,9 @@ export declare namespace ChatContextKeys {
     const agentSessionSection: RawContextKey<string>;
     const isArchivedAgentSession: RawContextKey<boolean>;
     const isReadAgentSession: RawContextKey<boolean>;
+    const hasMultipleAgentSessionsSelected: RawContextKey<boolean>;
     const hasAgentSessionChanges: RawContextKey<boolean>;
     const isKatexMathElement: RawContextKey<boolean>;
-    const inAgentSessionProjection: RawContextKey<boolean>;
-    const agentStatusHasNotifications: RawContextKey<boolean>;
 }
 export declare namespace ChatContextKeyExprs {
     const inEditingMode: import("../../../../../platform/contextkey/common/contextkey.js").ContextKeyExpression | undefined;

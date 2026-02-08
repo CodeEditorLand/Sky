@@ -18,84 +18,37 @@ import { ChatEditorInput, showClearEditingSessionConfirmation } from "../widgetH
 import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { ChatConfiguration } from "../../common/constants.js";
-import { ACTION_ID_NEW_CHAT, CHAT_CATEGORY } from "../actions/chatActions.js";
+import { ACTION_ID_NEW_CHAT } from "../actions/chatActions.js";
 import { IViewsService } from "../../../../services/views/common/viewsService.js";
 import { ICommandService } from "../../../../../platform/commands/common/commands.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { AgentSessionsPicker } from "./agentSessionsPicker.js";
-import { ActiveEditorContext, AuxiliaryBarMaximizedContext } from "../../../../common/contextkeys.js";
+import { ActiveEditorContext } from "../../../../common/contextkeys.js";
 import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
-const showSessionsSubmenu = new MenuId("chatShowSessionsSubmenu");
-MenuRegistry.appendMenuItem(MenuId.ChatWelcomeContext, {
-  submenu: showSessionsSubmenu,
-  title: localize2("chat.showSessions", "Show Sessions"),
-  group: "0_sessions",
-  order: 1,
-  when: ChatContextKeys.inChatEditor.negate()
-});
-class ShowAllAgentSessionsAction extends Action2 {
+import { coalesce } from "../../../../../base/common/arrays.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+const AGENT_SESSIONS_CATEGORY = localize2("chatSessions", "Chat Agent Sessions");
+class ToggleShowAgentSessionsAction extends Action2 {
   static {
-    __name(this, "ShowAllAgentSessionsAction");
+    __name(this, "ToggleShowAgentSessionsAction");
   }
   constructor() {
     super({
-      id: "workbench.action.chat.showAllAgentSessions",
-      title: localize2("chat.showSessions.all", "All"),
-      toggled: ContextKeyExpr.and(ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true), ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsShowRecentOnly}`, false)),
+      id: "workbench.action.chat.toggleShowAgentSessions",
+      title: localize2("chat.showSessions", "Show Sessions"),
+      toggled: ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true),
       menu: {
-        id: showSessionsSubmenu,
-        group: "navigation",
-        order: 1
+        id: MenuId.ChatWelcomeContext,
+        group: "0_sessions",
+        order: 2,
+        when: ChatContextKeys.inChatEditor.negate()
       }
     });
   }
   async run(accessor) {
     const configurationService = accessor.get(IConfigurationService);
-    await configurationService.updateValue(ChatConfiguration.ChatViewSessionsEnabled, true);
-    await configurationService.updateValue(ChatConfiguration.ChatViewSessionsShowRecentOnly, false);
-  }
-}
-class ShowRecentAgentSessionsAction extends Action2 {
-  static {
-    __name(this, "ShowRecentAgentSessionsAction");
-  }
-  constructor() {
-    super({
-      id: "workbench.action.chat.showRecentAgentSessions",
-      title: localize2("chat.showSessions.recent", "Recent"),
-      toggled: ContextKeyExpr.and(ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true), ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsShowRecentOnly}`, true)),
-      menu: {
-        id: showSessionsSubmenu,
-        group: "navigation",
-        order: 2
-      }
-    });
-  }
-  async run(accessor) {
-    const configurationService = accessor.get(IConfigurationService);
-    await configurationService.updateValue(ChatConfiguration.ChatViewSessionsEnabled, true);
-    await configurationService.updateValue(ChatConfiguration.ChatViewSessionsShowRecentOnly, true);
-  }
-}
-class HideAgentSessionsAction extends Action2 {
-  static {
-    __name(this, "HideAgentSessionsAction");
-  }
-  constructor() {
-    super({
-      id: "workbench.action.chat.hideAgentSessions",
-      title: localize2("chat.showSessions.none", "None"),
-      toggled: ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, false),
-      menu: {
-        id: showSessionsSubmenu,
-        group: "navigation",
-        order: 3
-      }
-    });
-  }
-  async run(accessor) {
-    const configurationService = accessor.get(IConfigurationService);
-    await configurationService.updateValue(ChatConfiguration.ChatViewSessionsEnabled, false);
+    const currentValue = configurationService.getValue(ChatConfiguration.ChatViewSessionsEnabled);
+    await configurationService.updateValue(ChatConfiguration.ChatViewSessionsEnabled, !currentValue);
   }
 }
 const agentSessionsOrientationSubmenu = new MenuId("chatAgentSessionsOrientationSubmenu");
@@ -103,7 +56,7 @@ MenuRegistry.appendMenuItem(MenuId.ChatWelcomeContext, {
   submenu: agentSessionsOrientationSubmenu,
   title: localize2("chat.sessionsOrientation", "Sessions Orientation"),
   group: "0_sessions",
-  order: 2,
+  order: 1,
   when: ChatContextKeys.inChatEditor.negate()
 });
 class SetAgentSessionsOrientationStackedAction extends Action2 {
@@ -115,7 +68,7 @@ class SetAgentSessionsOrientationStackedAction extends Action2 {
       id: "workbench.action.chat.setAgentSessionsOrientationStacked",
       title: localize2("chat.sessionsOrientation.stacked", "Stacked"),
       toggled: ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsOrientation}`, "stacked"),
-      precondition: ContextKeyExpr.and(ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true), AuxiliaryBarMaximizedContext.negate()),
+      precondition: ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true),
       menu: {
         id: agentSessionsOrientationSubmenu,
         group: "navigation",
@@ -137,7 +90,7 @@ class SetAgentSessionsOrientationSideBySideAction extends Action2 {
       id: "workbench.action.chat.setAgentSessionsOrientationSideBySide",
       title: localize2("chat.sessionsOrientation.sideBySide", "Side by Side"),
       toggled: ContextKeyExpr.notEquals(`config.${ChatConfiguration.ChatViewSessionsOrientation}`, "stacked"),
-      precondition: ContextKeyExpr.and(ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true), AuxiliaryBarMaximizedContext.negate()),
+      precondition: ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true),
       menu: {
         id: agentSessionsOrientationSubmenu,
         group: "navigation",
@@ -170,7 +123,7 @@ class PickAgentSessionAction extends Action2 {
           when: ActiveEditorContext.isEqualTo(ChatEditorInput.EditorID)
         }
       ],
-      category: CHAT_CATEGORY,
+      category: AGENT_SESSIONS_CATEGORY,
       icon: Codicon.history,
       f1: true,
       precondition: ChatContextKeys.enabled
@@ -191,7 +144,7 @@ class ArchiveAllAgentSessionsAction extends Action2 {
       id: "workbench.action.chat.archiveAllAgentSessions",
       title: localize2("archiveAll.label", "Archive All Workspace Agent Sessions"),
       precondition: ChatContextKeys.enabled,
-      category: CHAT_CATEGORY,
+      category: AGENT_SESSIONS_CATEGORY,
       f1: true
     });
   }
@@ -215,6 +168,38 @@ class ArchiveAllAgentSessionsAction extends Action2 {
     }
   }
 }
+class MarkAllAgentSessionsReadAction extends Action2 {
+  static {
+    __name(this, "MarkAllAgentSessionsReadAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.chat.markAllAgentSessionsRead",
+      title: localize2("markAllRead.label", "Mark All as Read"),
+      precondition: ChatContextKeys.enabled,
+      category: AGENT_SESSIONS_CATEGORY,
+      f1: true,
+      menu: {
+        id: MenuId.AgentSessionsContext,
+        group: "0_read",
+        order: 2,
+        when: ChatContextKeys.isArchivedAgentSession.negate()
+        // no read state for archived sessions
+      }
+    });
+  }
+  async run(accessor) {
+    const agentSessionsService = accessor.get(IAgentSessionsService);
+    const sessionsToMarkRead = agentSessionsService.model.sessions.filter((session) => !session.isArchived() && !session.isRead());
+    if (sessionsToMarkRead.length === 0) {
+      return;
+    }
+    for (const session of sessionsToMarkRead) {
+      session.setRead(true);
+    }
+  }
+}
+const ConfirmArchiveStorageKey = "chat.sessions.confirmArchive";
 class ArchiveAgentSessionSectionAction extends Action2 {
   static {
     __name(this, "ArchiveAgentSessionSectionAction");
@@ -248,13 +233,29 @@ class ArchiveAgentSessionSectionAction extends Action2 {
       return;
     }
     const dialogService = accessor.get(IDialogService);
-    const confirmed = await dialogService.confirm({
-      message: context.sessions.length === 1 ? localize("archiveSectionSessions.confirmSingle", "Are you sure you want to archive 1 agent session from '{0}'?", context.label) : localize("archiveSectionSessions.confirm", "Are you sure you want to archive {0} agent sessions from '{1}'?", context.sessions.length, context.label),
-      detail: localize("archiveSectionSessions.detail", "You can unarchive sessions later if needed from the sessions view."),
-      primaryButton: localize("archiveSectionSessions.archive", "Archive All")
-    });
-    if (!confirmed.confirmed) {
-      return;
+    const storageService = accessor.get(IStorageService);
+    const skipConfirmation = storageService.getBoolean(ConfirmArchiveStorageKey, 0, false);
+    if (!skipConfirmation) {
+      const confirmed = await dialogService.confirm({
+        message: context.sessions.length === 1 ? localize("archiveSectionSessions.confirmSingle", "Are you sure you want to archive 1 agent session from '{0}'?", context.label) : localize("archiveSectionSessions.confirm", "Are you sure you want to archive {0} agent sessions from '{1}'?", context.sessions.length, context.label),
+        detail: localize("archiveSectionSessions.detail", "You can unarchive sessions later if needed from the sessions view."),
+        primaryButton: localize("archiveSectionSessions.archive", "Archive All"),
+        checkbox: {
+          label: localize("doNotAskAgain", "Do not ask me again")
+        }
+      });
+      if (!confirmed.confirmed) {
+        return;
+      }
+      if (confirmed.checkboxChecked) {
+        storageService.store(
+          ConfirmArchiveStorageKey,
+          true,
+          0,
+          0
+          /* StorageTarget.USER */
+        );
+      }
     }
     for (const session of context.sessions) {
       session.setArchived(true);
@@ -294,12 +295,28 @@ class UnarchiveAgentSessionSectionAction extends Action2 {
       return;
     }
     const dialogService = accessor.get(IDialogService);
-    const confirmed = await dialogService.confirm({
-      message: context.sessions.length === 1 ? localize("unarchiveSectionSessions.confirmSingle", "Are you sure you want to unarchive 1 agent session?") : localize("unarchiveSectionSessions.confirm", "Are you sure you want to unarchive {0} agent sessions?", context.sessions.length),
-      primaryButton: localize("unarchiveSectionSessions.unarchive", "Unarchive All")
-    });
-    if (!confirmed.confirmed) {
-      return;
+    const storageService = accessor.get(IStorageService);
+    const skipConfirmation = storageService.getBoolean(ConfirmArchiveStorageKey, 0, false);
+    if (!skipConfirmation) {
+      const confirmed = await dialogService.confirm({
+        message: context.sessions.length === 1 ? localize("unarchiveSectionSessions.confirmSingle", "Are you sure you want to unarchive 1 agent session?") : localize("unarchiveSectionSessions.confirm", "Are you sure you want to unarchive {0} agent sessions?", context.sessions.length),
+        primaryButton: localize("unarchiveSectionSessions.unarchive", "Unarchive All"),
+        checkbox: {
+          label: localize("doNotAskAgain", "Do not ask me again")
+        }
+      });
+      if (!confirmed.confirmed) {
+        return;
+      }
+      if (confirmed.checkboxChecked) {
+        storageService.store(
+          ConfirmArchiveStorageKey,
+          true,
+          0,
+          0
+          /* StorageTarget.USER */
+        );
+      }
     }
     for (const session of context.sessions) {
       session.setArchived(false);
@@ -341,18 +358,21 @@ class BaseAgentSessionAction extends Action2 {
   async run(accessor, context) {
     const agentSessionsService = accessor.get(IAgentSessionsService);
     const viewsService = accessor.get(IViewsService);
-    let session;
+    let sessions = [];
     if (isMarshalledAgentSessionContext(context)) {
-      session = agentSessionsService.getSession(context.session.resource);
-    } else {
-      session = context;
+      sessions = coalesce((context.sessions ?? [context.session]).map((session) => agentSessionsService.getSession(session.resource)));
+    } else if (context) {
+      sessions = [context];
     }
-    if (!session) {
+    if (sessions.length === 0) {
       const chatView = viewsService.getActiveViewWithId(ChatViewId);
-      session = chatView?.getFocusedSessions().at(0);
+      const focused = chatView?.getFocusedSessions().at(0);
+      if (focused) {
+        sessions = [focused];
+      }
     }
-    if (session) {
-      await this.runWithSession(session, accessor);
+    if (sessions.length > 0) {
+      await this.runWithSessions(sessions, accessor);
     }
   }
 }
@@ -366,7 +386,7 @@ class MarkAgentSessionUnreadAction extends BaseAgentSessionAction {
       title: localize2("markUnread", "Mark as Unread"),
       menu: {
         id: MenuId.AgentSessionsContext,
-        group: "1_edit",
+        group: "0_read",
         order: 1,
         when: ContextKeyExpr.and(
           ChatContextKeys.isReadAgentSession,
@@ -376,8 +396,10 @@ class MarkAgentSessionUnreadAction extends BaseAgentSessionAction {
       }
     });
   }
-  runWithSession(session) {
-    session.setRead(false);
+  runWithSessions(sessions) {
+    for (const session of sessions) {
+      session.setRead(false);
+    }
   }
 }
 class MarkAgentSessionReadAction extends BaseAgentSessionAction {
@@ -390,7 +412,7 @@ class MarkAgentSessionReadAction extends BaseAgentSessionAction {
       title: localize2("markRead", "Mark as Read"),
       menu: {
         id: MenuId.AgentSessionsContext,
-        group: "1_edit",
+        group: "0_read",
         order: 1,
         when: ContextKeyExpr.and(
           ChatContextKeys.isReadAgentSession.negate(),
@@ -400,8 +422,10 @@ class MarkAgentSessionReadAction extends BaseAgentSessionAction {
       }
     });
   }
-  runWithSession(session) {
-    session.setRead(true);
+  runWithSessions(sessions) {
+    for (const session of sessions) {
+      session.setRead(true);
+    }
   }
 }
 class ArchiveAgentSessionAction extends BaseAgentSessionAction {
@@ -435,18 +459,20 @@ class ArchiveAgentSessionAction extends BaseAgentSessionAction {
       }]
     });
   }
-  async runWithSession(session, accessor) {
+  async runWithSessions(sessions, accessor) {
     const chatService = accessor.get(IChatService);
-    const chatModel = chatService.getSession(session.resource);
     const dialogService = accessor.get(IDialogService);
-    if (chatModel && !await showClearEditingSessionConfirmation(chatModel, dialogService, {
-      isArchiveAction: true,
-      titleOverride: localize("archiveSession", "Archive chat with pending edits?"),
-      messageOverride: localize("archiveSessionDescription", "You have pending changes in this chat session.")
-    })) {
-      return;
+    for (const session of sessions) {
+      const chatModel = chatService.getSession(session.resource);
+      if (chatModel && !await showClearEditingSessionConfirmation(chatModel, dialogService, {
+        isArchiveAction: true,
+        titleOverride: localize("archiveSession", "Archive chat with pending edits?"),
+        messageOverride: localize("archiveSessionDescription", "You have pending changes in this chat session.")
+      })) {
+        return;
+      }
+      session.setArchived(true);
     }
-    session.setArchived(true);
   }
 }
 class UnarchiveAgentSessionAction extends BaseAgentSessionAction {
@@ -479,8 +505,10 @@ class UnarchiveAgentSessionAction extends BaseAgentSessionAction {
       }]
     });
   }
-  runWithSession(session) {
-    session.setArchived(false);
+  runWithSessions(sessions) {
+    for (const session of sessions) {
+      session.setArchived(false);
+    }
   }
 }
 class RenameAgentSessionAction extends BaseAgentSessionAction {
@@ -491,6 +519,7 @@ class RenameAgentSessionAction extends BaseAgentSessionAction {
     super({
       id: AGENT_SESSION_RENAME_ACTION_ID,
       title: localize2("rename", "Rename..."),
+      precondition: ChatContextKeys.hasMultipleAgentSessionsSelected.negate(),
       keybinding: {
         primary: 60,
         mac: {
@@ -508,7 +537,11 @@ class RenameAgentSessionAction extends BaseAgentSessionAction {
       }
     });
   }
-  async runWithSession(session, accessor) {
+  async runWithSessions(sessions, accessor) {
+    const session = sessions.at(0);
+    if (!session) {
+      return;
+    }
     const quickInputService = accessor.get(IQuickInputService);
     const chatService = accessor.get(IChatService);
     const title = await quickInputService.input({ prompt: localize("newChatTitle", "New agent session title"), value: session.label });
@@ -533,20 +566,25 @@ class DeleteAgentSessionAction extends BaseAgentSessionAction {
       }
     });
   }
-  async runWithSession(session, accessor) {
+  async runWithSessions(sessions, accessor) {
+    if (sessions.length === 0) {
+      return;
+    }
     const chatService = accessor.get(IChatService);
     const dialogService = accessor.get(IDialogService);
     const widgetService = accessor.get(IChatWidgetService);
     const confirmed = await dialogService.confirm({
-      message: localize("deleteSession.confirm", "Are you sure you want to delete this chat session?"),
+      message: sessions.length === 1 ? localize("deleteSession.confirm", "Are you sure you want to delete this chat session?") : localize("deleteSessions.confirm", "Are you sure you want to delete {0} chat sessions?", sessions.length),
       detail: localize("deleteSession.detail", "This action cannot be undone."),
       primaryButton: localize("deleteSession.delete", "Delete")
     });
     if (!confirmed.confirmed) {
       return;
     }
-    await widgetService.getWidgetBySessionResource(session.resource)?.clear();
-    await chatService.removeHistoryEntry(session.resource);
+    for (const session of sessions) {
+      await widgetService.getWidgetBySessionResource(session.resource)?.clear();
+      await chatService.removeHistoryEntry(session.resource);
+    }
   }
 }
 class DeleteAllLocalSessionsAction extends Action2 {
@@ -558,7 +596,7 @@ class DeleteAllLocalSessionsAction extends Action2 {
       id: "workbench.action.chat.clearHistory",
       title: localize2("agentSessions.deleteAll", "Delete All Local Workspace Chat Sessions"),
       precondition: ChatContextKeys.enabled,
-      category: CHAT_CATEGORY,
+      category: AGENT_SESSIONS_CATEGORY,
       f1: true
     });
   }
@@ -587,13 +625,16 @@ class BaseOpenAgentSessionAction extends BaseAgentSessionAction {
   static {
     __name(this, "BaseOpenAgentSessionAction");
   }
-  async runWithSession(session, accessor) {
+  async runWithSessions(sessions, accessor) {
     const chatWidgetService = accessor.get(IChatWidgetService);
-    const uri = session.resource;
-    await chatWidgetService.openSession(uri, this.getTargetGroup(), {
-      ...this.getOptions(),
-      pinned: true
-    });
+    const targetGroup = this.getTargetGroup();
+    for (const session of sessions) {
+      const uri = session.resource;
+      await chatWidgetService.openSession(uri, targetGroup, {
+        ...this.getOptions(),
+        pinned: true
+      });
+    }
   }
 }
 class OpenAgentSessionInEditorGroupAction extends BaseOpenAgentSessionAction {
@@ -703,8 +744,7 @@ class RefreshAgentSessionsViewerAction extends Action2 {
       menu: {
         id: MenuId.AgentSessionsToolbar,
         group: "navigation",
-        order: 1,
-        when: ChatContextKeys.agentSessionsViewerLimited.negate()
+        order: 1
       }
     });
   }
@@ -724,8 +764,7 @@ class FindAgentSessionInViewerAction extends Action2 {
       menu: {
         id: MenuId.AgentSessionsToolbar,
         group: "navigation",
-        order: 2,
-        when: ChatContextKeys.agentSessionsViewerLimited.negate()
+        order: 2
       }
     });
   }
@@ -818,9 +857,9 @@ class ShowAgentSessionsSidebar extends UpdateChatViewWidthAction {
     super({
       id: ShowAgentSessionsSidebar.ID,
       title: ShowAgentSessionsSidebar.TITLE,
-      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.agentSessionsViewerOrientation.isEqualTo(AgentSessionsViewerOrientation.Stacked), AuxiliaryBarMaximizedContext.negate()),
+      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.agentSessionsViewerOrientation.isEqualTo(AgentSessionsViewerOrientation.Stacked)),
       f1: true,
-      category: CHAT_CATEGORY
+      category: AGENT_SESSIONS_CATEGORY
     });
   }
   getOrientation() {
@@ -841,9 +880,9 @@ class HideAgentSessionsSidebar extends UpdateChatViewWidthAction {
     super({
       id: HideAgentSessionsSidebar.ID,
       title: HideAgentSessionsSidebar.TITLE,
-      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.agentSessionsViewerOrientation.isEqualTo(AgentSessionsViewerOrientation.SideBySide), AuxiliaryBarMaximizedContext.negate()),
+      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.agentSessionsViewerOrientation.isEqualTo(AgentSessionsViewerOrientation.SideBySide)),
       f1: true,
-      category: CHAT_CATEGORY
+      category: AGENT_SESSIONS_CATEGORY
     });
   }
   getOrientation() {
@@ -864,9 +903,9 @@ class ToggleAgentSessionsSidebar extends Action2 {
     super({
       id: ToggleAgentSessionsSidebar.ID,
       title: ToggleAgentSessionsSidebar.TITLE,
-      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, AuxiliaryBarMaximizedContext.negate()),
+      precondition: ChatContextKeys.enabled,
       f1: true,
-      category: CHAT_CATEGORY
+      category: AGENT_SESSIONS_CATEGORY
     });
   }
   async run(accessor) {
@@ -893,7 +932,7 @@ class FocusAgentSessionsAction extends Action2 {
       id: FocusAgentSessionsAction.id,
       title: localize2("chat.focusAgentSessionsViewer.label", "Focus Agent Sessions"),
       precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewSessionsEnabled}`, true)),
-      category: CHAT_CATEGORY,
+      category: AGENT_SESSIONS_CATEGORY,
       f1: true
     });
   }
@@ -923,11 +962,11 @@ export {
   DeleteAllLocalSessionsAction,
   FindAgentSessionInViewerAction,
   FocusAgentSessionsAction,
-  HideAgentSessionsAction,
   HideAgentSessionsSidebar,
   MarkAgentSessionReadAction,
   MarkAgentSessionSectionReadAction,
   MarkAgentSessionUnreadAction,
+  MarkAllAgentSessionsReadAction,
   OpenAgentSessionInEditorGroupAction,
   OpenAgentSessionInNewEditorGroupAction,
   OpenAgentSessionInNewWindowAction,
@@ -937,9 +976,8 @@ export {
   SetAgentSessionsOrientationSideBySideAction,
   SetAgentSessionsOrientationStackedAction,
   ShowAgentSessionsSidebar,
-  ShowAllAgentSessionsAction,
-  ShowRecentAgentSessionsAction,
   ToggleAgentSessionsSidebar,
+  ToggleShowAgentSessionsAction,
   UnarchiveAgentSessionAction,
   UnarchiveAgentSessionSectionAction
 };

@@ -12,7 +12,7 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import "./hover.css";
-import { DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../base/common/lifecycle.js";
 import { Emitter } from "../../../base/common/event.js";
 import * as dom from "../../../base/browser/dom.js";
 import { IKeybindingService } from "../../keybinding/common/keybinding.js";
@@ -81,6 +81,15 @@ let HoverWidget = class HoverWidget2 extends Widget {
     }
     this._isLocked = value;
     this._hoverContainer.classList.toggle("locked", this._isLocked);
+  }
+  /**
+   * Adds an element to be tracked by this hover's mouse tracker. Mouse events on
+   * this element will be considered as being "inside" the hover, preventing it
+   * from closing. This is used for nested hovers where the child hover's container
+   * should be treated as part of the parent hover.
+   */
+  addMouseTrackingElement(element) {
+    return this._lockMouseTracker.addElement(element);
   }
   constructor(options, _keybindingService, _configurationService, _markdownRenderer, _accessibilityService) {
     super();
@@ -562,6 +571,26 @@ class CompositeMouseTracker extends Widget {
     if (!this._isMouseIn) {
       this._onMouseOut.fire();
     }
+  }
+  /**
+   * Adds an element to be tracked by this mouse tracker. Mouse events on this
+   * element will be considered as being "inside" the tracked area.
+   */
+  addElement(element) {
+    if (this._elements.includes(element)) {
+      return Disposable.None;
+    }
+    this._elements.push(element);
+    const store = new DisposableStore();
+    store.add(dom.addDisposableListener(element, dom.EventType.MOUSE_OVER, () => this._onTargetMouseOver()));
+    store.add(dom.addDisposableListener(element, dom.EventType.MOUSE_LEAVE, () => this._onTargetMouseLeave()));
+    store.add(toDisposable(() => {
+      const index = this._elements.indexOf(element);
+      if (index >= 0) {
+        this._elements.splice(index, 1);
+      }
+    }));
+    return store;
   }
 }
 class ElementHoverTarget {

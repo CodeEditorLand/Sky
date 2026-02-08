@@ -24,6 +24,7 @@ var CommentContextKeys;
   CommentContextKeys2.commentThreadContext = new RawContextKey("commentThread", void 0, { type: "string", description: nls.localize("commentThread", "The context value of the comment thread") });
   CommentContextKeys2.commentControllerContext = new RawContextKey("commentController", void 0, { type: "string", description: nls.localize("commentController", "The comment controller id associated with a comment thread") });
   CommentContextKeys2.commentFocused = new RawContextKey("commentFocused", false, { type: "boolean", description: nls.localize("commentFocused", "Set when the comment is focused") });
+  CommentContextKeys2.commentWidgetVisible = new RawContextKey("commentWidgetVisible", false, { type: "boolean", description: nls.localize("commentWidgetVisible", "Set when a comment widget is visible in the editor") });
   CommentContextKeys2.commentingEnabled = new RawContextKey("commentingEnabled", true, {
     description: nls.localize("commentingEnabled", "Whether commenting functionality is enabled"),
     type: "boolean"

@@ -30,7 +30,7 @@ function registerChatCopyActions() {
     run(accessor, context) {
       const clipboardService = accessor.get(IClipboardService);
       const chatWidgetService = accessor.get(IChatWidgetService);
-      const widget = context?.sessionResource && chatWidgetService.getWidgetBySessionResource(context.sessionResource) || chatWidgetService.lastFocusedWidget;
+      const widget = (isRequestVM(context) || isResponseVM(context)) && chatWidgetService.getWidgetBySessionResource(context.sessionResource) || chatWidgetService.lastFocusedWidget;
       if (widget) {
         const viewModel = widget.viewModel;
         const sessionAsText = viewModel?.getItems().filter((item) => isRequestVM(item) || isResponseVM(item) && !item.errorDetails?.responseIsFiltered).map((item) => stringifyItem(item)).join("\n\n");
@@ -72,6 +72,9 @@ function registerChatCopyActions() {
       const selectedText = nativeSelection?.toString();
       if (widget && selectedText && selectedText.length > 0 && dom.isAncestor(dom.getActiveElement(), widget.domNode)) {
         await clipboardService.writeText(selectedText);
+        return;
+      }
+      if (!isRequestVM(item) && !isResponseVM(item)) {
         return;
       }
       const text = stringifyItem(item, false);

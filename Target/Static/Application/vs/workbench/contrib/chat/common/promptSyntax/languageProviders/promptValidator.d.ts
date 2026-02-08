@@ -39,9 +39,13 @@ export declare class PromptValidator {
     private validateHandoffs;
     private validateInfer;
     private validateTarget;
+    private validateUserInvokable;
+    private validateDisableModelInvocation;
+    private validateAgentsAttribute;
 }
 export declare function getValidAttributeNames(promptType: PromptsType, includeNonRecommended: boolean, isGitHubTarget: boolean): string[];
 export declare function isNonRecommendedAttribute(attributeName: string): boolean;
+export declare function getAttributeDescription(attributeName: string, promptType: PromptsType): string | undefined;
 export declare const knownGithubCopilotTools: string[];
 export declare function isGithubTarget(promptType: PromptsType, target: string | undefined): boolean;
 export declare class PromptValidatorContribution extends Disposable {

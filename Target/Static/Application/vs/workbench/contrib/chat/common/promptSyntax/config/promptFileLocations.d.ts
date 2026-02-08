@@ -22,6 +22,10 @@ export declare const AGENT_FILE_EXTENSION = ".agent.md";
  */
 export declare const SKILL_FILENAME = "SKILL.md";
 /**
+ * Default hook file name (case insensitive).
+ */
+export declare const HOOKS_FILENAME = "hooks.json";
+/**
  * Copilot custom instructions file name.
  */
 export declare const COPILOT_CUSTOM_INSTRUCTIONS_FILENAME = "copilot-instructions.md";
@@ -42,6 +46,10 @@ export declare const LEGACY_MODE_DEFAULT_SOURCE_FOLDER = ".github/chatmodes";
  */
 export declare const AGENTS_SOURCE_FOLDER = ".github/agents";
 /**
+ * Hooks folder.
+ */
+export declare const HOOKS_SOURCE_FOLDER = ".github/hooks";
+/**
  * Tracks where prompt files originate from.
  */
 export declare enum PromptFileSource {
@@ -49,6 +57,9 @@ export declare enum PromptFileSource {
     CopilotPersonal = "copilot-personal",
     ClaudePersonal = "claude-personal",
     ClaudeWorkspace = "claude-workspace",
+    ClaudeWorkspaceLocal = "claude-workspace-local",
+    AgentsWorkspace = "agents-workspace",
+    AgentsPersonal = "agents-personal",
     ConfigWorkspace = "config-workspace",
     ConfigPersonal = "config-personal",
     ExtensionContribution = "extension-contribution",
@@ -69,6 +80,15 @@ export interface IResolvedPromptSourceFolder {
     readonly uri: URI;
     readonly source: PromptFileSource;
     readonly storage: PromptsStorage;
+    /**
+     * The original path string before resolution (e.g., '~/.copilot/agents' or '.github/agents').
+     * Used for display purposes.
+     */
+    readonly displayPath?: string;
+    /**
+     * Whether this is a default location (vs user-configured).
+     */
+    readonly isDefault?: boolean;
 }
 /**
  * Resolved prompt markdown file with source and storage type.
@@ -94,6 +114,10 @@ export declare const DEFAULT_PROMPT_SOURCE_FOLDERS: readonly IPromptSourceFolder
  * Default agent source folders.
  */
 export declare const DEFAULT_AGENT_SOURCE_FOLDERS: readonly IPromptSourceFolder[];
+/**
+ * Default hook file paths.
+ */
+export declare const DEFAULT_HOOK_FILE_PATHS: readonly IPromptSourceFolder[];
 /**
  * Gets the prompt file type from the provided path.
  */

@@ -12,9 +12,9 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import { h } from "../../../../base/browser/dom.js";
-import { Disposable } from "../../../../base/common/lifecycle.js";
-import { autorun, constObservable, observableFromEvent } from "../../../../base/common/observable.js";
-import { MenuEntryActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { getActionBarActions, MenuEntryActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { autorun, constObservable, derived, observableFromEvent } from "../../../../base/common/observable.js";
 import { MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
 import { IMenuService, MenuId, MenuItemAction } from "../../../../platform/actions/common/actions.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
@@ -30,28 +30,70 @@ let FloatingEditorToolbar = class FloatingEditorToolbar2 extends Disposable {
   constructor(editor, instantiationService, keybindingService, menuService) {
     super();
     const editorObs = this._register(observableCodeEditor(editor));
-    const menu = this._register(menuService.createMenu(MenuId.EditorContent, editor.contextKeyService));
-    const menuIsEmptyObs = observableFromEvent(this, menu.onDidChange, () => menu.getActions().length === 0);
+    const editorUriObs = derived((reader) => editorObs.model.read(reader)?.uri);
+    const widget = this._register(instantiationService.createInstance(FloatingEditorToolbarWidget, MenuId.EditorContent, editor.contextKeyService, editorUriObs));
     this._register(autorun((reader) => {
-      const menuIsEmpty = menuIsEmptyObs.read(reader);
-      if (menuIsEmpty) {
+      const hasActions = widget.hasActions.read(reader);
+      if (!hasActions) {
         return;
       }
-      const container = h("div.floating-menu-overlay-widget");
-      container.root.style.height = "28px";
-      const toolbar = instantiationService.createInstance(MenuWorkbenchToolBar, container.root, MenuId.EditorContent, {
+      reader.store.add(editorObs.createOverlayWidget({
+        allowEditorOverflow: false,
+        domNode: widget.element,
+        minContentWidthInPx: constObservable(0),
+        position: constObservable({
+          preference: 1
+          /* OverlayWidgetPositionPreference.BOTTOM_RIGHT_CORNER */
+        })
+      }));
+    }));
+  }
+};
+FloatingEditorToolbar = __decorate([
+  __param(1, IInstantiationService),
+  __param(2, IKeybindingService),
+  __param(3, IMenuService)
+], FloatingEditorToolbar);
+let FloatingEditorToolbarWidget = class FloatingEditorToolbarWidget2 extends Disposable {
+  static {
+    __name(this, "FloatingEditorToolbarWidget");
+  }
+  constructor(_menuId, _scopedContextKeyService, _toolbarContext, instantiationService, keybindingService, menuService) {
+    super();
+    const menu = this._register(menuService.createMenu(_menuId, _scopedContextKeyService));
+    const menuGroupsObs = observableFromEvent(this, menu.onDidChange, () => menu.getActions());
+    const menuPrimaryActionIdObs = derived((reader) => {
+      const menuGroups = menuGroupsObs.read(reader);
+      const { primary } = getActionBarActions(menuGroups, () => true);
+      return primary.length > 0 ? primary[0].id : void 0;
+    });
+    this.hasActions = derived((reader) => menuGroupsObs.read(reader).length > 0);
+    this.element = h("div.floating-menu-overlay-widget").root;
+    this._register(toDisposable(() => this.element.remove()));
+    this.element.style.height = "26px";
+    this._register(autorun((reader) => {
+      const hasActions = this.hasActions.read(reader);
+      const menuPrimaryActionId = menuPrimaryActionIdObs.read(reader);
+      if (!hasActions) {
+        return;
+      }
+      const toolbar = instantiationService.createInstance(MenuWorkbenchToolBar, this.element, _menuId, {
         actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
           if (!(action instanceof MenuItemAction)) {
             return void 0;
           }
-          const keybinding = keybindingService.lookupKeybinding(action.id);
-          if (!keybinding) {
-            return void 0;
-          }
           return instantiationService.createInstance(class extends MenuEntryActionViewItem {
+            render(container) {
+              super.render(container);
+              if (action.id === menuPrimaryActionId) {
+                this.element?.classList.add("primary");
+              }
+            }
             updateLabel() {
+              const keybinding = keybindingService.lookupKeybinding(action.id);
+              const keybindingLabel = keybinding ? keybinding.getLabel() : void 0;
               if (this.options.label && this.label) {
-                this.label.textContent = `${this._commandAction.label} (${keybinding.getLabel()})`;
+                this.label.textContent = keybindingLabel ? `${this._commandAction.label} (${keybindingLabel})` : this._commandAction.label;
               }
             }
           }, action, { ...options, keybindingNotRenderedWithLabel: true });
@@ -68,27 +110,19 @@ let FloatingEditorToolbar = class FloatingEditorToolbar2 extends Disposable {
       });
       reader.store.add(toolbar);
       reader.store.add(autorun((reader2) => {
-        const model = editorObs.model.read(reader2);
-        toolbar.context = model?.uri;
-      }));
-      reader.store.add(editorObs.createOverlayWidget({
-        allowEditorOverflow: false,
-        domNode: container.root,
-        minContentWidthInPx: constObservable(0),
-        position: constObservable({
-          preference: 1
-          /* OverlayWidgetPositionPreference.BOTTOM_RIGHT_CORNER */
-        })
+        const context = _toolbarContext.read(reader2);
+        toolbar.context = context;
       }));
     }));
   }
 };
-FloatingEditorToolbar = __decorate([
-  __param(1, IInstantiationService),
-  __param(2, IKeybindingService),
-  __param(3, IMenuService)
-], FloatingEditorToolbar);
+FloatingEditorToolbarWidget = __decorate([
+  __param(3, IInstantiationService),
+  __param(4, IKeybindingService),
+  __param(5, IMenuService)
+], FloatingEditorToolbarWidget);
 export {
-  FloatingEditorToolbar
+  FloatingEditorToolbar,
+  FloatingEditorToolbarWidget
 };
 //# sourceMappingURL=floatingMenu.js.map

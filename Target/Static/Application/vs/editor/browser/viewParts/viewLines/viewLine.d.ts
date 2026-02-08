@@ -30,5 +30,6 @@ export declare class ViewLine implements IVisibleLine {
     onMonospaceAssumptionsInvalidated(): void;
     getVisibleRangesForRange(lineNumber: number, startColumn: number, endColumn: number, context: DomReadingContext): VisibleRanges | null;
     getColumnOfNodeOffset(spanNode: HTMLElement, offset: number): number;
+    resetCachedWidth(): void;
 }
 export declare function getColumnOfNodeOffset(characterMapping: CharacterMapping, spanNode: HTMLElement, offset: number): number;

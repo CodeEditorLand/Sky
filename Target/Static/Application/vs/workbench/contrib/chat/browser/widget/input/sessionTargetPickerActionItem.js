@@ -20,76 +20,102 @@ import { ICommandService } from "../../../../../../platform/commands/common/comm
 import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
 import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
 import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
 import { IChatSessionsService } from "../../../common/chatSessionsService.js";
-import { AgentSessionProviders, getAgentSessionProvider, getAgentSessionProviderIcon, getAgentSessionProviderName } from "../../agentSessions/agentSessions.js";
+import { AgentSessionProviders, getAgentSessionProvider, getAgentSessionProviderDescription, getAgentSessionProviderIcon, getAgentSessionProviderName, isFirstPartyAgentSessionProvider } from "../../agentSessions/agentSessions.js";
 import { ChatInputPickerActionViewItem } from "./chatInputPickerActionItem.js";
+const firstPartyCategory = { label: localize("chat.sessionTarget.category.agent", "Agent Types"), order: 1 };
+const otherCategory = { label: localize("chat.sessionTarget.category.other", "Other"), order: 2 };
 let SessionTypePickerActionItem = class SessionTypePickerActionItem2 extends ChatInputPickerActionViewItem {
   static {
     __name(this, "SessionTypePickerActionItem");
   }
-  constructor(action, chatSessionPosition, delegate, pickerOptions, actionWidgetService, keybindingService, contextKeyService, chatSessionsService, commandService, openerService) {
+  constructor(action, chatSessionPosition, delegate, pickerOptions, actionWidgetService, keybindingService, contextKeyService, chatSessionsService, commandService, openerService, telemetryService) {
     const actionProvider = {
       getActions: /* @__PURE__ */ __name(() => {
-        const currentType = this.delegate.getActiveSessionProvider();
-        const actions = [];
+        const currentType = this._getSelectedSessionType();
+        const actions = [...this._getAdditionalActions().map((a) => ({ ...action, ...a }))];
         for (const sessionTypeItem of this._sessionTypeItems) {
+          if (!this._isVisible(sessionTypeItem.type)) {
+            continue;
+          }
           actions.push({
             ...action,
             id: sessionTypeItem.commandId,
             label: sessionTypeItem.label,
-            tooltip: sessionTypeItem.description,
             checked: currentType === sessionTypeItem.type,
             icon: getAgentSessionProviderIcon(sessionTypeItem.type),
-            enabled: true,
+            enabled: this._isSessionTypeEnabled(sessionTypeItem.type),
+            category: this._getSessionCategory(sessionTypeItem),
+            description: this._getSessionDescription(sessionTypeItem),
+            tooltip: "",
+            hover: { content: sessionTypeItem.hoverDescription, position: this.pickerOptions.hoverPosition },
             run: /* @__PURE__ */ __name(async () => {
-              if (this.delegate.setActiveSessionProvider) {
-                this.delegate.setActiveSessionProvider(sessionTypeItem.type);
-              } else {
-                this.commandService.executeCommand(sessionTypeItem.commandId, this.chatSessionPosition);
-              }
-              if (this.element) {
-                this.renderLabel(this.element);
-              }
+              this._run(sessionTypeItem);
             }, "run")
           });
         }
         return actions;
       }, "getActions")
     };
-    const actionBarActions = [];
-    const learnMoreUrl = "https://code.visualstudio.com/docs/copilot/agents/overview";
-    actionBarActions.push({
-      id: "workbench.action.chat.agentOverview.learnMore",
-      label: localize("chat.learnMore", "Learn about agent types..."),
-      tooltip: learnMoreUrl,
-      class: void 0,
-      enabled: true,
-      run: /* @__PURE__ */ __name(async () => {
-        await openerService.open(URI.parse(learnMoreUrl));
-      }, "run")
-    });
+    const actionBarActionProvider = {
+      getActions: /* @__PURE__ */ __name(() => {
+        return [this._getLearnMore()];
+      }, "getActions")
+    };
     const sessionTargetPickerOptions = {
       actionProvider,
-      actionBarActions,
-      actionBarActionProvider: void 0,
-      showItemKeybindings: true
+      actionBarActionProvider,
+      showItemKeybindings: true,
+      reporter: { id: "ChatSessionTypePicker", name: `ChatSessionTypePicker`, includeOptions: true }
     };
-    super(action, sessionTargetPickerOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService);
+    super(action, sessionTargetPickerOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
     this.chatSessionPosition = chatSessionPosition;
     this.delegate = delegate;
+    this.keybindingService = keybindingService;
     this.chatSessionsService = chatSessionsService;
     this.commandService = commandService;
+    this.openerService = openerService;
     this._sessionTypeItems = [];
     this._updateAgentSessionItems();
     this._register(this.chatSessionsService.onDidChangeAvailability(() => {
       this._updateAgentSessionItems();
     }));
   }
+  _run(sessionTypeItem) {
+    if (this.delegate.setActiveSessionProvider) {
+      this.delegate.setActiveSessionProvider(sessionTypeItem.type);
+    } else {
+      this.commandService.executeCommand(sessionTypeItem.commandId, this.chatSessionPosition);
+    }
+    if (this.element) {
+      this.renderLabel(this.element);
+    }
+  }
+  _getSelectedSessionType() {
+    return this.delegate.getActiveSessionProvider();
+  }
+  _getAdditionalActions() {
+    return [];
+  }
+  _getLearnMore() {
+    const learnMoreUrl = "https://code.visualstudio.com/docs/copilot/agents/overview";
+    return {
+      id: "workbench.action.chat.agentOverview.learnMore",
+      label: localize("chat.learnMoreAgentTypes", "Learn about agent types..."),
+      tooltip: learnMoreUrl,
+      class: void 0,
+      enabled: true,
+      run: /* @__PURE__ */ __name(async () => {
+        await this.openerService.open(URI.parse(learnMoreUrl));
+      }, "run")
+    };
+  }
   _updateAgentSessionItems() {
     const localSessionItem = {
       type: AgentSessionProviders.Local,
       label: getAgentSessionProviderName(AgentSessionProviders.Local),
-      description: localize("chat.sessionTarget.local.description", "Local chat session"),
+      hoverDescription: getAgentSessionProviderDescription(AgentSessionProviders.Local),
       commandId: `workbench.action.chat.openNewChatSessionInPlace.${AgentSessionProviders.Local}`
     };
     const agentSessionItems = [localSessionItem];
@@ -102,20 +128,32 @@ let SessionTypePickerActionItem = class SessionTypePickerActionItem2 extends Cha
       agentSessionItems.push({
         type: agentSessionType,
         label: getAgentSessionProviderName(agentSessionType),
-        description: contribution.description,
-        commandId: `workbench.action.chat.openNewChatSessionInPlace.${contribution.type}`
+        hoverDescription: getAgentSessionProviderDescription(agentSessionType),
+        commandId: contribution.canDelegate ? `workbench.action.chat.openNewChatSessionInPlace.${contribution.type}` : `workbench.action.chat.openNewChatSessionExternal.${contribution.type}`
       });
     }
     this._sessionTypeItems = agentSessionItems;
   }
+  _isVisible(type) {
+    return true;
+  }
+  _isSessionTypeEnabled(type) {
+    return true;
+  }
+  _getSessionCategory(sessionTypeItem) {
+    return isFirstPartyAgentSessionProvider(sessionTypeItem.type) ? firstPartyCategory : otherCategory;
+  }
+  _getSessionDescription(sessionTypeItem) {
+    return void 0;
+  }
   renderLabel(element) {
     this.setAriaLabelAttributes(element);
-    const currentType = this.delegate.getActiveSessionProvider();
+    const currentType = this._getSelectedSessionType();
     const label = getAgentSessionProviderName(currentType ?? AgentSessionProviders.Local);
     const icon = getAgentSessionProviderIcon(currentType ?? AgentSessionProviders.Local);
     const labelElements = [];
     labelElements.push(...renderLabelWithIcons(`$(${icon.id})`));
-    if (currentType !== AgentSessionProviders.Local) {
+    if (currentType !== AgentSessionProviders.Local || !this.pickerOptions.onlyShowIconsForDefaultActions.get()) {
       labelElements.push(dom.$("span.chat-input-picker-label", void 0, label));
     }
     labelElements.push(...renderLabelWithIcons(`$(chevron-down)`));
@@ -129,7 +167,8 @@ SessionTypePickerActionItem = __decorate([
   __param(6, IContextKeyService),
   __param(7, IChatSessionsService),
   __param(8, ICommandService),
-  __param(9, IOpenerService)
+  __param(9, IOpenerService),
+  __param(10, ITelemetryService)
 ], SessionTypePickerActionItem);
 export {
   SessionTypePickerActionItem

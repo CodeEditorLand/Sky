@@ -276,7 +276,7 @@ let LanguageModelToolsExtensionPointHandler = class LanguageModelToolsExtensionP
           const tools = [];
           const toolSets = [];
           for (const toolName of toolSet.tools) {
-            const toolObj = languageModelToolsService.getToolByName(toolName, true);
+            const toolObj = languageModelToolsService.getToolByName(toolName);
             if (toolObj) {
               tools.push(toolObj);
               continue;
@@ -421,6 +421,7 @@ Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
   renderer: new SyncDescriptor(LanguageModelToolSetDataRenderer)
 });
 export {
-  LanguageModelToolsExtensionPointHandler
+  LanguageModelToolsExtensionPointHandler,
+  toToolSetKey
 };
 //# sourceMappingURL=languageModelToolsContribution.js.map

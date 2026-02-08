@@ -175,7 +175,7 @@ suite("RubyCommandLinePresenter", () => {
   const presenter = new RubyCommandLinePresenter();
   test("should return Ruby presentation for ruby -e command", () => {
     const result = presenter.present({
-      commandLine: `ruby -e "puts 'hello'"`,
+      commandLine: { forDisplay: `ruby -e "puts 'hello'"` },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -187,7 +187,7 @@ suite("RubyCommandLinePresenter", () => {
   });
   test("should return undefined for non-ruby commands", () => {
     const result = presenter.present({
-      commandLine: "echo hello",
+      commandLine: { forDisplay: "echo hello" },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -196,7 +196,7 @@ suite("RubyCommandLinePresenter", () => {
   });
   test("should return undefined for regular ruby script execution", () => {
     const result = presenter.present({
-      commandLine: "ruby script.rb",
+      commandLine: { forDisplay: "ruby script.rb" },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -205,7 +205,7 @@ suite("RubyCommandLinePresenter", () => {
   });
   test("should handle PowerShell backtick escaping", () => {
     const result = presenter.present({
-      commandLine: 'ruby -e "puts `"hello`""',
+      commandLine: { forDisplay: 'ruby -e "puts `"hello`""' },
       shell: "pwsh",
       os: 1
       /* OperatingSystem.Windows */

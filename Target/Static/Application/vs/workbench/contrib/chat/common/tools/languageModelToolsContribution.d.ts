@@ -1,4 +1,5 @@
 import { IJSONSchema } from '../../../../../base/common/jsonSchema.js';
+import { ExtensionIdentifier } from '../../../../../platform/extensions/common/extensions.js';
 import { IProductService } from '../../../../../platform/product/common/productService.js';
 import { IWorkbenchContribution } from '../../../../common/contributions.js';
 import { ILanguageModelToolsService } from './languageModelToolsService.js';
@@ -29,6 +30,7 @@ export interface IRawToolSetContribution {
     icon?: string;
     tools: string[];
 }
+export declare function toToolSetKey(extensionIdentifier: ExtensionIdentifier, toolName: string): string;
 export declare class LanguageModelToolsExtensionPointHandler implements IWorkbenchContribution {
     static readonly ID = "workbench.contrib.toolsExtensionPointHandler";
     private _registrationDisposables;

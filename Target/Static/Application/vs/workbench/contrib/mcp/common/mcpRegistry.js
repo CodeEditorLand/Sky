@@ -107,8 +107,10 @@ let McpRegistry = class McpRegistry2 extends Disposable {
   }
   registerCollection(collection) {
     const currentCollections = this._collections.get();
-    const toReplace = currentCollections.find((c) => c.lazy && c.id === collection.id);
-    if (toReplace) {
+    const toReplace = currentCollections.find((c) => c.id === collection.id);
+    if (toReplace && !toReplace.lazy) {
+      return Disposable.None;
+    } else if (toReplace) {
       this._collections.set(currentCollections.map((c) => c === toReplace ? collection : c), void 0);
     } else {
       this._collections.set([...currentCollections, collection].sort((a, b) => (a.presentation?.order || 0) - (b.presentation?.order || 0)), void 0);

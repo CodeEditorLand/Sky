@@ -55,6 +55,17 @@ function computeMaxBufferColumnWidth(buffer, cols) {
   return maxWidth;
 }
 __name(computeMaxBufferColumnWidth, "computeMaxBufferColumnWidth");
+function vtBoundaryMatches(newVT, oldVT, slicePoint, windowSize = 50) {
+  const start = Math.max(0, slicePoint - windowSize);
+  const end = slicePoint;
+  for (let i = start; i < end; i++) {
+    if (newVT.charCodeAt(i) !== oldVT.charCodeAt(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+__name(vtBoundaryMatches, "vtBoundaryMatches");
 var ChatTerminalMirrorMetrics;
 (function(ChatTerminalMirrorMetrics2) {
   ChatTerminalMirrorMetrics2[ChatTerminalMirrorMetrics2["MirrorRowCount"] = 10] = "MirrorRowCount";
@@ -196,7 +207,11 @@ let DetachedTerminalCommandMirror = class DetachedTerminalCommandMirror2 extends
       return void 0;
     }
     await new Promise((resolve) => {
-      if (!this._lastVT) {
+      const canAppend = !!this._lastVT && vt.text.length >= this._lastVT.length && this._vtBoundaryMatches(vt.text, this._lastVT.length);
+      if (!canAppend) {
+        if (this._lastVT) {
+          detached.xterm.reset();
+        }
         if (vt.text) {
           detached.xterm.write(vt.text, resolve);
         } else {
@@ -281,19 +296,22 @@ let DetachedTerminalCommandMirror = class DetachedTerminalCommandMirror2 extends
       const colorProvider = {
         getBackgroundColor: /* @__PURE__ */ __name((theme) => getChatTerminalBackgroundColor(theme, this._contextKeyService), "getBackgroundColor")
       };
+      const processInfo = new DetachedProcessInfo({ initialCwd: "" });
       const detached = await this._terminalService.createDetachedTerminal({
         cols: this._xtermTerminal.raw.cols ?? 80,
         rows: 10,
         readonly: false,
-        processInfo: new DetachedProcessInfo({ initialCwd: "" }),
+        processInfo,
         disableOverviewRuler: true,
         colorProvider
       });
       if (this._store.isDisposed) {
+        processInfo.dispose();
         detached.dispose();
         throw new CancellationError();
       }
       this._detachedTerminal = detached;
+      this._register(processInfo);
       this._register(detached);
       this._register(detached.onData((data) => this._onDidInputEmitter.fire(data)));
       return detached;
@@ -390,9 +408,12 @@ let DetachedTerminalCommandMirror = class DetachedTerminalCommandMirror2 extends
       }
       return;
     }
-    const canAppend = !!this._lastVT && startLine >= previousCursor;
+    const canAppend = !!this._lastVT && startLine >= previousCursor && vt.text.length >= this._lastVT.length && this._vtBoundaryMatches(vt.text, this._lastVT.length);
     await new Promise((resolve) => {
-      if (!this._lastVT || !canAppend) {
+      if (!canAppend) {
+        if (this._lastVT) {
+          detachedRaw.reset();
+        }
         if (vt.text) {
           detachedRaw.write(vt.text, resolve);
         } else {
@@ -421,6 +442,12 @@ let DetachedTerminalCommandMirror = class DetachedTerminalCommandMirror2 extends
   }
   _getAbsoluteCursorY(raw) {
     return raw.buffer.active.baseY + raw.buffer.active.cursorY;
+  }
+  /**
+   * Checks if the new VT text matches the old VT around the boundary where we would slice.
+   */
+  _vtBoundaryMatches(newVT, slicePoint) {
+    return vtBoundaryMatches(newVT, this._lastVT, slicePoint);
   }
 };
 DetachedTerminalCommandMirror = __decorate([
@@ -451,7 +478,13 @@ let DetachedTerminalSnapshotMirror = class DetachedTerminalSnapshotMirror2 exten
           return getChatTerminalBackgroundColor(theme, this._contextKeyService, storedBackground);
         }, "getBackgroundColor")
       }
-    }).then((terminal) => this._register(terminal));
+    }).then((terminal) => {
+      if (this._store.isDisposed) {
+        terminal.dispose();
+        return terminal;
+      }
+      return this._register(terminal);
+    });
   }
   async _getTerminal() {
     if (!this._detachedTerminal) {
@@ -465,6 +498,9 @@ let DetachedTerminalSnapshotMirror = class DetachedTerminalSnapshotMirror2 exten
   }
   async attach(container) {
     const terminal = await this._getTerminal();
+    if (this._store.isDisposed) {
+      return;
+    }
     container.classList.add("chat-terminal-output-terminal");
     const needsAttach = this._attachedContainer !== container || container.firstChild === null;
     if (needsAttach) {
@@ -483,6 +519,9 @@ let DetachedTerminalSnapshotMirror = class DetachedTerminalSnapshotMirror2 exten
       return { lineCount: this._lastRenderedLineCount ?? output.lineCount, maxColumnWidth: this._lastRenderedMaxColumnWidth };
     }
     const terminal = await this._getTerminal();
+    if (this._store.isDisposed) {
+      return void 0;
+    }
     if (this._container) {
       this._applyTheme(this._container);
     }
@@ -495,6 +534,9 @@ let DetachedTerminalSnapshotMirror = class DetachedTerminalSnapshotMirror2 exten
       return { lineCount: 0, maxColumnWidth: 0 };
     }
     await new Promise((resolve) => terminal.xterm.write(text, resolve));
+    if (this._store.isDisposed) {
+      return void 0;
+    }
     this._dirty = false;
     this._lastRenderedLineCount = lineCount;
     if (this._shouldComputeMaxColumnWidth(lineCount)) {
@@ -540,6 +582,7 @@ export {
   DetachedTerminalCommandMirror,
   DetachedTerminalSnapshotMirror,
   computeMaxBufferColumnWidth,
-  getCommandOutputSnapshot
+  getCommandOutputSnapshot,
+  vtBoundaryMatches
 };
 //# sourceMappingURL=chatTerminalCommandMirror.js.map

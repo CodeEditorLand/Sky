@@ -26,6 +26,7 @@ export declare const buttonHoverBackground: string;
 export declare const buttonBorder: string;
 export declare const buttonSecondaryForeground: string;
 export declare const buttonSecondaryBackground: string;
+export declare const buttonSecondaryBorder: string;
 export declare const buttonSecondaryHoverBackground: string;
 export declare const radioActiveForeground: string;
 export declare const radioActiveBackground: string;

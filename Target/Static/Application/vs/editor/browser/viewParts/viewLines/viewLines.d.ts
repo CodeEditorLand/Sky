@@ -59,6 +59,7 @@ export declare class ViewLines extends ViewPart implements IViewLines {
      */
     private _getLineNumberFor;
     getLineWidth(lineNumber: number): number;
+    resetLineWidthCaches(): void;
     linesVisibleRangesForRange(_range: Range, includeNewLines: boolean): LineVisibleRanges[] | null;
     private _visibleRangesForLineRange;
     private _lineIsRenderedRTL;

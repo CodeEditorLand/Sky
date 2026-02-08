@@ -14,6 +14,8 @@ class ViewPart extends ViewEventHandler {
     this._context.removeEventHandler(this);
     super.dispose();
   }
+  onBeforeRender(viewportData) {
+  }
 }
 var PartFingerprint;
 (function(PartFingerprint2) {

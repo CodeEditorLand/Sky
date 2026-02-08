@@ -1,5 +1,6 @@
 import type { CancellationToken } from '../../../../../../base/common/cancellation.js';
 import { Event } from '../../../../../../base/common/event.js';
+import { Disposable } from '../../../../../../base/common/lifecycle.js';
 import { ITerminalLogService } from '../../../../../../platform/terminal/common/terminal.js';
 import { type ITerminalExecuteStrategy, type ITerminalExecuteStrategyResult } from './executeStrategy.js';
 import type { IMarker as IXtermMarker } from '@xterm/xterm';
@@ -10,7 +11,7 @@ import { ITerminalInstance } from '../../../../terminal/browser/terminal.js';
  * with `sendText` instead of `shellIntegration.executeCommand` and relying on idle events instead
  * of execution events.
  */
-export declare class NoneExecuteStrategy implements ITerminalExecuteStrategy {
+export declare class NoneExecuteStrategy extends Disposable implements ITerminalExecuteStrategy {
     private readonly _instance;
     private readonly _hasReceivedUserInput;
     private readonly _logService;

@@ -25,6 +25,7 @@ import { ServiceCollection } from "../../../platform/instantiation/common/servic
 import { ILabelService } from "../../../platform/label/common/label.js";
 import { AbstractMessageLogger } from "../../../platform/log/common/log.js";
 import { IOpenerService } from "../../../platform/opener/common/opener.js";
+import { IProductService } from "../../../platform/product/common/productService.js";
 import { IWorkbenchEnvironmentService } from "../../services/environment/common/environmentService.js";
 import { IExtensionManagementServerService } from "../../services/extensionManagement/common/extensionManagement.js";
 import { IExtensionManifestPropertiesService } from "../../services/extensions/common/extensionManifestPropertiesService.js";
@@ -87,8 +88,8 @@ let RemoteExtensionManagementCLI = class RemoteExtensionManagementCLI2 extends E
   static {
     __name(this, "RemoteExtensionManagementCLI");
   }
-  constructor(logger, extensionManagementService, extensionGalleryService, labelService, envService, _extensionManifestPropertiesService) {
-    super(logger, extensionManagementService, extensionGalleryService);
+  constructor(logger, extensionManagementService, extensionGalleryService, labelService, envService, _extensionManifestPropertiesService, productService) {
+    super([], logger, extensionManagementService, extensionGalleryService, productService);
     this._extensionManifestPropertiesService = _extensionManifestPropertiesService;
     const remoteAuthority = envService.remoteAuthority;
     this._location = remoteAuthority ? labelService.getHostLabel(Schemas.vscodeRemote, remoteAuthority) : void 0;
@@ -109,6 +110,7 @@ RemoteExtensionManagementCLI = __decorate([
   __param(2, IExtensionGalleryService),
   __param(3, ILabelService),
   __param(4, IWorkbenchEnvironmentService),
-  __param(5, IExtensionManifestPropertiesService)
+  __param(5, IExtensionManifestPropertiesService),
+  __param(6, IProductService)
 ], RemoteExtensionManagementCLI);
 //# sourceMappingURL=mainThreadCLICommands.js.map

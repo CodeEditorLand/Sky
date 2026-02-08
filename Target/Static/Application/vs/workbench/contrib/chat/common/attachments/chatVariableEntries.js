@@ -187,7 +187,7 @@ function isSCMHistoryItemChangeRangeVariableEntry(obj) {
 __name(isSCMHistoryItemChangeRangeVariableEntry, "isSCMHistoryItemChangeRangeVariableEntry");
 function isStringImplicitContextValue(value) {
   const asStringImplicitContextValue = value;
-  return typeof asStringImplicitContextValue === "object" && asStringImplicitContextValue !== null && (typeof asStringImplicitContextValue.value === "string" || typeof asStringImplicitContextValue.value === "undefined") && typeof asStringImplicitContextValue.name === "string" && ThemeIcon.isThemeIcon(asStringImplicitContextValue.icon) && URI.isUri(asStringImplicitContextValue.uri);
+  return typeof asStringImplicitContextValue === "object" && asStringImplicitContextValue !== null && (typeof asStringImplicitContextValue.value === "string" || typeof asStringImplicitContextValue.value === "undefined") && (typeof asStringImplicitContextValue.name === "string" || typeof asStringImplicitContextValue.name === "undefined") && (asStringImplicitContextValue.icon === void 0 || ThemeIcon.isThemeIcon(asStringImplicitContextValue.icon)) && URI.isUri(asStringImplicitContextValue.uri);
 }
 __name(isStringImplicitContextValue, "isStringImplicitContextValue");
 var PromptFileVariableKind;

@@ -36,6 +36,7 @@ import { Separator } from "../../../../base/common/actions.js";
 import { ToggleActivityBarVisibilityActionId } from "../../actions/layoutActions.js";
 import { localize2 } from "../../../../nls.js";
 import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { VisibleViewContainersTracker } from "../visibleViewContainersTracker.js";
 let SidebarPart = class SidebarPart2 extends AbstractPaneCompositePart {
   static {
     __name(this, "SidebarPart");
@@ -70,6 +71,12 @@ let SidebarPart = class SidebarPart2 extends AbstractPaneCompositePart {
     this.maximumHeight = Number.POSITIVE_INFINITY;
     this.priority = 1;
     this.activityBarPart = this._register(this.instantiationService.createInstance(ActivitybarPart, this));
+    this.visibleViewContainersTracker = this._register(instantiationService.createInstance(
+      VisibleViewContainersTracker,
+      0
+      /* ViewContainerLocation.Sidebar */
+    ));
+    this._register(this.visibleViewContainersTracker.onDidChange((e) => this.onDidChangeAutoHideViewContainers(e)));
     this.rememberActivityBarVisiblePosition();
     this._register(configurationService.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration(
@@ -78,8 +85,31 @@ let SidebarPart = class SidebarPart2 extends AbstractPaneCompositePart {
       )) {
         this.onDidChangeActivityBarLocation();
       }
+      if (e.affectsConfiguration(
+        "workbench.activityBar.autoHide"
+        /* LayoutSettings.ACTIVITY_BAR_AUTO_HIDE */
+      )) {
+        this.onDidChangeActivityBarLocation();
+      }
     }));
     this.registerActions();
+  }
+  onDidChangeAutoHideViewContainers(e) {
+    const activityBarPosition = this.configurationService.getValue(
+      "workbench.activityBar.location"
+      /* LayoutSettings.ACTIVITY_BAR_LOCATION */
+    );
+    const autoHide = this.configurationService.getValue(
+      "workbench.activityBar.autoHide"
+      /* LayoutSettings.ACTIVITY_BAR_AUTO_HIDE */
+    );
+    if (autoHide && (activityBarPosition === "top" || activityBarPosition === "bottom")) {
+      const visibleBefore = e.before > 1;
+      const visibleAfter = e.after > 1;
+      if (visibleBefore !== visibleAfter) {
+        this.onDidChangeActivityBarLocation();
+      }
+    }
   }
   onDidChangeActivityBarLocation() {
     this.activityBarPart.hide();
@@ -165,7 +195,20 @@ let SidebarPart = class SidebarPart2 extends AbstractPaneCompositePart {
       "workbench.activityBar.location"
       /* LayoutSettings.ACTIVITY_BAR_LOCATION */
     );
-    return activityBarPosition === "top" || activityBarPosition === "bottom";
+    if (activityBarPosition !== "top" && activityBarPosition !== "bottom") {
+      return false;
+    }
+    const autoHide = this.configurationService.getValue(
+      "workbench.activityBar.autoHide"
+      /* LayoutSettings.ACTIVITY_BAR_AUTO_HIDE */
+    );
+    if (autoHide) {
+      const visibleCount = this.visibleViewContainersTracker.visibleCount;
+      if (visibleCount <= 1) {
+        return false;
+      }
+    }
+    return true;
   }
   shouldShowActivityBar() {
     if (this.shouldShowCompositeBar()) {

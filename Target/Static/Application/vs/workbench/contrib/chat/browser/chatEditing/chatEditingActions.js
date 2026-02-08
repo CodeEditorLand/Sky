@@ -27,6 +27,8 @@ import { isChatTreeItem, isRequestVM, isResponseVM } from "../../common/model/ch
 import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../common/constants.js";
 import { CHAT_CATEGORY } from "../actions/chatActions.js";
 import { IChatWidgetService } from "../chat.js";
+import { isAgentSession } from "../agentSessions/agentSessionsModel.js";
+import { AgentSessionProviders } from "../agentSessions/agentSessions.js";
 class EditingSessionAction extends Action2 {
   static {
     __name(this, "EditingSessionAction");
@@ -236,6 +238,38 @@ class ChatEditingDiscardAllAction extends EditingSessionAction {
   }
 }
 registerAction2(ChatEditingDiscardAllAction);
+class ToggleExplanationWidgetAction extends EditingSessionAction {
+  static {
+    __name(this, "ToggleExplanationWidgetAction");
+  }
+  static {
+    this.ID = "chatEditing.toggleExplanationWidget";
+  }
+  constructor() {
+    super({
+      id: ToggleExplanationWidgetAction.ID,
+      title: localize("explainButton", "Explain"),
+      tooltip: localize("toggleExplanationTooltip", "Toggle Change Explanations"),
+      precondition: hasUndecidedChatEditingResourceContextKey,
+      menu: [
+        {
+          id: MenuId.ChatEditingWidgetToolbar,
+          group: "navigation",
+          order: 2,
+          when: ContextKeyExpr.and(hasUndecidedChatEditingResourceContextKey, ContextKeyExpr.has(`config.${ChatConfiguration.ExplainChangesEnabled}`))
+        }
+      ]
+    });
+  }
+  async runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    if (editingSession.hasExplanations()) {
+      editingSession.clearExplanations();
+    } else {
+      await editingSession.triggerExplanationGeneration();
+    }
+  }
+}
+registerAction2(ToggleExplanationWidgetAction);
 async function discardAllEditsWithConfirmation(accessor, currentEditingSession) {
   const dialogService = accessor.get(IDialogService);
   const entries = currentEditingSession.entries.get().filter(
@@ -310,29 +344,48 @@ class ViewAllSessionChangesAction extends Action2 {
           group: "navigation",
           order: 10,
           when: ChatContextKeys.hasAgentSessionChanges
+        },
+        {
+          id: MenuId.AgentSessionItemToolbar,
+          group: "navigation",
+          order: 0,
+          when: ChatContextKeys.hasAgentSessionChanges
         }
       ]
     });
   }
-  async run(accessor, sessionResource) {
+  async run(accessor, sessionOrSessionResource) {
     const agentSessionsService = accessor.get(IAgentSessionsService);
     const commandService = accessor.get(ICommandService);
-    if (!URI.isUri(sessionResource)) {
+    const chatEditingService = accessor.get(IChatEditingService);
+    if (!URI.isUri(sessionOrSessionResource) && !isAgentSession(sessionOrSessionResource)) {
       return;
     }
+    const sessionResource = URI.isUri(sessionOrSessionResource) ? sessionOrSessionResource : sessionOrSessionResource.resource;
     const session = agentSessionsService.getSession(sessionResource);
     const changes = session?.changes;
-    if (!(changes instanceof Array)) {
+    if (!session || !changes) {
       return;
     }
-    const resources = changes.filter((d) => d.originalUri).map((d) => ({ originalUri: d.originalUri, modifiedUri: d.modifiedUri }));
-    if (resources.length > 0) {
+    if (session.providerType === AgentSessionProviders.Background || session.providerType === AgentSessionProviders.Cloud) {
+      if (!Array.isArray(changes) || changes.length === 0) {
+        return;
+      }
+      const resources = changes.map((d) => ({
+        originalUri: d.originalUri,
+        modifiedUri: d.modifiedUri
+      }));
       await commandService.executeCommand("_workbench.openMultiDiffEditor", {
         multiDiffSourceUri: sessionResource.with({ scheme: sessionResource.scheme + "-worktree-changes" }),
         title: localize("chatEditing.allChanges.title", "All Session Changes"),
         resources
       });
+      session?.setRead(true);
+      return;
     }
+    const editingSession = chatEditingService.getEditingSession(sessionResource);
+    await editingSession?.show();
+    session?.setRead(true);
   }
 }
 registerAction2(ViewAllSessionChangesAction);
@@ -756,6 +809,7 @@ export {
   ChatEditingDiscardAllAction,
   ChatEditingShowChangesAction,
   EditingSessionAction,
+  ToggleExplanationWidgetAction,
   ViewAllSessionChangesAction,
   ViewPreviousEditsAction,
   discardAllEditsWithConfirmation,

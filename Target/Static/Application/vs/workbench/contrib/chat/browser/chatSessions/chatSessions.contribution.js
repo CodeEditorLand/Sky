@@ -15,7 +15,7 @@ import { sep } from "../../../../../base/common/path.js";
 import { raceCancellationError } from "../../../../../base/common/async.js";
 import { CancellationToken } from "../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
-import { Emitter, Event } from "../../../../../base/common/event.js";
+import { AsyncEmitter, Emitter, Event } from "../../../../../base/common/event.js";
 import { combinedDisposable, Disposable, DisposableMap, DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
 import { ResourceMap } from "../../../../../base/common/map.js";
 import { Schemas } from "../../../../../base/common/network.js";
@@ -50,6 +50,7 @@ import { BugIndicatingError } from "../../../../../base/common/errors.js";
 import { IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
 import { LocalChatSessionUri } from "../../common/model/chatUri.js";
 import { assertNever } from "../../../../../base/common/assert.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
 const extensionPoint = ExtensionsRegistry.registerExtensionPoint({
   extensionPoint: "chatSessions",
   jsonSchema: {
@@ -199,6 +200,10 @@ const extensionPoint = ExtensionsRegistry.registerExtensionPoint({
           description: localize("chatSessionsExtPoint.canDelegate", "Whether delegation is supported. Default is false. Note that enabling this is experimental and may not be respected at all times."),
           type: "boolean",
           default: false
+        },
+        customAgentTarget: {
+          description: localize("chatSessionsExtPoint.customAgentTarget", "When set, the chat session will show a filtered mode picker that prefers custom agents whose target property matches this value. Custom agents without a target property are still shown in all session types. This enables the use of standard agent/mode with contributed sessions."),
+          type: "string"
         }
       },
       required: ["type", "name", "displayName", "description"]
@@ -254,6 +259,9 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
   get onDidChangeOptionGroups() {
     return this._onDidChangeOptionGroups.event;
   }
+  get onRequestNotifyExtension() {
+    return this._onRequestNotifyExtension.event;
+  }
   constructor(_logService, _chatAgentService, _extensionService, _contextKeyService, _menuService, _themeService, _labelService) {
     super();
     this._logService = _logService;
@@ -279,6 +287,7 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
     this._onDidChangeContentProviderSchemes = this._register(new Emitter());
     this._onDidChangeSessionOptions = this._register(new Emitter());
     this._onDidChangeOptionGroups = this._register(new Emitter());
+    this._onRequestNotifyExtension = this._register(new AsyncEmitter());
     this.inProgressMap = /* @__PURE__ */ new Map();
     this._sessionTypeOptions = /* @__PURE__ */ new Map();
     this._sessionTypeIcons = /* @__PURE__ */ new Map();
@@ -314,7 +323,7 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
         }
       }
     }));
-    this._register(this.onDidChangeSessionItems((chatSessionType) => {
+    this._register(this.onDidChangeSessionItems(({ chatSessionType }) => {
       this.updateInProgressStatus(chatSessionType).catch((error) => {
         this._logService.warn(`Failed to update progress status for '${chatSessionType}':`, error);
       });
@@ -461,12 +470,17 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
     const rawMenuActions = this._menuService.getMenuActions(MenuId.AgentSessionsCreateSubMenu, contextKeyService);
     const menuActions = rawMenuActions.map((value) => value[1]).flat();
     const disposables = new DisposableStore();
-    for (const action of menuActions) {
+    for (let i = 0; i < menuActions.length; i++) {
+      const action = menuActions[i];
       if (action instanceof MenuItemAction) {
-        disposables.add(MenuRegistry.appendMenuItem(MenuId.ChatNewMenu, {
-          command: action.item,
-          group: "4_externally_contributed"
-        }));
+        if (i === 0 && !contribution.canDelegate) {
+          disposables.add(registerNewSessionExternalAction(contribution.type, contribution.displayName, action.item.id));
+        } else {
+          disposables.add(MenuRegistry.appendMenuItem(MenuId.ChatNewMenu, {
+            command: action.item,
+            group: "4_externally_contributed"
+          }));
+        }
       }
     }
     return {
@@ -568,7 +582,7 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
         this._onDidChangeItemsProviders.fire(provider);
       }
       for (const { contribution } of this._contributions.values()) {
-        this._onDidChangeSessionItems.fire(contribution.type);
+        this._onDidChangeSessionItems.fire({ chatSessionType: contribution.type });
       }
     }
     this._updateHasCanDelegateProvidersContextKey();
@@ -644,6 +658,9 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
     return this._isContributionAvailable(contribution) ? contribution : void 0;
   }
   async activateChatSessionItemProvider(chatViewType) {
+    await this.doActivateChatSessionItemProvider(chatViewType);
+  }
+  async doActivateChatSessionItemProvider(chatViewType) {
     await this._extensionService.whenInstalledExtensionsRegistered();
     const resolvedType = this._resolveToPrimaryType(chatViewType);
     if (resolvedType) {
@@ -679,7 +696,7 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
       if (providersToResolve && !providersToResolve.includes(contrib.type)) {
         continue;
       }
-      const provider = await this.activateChatSessionItemProvider(contrib.type);
+      const provider = await this.doActivateChatSessionItemProvider(contrib.type);
       if (!provider) {
         if (providersToResolve?.includes(contrib.type)) {
           this._logService.trace(`[ChatSessionsService] No enabled provider found for chat session type ${contrib.type}`);
@@ -720,7 +737,7 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
     this._onDidChangeItemsProviders.fire(provider);
     const disposables = new DisposableStore();
     disposables.add(provider.onDidChangeChatSessionItems(() => {
-      this._onDidChangeSessionItems.fire(chatSessionType);
+      this._onDidChangeSessionItems.fire({ chatSessionType });
     }));
     this.updateInProgressStatus(chatSessionType).catch((error) => {
       this._logService.warn(`Failed to update initial progress status for '${chatSessionType}':`, error);
@@ -860,9 +877,6 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
     const session = this._sessions.get(sessionResource);
     return !!session?.setOption(optionId, value);
   }
-  notifySessionItemsChanged(chatSessionType) {
-    this._onDidChangeSessionItems.fire(chatSessionType);
-  }
   /**
    * Store option groups for a session type
    */
@@ -881,25 +895,20 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
     return this._sessionTypeOptions.get(chatSessionType);
   }
   /**
-   * Set the callback for notifying extensions about option changes
-   */
-  setOptionsChangeCallback(callback) {
-    this._optionsChangeCallback = callback;
-  }
-  /**
    * Notify extension about option changes for a session
    */
   async notifySessionOptionsChange(sessionResource, updates) {
     if (!updates.length) {
       return;
     }
-    if (this._optionsChangeCallback) {
-      await this._optionsChangeCallback(sessionResource, updates);
-    }
+    this._logService.trace(`[ChatSessionsService] notifySessionOptionsChange: starting for ${sessionResource}, ${updates.length} update(s): [${updates.map((u) => u.optionId).join(", ")}]`);
+    await this._onRequestNotifyExtension.fireAsync({ sessionResource, updates }, CancellationToken.None);
+    this._logService.trace(`[ChatSessionsService] notifySessionOptionsChange: fireAsync completed for ${sessionResource}`);
     for (const u of updates) {
       this.setSessionOption(sessionResource, u.optionId, u.value);
     }
     this._onDidChangeSessionOptions.fire(sessionResource);
+    this._logService.trace(`[ChatSessionsService] notifySessionOptionsChange: finished for ${sessionResource}`);
   }
   /**
    * Get the icon for a specific session type
@@ -939,6 +948,14 @@ let ChatSessionsService = class ChatSessionsService2 extends Disposable {
   getCapabilitiesForSessionType(chatSessionType) {
     const contribution = this._contributions.get(chatSessionType)?.contribution;
     return contribution?.capabilities;
+  }
+  /**
+   * Get the customAgentTarget for a specific session type.
+   * When set, the mode picker should show filtered custom agents matching this target.
+   */
+  getCustomAgentTargetForSessionType(chatSessionType) {
+    const contribution = this._contributions.get(chatSessionType)?.contribution;
+    return contribution?.customAgentTarget;
   }
   getContentProviderSchemes() {
     return Array.from(this._contentProviders.keys());
@@ -987,6 +1004,27 @@ function registerNewSessionInPlaceAction(type, displayName) {
   });
 }
 __name(registerNewSessionInPlaceAction, "registerNewSessionInPlaceAction");
+function registerNewSessionExternalAction(type, displayName, commandId) {
+  return registerAction2(class NewChatSessionExternalAction extends Action2 {
+    static {
+      __name(this, "NewChatSessionExternalAction");
+    }
+    constructor() {
+      super({
+        id: `workbench.action.chat.openNewChatSessionExternal.${type}`,
+        title: localize2("interactiveSession.openNewChatSessionExternal", "New {0}", displayName),
+        category: CHAT_CATEGORY,
+        f1: false,
+        precondition: ChatContextKeys.enabled
+      });
+    }
+    async run(accessor) {
+      const commandService = accessor.get(ICommandService);
+      await commandService.executeCommand(commandId);
+    }
+  });
+}
+__name(registerNewSessionExternalAction, "registerNewSessionExternalAction");
 var ChatSessionPosition;
 (function(ChatSessionPosition2) {
   ChatSessionPosition2["Editor"] = "editor";
@@ -1069,6 +1107,8 @@ function isAgentSessionProviderType(type) {
 }
 __name(isAgentSessionProviderType, "isAgentSessionProviderType");
 export {
-  ChatSessionsService
+  ChatSessionPosition,
+  ChatSessionsService,
+  getResourceForNewChatSession
 };
 //# sourceMappingURL=chatSessions.contribution.js.map

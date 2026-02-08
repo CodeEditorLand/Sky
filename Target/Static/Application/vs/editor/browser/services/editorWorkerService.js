@@ -11,6 +11,7 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
+var EditorWorkerService_1;
 import { timeout } from "../../../base/common/async.js";
 import { Disposable } from "../../../base/common/lifecycle.js";
 import { logOnceWebWorkerWarning } from "../../../base/common/worker/webWorker.js";
@@ -36,6 +37,7 @@ import { EditorWorkerHost } from "../../common/services/editorWorkerHost.js";
 import { StringEdit } from "../../common/core/edits/stringEdit.js";
 import { OffsetRange } from "../../common/core/ranges/offsetRange.js";
 import { FileAccess } from "../../../base/common/network.js";
+import { isCompletionsEnabledWithTextResourceConfig } from "../../common/services/completionsEnablement.js";
 const STOP_WORKER_DELTA_TIME_MS = 5 * 60 * 1e3;
 function canSyncModel(modelService, resource) {
   const model = modelService.getModel(resource);
@@ -52,17 +54,22 @@ let EditorWorkerService = class EditorWorkerService2 extends Disposable {
   static {
     __name(this, "EditorWorkerService");
   }
+  static {
+    EditorWorkerService_1 = this;
+  }
+  static {
+    this.workerDescriptor = new WebWorkerDescriptor({
+      esmModuleLocation: /* @__PURE__ */ __name(() => FileAccess.asBrowserUri("vs/editor/common/services/editorWebWorkerMain.js"), "esmModuleLocation"),
+      esmModuleLocationBundler: /* @__PURE__ */ __name(() => new URL("../../common/services/editorWebWorkerMain.ts?esm", import.meta.url), "esmModuleLocationBundler"),
+      label: "editorWorkerService"
+    });
+  }
   constructor(modelService, configurationService, logService, _languageConfigurationService, languageFeaturesService, _webWorkerService) {
     super();
     this._languageConfigurationService = _languageConfigurationService;
     this._webWorkerService = _webWorkerService;
     this._modelService = modelService;
-    const workerDescriptor = new WebWorkerDescriptor({
-      esmModuleLocation: /* @__PURE__ */ __name(() => FileAccess.asBrowserUri("vs/editor/common/services/editorWebWorkerMain.js"), "esmModuleLocation"),
-      esmModuleLocationBundler: /* @__PURE__ */ __name(() => new URL("../../common/services/editorWebWorkerMain.ts?esm", import.meta.url), "esmModuleLocationBundler"),
-      label: "editorWorkerService"
-    });
-    this._workerManager = this._register(new WorkerManager(workerDescriptor, this._modelService, this._webWorkerService));
+    this._workerManager = this._register(new WorkerManager(EditorWorkerService_1.workerDescriptor, this._modelService, this._webWorkerService));
     this._logService = logService;
     this._register(languageFeaturesService.linkProvider.register({ language: "*", hasAccessToAllModels: true }, {
       provideLinks: /* @__PURE__ */ __name(async (model, token) => {
@@ -196,7 +203,7 @@ let EditorWorkerService = class EditorWorkerService2 extends Disposable {
     return await worker.workerWithSyncedResources(resources, forceLargeModels);
   }
 };
-EditorWorkerService = __decorate([
+EditorWorkerService = EditorWorkerService_1 = __decorate([
   __param(0, IModelService),
   __param(1, ITextResourceConfigurationService),
   __param(2, ILogService),
@@ -222,7 +229,7 @@ class WordBasedCompletionItemProvider {
     if (config.wordBasedSuggestions === "off") {
       return void 0;
     }
-    if (config.wordBasedSuggestions === "offWithInlineSuggestions" && this.languageFeaturesService.inlineCompletionsProvider.has(model)) {
+    if (config.wordBasedSuggestions === "offWithInlineSuggestions" && this.languageFeaturesService.inlineCompletionsProvider.has(model) && isCompletionsEnabledWithTextResourceConfig(this._configurationService, model.uri, model.getLanguageId())) {
       return void 0;
     }
     const models = [];

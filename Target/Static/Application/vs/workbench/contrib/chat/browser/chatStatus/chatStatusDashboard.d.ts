@@ -40,6 +40,7 @@ export declare class ChatStatusDashboard extends DomWidget {
     constructor(chatEntitlementService: ChatEntitlementService, chatStatusItemService: IChatStatusItemService, commandService: ICommandService, configurationService: IConfigurationService, editorService: IEditorService, hoverService: IHoverService, languageService: ILanguageService, openerService: IOpenerService, telemetryService: ITelemetryService, textResourceConfigurationService: ITextResourceConfigurationService, inlineCompletionsService: IInlineCompletionsService, chatSessionsService: IChatSessionsService, markdownRendererService: IMarkdownRendererService, languageFeaturesService: ILanguageFeaturesService, quickInputService: IQuickInputService, viewService: IViewsService);
     private render;
     private canUseChat;
+    private getUsageTitle;
     private renderHeader;
     private renderContributedChatStatusItem;
     private renderTextPlus;

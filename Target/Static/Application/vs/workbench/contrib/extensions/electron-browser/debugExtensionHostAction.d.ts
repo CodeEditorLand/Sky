@@ -10,7 +10,15 @@ export declare class DebugExtensionHostInDevToolsAction extends Action2 {
 }
 export declare class DebugExtensionHostInNewWindowAction extends Action2 {
     constructor();
-    run(accessor: ServicesAccessor): void;
+    run(accessor: ServicesAccessor): Promise<void>;
+}
+export declare class DebugRendererInNewWindowAction extends Action2 {
+    constructor();
+    run(accessor: ServicesAccessor): Promise<void>;
+}
+export declare class DebugExtensionHostAndRendererAction extends Action2 {
+    constructor();
+    run(accessor: ServicesAccessor): Promise<void>;
 }
 export declare class DebugExtensionsContribution extends Disposable implements IWorkbenchContribution {
     private readonly _debugService;

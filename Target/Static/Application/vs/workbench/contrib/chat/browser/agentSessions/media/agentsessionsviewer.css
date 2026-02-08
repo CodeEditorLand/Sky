@@ -15,7 +15,6 @@
     .agent-session-diff-container {
       background-color: unset;
       outline: 1px solid var(--vscode-agentSessionSelectedBadge-border);
-      .agent-session-diff-files,
       .agent-session-diff-added,
       .agent-session-diff-removed {
         color: unset;
@@ -32,8 +31,9 @@
   }
   .monaco-list-row .agent-session-title-toolbar {
     position: relative;
+    height: 16px;
     .monaco-toolbar {
-      position: absolute;
+      position: relative;
       right: 0;
       top: 0;
       display: none;
@@ -41,7 +41,6 @@
   }
   .monaco-list-row:hover .agent-session-title-toolbar,
   .monaco-list-row.focused .agent-session-title-toolbar {
-    width: 22px;
     .monaco-toolbar {
       display: block;
     }
@@ -125,9 +124,6 @@
         gap: 4px;
         &:not(.has-diff) {
           display: none;
-        }
-        .agent-session-diff-files {
-          color: var(--vscode-descriptionForeground);
         }
         .agent-session-diff-added {
           color: var(--vscode-chat-linesAddedForeground);

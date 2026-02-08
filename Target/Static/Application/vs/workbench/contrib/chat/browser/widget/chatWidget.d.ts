@@ -9,7 +9,7 @@ import { ICodeEditor } from '../../../../../editor/browser/editorBrowser.js';
 import { ICodeEditorService } from '../../../../../editor/browser/services/codeEditorService.js';
 import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
 import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
+import { IDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
 import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
@@ -63,12 +63,12 @@ export declare class ChatWidget extends Disposable implements IChatWidget {
     private readonly codeEditorService;
     private readonly editorService;
     private readonly configurationService;
+    private readonly dialogService;
     private readonly contextKeyService;
     private readonly instantiationService;
     private readonly chatService;
     private readonly chatAgentService;
     private readonly chatWidgetService;
-    private readonly contextMenuService;
     private readonly chatAccessibilityService;
     private readonly logService;
     private readonly themeService;
@@ -123,20 +123,16 @@ export declare class ChatWidget extends Disposable implements IChatWidget {
     private listContainer;
     private container;
     get domNode(): HTMLElement;
-    private tree;
-    private renderer;
+    private listWidget;
     private readonly _codeBlockModelCollection;
-    private lastItem;
     private readonly visibilityTimeoutDisposable;
     private readonly visibilityAnimationFrameDisposable;
-    private readonly scrollAnimationFrameDisposable;
     private readonly inputPartDisposable;
     private readonly inlineInputPartDisposable;
     private inputContainer;
     private focusedInputDOM;
     private editorOptions;
     private recentlyRestoredCheckpoint;
-    private settingChangeCounter;
     private welcomeMessageContainer;
     private readonly welcomePart;
     private readonly chatSuggestNextWidget;
@@ -144,15 +140,8 @@ export declare class ChatWidget extends Disposable implements IChatWidget {
     private visibleChangeCount;
     private requestInProgress;
     private agentInInput;
-    private currentRequest;
     private _visible;
     get visible(): boolean;
-    private previousTreeScrollHeight;
-    /**
-     * Whether the list is scroll-locked to the bottom. Initialize to true so that we can scroll to the bottom on first render.
-     * The initial render leads to a lot of `onDidChangeTreeContentHeight` as the renderer works out the real heights of rows.
-    */
-    private scrollLock;
     private _instructionFilesCheckPromise;
     private _instructionFilesExist;
     private _isRenderingWelcome;
@@ -160,11 +149,11 @@ export declare class ChatWidget extends Disposable implements IChatWidget {
     private readonly _lockedToCodingAgentContextKey;
     private readonly _agentSupportsAttachmentsContextKey;
     private readonly _sessionIsEmptyContextKey;
+    private readonly _hasPendingRequestsContextKey;
     private _attachmentCapabilities;
     private readonly promptDescriptionsCache;
     private readonly promptUriCache;
     private _isLoadingPromptDescriptions;
-    private _mostRecentlyFocusedItemIndex;
     private readonly viewModelDisposables;
     private _viewModel;
     private set viewModel(value);
@@ -178,21 +167,26 @@ export declare class ChatWidget extends Disposable implements IChatWidget {
     readonly viewContext: IChatWidgetViewContext;
     get supportsChangingModes(): boolean;
     get locationData(): IChatLocationData | undefined;
-    constructor(location: ChatAgentLocation | IChatWidgetLocationOptions, viewContext: IChatWidgetViewContext | undefined, viewOptions: IChatWidgetViewOptions, styles: IChatWidgetStyles, codeEditorService: ICodeEditorService, editorService: IEditorService, configurationService: IConfigurationService, contextKeyService: IContextKeyService, instantiationService: IInstantiationService, chatService: IChatService, chatAgentService: IChatAgentService, chatWidgetService: IChatWidgetService, contextMenuService: IContextMenuService, chatAccessibilityService: IChatAccessibilityService, logService: ILogService, themeService: IThemeService, chatSlashCommandService: IChatSlashCommandService, chatEditingService: IChatEditingService, telemetryService: ITelemetryService, promptsService: IPromptsService, toolsService: ILanguageModelToolsService, chatModeService: IChatModeService, chatLayoutService: IChatLayoutService, chatEntitlementService: IChatEntitlementService, chatSessionsService: IChatSessionsService, agentSessionsService: IAgentSessionsService, chatTodoListService: IChatTodoListService, contextService: IWorkspaceContextService, lifecycleService: ILifecycleService);
+    constructor(location: ChatAgentLocation | IChatWidgetLocationOptions, viewContext: IChatWidgetViewContext | undefined, viewOptions: IChatWidgetViewOptions, styles: IChatWidgetStyles, codeEditorService: ICodeEditorService, editorService: IEditorService, configurationService: IConfigurationService, dialogService: IDialogService, contextKeyService: IContextKeyService, instantiationService: IInstantiationService, chatService: IChatService, chatAgentService: IChatAgentService, chatWidgetService: IChatWidgetService, chatAccessibilityService: IChatAccessibilityService, logService: ILogService, themeService: IThemeService, chatSlashCommandService: IChatSlashCommandService, chatEditingService: IChatEditingService, telemetryService: ITelemetryService, promptsService: IPromptsService, toolsService: ILanguageModelToolsService, chatModeService: IChatModeService, chatLayoutService: IChatLayoutService, chatEntitlementService: IChatEntitlementService, chatSessionsService: IChatSessionsService, agentSessionsService: IAgentSessionsService, chatTodoListService: IChatTodoListService, contextService: IWorkspaceContextService, lifecycleService: ILifecycleService);
     private _lastSelectedAgent;
     set lastSelectedAgent(agent: IChatAgentData | undefined);
     get lastSelectedAgent(): IChatAgentData | undefined;
     private _updateAgentCapabilitiesContextKeys;
     get supportsFileReferences(): boolean;
     get attachmentCapabilities(): IChatAgentAttachmentCapabilities;
+    /**
+     * Either the inline input (when editing) or the main input part
+     */
     get input(): ChatInputPart;
-    private get inputPart();
+    /**
+     * The main input part at the buttom of the chat widget. Use `input` to get the active input (main or inline editing part).
+     */
+    get inputPart(): ChatInputPart;
     private get inlineInputPart();
     get inputEditor(): ICodeEditor;
     get contentHeight(): number;
     get attachmentModel(): ChatAttachmentModel;
     render(parent: HTMLElement): void;
-    private scrollToEnd;
     focusInput(): void;
     hasInputFocus(): boolean;
     refreshParsedInput(): void;
@@ -237,9 +231,6 @@ export declare class ChatWidget extends Disposable implements IChatWidget {
     startEditing(requestId: string): void;
     private clickedRequest;
     finishedEditing(completedEdit?: boolean): void;
-    private scrollToCurrentItem;
-    private onContextMenu;
-    private onDidChangeTreeContentHeight;
     private getWidgetViewKindTag;
     private createInput;
     private onDidStyleChange;
@@ -261,6 +252,7 @@ export declare class ChatWidget extends Disposable implements IChatWidget {
     rerunLastRequest(): Promise<void>;
     private _applyPromptFileIfSet;
     private _acceptInput;
+    private confirmPendingRequestsBeforeSend;
     getModeRequestOptions(): Partial<IChatSendRequestOptions>;
     getCodeBlockInfosForResponse(response: IChatResponseViewModel): IChatCodeBlockInfo[];
     getCodeBlockInfoForEditor(uri: URI): IChatCodeBlockInfo | undefined;

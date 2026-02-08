@@ -442,7 +442,7 @@ let BreadcrumbsControl = class BreadcrumbsControl2 {
           const pickerWidth = Math.min(maxInnerWidth, Math.max(240, maxInnerWidth / 4.17));
           const pickerArrowSize = 8;
           let pickerArrowOffset;
-          const data = dom.getDomNodePagePosition(event.node.firstChild);
+          const data = dom.getDomNodePagePosition(event.node);
           const y = data.top + data.height + pickerArrowSize;
           if (y + maxHeight >= window.innerHeight) {
             maxHeight = window.innerHeight - y - 30;

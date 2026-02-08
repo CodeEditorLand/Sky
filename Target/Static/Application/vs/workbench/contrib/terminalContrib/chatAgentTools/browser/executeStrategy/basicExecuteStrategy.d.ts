@@ -1,5 +1,6 @@
 import type { CancellationToken } from '../../../../../../base/common/cancellation.js';
 import { Event } from '../../../../../../base/common/event.js';
+import { Disposable } from '../../../../../../base/common/lifecycle.js';
 import type { ICommandDetectionCapability } from '../../../../../../platform/terminal/common/capabilities/capabilities.js';
 import { ITerminalLogService } from '../../../../../../platform/terminal/common/terminal.js';
 import { type ITerminalExecuteStrategy, type ITerminalExecuteStrategyResult } from './executeStrategy.js';
@@ -27,7 +28,7 @@ import { ITerminalInstance } from '../../../../terminal/browser/terminal.js';
  * output. We lean on the LLM to be able to differentiate the actual output from prompts and bad
  * output when it's not ideal.
  */
-export declare class BasicExecuteStrategy implements ITerminalExecuteStrategy {
+export declare class BasicExecuteStrategy extends Disposable implements ITerminalExecuteStrategy {
     private readonly _instance;
     private readonly _hasReceivedUserInput;
     private readonly _commandDetection;

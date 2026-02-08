@@ -38,6 +38,7 @@ import { Promises } from "../../../../base/common/async.js";
 import { IUserDataSyncWorkbenchService } from "../../../services/userDataSync/common/userDataSync.js";
 import { Event } from "../../../../base/common/event.js";
 import { toAction } from "../../../../base/common/actions.js";
+import { IDefaultAccountService } from "../../../../platform/defaultAccount/common/defaultAccount.js";
 const CONTEXT_UPDATE_STATE = new RawContextKey(
   "updateState",
   "uninitialized"
@@ -233,14 +234,17 @@ let UpdateContribution = class UpdateContribution2 extends Disposable {
       case "downloaded":
         this.onUpdateDownloaded(state.update);
         break;
+      case "overwriting":
+        this.onUpdateOverwriting(state);
+        break;
       case "ready": {
         const productVersion = state.update.productVersion;
         if (productVersion) {
           const currentVersion = parseVersion(this.productService.version);
           const nextVersion = parseVersion(productVersion);
           this.majorMinorUpdateAvailableContextKey.set(Boolean(currentVersion && nextVersion && isMajorMinorUpdate(currentVersion, nextVersion)));
-          this.onUpdateReady(state.update);
         }
+        this.onUpdateReady(state);
         break;
       }
     }
@@ -249,7 +253,7 @@ let UpdateContribution = class UpdateContribution2 extends Disposable {
       badge = new NumberBadge(1, () => nls.localize("updateIsReady", "New {0} update available.", this.productService.nameShort));
     } else if (state.type === "checking for updates") {
       badge = new ProgressBadge(() => nls.localize("checkingForUpdates", "Checking for {0} updates...", this.productService.nameShort));
-    } else if (state.type === "downloading") {
+    } else if (state.type === "downloading" || state.type === "overwriting") {
       badge = new ProgressBadge(() => nls.localize("downloading", "Downloading {0} update...", this.productService.nameShort));
     } else if (state.type === "updating") {
       badge = new ProgressBadge(() => nls.localize("updating", "Updating {0}...", this.productService.nameShort));
@@ -327,31 +331,57 @@ let UpdateContribution = class UpdateContribution2 extends Disposable {
     }], { priority: NotificationPriority.OPTIONAL });
   }
   // windows and mac
-  onUpdateReady(update) {
-    if (!(isWindows && this.productService.target !== "user") && !this.shouldShowNotification()) {
-      return;
-    }
-    const actions = [{
-      label: nls.localize("updateNow", "Update Now"),
-      run: /* @__PURE__ */ __name(() => this.updateService.quitAndInstall(), "run")
-    }, {
-      label: nls.localize("later", "Later"),
-      run: /* @__PURE__ */ __name(() => {
-      }, "run")
-    }];
-    const productVersion = update.productVersion;
-    if (productVersion) {
-      actions.push({
-        label: nls.localize("releaseNotes", "Release Notes"),
+  onUpdateReady(state) {
+    if (state.overwrite && this.overwriteNotificationHandle) {
+      const handle = this.overwriteNotificationHandle;
+      this.overwriteNotificationHandle = void 0;
+      handle.progress.done();
+      handle.updateMessage(nls.localize("newerUpdateReady", "The newer update is ready to install."));
+      handle.updateActions({
+        primary: [
+          toAction({
+            id: "update.restartToUpdate",
+            label: nls.localize("restartToUpdate2", "Restart to Update"),
+            run: /* @__PURE__ */ __name(() => this.updateService.quitAndInstall(), "run")
+          })
+        ]
+      });
+    } else if (isWindows && this.productService.target !== "user" || this.shouldShowNotification()) {
+      const actions = [{
+        label: nls.localize("updateNow", "Update Now"),
+        run: /* @__PURE__ */ __name(() => this.updateService.quitAndInstall(), "run")
+      }, {
+        label: nls.localize("later", "Later"),
         run: /* @__PURE__ */ __name(() => {
-          this.instantiationService.invokeFunction((accessor) => showReleaseNotes(accessor, productVersion));
         }, "run")
+      }];
+      const productVersion = state.update.productVersion;
+      if (productVersion) {
+        actions.push({
+          label: nls.localize("releaseNotes", "Release Notes"),
+          run: /* @__PURE__ */ __name(() => {
+            this.instantiationService.invokeFunction((accessor) => showReleaseNotes(accessor, productVersion));
+          }, "run")
+        });
+      }
+      this.notificationService.prompt(severity.Info, nls.localize("updateAvailableAfterRestart", "Restart {0} to apply the latest update.", this.productService.nameLong), actions, {
+        sticky: true,
+        priority: NotificationPriority.OPTIONAL
       });
     }
-    this.notificationService.prompt(severity.Info, nls.localize("updateAvailableAfterRestart", "Restart {0} to apply the latest update.", this.productService.nameLong), actions, {
+  }
+  // macOS overwrite update - overwriting
+  onUpdateOverwriting(state) {
+    if (!state.explicit) {
+      return;
+    }
+    this.overwriteNotificationHandle = this.notificationService.notify({
+      severity: Severity.Info,
       sticky: true,
-      priority: NotificationPriority.OPTIONAL
+      message: nls.localize("newerUpdateDownloading", "We found a newer update available and have started to download it. We'll let you know as soon as it's ready to install."),
+      source: nls.localize("update service", "Update Service")
     });
+    this.overwriteNotificationHandle.progress.infinite();
   }
   shouldShowNotification() {
     const currentVersion = this.productService.commit;
@@ -635,9 +665,42 @@ SwitchProductQualityContribution = __decorate([
   __param(0, IProductService),
   __param(1, IBrowserWorkbenchEnvironmentService)
 ], SwitchProductQualityContribution);
+let DefaultAccountUpdateContribution = class DefaultAccountUpdateContribution2 extends Disposable {
+  static {
+    __name(this, "DefaultAccountUpdateContribution");
+  }
+  constructor(updateService, defaultAccountService) {
+    super();
+    this.updateService = updateService;
+    this.defaultAccountService = defaultAccountService;
+    if (isWeb) {
+      return;
+    }
+    this.checkDefaultAccount();
+    this._register(this.defaultAccountService.onDidChangeDefaultAccount(() => {
+      this.checkDefaultAccount();
+    }));
+  }
+  async checkDefaultAccount() {
+    try {
+      const defaultAccount = await this.defaultAccountService.getDefaultAccount();
+      const shouldDisable = defaultAccount?.entitlementsData?.organization_login_list?.some((org) => org.toLowerCase() === "visual-studio-code") ?? false;
+      if (shouldDisable) {
+        await this.updateService.disableProgressiveReleases();
+        this.dispose();
+      }
+    } catch (error) {
+    }
+  }
+};
+DefaultAccountUpdateContribution = __decorate([
+  __param(0, IUpdateService),
+  __param(1, IDefaultAccountService)
+], DefaultAccountUpdateContribution);
 export {
   CONTEXT_UPDATE_STATE,
   DOWNLOAD_URL,
+  DefaultAccountUpdateContribution,
   MAJOR_MINOR_UPDATE_AVAILABLE,
   ProductContribution,
   RELEASE_NOTES_URL,

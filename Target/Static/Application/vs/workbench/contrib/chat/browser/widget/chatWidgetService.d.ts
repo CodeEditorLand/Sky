@@ -9,7 +9,6 @@ import { IChatService } from '../../common/chatService/chatService.js';
 import { ChatAgentLocation } from '../../common/constants.js';
 import { ChatViewPaneTarget, IChatWidget, IChatWidgetService, IQuickChatService } from '../chat.js';
 import { IChatEditorOptions } from '../widgetHosts/editor/chatEditor.js';
-import { IWorkbenchLayoutService } from '../../../../services/layout/browser/layoutService.js';
 export declare class ChatWidgetService extends Disposable implements IChatWidgetService {
     private readonly editorGroupsService;
     private readonly viewsService;
@@ -17,7 +16,6 @@ export declare class ChatWidgetService extends Disposable implements IChatWidget
     private readonly layoutService;
     private readonly editorService;
     private readonly chatService;
-    private readonly workbenchLayoutService;
     readonly _serviceBrand: undefined;
     private _widgets;
     private _lastFocusedWidget;
@@ -25,7 +23,7 @@ export declare class ChatWidgetService extends Disposable implements IChatWidget
     readonly onDidAddWidget: Event<IChatWidget>;
     private readonly _onDidBackgroundSession;
     readonly onDidBackgroundSession: Event<URI>;
-    constructor(editorGroupsService: IEditorGroupsService, viewsService: IViewsService, quickChatService: IQuickChatService, layoutService: ILayoutService, editorService: IEditorService, chatService: IChatService, workbenchLayoutService: IWorkbenchLayoutService);
+    constructor(editorGroupsService: IEditorGroupsService, viewsService: IViewsService, quickChatService: IQuickChatService, layoutService: ILayoutService, editorService: IEditorService, chatService: IChatService);
     get lastFocusedWidget(): IChatWidget | undefined;
     getAllWidgets(): ReadonlyArray<IChatWidget>;
     getWidgetsByLocations(location: ChatAgentLocation): ReadonlyArray<IChatWidget>;

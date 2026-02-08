@@ -378,6 +378,9 @@ class ActionBar extends Disposable {
   isEmpty() {
     return this.viewItems.length === 0;
   }
+  isFocused(index) {
+    return index === void 0 ? DOM.isAncestor(DOM.getActiveElement(), this.domNode) : DOM.isAncestor(DOM.getActiveElement(), this.actionsList.children[index]);
+  }
   focus(arg) {
     let selectFirst = false;
     let index = void 0;

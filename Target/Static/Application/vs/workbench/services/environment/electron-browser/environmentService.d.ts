@@ -27,6 +27,7 @@ export interface INativeWorkbenchEnvironmentService extends IBrowserWorkbenchEnv
     readonly machineId: string;
     readonly sqmId: string;
     readonly devDeviceId: string;
+    readonly isPortable: boolean;
     readonly execPath: string;
     readonly backupPath?: string;
     readonly crashReporterDirectory?: string;
@@ -39,6 +40,7 @@ export declare class NativeWorkbenchEnvironmentService extends AbstractNativeEnv
     get machineId(): string;
     get sqmId(): string;
     get devDeviceId(): string;
+    get isPortable(): boolean;
     get remoteAuthority(): string | undefined;
     get expectsResolverExtension(): boolean;
     get execPath(): string;

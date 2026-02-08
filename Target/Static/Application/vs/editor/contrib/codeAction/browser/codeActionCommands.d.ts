@@ -1,6 +1,6 @@
 import { TypeFromJsonSchema } from '../../../../base/common/jsonSchema.js';
 import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorAction, EditorCommand, ServicesAccessor } from '../../../browser/editorExtensions.js';
+import { EditorAction, EditorAction2, EditorCommand, ServicesAccessor } from '../../../browser/editorExtensions.js';
 import { CodeActionAutoApply } from '../common/types.js';
 declare const argsSchema: {
     readonly type: "object";
@@ -28,9 +28,9 @@ declare const argsSchema: {
         };
     };
 };
-export declare class QuickFixAction extends EditorAction {
+export declare class QuickFixAction extends EditorAction2 {
     constructor();
-    run(_accessor: ServicesAccessor, editor: ICodeEditor): void;
+    runEditorCommand(_accessor: ServicesAccessor, editor: ICodeEditor): void;
 }
 export declare class CodeActionCommand extends EditorCommand {
     constructor();

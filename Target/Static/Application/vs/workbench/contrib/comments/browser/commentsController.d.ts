@@ -64,6 +64,7 @@ export declare class CommentController implements IEditorContribution {
     private _activeCursorHasCommentingRange;
     private _activeCursorHasComment;
     private _activeEditorHasCommentingRange;
+    private _commentWidgetVisible;
     private _hasRespondedToEditorChange;
     constructor(editor: ICodeEditor, commentService: ICommentService, instantiationService: IInstantiationService, codeEditorService: ICodeEditorService, contextMenuService: IContextMenuService, quickInputService: IQuickInputService, viewsService: IViewsService, configurationService: IConfigurationService, contextKeyService: IContextKeyService, editorService: IEditorService, keybindingService: IKeybindingService, accessibilityService: IAccessibilityService, notificationService: INotificationService);
     private registerEditorListeners;
@@ -78,6 +79,8 @@ export declare class CommentController implements IEditorContribution {
     static get(editor: ICodeEditor): CommentController | null;
     revealCommentThread(threadId: string, commentUniqueId: number | undefined, fetchOnceIfNotExist: boolean, focus: CommentWidgetFocus): void;
     collapseAll(): void;
+    collapseVisibleComments(): Promise<void>;
+    private _updateCommentWidgetVisibleContext;
     expandAll(): void;
     expandUnresolved(): void;
     nextCommentThread(focusThread: boolean): void;

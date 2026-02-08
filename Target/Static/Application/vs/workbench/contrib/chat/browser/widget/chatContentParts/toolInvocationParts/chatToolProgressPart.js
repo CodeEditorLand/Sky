@@ -12,8 +12,10 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import * as dom from "../../../../../../../base/browser/dom.js";
+import { renderAsPlaintext } from "../../../../../../../base/browser/markdownRenderer.js";
 import { status } from "../../../../../../../base/browser/ui/aria/aria.js";
 import { MarkdownString } from "../../../../../../../base/common/htmlContent.js";
+import { stripIcons } from "../../../../../../../base/common/iconLabels.js";
 import { autorun } from "../../../../../../../base/common/observable.js";
 import { IConfigurationService } from "../../../../../../../platform/configuration/common/configuration.js";
 import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
@@ -101,7 +103,7 @@ let ChatToolProgressSubPart = class ChatToolProgressSubPart2 extends BaseChatToo
     return true;
   }
   provideScreenReaderStatus(content) {
-    const message = typeof content === "string" ? content : content.value;
+    const message = typeof content === "string" ? content : stripIcons(renderAsPlaintext(content, { useLinkFormatter: true }));
     status(message);
   }
   hasMeaningfulContent(content) {

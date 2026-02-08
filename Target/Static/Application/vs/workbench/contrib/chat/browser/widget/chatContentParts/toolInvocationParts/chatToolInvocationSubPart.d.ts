@@ -9,8 +9,6 @@ export declare abstract class BaseChatToolInvocationSubPart extends Disposable {
     abstract readonly domNode: HTMLElement;
     protected _onNeedsRerender: Emitter<void>;
     readonly onNeedsRerender: import("../../../../../../../base/common/event.js").Event<void>;
-    protected _onDidChangeHeight: Emitter<void>;
-    readonly onDidChangeHeight: import("../../../../../../../base/common/event.js").Event<void>;
     abstract codeblocks: IChatCodeBlockInfo[];
     private readonly _codeBlocksPartId;
     get codeblocksPartId(): string;

@@ -1,4 +1,4 @@
-import { IDefaultAccount } from './defaultAccount.js';
+import { IPolicyData } from './defaultAccount.js';
 /**
  * System-wide policy file path for Linux systems.
  */
@@ -56,5 +56,5 @@ export interface IPolicy {
      *
      * If `undefined`, the feature's setting is not locked and can be overridden by other means.
      */
-    readonly value?: (account: IDefaultAccount) => string | number | boolean | undefined;
+    readonly value?: (policyData: IPolicyData) => string | number | boolean | undefined;
 }

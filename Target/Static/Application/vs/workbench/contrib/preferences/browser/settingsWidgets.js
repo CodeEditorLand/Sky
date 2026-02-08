@@ -34,6 +34,7 @@ import { IHoverService } from "../../../../platform/hover/browser/hover.js";
 import { defaultButtonStyles, getInputBoxStyle, getSelectBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
 import { IThemeService } from "../../../../platform/theme/common/themeService.js";
 import { hasNativeContextMenu } from "../../../../platform/window/common/window.js";
+import { validatePropertyName } from "../../../services/preferences/common/preferencesValidation.js";
 import { settingsSelectBackground, settingsSelectBorder, settingsSelectForeground, settingsSelectListBorder, settingsTextInputBackground, settingsTextInputBorder, settingsTextInputForeground } from "../common/settingsEditorColorRegistry.js";
 import "./media/settingsWidgets.css";
 import { settingsDiscardIcon, settingsEditIcon, settingsRemoveIcon } from "./preferencesIcons.js";
@@ -676,6 +677,7 @@ let ObjectSettingDropdownWidget = class ObjectSettingDropdownWidget2 extends Abs
     this.showAddButton = options?.showAddButton ?? this.showAddButton;
     this.keySuggester = options?.keySuggester ?? this.keySuggester;
     this.valueSuggester = options?.valueSuggester ?? this.valueSuggester;
+    this.propertyNames = options?.propertyNames;
     if (isDefined(options) && options.settingKey !== this.currentSettingKey) {
       this.model.setEditKey("none");
       this.model.select(null);
@@ -751,6 +753,9 @@ let ObjectSettingDropdownWidget = class ObjectSettingDropdownWidget2 extends Abs
   renderItem(item, idx) {
     const rowElement = $(".setting-list-row");
     rowElement.classList.add("setting-list-object-row");
+    if (this.propertyNames && item.key.data && !validatePropertyName(this.propertyNames, item.key.data)) {
+      rowElement.classList.add("invalid-key");
+    }
     const keyElement = DOM.append(rowElement, $(".setting-list-object-key"));
     const valueElement = DOM.append(rowElement, $(".setting-list-object-value"));
     keyElement.textContent = item.key.data;

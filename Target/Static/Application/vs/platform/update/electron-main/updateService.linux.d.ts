@@ -6,11 +6,11 @@ import { INativeHostMainService } from '../../native/electron-main/nativeHostMai
 import { IProductService } from '../../product/common/productService.js';
 import { IRequestService } from '../../request/common/request.js';
 import { AvailableForDownload } from '../common/update.js';
-import { AbstractUpdateService } from './abstractUpdateService.js';
+import { AbstractUpdateService, IUpdateURLOptions } from './abstractUpdateService.js';
 export declare class LinuxUpdateService extends AbstractUpdateService {
     private readonly nativeHostMainService;
     constructor(lifecycleMainService: ILifecycleMainService, configurationService: IConfigurationService, environmentMainService: IEnvironmentMainService, requestService: IRequestService, logService: ILogService, nativeHostMainService: INativeHostMainService, productService: IProductService);
-    protected buildUpdateFeedUrl(quality: string): string;
-    protected doCheckForUpdates(explicit: boolean): void;
+    protected buildUpdateFeedUrl(quality: string, commit: string, options?: IUpdateURLOptions): string;
+    protected doCheckForUpdates(explicit: boolean, _pendingCommit?: string): void;
     protected doDownloadUpdate(state: AvailableForDownload): Promise<void>;
 }

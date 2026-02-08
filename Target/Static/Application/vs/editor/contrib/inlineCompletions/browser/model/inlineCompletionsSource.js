@@ -19,7 +19,7 @@ import { CancellationTokenSource } from "../../../../../base/common/cancellation
 import { equalsIfDefined, thisEqualsC } from "../../../../../base/common/equals.js";
 import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
 import { cloneAndChange } from "../../../../../base/common/objects.js";
-import { derived, observableValue, recordChangesLazy, transaction } from "../../../../../base/common/observable.js";
+import { derived, observableValue, recordChangesLazy, runOnChange, transaction } from "../../../../../base/common/observable.js";
 import { observableReducerSettable } from "../../../../../base/common/observableInternal/experimental/reducer.js";
 import { isDefined, isObject } from "../../../../../base/common/types.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
@@ -35,12 +35,15 @@ import { Range } from "../../../../common/core/range.js";
 import { Command, InlineCompletionEndOfLifeReasonKind, InlineCompletionTriggerKind } from "../../../../common/languages.js";
 import { ILanguageConfigurationService } from "../../../../common/languages/languageConfigurationRegistry.js";
 import { offsetEditFromContentChanges } from "../../../../common/model/textModelStringEdit.js";
+import { isCompletionsEnabledFromObject } from "../../../../common/services/completionsEnablement.js";
+import { ITextModelService } from "../../../../common/services/resolverService.js";
 import { formatRecordableLogEntry, StructuredLogger } from "../structuredLogger.js";
 import { sendInlineCompletionsEndOfLifeTelemetry } from "../telemetry.js";
 import { wait } from "../utils.js";
 import { InlineSuggestionItem } from "./inlineSuggestionItem.js";
 import { provideInlineCompletions, runWhenCancelled } from "./provideInlineCompletions.js";
 import { RenameSymbolProcessor } from "./renameSymbolProcessor.js";
+import { TextModelValueReference } from "./textModelValueReference.js";
 let InlineCompletionsSource = class InlineCompletionsSource2 extends Disposable {
   static {
     __name(this, "InlineCompletionsSource");
@@ -51,7 +54,7 @@ let InlineCompletionsSource = class InlineCompletionsSource2 extends Disposable 
   static {
     this._requestId = 0;
   }
-  constructor(_textModel, _versionId, _debounceValue, _cursorPosition, _languageConfigurationService, _logService, _configurationService, _instantiationService, _contextKeyService) {
+  constructor(_textModel, _versionId, _debounceValue, _cursorPosition, _languageConfigurationService, _logService, _configurationService, _instantiationService, _contextKeyService, _textModelService) {
     super();
     this._textModel = _textModel;
     this._versionId = _versionId;
@@ -62,6 +65,7 @@ let InlineCompletionsSource = class InlineCompletionsSource2 extends Disposable 
     this._configurationService = _configurationService;
     this._instantiationService = _instantiationService;
     this._contextKeyService = _contextKeyService;
+    this._textModelService = _textModelService;
     this._updateOperation = this._register(new MutableDisposable());
     this._state = observableReducerSettable(this, {
       initial: /* @__PURE__ */ __name(() => ({
@@ -202,7 +206,25 @@ let InlineCompletionsSource = class InlineCompletionsSource2 extends Disposable 
               continue;
             }
             item.addPerformanceMarker("providerReturned");
-            const i = InlineSuggestionItem.create(item, this._textModel);
+            const targetUri = item.action?.uri;
+            let targetModel;
+            let disposable;
+            if (targetUri && targetUri.toString() !== this._textModel.uri.toString()) {
+              const modelRef = await this._textModelService.createModelReference(targetUri);
+              targetModel = modelRef.object.textEditorModel;
+              disposable = modelRef;
+            } else {
+              targetModel = this._textModel;
+              disposable = void 0;
+            }
+            const ref = TextModelValueReference.snapshot(targetModel);
+            const i = InlineSuggestionItem.create(item, ref);
+            if (disposable) {
+              const s = runOnChange(i.identity.onDispose, () => {
+                disposable?.dispose();
+                s.dispose();
+              });
+            }
             item.addPerformanceMarker("itemCreated");
             providerSuggestions.push(i);
             if (!i.isInlineEdit && !i.showInlineEditMenu && context.triggerKind === InlineCompletionTriggerKind.Automatic) {
@@ -315,7 +337,7 @@ let InlineCompletionsSource = class InlineCompletionsSource2 extends Disposable 
       } finally {
         store.dispose();
         decreaseLoadingCount();
-        this.sendInlineCompletionsRequestTelemetry(requestResponseInfo);
+        this._sendInlineCompletionsRequestTelemetry(requestResponseInfo);
       }
       return true;
     })();
@@ -324,6 +346,9 @@ let InlineCompletionsSource = class InlineCompletionsSource2 extends Disposable 
     return promise;
   }
   clear(tx) {
+    if (this._store.isDisposed) {
+      return;
+    }
     this._updateOperation.clear();
     const v = this._state.get();
     this._state.set({
@@ -353,14 +378,27 @@ let InlineCompletionsSource = class InlineCompletionsSource2 extends Disposable 
       this.clearSuggestWidgetInlineCompletions(tx);
     });
   }
-  sendInlineCompletionsRequestTelemetry(requestResponseInfo) {
+  /**
+   * Seeds the inline completions with an external inline completion item.
+   * Used when transplanting a completion from one model to another (cross-file edits).
+   */
+  seedWithCompletion(item, tx) {
+    const s = this._state.get();
+    this._state.set({
+      inlineCompletions: new InlineCompletionsState([item], void 0),
+      suggestWidgetInlineCompletions: InlineCompletionsState.createEmpty()
+    }, tx);
+    s.inlineCompletions.dispose();
+    s.suggestWidgetInlineCompletions.dispose();
+  }
+  _sendInlineCompletionsRequestTelemetry(requestResponseInfo) {
     if (!this._sendRequestData.get() && !this._contextKeyService.getContextKeyValue("isRunningUnificationExperiment")) {
       return;
     }
     if (requestResponseInfo.requestUuid === void 0 || requestResponseInfo.hasProducedSuggestion) {
       return;
     }
-    if (!isCompletionsEnabled(this._completionsEnabled, this._textModel.getLanguageId())) {
+    if (!isCompletionsEnabledFromObject(this._completionsEnabled, this._textModel.getLanguageId())) {
       return;
     }
     if (!requestResponseInfo.providers.some((p) => isCopilotLikeExtension(p.providerId?.extensionId))) {
@@ -434,7 +472,8 @@ InlineCompletionsSource = InlineCompletionsSource_1 = __decorate([
   __param(5, ILogService),
   __param(6, IConfigurationService),
   __param(7, IInstantiationService),
-  __param(8, IContextKeyService)
+  __param(8, IContextKeyService),
+  __param(9, ITextModelService)
 ], InlineCompletionsSource);
 class UpdateRequest {
   static {
@@ -477,16 +516,6 @@ function isSubset(set1, set2) {
   return [...set1].every((item) => set2.has(item));
 }
 __name(isSubset, "isSubset");
-function isCompletionsEnabled(completionsEnablementObject, modeId = "*") {
-  if (completionsEnablementObject === void 0) {
-    return false;
-  }
-  if (typeof completionsEnablementObject[modeId] !== "undefined") {
-    return Boolean(completionsEnablementObject[modeId]);
-  }
-  return Boolean(completionsEnablementObject["*"]);
-}
-__name(isCompletionsEnabled, "isCompletionsEnabled");
 class UpdateOperation {
   static {
     __name(this, "UpdateOperation");
@@ -508,12 +537,12 @@ class InlineCompletionsState extends Disposable {
     return new InlineCompletionsState([], void 0);
   }
   constructor(inlineCompletions, request) {
-    for (const inlineCompletion of inlineCompletions) {
-      inlineCompletion.addRef();
-    }
     super();
     this.inlineCompletions = inlineCompletions;
     this.request = request;
+    for (const inlineCompletion of this.inlineCompletions) {
+      inlineCompletion.addRef();
+    }
     this._register({
       dispose: /* @__PURE__ */ __name(() => {
         for (const inlineCompletion of this.inlineCompletions) {
@@ -594,6 +623,7 @@ function moveToFront(item, items) {
 }
 __name(moveToFront, "moveToFront");
 export {
-  InlineCompletionsSource
+  InlineCompletionsSource,
+  InlineCompletionsState
 };
 //# sourceMappingURL=inlineCompletionsSource.js.map

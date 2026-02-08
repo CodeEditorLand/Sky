@@ -5,15 +5,18 @@ import { MarshalledId } from '../../../../../base/common/marshallingIds.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IProductService } from '../../../../../platform/product/common/productService.js';
 import { IStorageService } from '../../../../../platform/storage/common/storage.js';
 import { ILifecycleService } from '../../../../services/lifecycle/common/lifecycle.js';
 import { ChatSessionStatus as AgentSessionStatus, IChatSessionItem, IChatSessionsService } from '../../common/chatSessionsService.js';
+import { IChatWidgetService } from '../chat.js';
 export { ChatSessionStatus as AgentSessionStatus, isSessionInProgressStatus } from '../../common/chatSessionsService.js';
 export interface IAgentSessionsModel {
     readonly onWillResolve: Event<void>;
     readonly onDidResolve: Event<void>;
     readonly onDidChangeSessions: Event<void>;
+    readonly onDidChangeSessionArchivedState: Event<IAgentSession>;
+    readonly resolved: boolean;
     readonly sessions: IAgentSession[];
     getSession(resource: URI): IAgentSession | undefined;
     resolve(provider: string | string[] | undefined): Promise<void>;
@@ -28,10 +31,7 @@ interface IAgentSessionData extends Omit<IChatSessionItem, 'archived' | 'iconPat
     readonly description?: string | IMarkdownString;
     readonly badge?: string | IMarkdownString;
     readonly icon: ThemeIcon;
-    readonly timing: IChatSessionItem['timing'] & {
-        readonly inProgressTime?: number;
-        readonly finishedOrFailedTime?: number;
-    };
+    readonly timing: IChatSessionItem['timing'];
     readonly changes?: IChatSessionItem['changes'];
 }
 /**
@@ -61,7 +61,8 @@ export declare const enum AgentSessionSection {
     Yesterday = "yesterday",
     Week = "week",
     Older = "older",
-    Archived = "archived"
+    Archived = "archived",
+    More = "more"
 }
 export interface IAgentSessionSection {
     readonly section: AgentSessionSection;
@@ -72,6 +73,7 @@ export declare function isAgentSessionSection(obj: unknown): obj is IAgentSessio
 export interface IMarshalledAgentSessionContext {
     readonly $mid: MarshalledId.AgentSessionContext;
     readonly session: IAgentSession;
+    readonly sessions: IAgentSession[];
 }
 export declare function isMarshalledAgentSessionContext(thing: unknown): thing is IMarshalledAgentSessionContext;
 export declare class AgentSessionsModel extends Disposable implements IAgentSessionsModel {
@@ -79,29 +81,38 @@ export declare class AgentSessionsModel extends Disposable implements IAgentSess
     private readonly lifecycleService;
     private readonly instantiationService;
     private readonly storageService;
-    private readonly logService;
+    private readonly productService;
+    private readonly chatWidgetService;
     private readonly _onWillResolve;
     readonly onWillResolve: Event<void>;
     private readonly _onDidResolve;
     readonly onDidResolve: Event<void>;
     private readonly _onDidChangeSessions;
     readonly onDidChangeSessions: Event<void>;
+    private readonly _onDidChangeSessionArchivedState;
+    readonly onDidChangeSessionArchivedState: Event<IAgentSession>;
+    private _resolved;
+    get resolved(): boolean;
     private _sessions;
     get sessions(): IAgentSession[];
     private readonly resolver;
     private readonly providersToResolve;
-    private readonly mapSessionToState;
     private readonly cache;
-    constructor(chatSessionsService: IChatSessionsService, lifecycleService: ILifecycleService, instantiationService: IInstantiationService, storageService: IStorageService, logService: ILogService);
+    private readonly logger;
+    constructor(chatSessionsService: IChatSessionsService, lifecycleService: ILifecycleService, instantiationService: IInstantiationService, storageService: IStorageService, productService: IProductService, chatWidgetService: IChatWidgetService);
     private registerListeners;
     getSession(resource: URI): IAgentSession | undefined;
     resolve(provider: string | string[] | undefined): Promise<void>;
     private doResolve;
     private toAgentSession;
-    private static readonly READ_STATE_INITIAL_DATE;
+    private static readonly UNREAD_MARKER;
     private readonly sessionStates;
     private isArchived;
     private setArchived;
     private isRead;
+    private sessionTimeForReadStateTracking;
     private setRead;
+    private static readonly READ_DATE_BASELINE_KEY;
+    private readonly readDateBaseline;
+    private resolveReadDateBaseline;
 }

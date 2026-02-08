@@ -17,7 +17,7 @@ import { Disposable } from "../../../../base/common/lifecycle.js";
 import { BrowserViewStorageScope } from "../../../../platform/browserView/common/browserView.js";
 import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
 import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
-import { isLocalhost } from "../../../../platform/tunnel/common/tunnel.js";
+import { isLocalhostAuthority } from "../../../../platform/url/common/trustedDomains.js";
 import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
 import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
 const IBrowserViewWorkbenchService = createDecorator("browserViewWorkbenchService");
@@ -38,6 +38,8 @@ let BrowserViewModel = class BrowserViewModel2 extends Disposable {
     this._favicon = void 0;
     this._screenshot = void 0;
     this._loading = false;
+    this._focused = false;
+    this._visible = false;
     this._isDevToolsOpen = false;
     this._canGoBack = false;
     this._canGoForward = false;
@@ -57,6 +59,12 @@ let BrowserViewModel = class BrowserViewModel2 extends Disposable {
   }
   get loading() {
     return this._loading;
+  }
+  get focused() {
+    return this._focused;
+  }
+  get visible() {
+    return this._visible;
   }
   get isDevToolsOpen() {
     return this._isDevToolsOpen;
@@ -100,6 +108,12 @@ let BrowserViewModel = class BrowserViewModel2 extends Disposable {
   get onDidRequestNewPage() {
     return this.browserViewService.onDynamicDidRequestNewPage(this.id);
   }
+  get onDidFindInPage() {
+    return this.browserViewService.onDynamicDidFindInPage(this.id);
+  }
+  get onDidChangeVisibility() {
+    return this.browserViewService.onDynamicDidChangeVisibility(this.id);
+  }
   get onDidClose() {
     return this.browserViewService.onDynamicDidClose(this.id);
   }
@@ -116,6 +130,8 @@ let BrowserViewModel = class BrowserViewModel2 extends Disposable {
     this._url = state.url;
     this._title = state.title;
     this._loading = state.loading;
+    this._focused = state.focused;
+    this._visible = state.visible;
     this._isDevToolsOpen = state.isDevToolsOpen;
     this._canGoBack = state.canGoBack;
     this._canGoForward = state.canGoForward;
@@ -144,11 +160,18 @@ let BrowserViewModel = class BrowserViewModel2 extends Disposable {
     this._register(this.onDidChangeFavicon((e) => {
       this._favicon = e.favicon;
     }));
+    this._register(this.onDidChangeFocus(({ focused }) => {
+      this._focused = focused;
+    }));
+    this._register(this.onDidChangeVisibility(({ visible }) => {
+      this._visible = visible;
+    }));
   }
   async layout(bounds) {
     return this.browserViewService.layout(this.id, bounds);
   }
   async setVisible(visible) {
+    this._visible = visible;
     return this.browserViewService.setVisible(this.id, visible);
   }
   async loadURL(url) {
@@ -183,13 +206,25 @@ let BrowserViewModel = class BrowserViewModel2 extends Disposable {
   async focus() {
     return this.browserViewService.focus(this.id);
   }
+  async findInPage(text, options) {
+    return this.browserViewService.findInPage(this.id, text, options);
+  }
+  async stopFindInPage(keepSelection) {
+    return this.browserViewService.stopFindInPage(this.id, keepSelection);
+  }
+  async getSelectedText() {
+    return this.browserViewService.getSelectedText(this.id);
+  }
+  async clearStorage() {
+    return this.browserViewService.clearStorage(this.id);
+  }
   /**
    * Log navigation telemetry event
    */
   logNavigationTelemetry(navigationType, url) {
     let localhost;
     try {
-      localhost = isLocalhost(new URL(url).hostname);
+      localhost = isLocalhostAuthority(new URL(url).host);
     } catch {
       localhost = false;
     }

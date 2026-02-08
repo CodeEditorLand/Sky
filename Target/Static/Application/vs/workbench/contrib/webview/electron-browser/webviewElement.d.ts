@@ -10,6 +10,7 @@ import { INativeHostService } from '../../../../platform/native/common/native.js
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IRemoteAuthorityResolverService } from '../../../../platform/remote/common/remoteAuthorityResolver.js';
 import { ITunnelService } from '../../../../platform/tunnel/common/tunnel.js';
+import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
 import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
 import { WebviewThemeDataProvider } from '../browser/themeing.js';
 import { WebviewInitInfo } from '../browser/webview.js';
@@ -25,7 +26,7 @@ export declare class ElectronWebviewElement extends WebviewElement {
     private readonly _webviewMainService;
     private readonly _iframeDelayer;
     protected get platform(): string;
-    constructor(initInfo: WebviewInitInfo, webviewThemeDataProvider: WebviewThemeDataProvider, contextMenuService: IContextMenuService, tunnelService: ITunnelService, fileService: IFileService, environmentService: IWorkbenchEnvironmentService, remoteAuthorityResolverService: IRemoteAuthorityResolverService, logService: ILogService, configurationService: IConfigurationService, mainProcessService: IMainProcessService, notificationService: INotificationService, _nativeHostService: INativeHostService, instantiationService: IInstantiationService, accessibilityService: IAccessibilityService);
+    constructor(initInfo: WebviewInitInfo, webviewThemeDataProvider: WebviewThemeDataProvider, contextMenuService: IContextMenuService, tunnelService: ITunnelService, fileService: IFileService, environmentService: IWorkbenchEnvironmentService, remoteAuthorityResolverService: IRemoteAuthorityResolverService, logService: ILogService, configurationService: IConfigurationService, mainProcessService: IMainProcessService, notificationService: INotificationService, _nativeHostService: INativeHostService, instantiationService: IInstantiationService, accessibilityService: IAccessibilityService, uriIdentityService: IUriIdentityService);
     dispose(): void;
     protected webviewContentEndpoint(iframeId: string): string;
     protected streamToBuffer(stream: VSBufferReadableStream): Promise<ArrayBufferLike>;

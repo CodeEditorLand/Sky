@@ -5,12 +5,22 @@ type Implementation = MCP.Implementation;
 type RequestId = MCP.RequestId;
 type Tool = MCP.Tool;
 export declare namespace McpApps {
-    type AppRequest = MCP.CallToolRequest | MCP.ReadResourceRequest | MCP.PingRequest | (McpUiOpenLinkRequest & MCP.JSONRPCRequest) | (McpUiMessageRequest & MCP.JSONRPCRequest) | (McpUiRequestDisplayModeRequest & MCP.JSONRPCRequest) | (McpApps.McpUiInitializeRequest & MCP.JSONRPCRequest);
-    type AppNotification = McpUiInitializedNotification | McpUiSizeChangedNotification | MCP.LoggingMessageNotification;
+    type AppRequest = MCP.CallToolRequest | MCP.ReadResourceRequest | MCP.PingRequest | (McpUiOpenLinkRequest & MCP.JSONRPCRequest) | (McpUiUpdateModelContextRequest & MCP.JSONRPCRequest) | (McpUiMessageRequest & MCP.JSONRPCRequest) | (McpUiRequestDisplayModeRequest & MCP.JSONRPCRequest) | (McpApps.McpUiInitializeRequest & MCP.JSONRPCRequest);
+    type AppNotification = McpUiInitializedNotification | McpUiSizeChangedNotification | MCP.LoggingMessageNotification | CustomSandboxWheelNotification;
     type AppMessage = AppRequest | AppNotification;
     type HostResult = MCP.CallToolResult | MCP.ReadResourceResult | MCP.EmptyResult | McpApps.McpUiInitializeResult | McpUiMessageResult | McpUiOpenLinkResult | McpUiRequestDisplayModeResult;
     type HostNotification = McpUiHostContextChangedNotification | McpUiResourceTeardownRequest | McpUiToolInputNotification | McpUiToolInputPartialNotification | McpUiToolResultNotification | McpUiToolCancelledNotification | McpUiSizeChangedNotification;
     type HostMessage = HostResult | HostNotification;
+    /** Custom notification used for bubbling up sandbox wheel events. */
+    interface CustomSandboxWheelNotification {
+        method: 'ui/notifications/sandbox-wheel';
+        params: {
+            deltaMode: number;
+            deltaX: number;
+            deltaY: number;
+            deltaZ: number;
+        };
+    }
 }
 /**
  * Schema updated from the Model Context Protocol Apps repository at
@@ -25,7 +35,7 @@ export declare namespace McpApps {
      * The SDK automatically handles version negotiation during initialization.
      * Apps and hosts don't need to manage protocol versions manually.
      */
-    const LATEST_PROTOCOL_VERSION = "2025-11-21";
+    const LATEST_PROTOCOL_VERSION = "2026-01-26";
     /**
      * @description Color theme preference for the host environment.
      */
@@ -269,6 +279,27 @@ export declare namespace McpApps {
         params: McpUiHostContext;
     }
     /**
+     * @description Request to update the agent's context without requiring a follow-up action (Guest UI -> Host).
+     *
+     * Unlike `notifications/message` which is for debugging/logging, this request is intended
+     * to update the Host's model context. Each request overwrites the previous context sent by the Guest UI.
+     * Unlike messages, context updates do not trigger follow-ups.
+     *
+     * The host will typically defer sending the context to the model until the next user message
+     * (including `ui/message`), and will only send the last update received.
+     *
+     * @see {@link app.App.updateModelContext} for the method that sends this request
+     */
+    interface McpUiUpdateModelContextRequest {
+        method: "ui/update-model-context";
+        params: {
+            /** @description Context content blocks (text, image, etc.). */
+            content?: ContentBlock[];
+            /** @description Structured content for machine-readable context data. */
+            structuredContent?: Record<string, unknown>;
+        };
+    }
+    /**
      * @description Request for graceful shutdown of the Guest UI (Host -> Guest UI).
      * @see {@link app-bridge.AppBridge.teardownResource} for the host method that sends this
      */
@@ -285,6 +316,20 @@ export declare namespace McpApps {
          * Index signature required for MCP SDK `Protocol` class compatibility.
          */
         [key: string]: unknown;
+    }
+    interface McpUiSupportedContentBlockModalities {
+        /** @description Host supports text content blocks. */
+        text?: {};
+        /** @description Host supports image content blocks. */
+        image?: {};
+        /** @description Host supports audio content blocks. */
+        audio?: {};
+        /** @description Host supports resource content blocks. */
+        resource?: {};
+        /** @description Host supports resource link content blocks. */
+        resourceLink?: {};
+        /** @description Host supports structured content. */
+        structuredContent?: {};
     }
     /**
      * @description Capabilities supported by the host application.
@@ -314,9 +359,13 @@ export declare namespace McpApps {
             /** @description CSP domains approved by the host. */
             csp?: McpUiResourceCsp;
         };
+        /** @description Host accepts context updates (ui/update-model-context) to be included in the model's context for future turns. */
+        updateModelContext?: McpUiSupportedContentBlockModalities;
+        /** @description Host supports receiving content messages (ui/message) from the View. */
+        message?: McpUiSupportedContentBlockModalities;
     }
     /**
-     * @description Capabilities provided by the Guest UI (App).
+     * @description Capabilities provided by the View (App).
      * @see {@link McpUiInitializeRequest} for the initialization request that includes these capabilities
      */
     interface McpUiAppCapabilities {
@@ -327,6 +376,11 @@ export declare namespace McpApps {
             /** @description App supports tools/list_changed notifications. */
             listChanged?: boolean;
         };
+        /**
+         * @description Display modes the app supports. See Display Modes section of the spec for details.
+         * @example ["inline", "fullscreen"]
+         */
+        availableDisplayModes?: McpUiDisplayMode[];
     }
     /**
      * @description Initialization request sent from Guest UI to Host.
@@ -489,5 +543,6 @@ export declare namespace McpApps {
     const INITIALIZE_METHOD: McpUiInitializeRequest["method"];
     const INITIALIZED_METHOD: McpUiInitializedNotification["method"];
     const REQUEST_DISPLAY_MODE_METHOD: McpUiRequestDisplayModeRequest["method"];
+    const UPDATE_MODEL_CONTEXT_METHOD: McpUiUpdateModelContextRequest["method"];
 }
 export {};

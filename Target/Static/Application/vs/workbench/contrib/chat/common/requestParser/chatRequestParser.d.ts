@@ -1,10 +1,10 @@
 import { URI } from '../../../../../base/common/uri.js';
-import { IChatAgentData, IChatAgentService } from '../participants/chatAgents.js';
-import { IParsedChatRequest } from './chatParserTypes.js';
-import { IChatSlashCommandService } from '../participants/chatSlashCommands.js';
 import { IChatVariablesService } from '../attachments/chatVariables.js';
 import { ChatAgentLocation, ChatModeKind } from '../constants.js';
+import { IChatAgentData, IChatAgentService } from '../participants/chatAgents.js';
+import { IChatSlashCommandService } from '../participants/chatSlashCommands.js';
 import { IPromptsService } from '../promptSyntax/service/promptsService.js';
+import { IParsedChatRequest } from './chatParserTypes.js';
 export interface IChatParserContext {
     /** Used only as a disambiguator, when the query references an agent that has a duplicate with the same name. */
     selectedAgent?: IChatAgentData;

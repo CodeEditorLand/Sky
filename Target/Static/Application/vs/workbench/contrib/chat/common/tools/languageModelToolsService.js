@@ -9,6 +9,16 @@ import { localize } from "../../../../../nls.js";
 import { ByteSize } from "../../../../../platform/files/common/files.js";
 import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
 import { stringifyPromptElementJSON } from "./promptTsxTypes.js";
+function toolMatchesModel(toolData, model) {
+  if (!toolData.models || toolData.models.length === 0) {
+    return true;
+  }
+  if (!model) {
+    return true;
+  }
+  return toolData.models.some((selector) => (!selector.id || selector.id === model.id) && (!selector.vendor || selector.vendor === model.vendor) && (!selector.family || selector.family === model.family) && (!selector.version || selector.version === model.version));
+}
+__name(toolMatchesModel, "toolMatchesModel");
 var ToolDataSource;
 (function(ToolDataSource2) {
   ToolDataSource2.Internal = { type: "internal", label: "Built-In" };
@@ -86,17 +96,22 @@ var ToolInvocationPresentation;
   ToolInvocationPresentation2["Hidden"] = "hidden";
   ToolInvocationPresentation2["HiddenAfterComplete"] = "hiddenAfterComplete";
 })(ToolInvocationPresentation || (ToolInvocationPresentation = {}));
+function isToolSet(obj) {
+  return !!obj && obj.getTools !== void 0;
+}
+__name(isToolSet, "isToolSet");
 class ToolSet {
   static {
     __name(this, "ToolSet");
   }
-  constructor(id, referenceName, icon, source, description, legacyFullNames) {
+  constructor(id, referenceName, icon, source, description, legacyFullNames, _contextKeyService) {
     this.id = id;
     this.referenceName = referenceName;
     this.icon = icon;
     this.source = source;
     this.description = description;
     this.legacyFullNames = legacyFullNames;
+    this._contextKeyService = _contextKeyService;
     this._tools = new ObservableSet();
     this._toolSets = new ObservableSet();
     this.isHomogenous = derived((r) => {
@@ -119,7 +134,37 @@ class ToolSet {
     });
   }
   getTools(r) {
-    return Iterable.concat(this._tools.observable.read(r), ...Iterable.map(this._toolSets.observable.read(r), (toolSet) => toolSet.getTools(r)));
+    return Iterable.concat(Iterable.filter(this._tools.observable.read(r), (toolData) => this._contextKeyService.contextMatchesRules(toolData.when)), ...Iterable.map(this._toolSets.observable.read(r), (toolSet) => toolSet.getTools(r)));
+  }
+}
+class ToolSetForModel {
+  static {
+    __name(this, "ToolSetForModel");
+  }
+  get id() {
+    return this._toolSet.id;
+  }
+  get referenceName() {
+    return this._toolSet.referenceName;
+  }
+  get icon() {
+    return this._toolSet.icon;
+  }
+  get source() {
+    return this._toolSet.source;
+  }
+  get description() {
+    return this._toolSet.description;
+  }
+  get legacyFullNames() {
+    return this._toolSet.legacyFullNames;
+  }
+  constructor(_toolSet, model) {
+    this._toolSet = _toolSet;
+    this.model = model;
+  }
+  getTools(r) {
+    return Iterable.filter(this._toolSet.getTools(r), (toolData) => toolMatchesModel(toolData, this.model));
   }
 }
 const ILanguageModelToolsService = createDecorator("ILanguageModelToolsService");
@@ -155,14 +200,17 @@ export {
   ToolDataSource,
   ToolInvocationPresentation,
   ToolSet,
+  ToolSetForModel,
   VSCodeToolReference,
   createToolInputUri,
   createToolSchemaUri,
   isToolInvocationContext,
   isToolResultInputOutputDetails,
   isToolResultOutputDetails,
+  isToolSet,
   stringifyPromptTsxPart,
   toolContentToA11yString,
+  toolMatchesModel,
   toolResultHasBuffers
 };
 //# sourceMappingURL=languageModelToolsService.js.map

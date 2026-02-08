@@ -21,7 +21,7 @@ import { Codicon } from "../../../../../base/common/codicons.js";
 import * as event from "../../../../../base/common/event.js";
 import { MarkdownString } from "../../../../../base/common/htmlContent.js";
 import { Iterable } from "../../../../../base/common/iterator.js";
-import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
 import { Schemas } from "../../../../../base/common/network.js";
 import { basename, dirname } from "../../../../../base/common/path.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
@@ -29,12 +29,14 @@ import { URI } from "../../../../../base/common/uri.js";
 import { EditorContextKeys } from "../../../../../editor/common/editorContextKeys.js";
 import { ILanguageService } from "../../../../../editor/common/languages/language.js";
 import { ILanguageFeaturesService } from "../../../../../editor/common/services/languageFeatures.js";
+import { getIconClasses } from "../../../../../editor/common/services/getIconClasses.js";
 import { IModelService } from "../../../../../editor/common/services/model.js";
 import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
 import { localize } from "../../../../../nls.js";
 import { getFlatContextMenuActions } from "../../../../../platform/actions/browser/menuEntryActionViewItem.js";
 import { IMenuService, MenuId } from "../../../../../platform/actions/common/actions.js";
 import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { IContextKeyService, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
 import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
 import { fillInSymbolsDragData } from "../../../../../platform/dnd/browser/dnd.js";
@@ -58,7 +60,7 @@ import { getHistoryItemEditorTitle } from "../../../scm/browser/util.js";
 import { ITerminalService } from "../../../terminal/browser/terminal.js";
 import { PromptFileVariableKind, isStringVariableEntry } from "../../common/attachments/chatVariableEntries.js";
 import { ILanguageModelsService } from "../../common/languageModels.js";
-import { ILanguageModelToolsService, ToolSet } from "../../common/tools/languageModelToolsService.js";
+import { ILanguageModelToolsService, isToolSet } from "../../common/tools/languageModelToolsService.js";
 import { getCleanPromptName } from "../../common/promptSyntax/config/promptFileLocations.js";
 import { IChatContextService } from "../contextContrib/chatContextService.js";
 const commonHoverOptions = {
@@ -82,13 +84,14 @@ let AbstractChatAttachmentWidget = class AbstractChatAttachmentWidget2 extends D
   get onDidOpen() {
     return this._onDidOpen.event;
   }
-  constructor(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, terminalService) {
+  constructor(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService, terminalService) {
     super();
     this.attachment = attachment;
     this.options = options;
     this.currentLanguageModel = currentLanguageModel;
     this.commandService = commandService;
     this.openerService = openerService;
+    this.configurationService = configurationService;
     this.terminalService = terminalService;
     this._onDidDelete = this._register(new event.Emitter());
     this._onDidOpen = this._register(new event.Emitter());
@@ -166,7 +169,8 @@ let AbstractChatAttachmentWidget = class AbstractChatAttachmentWidget2 extends D
 AbstractChatAttachmentWidget = __decorate([
   __param(5, ICommandService),
   __param(6, IOpenerService),
-  __param(7, ITerminalService)
+  __param(7, IConfigurationService),
+  __param(8, ITerminalService)
 ], AbstractChatAttachmentWidget);
 function modelSupportsVision(currentLanguageModel) {
   return currentLanguageModel?.metadata.capabilities?.vision ?? false;
@@ -176,8 +180,8 @@ let FileAttachmentWidget = class FileAttachmentWidget2 extends AbstractChatAttac
   static {
     __name(this, "FileAttachmentWidget");
   }
-  constructor(resource, range, attachment, correspondingContentReference, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, themeService, hoverService, languageModelsService, instantiationService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(resource, range, attachment, correspondingContentReference, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, themeService, hoverService, languageModelsService, instantiationService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.themeService = themeService;
     this.hoverService = hoverService;
     this.languageModelsService = languageModelsService;
@@ -225,17 +229,18 @@ let FileAttachmentWidget = class FileAttachmentWidget2 extends AbstractChatAttac
 FileAttachmentWidget = __decorate([
   __param(8, ICommandService),
   __param(9, IOpenerService),
-  __param(10, IThemeService),
-  __param(11, IHoverService),
-  __param(12, ILanguageModelsService),
-  __param(13, IInstantiationService)
+  __param(10, IConfigurationService),
+  __param(11, IThemeService),
+  __param(12, IHoverService),
+  __param(13, ILanguageModelsService),
+  __param(14, IInstantiationService)
 ], FileAttachmentWidget);
 let TerminalCommandAttachmentWidget = class TerminalCommandAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "TerminalCommandAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, hoverService, terminalService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, terminalService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, hoverService, terminalService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService, terminalService);
     this.hoverService = hoverService;
     this.terminalService = terminalService;
     const ariaLabel = localize("chat.terminalCommand", "Terminal command, {0}", attachment.command);
@@ -259,8 +264,9 @@ let TerminalCommandAttachmentWidget = class TerminalCommandAttachmentWidget2 ext
 TerminalCommandAttachmentWidget = __decorate([
   __param(5, ICommandService),
   __param(6, IOpenerService),
-  __param(7, IHoverService),
-  __param(8, ITerminalService)
+  __param(7, IConfigurationService),
+  __param(8, IHoverService),
+  __param(9, ITerminalService)
 ], TerminalCommandAttachmentWidget);
 var TerminalConstants;
 (function(TerminalConstants2) {
@@ -333,8 +339,8 @@ let ImageAttachmentWidget = class ImageAttachmentWidget2 extends AbstractChatAtt
   static {
     __name(this, "ImageAttachmentWidget");
   }
-  constructor(resource, attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, hoverService, languageModelsService, instantiationService, labelService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(resource, attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, hoverService, languageModelsService, instantiationService, labelService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.hoverService = hoverService;
     this.languageModelsService = languageModelsService;
     this.labelService = labelService;
@@ -367,10 +373,11 @@ let ImageAttachmentWidget = class ImageAttachmentWidget2 extends AbstractChatAtt
 ImageAttachmentWidget = __decorate([
   __param(6, ICommandService),
   __param(7, IOpenerService),
-  __param(8, IHoverService),
-  __param(9, ILanguageModelsService),
-  __param(10, IInstantiationService),
-  __param(11, ILabelService)
+  __param(8, IConfigurationService),
+  __param(9, IHoverService),
+  __param(10, ILanguageModelsService),
+  __param(11, IInstantiationService),
+  __param(12, ILabelService)
 ], ImageAttachmentWidget);
 function createImageElements(resource, name, fullName, element, buffer, hoverService, ariaLabel, currentLanguageModelName, clickHandler, currentLanguageModel, omittedState) {
   const disposable = new DisposableStore();
@@ -438,8 +445,8 @@ let PasteAttachmentWidget = class PasteAttachmentWidget2 extends AbstractChatAtt
   static {
     __name(this, "PasteAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, hoverService, instantiationService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, hoverService, instantiationService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.hoverService = hoverService;
     this.instantiationService = instantiationService;
     const ariaLabel = localize("chat.attachment", "Attached context, {0}", attachment.name);
@@ -480,20 +487,31 @@ ${attachment.code}
 PasteAttachmentWidget = __decorate([
   __param(5, ICommandService),
   __param(6, IOpenerService),
-  __param(7, IHoverService),
-  __param(8, IInstantiationService)
+  __param(7, IConfigurationService),
+  __param(8, IHoverService),
+  __param(9, IInstantiationService)
 ], PasteAttachmentWidget);
 let DefaultChatAttachmentWidget = class DefaultChatAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "DefaultChatAttachmentWidget");
   }
-  constructor(resource, range, attachment, correspondingContentReference, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, contextKeyService, instantiationService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(resource, range, attachment, correspondingContentReference, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, contextKeyService, instantiationService, hoverService, modelService, languageService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.contextKeyService = contextKeyService;
     this.instantiationService = instantiationService;
+    this.hoverService = hoverService;
+    this.modelService = modelService;
+    this.languageService = languageService;
+    this._tooltipHover = this._register(new MutableDisposable());
     const attachmentLabel = attachment.fullName ?? attachment.name;
-    const withIcon = attachment.icon?.id ? `$(${attachment.icon.id})\xA0${attachmentLabel}` : attachmentLabel;
-    this.label.setLabel(withIcon, correspondingContentReference?.options?.status?.description);
+    if (isStringVariableEntry(attachment) && attachment.icon && (ThemeIcon.isFile(attachment.icon) || ThemeIcon.isFolder(attachment.icon)) && attachment.resourceUri) {
+      const fileKind = ThemeIcon.isFolder(attachment.icon) ? FileKind.FOLDER : FileKind.FILE;
+      const iconClasses = getIconClasses(this.modelService, this.languageService, attachment.resourceUri, fileKind);
+      this.label.setLabel(attachmentLabel, correspondingContentReference?.options?.status?.description, { extraClasses: iconClasses });
+    } else {
+      const withIcon = attachment.icon?.id ? `$(${attachment.icon.id})\xA0${attachmentLabel}` : attachmentLabel;
+      this.label.setLabel(withIcon, correspondingContentReference?.options?.status?.description);
+    }
     this.element.ariaLabel = localize("chat.attachment", "Attached context, {0}", attachment.name);
     if (attachment.kind === "diagnostic") {
       if (attachment.filterUri) {
@@ -518,23 +536,36 @@ let DefaultChatAttachmentWidget = class DefaultChatAttachmentWidget2 extends Abs
         await chatContextService.executeChatContextItemCommand(contextItemHandle);
       }));
     }
+    if ((isStringVariableEntry(attachment) || attachment.kind === "generic") && attachment.tooltip) {
+      this._setupTooltipHover(attachment.tooltip);
+    }
     if (resource) {
       this.addResourceOpenHandlers(resource, range);
     }
+  }
+  _setupTooltipHover(tooltip) {
+    this._tooltipHover.value = this.hoverService.setupDelayedHover(this.element, {
+      content: tooltip,
+      appearance: { showPointer: true }
+    });
   }
 };
 DefaultChatAttachmentWidget = __decorate([
   __param(8, ICommandService),
   __param(9, IOpenerService),
-  __param(10, IContextKeyService),
-  __param(11, IInstantiationService)
+  __param(10, IConfigurationService),
+  __param(11, IContextKeyService),
+  __param(12, IInstantiationService),
+  __param(13, IHoverService),
+  __param(14, IModelService),
+  __param(15, ILanguageService)
 ], DefaultChatAttachmentWidget);
 let PromptFileAttachmentWidget = class PromptFileAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "PromptFileAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, labelService, instantiationService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, labelService, instantiationService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.labelService = labelService;
     this.instantiationService = instantiationService;
     this.hintElement = dom.append(this.element, dom.$("span.prompt-type"));
@@ -571,15 +602,16 @@ ${attachment.originLabel}` : "");
 PromptFileAttachmentWidget = __decorate([
   __param(5, ICommandService),
   __param(6, IOpenerService),
-  __param(7, ILabelService),
-  __param(8, IInstantiationService)
+  __param(7, IConfigurationService),
+  __param(8, ILabelService),
+  __param(9, IInstantiationService)
 ], PromptFileAttachmentWidget);
 let PromptTextAttachmentWidget = class PromptTextAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "PromptTextAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, preferencesService, hoverService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, preferencesService, hoverService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     if (attachment.settingId) {
       const openSettings = /* @__PURE__ */ __name(() => preferencesService.openSettings({ jsonEditor: false, query: `@id:${attachment.settingId}` }), "openSettings");
       this.element.style.cursor = "pointer";
@@ -611,19 +643,20 @@ let PromptTextAttachmentWidget = class PromptTextAttachmentWidget2 extends Abstr
 PromptTextAttachmentWidget = __decorate([
   __param(5, ICommandService),
   __param(6, IOpenerService),
-  __param(7, IPreferencesService),
-  __param(8, IHoverService)
+  __param(7, IConfigurationService),
+  __param(8, IPreferencesService),
+  __param(9, IHoverService)
 ], PromptTextAttachmentWidget);
 let ToolSetOrToolItemAttachmentWidget = class ToolSetOrToolItemAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "ToolSetOrToolItemAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, toolsService, commandService, openerService, hoverService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
-    const toolOrToolSet = Iterable.find(toolsService.getTools(), (tool) => tool.id === attachment.id) ?? Iterable.find(toolsService.toolSets.get(), (toolSet) => toolSet.id === attachment.id);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, toolsService, commandService, openerService, configurationService, hoverService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
+    const toolOrToolSet = Iterable.find(toolsService.getTools(currentLanguageModel?.metadata), (tool) => tool.id === attachment.id) ?? Iterable.find(toolsService.getToolSetsForModel(currentLanguageModel?.metadata), (toolSet) => toolSet.id === attachment.id);
     let name = attachment.name;
     const icon = attachment.icon ?? Codicon.tools;
-    if (toolOrToolSet instanceof ToolSet) {
+    if (isToolSet(toolOrToolSet)) {
       name = toolOrToolSet.referenceName;
     } else if (toolOrToolSet) {
       name = toolOrToolSet.toolReferenceName ?? name;
@@ -632,7 +665,7 @@ let ToolSetOrToolItemAttachmentWidget = class ToolSetOrToolItemAttachmentWidget2
     this.element.style.cursor = "pointer";
     this.element.ariaLabel = localize("chat.attachment", "Attached context, {0}", name);
     let hoverContent;
-    if (toolOrToolSet instanceof ToolSet) {
+    if (isToolSet(toolOrToolSet)) {
       hoverContent = localize("toolset", "{0} - {1}", toolOrToolSet.description ?? toolOrToolSet.referenceName, toolOrToolSet.source.label);
     } else if (toolOrToolSet) {
       hoverContent = localize("tool", "{0} - {1}", toolOrToolSet.userDescription ?? toolOrToolSet.modelDescription, toolOrToolSet.source.label);
@@ -649,14 +682,15 @@ ToolSetOrToolItemAttachmentWidget = __decorate([
   __param(5, ILanguageModelToolsService),
   __param(6, ICommandService),
   __param(7, IOpenerService),
-  __param(8, IHoverService)
+  __param(8, IConfigurationService),
+  __param(9, IHoverService)
 ], ToolSetOrToolItemAttachmentWidget);
 let NotebookCellOutputChatAttachmentWidget = class NotebookCellOutputChatAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "NotebookCellOutputChatAttachmentWidget");
   }
-  constructor(resource, attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, hoverService, languageModelsService, notebookService, instantiationService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(resource, attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, hoverService, languageModelsService, notebookService, instantiationService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.hoverService = hoverService;
     this.languageModelsService = languageModelsService;
     this.notebookService = notebookService;
@@ -737,17 +771,18 @@ let NotebookCellOutputChatAttachmentWidget = class NotebookCellOutputChatAttachm
 NotebookCellOutputChatAttachmentWidget = __decorate([
   __param(6, ICommandService),
   __param(7, IOpenerService),
-  __param(8, IHoverService),
-  __param(9, ILanguageModelsService),
-  __param(10, INotebookService),
-  __param(11, IInstantiationService)
+  __param(8, IConfigurationService),
+  __param(9, IHoverService),
+  __param(10, ILanguageModelsService),
+  __param(11, INotebookService),
+  __param(12, IInstantiationService)
 ], NotebookCellOutputChatAttachmentWidget);
 let ElementChatAttachmentWidget = class ElementChatAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "ElementChatAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, editorService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, editorService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     const ariaLabel = localize("chat.elementAttachment", "Attached element, {0}", attachment.name);
     this.element.ariaLabel = ariaLabel;
     this.element.style.position = "relative";
@@ -770,14 +805,15 @@ let ElementChatAttachmentWidget = class ElementChatAttachmentWidget2 extends Abs
 ElementChatAttachmentWidget = __decorate([
   __param(5, ICommandService),
   __param(6, IOpenerService),
-  __param(7, IEditorService)
+  __param(7, IConfigurationService),
+  __param(8, IEditorService)
 ], ElementChatAttachmentWidget);
 let SCMHistoryItemAttachmentWidget = class SCMHistoryItemAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "SCMHistoryItemAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, markdownRendererService, hoverService, openerService, themeService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, markdownRendererService, hoverService, openerService, configurationService, themeService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.label.setLabel(attachment.name, void 0);
     this.element.style.cursor = "pointer";
     this.element.ariaLabel = localize("chat.attachment", "Attached context, {0}", attachment.name);
@@ -817,14 +853,15 @@ SCMHistoryItemAttachmentWidget = __decorate([
   __param(6, IMarkdownRendererService),
   __param(7, IHoverService),
   __param(8, IOpenerService),
-  __param(9, IThemeService)
+  __param(9, IConfigurationService),
+  __param(10, IThemeService)
 ], SCMHistoryItemAttachmentWidget);
 let SCMHistoryItemChangeAttachmentWidget = class SCMHistoryItemChangeAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "SCMHistoryItemChangeAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, hoverService, markdownRendererService, openerService, themeService, editorService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, hoverService, markdownRendererService, openerService, configurationService, themeService, editorService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.editorService = editorService;
     const nameSuffix = `\xA0$(${Codicon.gitCommit.id})${attachment.historyItem.displayId ?? attachment.historyItem.id}`;
     this.label.setFile(attachment.value, { fileKind: FileKind.FILE, hidePath: true, nameSuffix });
@@ -852,15 +889,16 @@ SCMHistoryItemChangeAttachmentWidget = __decorate([
   __param(6, IHoverService),
   __param(7, IMarkdownRendererService),
   __param(8, IOpenerService),
-  __param(9, IThemeService),
-  __param(10, IEditorService)
+  __param(9, IConfigurationService),
+  __param(10, IThemeService),
+  __param(11, IEditorService)
 ], SCMHistoryItemChangeAttachmentWidget);
 let SCMHistoryItemChangeRangeAttachmentWidget = class SCMHistoryItemChangeRangeAttachmentWidget2 extends AbstractChatAttachmentWidget {
   static {
     __name(this, "SCMHistoryItemChangeRangeAttachmentWidget");
   }
-  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, editorService) {
-    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService);
+  constructor(attachment, currentLanguageModel, options, container, contextResourceLabels, commandService, openerService, configurationService, editorService) {
+    super(attachment, options, container, contextResourceLabels, currentLanguageModel, commandService, openerService, configurationService);
     this.editorService = editorService;
     const historyItemStartId = attachment.historyItemChangeStart.historyItem.displayId ?? attachment.historyItemChangeStart.historyItem.id;
     const historyItemEndId = attachment.historyItemChangeEnd.historyItem.displayId ?? attachment.historyItemChangeEnd.historyItem.id;
@@ -886,7 +924,8 @@ let SCMHistoryItemChangeRangeAttachmentWidget = class SCMHistoryItemChangeRangeA
 SCMHistoryItemChangeRangeAttachmentWidget = __decorate([
   __param(5, ICommandService),
   __param(6, IOpenerService),
-  __param(7, IEditorService)
+  __param(7, IConfigurationService),
+  __param(8, IEditorService)
 ], SCMHistoryItemChangeRangeAttachmentWidget);
 function hookUpResourceAttachmentDragAndContextMenu(accessor, widget, resource) {
   const contextKeyService = accessor.get(IContextKeyService);

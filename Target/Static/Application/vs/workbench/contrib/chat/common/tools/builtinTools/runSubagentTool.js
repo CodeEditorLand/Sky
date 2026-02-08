@@ -12,25 +12,27 @@ var __param = function(paramIndex, decorator) {
   };
 };
 var RunSubagentTool_1;
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
 import { Event } from "../../../../../../base/common/event.js";
 import { MarkdownString } from "../../../../../../base/common/htmlContent.js";
-import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { generateUuid } from "../../../../../../base/common/uuid.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
 import { ThemeIcon } from "../../../../../../base/common/themables.js";
 import { localize } from "../../../../../../nls.js";
 import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
 import { ILogService } from "../../../../../../platform/log/common/log.js";
 import { IChatAgentService } from "../../participants/chatAgents.js";
-import { IChatModeService } from "../../chatModes.js";
 import { IChatService } from "../../chatService/chatService.js";
 import { ChatRequestVariableSet } from "../../attachments/chatVariableEntries.js";
 import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../constants.js";
-import { ILanguageModelChatMetadata, ILanguageModelsService } from "../../languageModels.js";
-import { ILanguageModelToolsService, ToolDataSource, ToolSet, VSCodeToolReference } from "../languageModelToolsService.js";
+import { ILanguageModelsService } from "../../languageModels.js";
+import { ILanguageModelToolsService, isToolSet, ToolDataSource, VSCodeToolReference } from "../languageModelToolsService.js";
 import { ComputeAutomaticInstructions } from "../../promptSyntax/computeAutomaticInstructions.js";
 import { ManageTodoListToolToolId } from "./manageTodoListTool.js";
 import { createToolSimpleTextResult } from "./toolHelpers.js";
+import { IPromptsService } from "../../promptSyntax/service/promptsService.js";
 const BaseModelDescription = `Launch a new agent to handle complex, multi-step tasks autonomously. This tool is good at researching complex questions, searching for code, and executing multi-step tasks. When you are searching for a keyword or file and are not confident that you will find the right match in the first few tries, use this agent to perform the search for you.
 
 - Agents do not run async or in the background, you will wait for the agent's result.
@@ -48,16 +50,16 @@ let RunSubagentTool = class RunSubagentTool2 extends Disposable {
   static {
     this.Id = "runSubagent";
   }
-  constructor(chatAgentService, chatService, chatModeService, languageModelToolsService, languageModelsService, logService, toolsService, configurationService, instantiationService) {
+  constructor(chatAgentService, chatService, languageModelToolsService, languageModelsService, logService, toolsService, configurationService, promptsService, instantiationService) {
     super();
     this.chatAgentService = chatAgentService;
     this.chatService = chatService;
-    this.chatModeService = chatModeService;
     this.languageModelToolsService = languageModelToolsService;
     this.languageModelsService = languageModelsService;
     this.logService = logService;
     this.toolsService = toolsService;
     this.configurationService = configurationService;
+    this.promptsService = promptsService;
     this.instantiationService = instantiationService;
     this.onDidUpdateToolData = Event.filter(this.configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration(ChatConfiguration.SubagentToolCustomAgents));
   }
@@ -108,6 +110,7 @@ let RunSubagentTool = class RunSubagentTool2 extends Disposable {
       throw new Error("Chat model not found for session");
     }
     const request = model.getRequests().at(-1);
+    const store = new DisposableStore();
     try {
       const defaultAgent = this.chatAgentService.getDefaultAgent(ChatAgentLocation.Chat, ChatModeKind.Agent);
       if (!defaultAgent) {
@@ -116,53 +119,56 @@ let RunSubagentTool = class RunSubagentTool2 extends Disposable {
       let modeModelId = invocation.modelId;
       let modeTools = invocation.userSelectedTools;
       let modeInstructions;
-      if (args.agentName) {
-        const mode = this.chatModeService.findModeByName(args.agentName);
-        if (mode) {
-          const modeModelQualifiedName = mode.model?.get();
-          if (modeModelQualifiedName) {
-            const modelIds = this.languageModelsService.getLanguageModelIds();
-            for (const modelId of modelIds) {
-              const metadata = this.languageModelsService.lookupLanguageModel(modelId);
-              if (metadata && ILanguageModelChatMetadata.matchesQualifiedName(modeModelQualifiedName, metadata)) {
-                modeModelId = modelId;
-                break;
+      let subagent;
+      const subAgentName = args.agentName;
+      if (subAgentName) {
+        subagent = await this.getSubAgentByName(subAgentName);
+        if (subagent) {
+          const modeModelQualifiedNames = subagent.model;
+          if (modeModelQualifiedNames) {
+            outer: for (const qualifiedName of modeModelQualifiedNames) {
+              const lmByQualifiedName = this.languageModelsService.lookupLanguageModelByQualifiedName(qualifiedName);
+              if (lmByQualifiedName?.identifier) {
+                modeModelId = lmByQualifiedName.identifier;
+                break outer;
               }
             }
           }
-          const modeCustomTools = mode.customTools?.get();
+          const modeCustomTools = subagent.tools;
           if (modeCustomTools) {
-            const enablementMap = this.languageModelToolsService.toToolAndToolSetEnablementMap(modeCustomTools, mode.target?.get());
+            const enablementMap = this.languageModelToolsService.toToolAndToolSetEnablementMap(modeCustomTools, subagent.target, void 0);
             modeTools = {};
             for (const [tool, enabled] of enablementMap) {
-              if (!(tool instanceof ToolSet)) {
+              if (!isToolSet(tool)) {
                 modeTools[tool.id] = enabled;
               }
             }
           }
-          const instructions = mode.modeInstructions?.get();
+          const instructions = subagent.agentInstructions;
           modeInstructions = instructions && {
-            name: mode.name.get(),
+            name: subAgentName,
             content: instructions.content,
             toolReferences: this.toolsService.toToolReferences(instructions.toolReferences),
             metadata: instructions.metadata
           };
         } else {
-          this.logService.warn(`RunSubagentTool: Agent '${args.agentName}' not found, using current configuration`);
+          throw new Error(`Requested agent '${subAgentName}' not found. Try again with the correct agent name, or omit the agentName to use the current agent.`);
         }
       }
       const markdownParts = [];
+      const subAgentInvocationId = invocation.callId ?? `subagent-${generateUuid()}`;
       let inEdit = false;
       const progressCallback = /* @__PURE__ */ __name((parts) => {
         for (const part of parts) {
-          if (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized" || part.kind === "textEdit" || part.kind === "notebookEdit" || part.kind === "codeblockUri") {
+          if (part.kind === "textEdit" || part.kind === "notebookEdit" || part.kind === "codeblockUri") {
             if (part.kind === "codeblockUri" && !inEdit) {
               inEdit = true;
               model.acceptResponseProgress(request, { kind: "markdownContent", content: new MarkdownString("```\n") });
             }
-            model.acceptResponseProgress(request, part);
-            if (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") {
-              markdownParts.length = 0;
+            if (part.kind === "codeblockUri") {
+              model.acceptResponseProgress(request, { ...part, subAgentInvocationId });
+            } else {
+              model.acceptResponseProgress(request, part);
             }
           } else if (part.kind === "markdownContent") {
             if (inEdit) {
@@ -176,8 +182,11 @@ let RunSubagentTool = class RunSubagentTool2 extends Disposable {
       if (modeTools) {
         modeTools[RunSubagentTool_1.Id] = false;
         modeTools[ManageTodoListToolToolId] = false;
+        modeTools["copilot_askQuestions"] = false;
       }
-      const variableSet = await this.collectVariables(modeTools, token);
+      const variableSet = new ChatRequestVariableSet();
+      const computer = this.instantiationService.createInstance(ComputeAutomaticInstructions, ChatModeKind.Agent, modeTools, void 0);
+      await computer.collect(variableSet, token);
       const agentRequest = {
         sessionResource: invocation.context.sessionResource,
         requestId: invocation.callId ?? `subagent-${Date.now()}`,
@@ -186,62 +195,71 @@ let RunSubagentTool = class RunSubagentTool2 extends Disposable {
         variables: { variables: variableSet.asArray() },
         location: ChatAgentLocation.Chat,
         subAgentInvocationId: invocation.callId,
+        subAgentName,
         userSelectedModelId: modeModelId,
         userSelectedTools: modeTools,
-        modeInstructions
+        modeInstructions,
+        parentRequestId: invocation.chatRequestId
       };
+      store.add(this.languageModelToolsService.onDidInvokeTool((e) => {
+        if (e.subagentInvocationId === subAgentInvocationId) {
+          markdownParts.length = 0;
+        }
+      }));
       const result = await this.chatAgentService.invokeAgent(defaultAgent.id, agentRequest, progressCallback, [], token);
       if (result.errorDetails) {
         return createToolSimpleTextResult(`Agent error: ${result.errorDetails.message}`);
       }
-      const resultText = markdownParts.join("") || "Agent completed with no output";
+      const resultText = markdownParts.join("").replace(/^\n*```\n+```\n*/g, "").trim() || "Agent completed with no output";
       if (invocation.toolSpecificData?.kind === "subagent") {
         invocation.toolSpecificData.result = resultText;
       }
-      return createToolSimpleTextResult(resultText);
+      return {
+        content: [{
+          kind: "text",
+          value: resultText
+        }],
+        toolMetadata: {
+          subAgentInvocationId,
+          description: args.description,
+          agentName: agentRequest.subAgentName
+        }
+      };
     } catch (error) {
       const errorMessage = `Error invoking subagent: ${error instanceof Error ? error.message : "Unknown error"}`;
       this.logService.error(errorMessage, error);
       return createToolSimpleTextResult(errorMessage);
+    } finally {
+      store.dispose();
     }
+  }
+  async getSubAgentByName(name) {
+    const agents = await this.promptsService.getCustomAgents(CancellationToken.None);
+    return agents.find((agent) => agent.name === name);
   }
   async prepareToolInvocation(context, _token) {
     const args = context.parameters;
+    const subagent = args.agentName ? await this.getSubAgentByName(args.agentName) : void 0;
     return {
       invocationMessage: args.description,
       toolSpecificData: {
         kind: "subagent",
         description: args.description,
-        agentName: args.agentName,
+        agentName: subagent?.name,
         prompt: args.prompt
       }
     };
-  }
-  async collectVariables(modeTools, token) {
-    let enabledTools;
-    if (modeTools) {
-      const enabledToolIds = Object.entries(modeTools).filter(([, enabled]) => enabled).map(([id]) => id);
-      const tools = enabledToolIds.map((id) => this.languageModelToolsService.getTool(id)).filter((tool) => !!tool);
-      const fullReferenceNames = tools.map((tool) => this.languageModelToolsService.getFullReferenceName(tool));
-      if (fullReferenceNames.length > 0) {
-        enabledTools = this.languageModelToolsService.toToolAndToolSetEnablementMap(fullReferenceNames, void 0);
-      }
-    }
-    const variableSet = new ChatRequestVariableSet();
-    const computer = this.instantiationService.createInstance(ComputeAutomaticInstructions, enabledTools);
-    await computer.collect(variableSet, token);
-    return variableSet;
   }
 };
 RunSubagentTool = RunSubagentTool_1 = __decorate([
   __param(0, IChatAgentService),
   __param(1, IChatService),
-  __param(2, IChatModeService),
-  __param(3, ILanguageModelToolsService),
-  __param(4, ILanguageModelsService),
-  __param(5, ILogService),
-  __param(6, ILanguageModelToolsService),
-  __param(7, IConfigurationService),
+  __param(2, ILanguageModelToolsService),
+  __param(3, ILanguageModelsService),
+  __param(4, ILogService),
+  __param(5, ILanguageModelToolsService),
+  __param(6, IConfigurationService),
+  __param(7, IPromptsService),
   __param(8, IInstantiationService)
 ], RunSubagentTool);
 export {

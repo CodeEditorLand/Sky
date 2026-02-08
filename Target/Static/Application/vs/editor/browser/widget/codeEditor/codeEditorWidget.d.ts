@@ -6,6 +6,7 @@ import { Disposable, DisposableStore, IDisposable } from '../../../../base/commo
 import './editor.css';
 import { EditorConfiguration, IEditorConstructionOptions } from '../../config/editorConfiguration.js';
 import * as editorBrowser from '../../editorBrowser.js';
+import { IClipboardCopyEvent, IClipboardPasteEvent } from '../../controller/editContext/clipboardUtils.js';
 import { IEditorContributionDescription } from '../../editorExtensions.js';
 import { ICodeEditorService } from '../../services/codeEditorService.js';
 import { View } from '../../view.js';
@@ -86,6 +87,12 @@ export declare class CodeEditorWidget extends Disposable implements editorBrowse
     readonly onDidCompositionEnd: Event<void>;
     private readonly _onDidPaste;
     readonly onDidPaste: Event<editorBrowser.IPasteEvent>;
+    private readonly _onWillCopy;
+    readonly onWillCopy: Event<IClipboardCopyEvent>;
+    private readonly _onWillCut;
+    readonly onWillCut: Event<IClipboardCopyEvent>;
+    private readonly _onWillPaste;
+    readonly onWillPaste: Event<IClipboardPasteEvent>;
     private readonly _onMouseUp;
     readonly onMouseUp: Event<editorBrowser.IEditorMouseEvent>;
     private readonly _onMouseDown;
@@ -304,7 +311,9 @@ export declare class CodeEditorWidget extends Disposable implements editorBrowse
     } | null;
     getOffsetForColumn(lineNumber: number, column: number): number;
     getWidthOfLine(lineNumber: number): number;
+    resetLineWidthCaches(): void;
     render(forceRedraw?: boolean): void;
+    renderAsync(forceRedraw?: boolean): void;
     setAriaOptions(options: editorBrowser.IEditorAriaOptions): void;
     applyFontInfo(target: HTMLElement): void;
     setBanner(domNode: HTMLElement | null, domNodeHeight: number): void;

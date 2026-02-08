@@ -1,3 +1,4 @@
+import { CancellationToken } from '../../../base/common/cancellation.js';
 import { Event } from '../../../base/common/event.js';
 import { IConfigurationService } from '../../configuration/common/configuration.js';
 import { IEnvironmentMainService } from '../../environment/electron-main/environmentMainService.js';
@@ -6,7 +7,10 @@ import { ILogService } from '../../log/common/log.js';
 import { IProductService } from '../../product/common/productService.js';
 import { IRequestService } from '../../request/common/request.js';
 import { AvailableForDownload, IUpdateService, State, UpdateType } from '../common/update.js';
-export declare function createUpdateURL(platform: string, quality: string, productService: IProductService): string;
+export interface IUpdateURLOptions {
+    readonly background?: boolean;
+}
+export declare function createUpdateURL(baseUpdateUrl: string, platform: string, quality: string, commit: string, options?: IUpdateURLOptions): string;
 export type UpdateErrorClassification = {
     owner: 'joaomoreno';
     messageHash: {
@@ -23,14 +27,19 @@ export declare abstract class AbstractUpdateService implements IUpdateService {
     protected requestService: IRequestService;
     protected logService: ILogService;
     protected readonly productService: IProductService;
+    protected readonly supportsUpdateOverwrite: boolean;
     readonly _serviceBrand: undefined;
-    protected url: string | undefined;
+    protected quality: string | undefined;
     private _state;
+    protected _overwrite: boolean;
+    private _hasCheckedForOverwriteOnQuit;
+    private readonly overwriteUpdatesCheckInterval;
+    private _disableProgressiveReleases;
     private readonly _onStateChange;
     readonly onStateChange: Event<State>;
     get state(): State;
     protected setState(state: State): void;
-    constructor(lifecycleMainService: ILifecycleMainService, configurationService: IConfigurationService, environmentMainService: IEnvironmentMainService, requestService: IRequestService, logService: ILogService, productService: IProductService);
+    constructor(lifecycleMainService: ILifecycleMainService, configurationService: IConfigurationService, environmentMainService: IEnvironmentMainService, requestService: IRequestService, logService: ILogService, productService: IProductService, supportsUpdateOverwrite: boolean);
     /**
      * This must be called before any other call. This is a performance
      * optimization, to avoid using extra CPU cycles before first window open.
@@ -45,11 +54,15 @@ export declare abstract class AbstractUpdateService implements IUpdateService {
     applyUpdate(): Promise<void>;
     protected doApplyUpdate(): Promise<void>;
     quitAndInstall(): Promise<void>;
-    isLatestVersion(): Promise<boolean | undefined>;
+    private checkForOverwriteUpdates;
+    isLatestVersion(commit?: string, token?: CancellationToken): Promise<boolean | undefined>;
     _applySpecificUpdate(packagePath: string): Promise<void>;
+    disableProgressiveReleases(): Promise<void>;
+    protected shouldDisableProgressiveReleases(): boolean;
     protected getUpdateType(): UpdateType;
     protected doQuitAndInstall(): void;
     protected postInitialize(): Promise<void>;
-    protected abstract buildUpdateFeedUrl(quality: string): string | undefined;
-    protected abstract doCheckForUpdates(explicit: boolean): void;
+    protected cancelPendingUpdate(): Promise<void>;
+    protected abstract buildUpdateFeedUrl(quality: string, commit: string, options?: IUpdateURLOptions): string | undefined;
+    protected abstract doCheckForUpdates(explicit: boolean, pendingCommit?: string): void;
 }

@@ -48,6 +48,7 @@ import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
 import { ChatMode } from "../../chat/common/chatModes.js";
 import { ChatAgentVoteDirection, IChatService } from "../../chat/common/chatService/chatService.js";
 import { isResponseVM } from "../../chat/common/model/chatViewModel.js";
+import * as marked from "../../../../base/common/marked/marked.js";
 import { CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_RESPONSE_FOCUSED, inlineChatBackground, inlineChatForeground } from "../common/inlineChat.js";
 import "./media/inlineChat.css";
 let InlineChatWidget = class InlineChatWidget2 {
@@ -300,7 +301,7 @@ let InlineChatWidget = class InlineChatWidget2 {
     }
     let value = this.contentHeight;
     value -= this._chatWidget.contentHeight;
-    value += Math.min(this._chatWidget.input.inputPartHeight.get() + maxWidgetOutputHeight, this._chatWidget.contentHeight);
+    value += Math.min(this._chatWidget.input.height.get() + maxWidgetOutputHeight, this._chatWidget.contentHeight);
     return value;
   }
   _getExtraHeight() {
@@ -343,7 +344,26 @@ let InlineChatWidget = class InlineChatWidget2 {
     if (!item) {
       return;
     }
-    return viewModel.codeBlockModelCollection.get(viewModel.sessionResource, item, codeBlockIndex)?.model;
+    const existingEntry = viewModel.codeBlockModelCollection.get(viewModel.sessionResource, item, codeBlockIndex);
+    if (existingEntry) {
+      return existingEntry.model;
+    }
+    const markdown = item.response.getMarkdown();
+    let currentCodeBlockIndex = 0;
+    let foundCodeBlock;
+    marked.walkTokens(marked.lexer(markdown), (token) => {
+      if (token.type === "code") {
+        if (currentCodeBlockIndex === codeBlockIndex) {
+          foundCodeBlock = { text: token.text, lang: token.lang || "" };
+        }
+        currentCodeBlockIndex++;
+      }
+    });
+    if (!foundCodeBlock) {
+      return void 0;
+    }
+    const entry = viewModel.codeBlockModelCollection.updateSync(viewModel.sessionResource, item, codeBlockIndex, { text: foundCodeBlock.text, languageId: foundCodeBlock.lang, isComplete: true });
+    return entry.model;
   }
   get responseContent() {
     const requests = this._chatWidget.viewModel?.model.getRequests();

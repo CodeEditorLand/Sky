@@ -1,5 +1,6 @@
 import { Event } from '../../../base/common/event.js';
 import { Disposable, IDisposable } from '../../../base/common/lifecycle.js';
+import { EditorOption, FindComputedEditorOptionValueById } from '../config/editorOptions.js';
 import { CursorConfiguration, CursorState, EditOperationType, IColumnSelectData, PartialCursorState } from '../cursorCommon.js';
 import { CursorChangeReason } from '../cursorEvents.js';
 import { IPosition, Position } from '../core/position.js';
@@ -42,6 +43,7 @@ export declare class ViewModel extends Disposable implements IViewModel {
     readonly glyphLanes: IGlyphMarginLanesModel;
     constructor(editorId: number, configuration: IEditorConfiguration, model: ITextModel, domLineBreaksComputerFactory: ILineBreaksComputerFactory, monospaceLineBreaksComputerFactory: ILineBreaksComputerFactory, scheduleAtNextAnimationFrame: (callback: () => void) => IDisposable, languageConfigurationService: ILanguageConfigurationService, _themeService: IThemeService, _attachedView: IAttachedView, _transactionalTarget: IBatchableTarget);
     dispose(): void;
+    getEditorOption<T extends EditorOption>(id: T): FindComputedEditorOptionValueById<T>;
     createLineBreaksComputer(): ILineBreaksComputer;
     addViewEventHandler(eventHandler: ViewEventHandler): void;
     removeViewEventHandler(eventHandler: ViewEventHandler): void;
@@ -113,7 +115,10 @@ export declare class ViewModel extends Disposable implements IViewModel {
     getValueLengthInRange(range: Range, eol: EndOfLinePreference): number;
     modifyPosition(position: Position, offset: number): Position;
     deduceModelPositionRelativeToViewPosition(viewAnchorPosition: Position, deltaOffset: number, lineFeedCnt: number): Position;
-    getPlainTextToCopy(modelRanges: Range[], emptySelectionClipboard: boolean, forceCRLF: boolean): string | string[];
+    getPlainTextToCopy(modelRanges: Range[], emptySelectionClipboard: boolean, forceCRLF: boolean): {
+        sourceRanges: Range[];
+        sourceText: string | string[];
+    };
     getRichTextToCopy(modelRanges: Range[], emptySelectionClipboard: boolean): {
         html: string;
         mode: string;

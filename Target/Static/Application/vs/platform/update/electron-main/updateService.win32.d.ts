@@ -8,7 +8,7 @@ import { IProductService } from '../../product/common/productService.js';
 import { IRequestService } from '../../request/common/request.js';
 import { ITelemetryService } from '../../telemetry/common/telemetry.js';
 import { AvailableForDownload, UpdateType } from '../common/update.js';
-import { AbstractUpdateService } from './abstractUpdateService.js';
+import { AbstractUpdateService, IUpdateURLOptions } from './abstractUpdateService.js';
 export declare class Win32UpdateService extends AbstractUpdateService implements IRelaunchHandler {
     private readonly telemetryService;
     private readonly fileService;
@@ -19,7 +19,7 @@ export declare class Win32UpdateService extends AbstractUpdateService implements
     handleRelaunch(options?: IRelaunchOptions): boolean;
     protected initialize(): Promise<void>;
     protected postInitialize(): Promise<void>;
-    protected buildUpdateFeedUrl(quality: string): string | undefined;
+    protected buildUpdateFeedUrl(quality: string, commit: string, options?: IUpdateURLOptions): string | undefined;
     protected doCheckForUpdates(explicit: boolean): void;
     protected doDownloadUpdate(state: AvailableForDownload): Promise<void>;
     private getUpdatePackagePath;

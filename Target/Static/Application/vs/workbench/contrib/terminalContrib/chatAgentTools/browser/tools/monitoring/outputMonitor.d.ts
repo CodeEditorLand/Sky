@@ -86,3 +86,17 @@ export declare class OutputMonitor extends Disposable implements IOutputMonitor 
 }
 export declare function detectsInputRequiredPattern(cursorLine: string): boolean;
 export declare function detectsNonInteractiveHelpPattern(cursorLine: string): boolean;
+/**
+ * Detects VS Code's specific task completion messages like:
+ * - "Press any key to close the terminal."
+ * - "Terminal will be reused by tasks, press any key to close it."
+ * These appear when a task finishes and should be ignored if the task is done.
+ * Note: These messages may be prefixed with " * " by VS Code and may have line wrapping
+ * that can split words across lines (e.g., "t\no" instead of "to").
+ */
+export declare function detectsVSCodeTaskFinishMessage(cursorLine: string): boolean;
+/**
+ * Detects generic "press any key" prompts from scripts (not VS Code task messages).
+ * These should prompt the user to interact with the terminal.
+ */
+export declare function detectsGenericPressAnyKeyPattern(cursorLine: string): boolean;

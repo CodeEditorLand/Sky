@@ -1,8 +1,9 @@
 import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
 import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
+import { IOpenEvent } from '../../../../../platform/list/browser/listService.js';
 import { IAgentSession } from './agentSessionsModel.js';
-import { IAgentSessionsFilter, IAgentSessionsSorterOptions } from './agentSessionsViewer.js';
+import { AgentSessionListItem, IAgentSessionsFilter, IAgentSessionsSorterOptions } from './agentSessionsViewer.js';
 import { IMenuService } from '../../../../../platform/actions/common/actions.js';
 import { IChatSessionsService } from '../../common/chatSessionsService.js';
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
@@ -14,17 +15,17 @@ import { IStyleOverride } from '../../../../../platform/theme/browser/defaultSty
 import { IAgentSessionsControl } from './agentSessions.js';
 import { HoverPosition } from '../../../../../base/browser/ui/hover/hoverWidget.js';
 import { URI } from '../../../../../base/common/uri.js';
+import { ISessionOpenOptions } from './agentSessionsOpener.js';
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
+import { IChatWidget } from '../chat.js';
 export interface IAgentSessionsControlOptions extends IAgentSessionsSorterOptions {
     readonly overrideStyles: IStyleOverride<IListStyles>;
     readonly filter: IAgentSessionsFilter;
-    readonly source: AgentSessionsControlSource;
+    readonly source: string;
     getHoverPosition(): HoverPosition;
     trackActiveEditorSession(): boolean;
-}
-export declare const enum AgentSessionsControlSource {
-    ChatViewPane = "chatViewPane",
-    WelcomeView = "welcomeView"
+    overrideSessionOpenOptions?(openEvent: IOpenEvent<AgentSessionListItem | undefined>): ISessionOpenOptions;
+    notifySessionOpened?(resource: URI, widget: IChatWidget): void;
 }
 export declare class AgentSessionsControl extends Disposable implements IAgentSessionsControl {
     private readonly container;
@@ -39,11 +40,15 @@ export declare class AgentSessionsControl extends Disposable implements IAgentSe
     private readonly telemetryService;
     private readonly editorService;
     private sessionsContainer;
+    get element(): HTMLElement | undefined;
     private sessionsList;
+    private sessionsListFindIsOpen;
+    private readonly updateSessionsListThrottler;
     private visible;
     private focusedAgentSessionArchivedContextKey;
     private focusedAgentSessionReadContextKey;
     private focusedAgentSessionTypeContextKey;
+    private hasMultipleAgentSessionsSelectedContextKey;
     constructor(container: HTMLElement, options: IAgentSessionsControlOptions, contextMenuService: IContextMenuService, contextKeyService: IContextKeyService, instantiationService: IInstantiationService, chatSessionsService: IChatSessionsService, commandService: ICommandService, menuService: IMenuService, agentSessionsService: IAgentSessionsService, telemetryService: ITelemetryService, editorService: IEditorService);
     private registerListeners;
     private revealAndFocusActiveEditorSession;
@@ -53,15 +58,15 @@ export declare class AgentSessionsControl extends Disposable implements IAgentSe
     private showAgentSessionSectionContextMenu;
     private showAgentSessionContextMenu;
     openFind(): void;
-    private updateArchivedSectionCollapseState;
+    private updateSectionCollapseStates;
     refresh(): Promise<void>;
     update(): Promise<void>;
     setVisible(visible: boolean): void;
     layout(height: number, width: number): void;
     focus(): void;
     clearFocus(): void;
+    hasFocusOrSelection(): boolean;
     scrollToTop(): void;
     getFocus(): IAgentSession[];
-    reveal(sessionResource: URI): void;
-    setGridMarginOffset(offset: number): void;
+    reveal(sessionResource: URI): boolean;
 }

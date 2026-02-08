@@ -18,7 +18,7 @@ import { Action2, MenuId, MenuRegistry, registerAction2 } from "../../../../plat
 import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
 import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
-import { CURRENT_PROFILE_CONTEXT, HAS_PROFILES_CONTEXT, IS_CURRENT_PROFILE_TRANSIENT_CONTEXT, IUserDataProfileManagementService, IUserDataProfileService, PROFILES_CATEGORY, PROFILES_TITLE, PROFILE_EXTENSION, isProfileURL } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { CURRENT_PROFILE_CONTEXT, HAS_PROFILES_CONTEXT, IS_CURRENT_PROFILE_TRANSIENT_CONTEXT, IUserDataProfileImportExportService, IUserDataProfileManagementService, IUserDataProfileService, PROFILES_CATEGORY, PROFILES_TITLE, PROFILE_EXTENSION, isProfileURL } from "../../../services/userDataProfile/common/userDataProfile.js";
 import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
 import { INotificationService } from "../../../../platform/notification/common/notification.js";
 import { URI } from "../../../../base/common/uri.js";
@@ -39,6 +39,7 @@ import { IURLService } from "../../../../platform/url/common/url.js";
 import { IBrowserWorkbenchEnvironmentService } from "../../../services/environment/browser/environmentService.js";
 import { Extensions as DndExtensions } from "../../../../platform/dnd/browser/dnd.js";
 import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ITextEditorService } from "../../../services/textfile/common/textEditorService.js";
 const OpenProfileMenu = new MenuId("OpenProfile");
 const ProfilesMenu = new MenuId("Profiles");
 let UserDataProfilesWorkbenchContribution = class UserDataProfilesWorkbenchContribution2 extends Disposable {
@@ -119,10 +120,24 @@ let UserDataProfilesWorkbenchContribution = class UserDataProfilesWorkbenchContr
       }
       async handleDrop(resource, accessor) {
         const uriIdentityService = accessor.get(IUriIdentityService);
+        const userDataProfileImportExportService = accessor.get(IUserDataProfileImportExportService);
+        const editorGroupsService = accessor.get(IEditorGroupsService);
+        const textEditorService = accessor.get(ITextEditorService);
+        const notificationService = accessor.get(INotificationService);
         if (uriIdentityService.extUri.extname(resource) === `.${PROFILE_EXTENSION}`) {
+          const template = await userDataProfileImportExportService.resolveProfileTemplate(resource);
+          if (!template) {
+            notificationService.warn(localize("invalid profile", "The dropped profile is invalid."));
+            editorGroupsService.activeGroup.openEditor(textEditorService.createTextEditor({ resource }));
+            return true;
+          }
           const editor = await that.openProfilesEditor();
           if (editor) {
-            editor.createNewProfile(resource);
+            try {
+              await editor.createNewProfile(resource);
+            } catch (error) {
+              return false;
+            }
           }
           return true;
         }
@@ -248,6 +263,7 @@ let UserDataProfilesWorkbenchContribution = class UserDataProfilesWorkbenchContr
   registerNewWindowAction(profile) {
     const disposables = new DisposableStore();
     const id = `workbench.action.openProfile.${profile.name.replace("/s+/", "_")}`;
+    const precondition = HAS_PROFILES_CONTEXT;
     disposables.add(registerAction2(class NewWindowAction extends Action2 {
       static {
         __name(this, "NewWindowAction");
@@ -262,7 +278,7 @@ let UserDataProfilesWorkbenchContribution = class UserDataProfilesWorkbenchContr
           menu: {
             id: OpenProfileMenu,
             group: "0_profiles",
-            when: HAS_PROFILES_CONTEXT
+            when: precondition
           }
         });
       }
@@ -276,7 +292,7 @@ let UserDataProfilesWorkbenchContribution = class UserDataProfilesWorkbenchContr
         id,
         category: PROFILES_CATEGORY,
         title: localize2("open", "Open {0} Profile", profile.name),
-        precondition: HAS_PROFILES_CONTEXT
+        precondition
       }
     }));
     return disposables;

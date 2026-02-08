@@ -14,8 +14,6 @@ var __param = function(paramIndex, decorator) {
 import * as dom from "../../../../../../../base/browser/dom.js";
 import { Separator } from "../../../../../../../base/common/actions.js";
 import { getExtensionForMimeType } from "../../../../../../../base/common/mime.js";
-import { ILanguageService } from "../../../../../../../editor/common/languages/language.js";
-import { IModelService } from "../../../../../../../editor/common/services/model.js";
 import { localize } from "../../../../../../../nls.js";
 import { IContextKeyService } from "../../../../../../../platform/contextkey/common/contextkey.js";
 import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
@@ -34,10 +32,8 @@ let ChatToolPostExecuteConfirmationPart = class ChatToolPostExecuteConfirmationP
   get codeblocks() {
     return this._codeblocks;
   }
-  constructor(toolInvocation, context, instantiationService, keybindingService, modelService, languageService, contextKeyService, chatWidgetService, languageModelToolsService, confirmationService) {
+  constructor(toolInvocation, context, instantiationService, keybindingService, contextKeyService, chatWidgetService, languageModelToolsService, confirmationService) {
     super(toolInvocation, context, instantiationService, keybindingService, contextKeyService, chatWidgetService, languageModelToolsService);
-    this.modelService = modelService;
-    this.languageService = languageService;
     this.confirmationService = confirmationService;
     this._codeblocks = [];
     const subtitle = toolInvocation.pastTenseMessage || toolInvocation.invocationMessage;
@@ -103,55 +99,35 @@ let ChatToolPostExecuteConfirmationPart = class ChatToolPostExecuteConfirmationP
     const parts = [];
     for (const [i, part] of contentForModel.entries()) {
       if (part.kind === "text") {
-        const model = this._register(this.modelService.createModel(part.value, this.languageService.createById("plaintext"), void 0, true));
         parts.push({
           kind: "code",
           title: part.title,
-          textModel: model,
-          languageId: model.getLanguageId(),
+          data: part.value,
+          languageId: "plaintext",
+          codeBlockIndex: i,
+          ownerMarkdownPartId: this.codeblocksPartId,
           options: {
             hideToolbar: true,
             reserveWidth: 19,
             maxHeightInLines: 13,
             verticalPadding: 5,
             editorOptions: { wordWrap: "on", readOnly: true }
-          },
-          codeBlockInfo: {
-            codeBlockIndex: i,
-            codemapperUri: void 0,
-            elementId: this.context.element.id,
-            focus: /* @__PURE__ */ __name(() => {
-            }, "focus"),
-            ownerMarkdownPartId: this.codeblocksPartId,
-            uri: model.uri,
-            chatSessionResource: this.context.element.sessionResource,
-            uriPromise: Promise.resolve(model.uri)
           }
         });
       } else if (part.kind === "promptTsx") {
         const stringified = stringifyPromptTsxPart(part);
-        const model = this._register(this.modelService.createModel(stringified, this.languageService.createById("json"), void 0, true));
         parts.push({
           kind: "code",
-          textModel: model,
-          languageId: model.getLanguageId(),
+          data: stringified,
+          languageId: "json",
+          codeBlockIndex: i,
+          ownerMarkdownPartId: this.codeblocksPartId,
           options: {
             hideToolbar: true,
             reserveWidth: 19,
             maxHeightInLines: 13,
             verticalPadding: 5,
             editorOptions: { wordWrap: "on", readOnly: true }
-          },
-          codeBlockInfo: {
-            codeBlockIndex: i,
-            codemapperUri: void 0,
-            elementId: this.context.element.id,
-            focus: /* @__PURE__ */ __name(() => {
-            }, "focus"),
-            ownerMarkdownPartId: this.codeblocksPartId,
-            uri: model.uri,
-            chatSessionResource: this.context.element.sessionResource,
-            uriPromise: Promise.resolve(model.uri)
           }
         });
       } else if (part.kind === "data") {
@@ -165,54 +141,34 @@ let ChatToolPostExecuteConfirmationPart = class ChatToolPostExecuteConfirmationP
           const decoder = new TextDecoder("utf-8", { fatal: true });
           try {
             const text = decoder.decode(data.buffer);
-            const model = this._register(this.modelService.createModel(text, this.languageService.createById("plaintext"), void 0, true));
             parts.push({
               kind: "code",
-              textModel: model,
-              languageId: model.getLanguageId(),
+              data: text,
+              languageId: "plaintext",
+              codeBlockIndex: i,
+              ownerMarkdownPartId: this.codeblocksPartId,
               options: {
                 hideToolbar: true,
                 reserveWidth: 19,
                 maxHeightInLines: 13,
                 verticalPadding: 5,
                 editorOptions: { wordWrap: "on", readOnly: true }
-              },
-              codeBlockInfo: {
-                codeBlockIndex: i,
-                codemapperUri: void 0,
-                elementId: this.context.element.id,
-                focus: /* @__PURE__ */ __name(() => {
-                }, "focus"),
-                ownerMarkdownPartId: this.codeblocksPartId,
-                uri: model.uri,
-                chatSessionResource: this.context.element.sessionResource,
-                uriPromise: Promise.resolve(model.uri)
               }
             });
           } catch {
             const base64 = data.toString();
-            const model = this._register(this.modelService.createModel(base64, this.languageService.createById("plaintext"), void 0, true));
             parts.push({
               kind: "code",
-              textModel: model,
-              languageId: model.getLanguageId(),
+              data: base64,
+              languageId: "plaintext",
+              codeBlockIndex: i,
+              ownerMarkdownPartId: this.codeblocksPartId,
               options: {
                 hideToolbar: true,
                 reserveWidth: 19,
                 maxHeightInLines: 13,
                 verticalPadding: 5,
                 editorOptions: { wordWrap: "on", readOnly: true }
-              },
-              codeBlockInfo: {
-                codeBlockIndex: i,
-                codemapperUri: void 0,
-                elementId: this.context.element.id,
-                focus: /* @__PURE__ */ __name(() => {
-                }, "focus"),
-                ownerMarkdownPartId: this.codeblocksPartId,
-                uri: model.uri,
-                chatSessionResource: this.context.element.sessionResource,
-                uriPromise: Promise.resolve(model.uri)
               }
             });
           }
@@ -222,7 +178,6 @@ let ChatToolPostExecuteConfirmationPart = class ChatToolPostExecuteConfirmationP
     if (parts.length > 0) {
       const outputSubPart = this._register(this.instantiationService.createInstance(ChatToolOutputContentSubPart, this.context, parts));
       this._codeblocks.push(...outputSubPart.codeblocks);
-      this._register(outputSubPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
       outputSubPart.domNode.classList.add("tool-postconfirm-display");
       return outputSubPart.domNode;
     }
@@ -233,12 +188,10 @@ let ChatToolPostExecuteConfirmationPart = class ChatToolPostExecuteConfirmationP
 ChatToolPostExecuteConfirmationPart = __decorate([
   __param(2, IInstantiationService),
   __param(3, IKeybindingService),
-  __param(4, IModelService),
-  __param(5, ILanguageService),
-  __param(6, IContextKeyService),
-  __param(7, IChatWidgetService),
-  __param(8, ILanguageModelToolsService),
-  __param(9, ILanguageModelToolsConfirmationService)
+  __param(4, IContextKeyService),
+  __param(5, IChatWidgetService),
+  __param(6, ILanguageModelToolsService),
+  __param(7, ILanguageModelToolsConfirmationService)
 ], ChatToolPostExecuteConfirmationPart);
 export {
   ChatToolPostExecuteConfirmationPart

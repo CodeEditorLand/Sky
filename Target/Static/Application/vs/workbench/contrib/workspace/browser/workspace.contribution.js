@@ -89,10 +89,11 @@ let WorkspaceTrustRequestHandler = class WorkspaceTrustRequestHandler2 extends D
   static {
     this.ID = "workbench.contrib.workspaceTrustRequestHandler";
   }
-  constructor(dialogService, commandService, workspaceContextService, workspaceTrustManagementService, workspaceTrustRequestService) {
+  constructor(dialogService, commandService, labelService, workspaceContextService, workspaceTrustManagementService, workspaceTrustRequestService) {
     super();
     this.dialogService = dialogService;
     this.commandService = commandService;
+    this.labelService = labelService;
     this.workspaceContextService = workspaceContextService;
     this.workspaceTrustManagementService = workspaceTrustManagementService;
     this.workspaceTrustRequestService = workspaceTrustRequestService;
@@ -130,6 +131,41 @@ let WorkspaceTrustRequestHandler = class WorkspaceTrustRequestHandler2 extends D
         checkbox: {
           label: localize("openLooseFileWorkspaceCheckbox", "Remember my decision for all workspaces"),
           checked: false
+        },
+        custom: {
+          icon: Codicon.shield,
+          markdownDetails: markdownDetails.map((md) => {
+            return { markdown: new MarkdownString(md) };
+          })
+        }
+      });
+    }));
+    this._register(this.workspaceTrustRequestService.onDidInitiateResourcesTrustRequest(async (options) => {
+      await this.workspaceTrustManagementService.workspaceResolved;
+      const markdownDetails = [
+        options?.message ?? localize("resourcesTrustDetails", "You are trying to open an untrusted folder. Do you trust the authors of this content?"),
+        localize("resourcesTrustLearnMore", "If you don't trust the authors of these files, we recommend not continuing as the files may be malicious. See [our docs](https://aka.ms/vscode-workspace-trust) to learn more."),
+        `\`${this.labelService.getUriLabel(options.uri)}\``
+      ];
+      await this.dialogService.prompt({
+        type: Severity.Info,
+        message: localize("resourcesTrustMessage", "Do you trust the authors of the files in this folder?"),
+        buttons: [
+          {
+            label: localize({ key: "trustResources", comment: ["&& denotes a mnemonic"] }, "&&Trust Folder & Continue"),
+            run: /* @__PURE__ */ __name(() => this.workspaceTrustRequestService.completeResourcesTrustRequest(
+              options.uri,
+              1
+              /* WorkspaceTrustUriResponse.Open */
+            ), "run")
+          }
+        ],
+        cancelButton: {
+          run: /* @__PURE__ */ __name(() => this.workspaceTrustRequestService.completeResourcesTrustRequest(
+            options.uri,
+            3
+            /* WorkspaceTrustUriResponse.Cancel */
+          ), "run")
         },
         custom: {
           icon: Codicon.shield,
@@ -199,9 +235,10 @@ let WorkspaceTrustRequestHandler = class WorkspaceTrustRequestHandler2 extends D
 WorkspaceTrustRequestHandler = __decorate([
   __param(0, IDialogService),
   __param(1, ICommandService),
-  __param(2, IWorkspaceContextService),
-  __param(3, IWorkspaceTrustManagementService),
-  __param(4, IWorkspaceTrustRequestService)
+  __param(2, ILabelService),
+  __param(3, IWorkspaceContextService),
+  __param(4, IWorkspaceTrustManagementService),
+  __param(5, IWorkspaceTrustRequestService)
 ], WorkspaceTrustRequestHandler);
 let WorkspaceTrustUXHandler = class WorkspaceTrustUXHandler2 extends Disposable {
   static {
@@ -296,7 +333,7 @@ let WorkspaceTrustUXHandler = class WorkspaceTrustUXHandler2 extends Disposable 
         const name = basename(uriDirname(workspaceIdentifier.uri));
         checkboxText = localize("checkboxString", "Trust the authors of all files in the parent folder '{0}'", name);
       }
-      this.doShowModal(title, { label: trustOption ?? localize({ key: "trustOption", comment: ["&& denotes a mnemonic"] }, "&&Yes, I trust the authors"), sublabel: isSingleFolderWorkspace ? localize("trustFolderOptionDescription", "Trust folder and enable all features") : localize("trustWorkspaceOptionDescription", "Trust workspace and enable all features") }, { label: dontTrustOption ?? localize({ key: "dontTrustOption", comment: ["&& denotes a mnemonic"] }, "&&No, I don't trust the authors"), sublabel: isSingleFolderWorkspace ? localize("dontTrustFolderOptionDescription", "Browse folder in restricted mode") : localize("dontTrustWorkspaceOptionDescription", "Browse workspace in restricted mode") }, [
+      this.doShowModal(title, { label: trustOption ?? localize({ key: "trustOption", comment: ["&& denotes a mnemonic"] }, "&&Yes, I trust the authors"), sublabel: isSingleFolderWorkspace ? localize("trustFolderOptionDescription", "Trust folder and enable all features") : localize("trustWorkspaceOptionDescription", "Trust workspace and enable all features") }, { label: dontTrustOption ?? localize({ key: "dontTrustOption", comment: ["&& denotes a mnemonic"] }, "&&No, I don't trust the authors"), sublabel: isSingleFolderWorkspace ? localize("dontTrustFolderOptionDescription", "Open folder in restricted mode") : localize("dontTrustWorkspaceOptionDescription", "Open workspace in restricted mode") }, [
         !isSingleFolderWorkspace ? localize("workspaceStartupTrustDetails", "{0} provides features that may automatically execute files in this workspace.", this.productService.nameShort) : localize("folderStartupTrustDetails", "{0} provides features that may automatically execute files in this folder.", this.productService.nameShort),
         learnMoreString ?? localize("startupTrustRequestLearnMore", "If you don't trust the authors of these files, we recommend to continue in restricted mode as the files may be malicious. See [our docs](https://aka.ms/vscode-workspace-trust) to learn more."),
         !isEmptyWindow ? `\`${this.labelService.getWorkspaceLabel(workspaceIdentifier, {

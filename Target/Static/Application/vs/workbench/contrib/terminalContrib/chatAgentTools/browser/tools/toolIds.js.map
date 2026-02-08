@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminalContrib/chatAgentTools/browser/tools/toolIds.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport const enum TerminalToolId {\r\n\tRunInTerminal = 'run_in_terminal',\r\n\tAwaitTerminal = 'await_terminal',\r\n\tGetTerminalOutput = 'get_terminal_output',\r\n\tKillTerminal = 'kill_terminal',\r\n\tTerminalSelection = 'terminal_selection',\r\n\tTerminalLastCommand = 'terminal_last_command',\r\n\tConfirmTerminalCommand = 'vscode_get_terminal_confirmation',\r\n\tCreateAndRunTask = 'create_and_run_task',\r\n\tGetTaskOutput = 'get_task_output',\r\n\tRunTask = 'run_task',\r\n}\r\n"],
+  "mappings": "AAKA,IAAkB;CAAlB,SAAkBA,iBAAc;AAC/B,EAAAA,gBAAA,eAAA,IAAA;AACA,EAAAA,gBAAA,eAAA,IAAA;AACA,EAAAA,gBAAA,mBAAA,IAAA;AACA,EAAAA,gBAAA,cAAA,IAAA;AACA,EAAAA,gBAAA,mBAAA,IAAA;AACA,EAAAA,gBAAA,qBAAA,IAAA;AACA,EAAAA,gBAAA,wBAAA,IAAA;AACA,EAAAA,gBAAA,kBAAA,IAAA;AACA,EAAAA,gBAAA,eAAA,IAAA;AACA,EAAAA,gBAAA,SAAA,IAAA;AACD,GAXkB,mBAAA,iBAAc,CAAA,EAAA;",
+  "names": ["TerminalToolId"]
+}

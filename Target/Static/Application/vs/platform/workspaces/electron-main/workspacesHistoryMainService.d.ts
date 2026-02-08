@@ -7,6 +7,7 @@ import { IApplicationStorageMainService } from '../../storage/electron-main/stor
 import { IRecent, IRecentlyOpened } from '../common/workspaces.js';
 import { IWorkspacesManagementMainService } from './workspacesManagementMainService.js';
 import { IDialogMainService } from '../../dialogs/electron-main/dialogMainService.js';
+import { IEnvironmentMainService } from '../../environment/electron-main/environmentMainService.js';
 export declare const IWorkspacesHistoryMainService: import("../../instantiation/common/instantiation.js").ServiceIdentifier<IWorkspacesHistoryMainService>;
 export interface IWorkspacesHistoryMainService {
     readonly _serviceBrand: undefined;
@@ -24,12 +25,13 @@ export declare class WorkspacesHistoryMainService extends Disposable implements 
     private readonly lifecycleMainService;
     private readonly applicationStorageMainService;
     private readonly dialogMainService;
+    private readonly environmentMainService;
     private static readonly MAX_TOTAL_RECENT_ENTRIES;
     private static readonly RECENTLY_OPENED_STORAGE_KEY;
     readonly _serviceBrand: undefined;
     private readonly _onDidChangeRecentlyOpened;
     readonly onDidChangeRecentlyOpened: CommonEvent<void>;
-    constructor(logService: ILogService, workspacesManagementMainService: IWorkspacesManagementMainService, lifecycleMainService: ILifecycleMainService, applicationStorageMainService: IApplicationStorageMainService, dialogMainService: IDialogMainService);
+    constructor(logService: ILogService, workspacesManagementMainService: IWorkspacesManagementMainService, lifecycleMainService: ILifecycleMainService, applicationStorageMainService: IApplicationStorageMainService, dialogMainService: IDialogMainService, environmentMainService: IEnvironmentMainService);
     private registerListeners;
     addRecentlyOpened(recentToAdd: IRecent[]): Promise<void>;
     removeRecentlyOpened(recentToRemove: URI[]): Promise<void>;

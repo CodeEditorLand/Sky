@@ -36,6 +36,7 @@ export declare class ChatMcpAppModel extends Disposable {
     private readonly _logService;
     private readonly _productService;
     private readonly _openerService;
+    private static readonly heightCache;
     /** Origin store for persistent webview origins per server */
     private readonly _originStore;
     /** The webview element instance */
@@ -84,7 +85,7 @@ export declare class ChatMcpAppModel extends Disposable {
      */
     private _handleWebviewMessage;
     /**
-     * Handles the ui/initialize request from the MCP App.
+     * Handles the ui/initialize request from the MCP App View.
      */
     private _handleInitialize;
     /**
@@ -92,7 +93,9 @@ export declare class ChatMcpAppModel extends Disposable {
      */
     private _sendToolResult;
     private _handleUiMessage;
+    private _handleUpdateModelContext;
     private _handleSizeChanged;
+    private _handleSandboxWheel;
     private _handleOpenLink;
     /**
      * Handles tools/call requests from the MCP App.

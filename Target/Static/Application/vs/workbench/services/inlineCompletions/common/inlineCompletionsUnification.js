@@ -117,7 +117,7 @@ let InlineCompletionsUnificationImpl = class InlineCompletionsUnificationImpl2 e
     }
     const completionExtensionInstalled = installedExtensions.filter((ext) => ext.identifier.id.toLowerCase() === this._completionsExtensionId);
     if (completionExtensionInstalled.length === 0) {
-      return false;
+      return true;
     }
     const completionsExtensionDisabledByUnification = completionExtensionInstalled.some(
       (ext) => this._extensionEnablementService.getEnablementState(ext) === 9

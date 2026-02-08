@@ -323,7 +323,8 @@ let WalkthroughsService = class WalkthroughsService2 extends Disposable {
       /* StorageTarget.USER */
     );
     const hadLastFoucs = await this.hostService.hadLastFocus();
-    if (hadLastFoucs && sectionToOpen && this.configurationService.getValue("workbench.welcomePage.walkthroughs.openOnInstall")) {
+    const startupEditor = this.configurationService.getValue("workbench.startupEditor");
+    if (hadLastFoucs && sectionToOpen && this.configurationService.getValue("workbench.welcomePage.walkthroughs.openOnInstall") && startupEditor !== "agentSessionsWelcomePage") {
       this.telemetryService.publicLog2("gettingStarted.didAutoOpenWalkthrough", { id: sectionToOpen });
       const activeEditor = this.editorService.activeEditor;
       if (activeEditor instanceof GettingStartedInput) {

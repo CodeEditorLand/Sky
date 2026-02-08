@@ -89,10 +89,11 @@ class ViewModelDecorations {
     const decorationsInViewport = [];
     let decorationsInViewportLen = 0;
     const inlineDecorations = [];
+    const hasVariableFonts = [];
     for (let j = startLineNumber; j <= endLineNumber; j++) {
       inlineDecorations[j - startLineNumber] = [];
+      hasVariableFonts[j - startLineNumber] = false;
     }
-    let hasVariableFonts = false;
     for (let i = 0, len = modelDecorations.length; i < len; i++) {
       const modelDecoration = modelDecorations[i];
       const decorationOptions = modelDecoration.options;
@@ -113,6 +114,9 @@ class ViewModelDecorations {
         const intersectedEndLineNumber = Math.min(endLineNumber, viewRange2.endLineNumber);
         for (let j = intersectedStartLineNumber; j <= intersectedEndLineNumber; j++) {
           inlineDecorations[j - startLineNumber].push(inlineDecoration);
+          if (decorationOptions.affectsFont) {
+            hasVariableFonts[j - startLineNumber] = true;
+          }
         }
       }
       if (decorationOptions.beforeContentClassName) {
@@ -124,6 +128,9 @@ class ViewModelDecorations {
             /* InlineDecorationType.Before */
           );
           inlineDecorations[viewRange2.startLineNumber - startLineNumber].push(inlineDecoration);
+          if (decorationOptions.affectsFont) {
+            hasVariableFonts[viewRange2.startLineNumber - startLineNumber] = true;
+          }
         }
       }
       if (decorationOptions.afterContentClassName) {
@@ -135,10 +142,10 @@ class ViewModelDecorations {
             /* InlineDecorationType.After */
           );
           inlineDecorations[viewRange2.endLineNumber - startLineNumber].push(inlineDecoration);
+          if (decorationOptions.affectsFont) {
+            hasVariableFonts[viewRange2.endLineNumber - startLineNumber] = true;
+          }
         }
-      }
-      if (decorationOptions.affectsFont) {
-        hasVariableFonts = true;
       }
     }
     return {

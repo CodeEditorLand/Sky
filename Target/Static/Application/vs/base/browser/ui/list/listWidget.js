@@ -25,7 +25,7 @@ import { clamp } from "../../../common/numbers.js";
 import * as platform from "../../../common/platform.js";
 import { isNumber } from "../../../common/types.js";
 import "./list.css";
-import { ListError } from "./list.js";
+import { ListError, NotSelectableGroupId } from "./list.js";
 import { ListView } from "./listView.js";
 import { StandardMouseEvent } from "../../mouseEvent.js";
 import { autorun, constObservable } from "../../../common/observable.js";
@@ -334,7 +334,13 @@ class KeyboardController {
   onCtrlA(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.list.setSelection(range(this.list.length), e.browserEvent);
+    let selection = range(this.list.length);
+    const focusedElements = this.list.getFocus();
+    const referenceGroupId = focusedElements.length > 0 ? this.list.getElementGroupId(focusedElements[0]) : void 0;
+    if (referenceGroupId !== void 0) {
+      selection = this.list.filterIndicesByGroup(selection, referenceGroupId);
+    }
+    this.list.setSelection(selection, e.browserEvent);
     this.list.setAnchor(void 0);
     this.view.domNode.focus();
   }
@@ -627,7 +633,10 @@ class MouseController {
     this.list.setFocus([focus], e.browserEvent);
     this.list.setAnchor(focus);
     if (!isMouseRightClick(e.browserEvent)) {
-      this.list.setSelection([focus], e.browserEvent);
+      const focusGroupId = this.list.getElementGroupId(focus);
+      if (focusGroupId !== NotSelectableGroupId) {
+        this.list.setSelection([focus], e.browserEvent);
+      }
     }
     this._onPointer.fire(e);
   }
@@ -656,7 +665,14 @@ class MouseController {
       }
       const min = Math.min(anchor, focus);
       const max = Math.max(anchor, focus);
-      const rangeSelection = range(min, max + 1);
+      let rangeSelection = range(min, max + 1);
+      const selectedElement = this.list.getSelection()[0];
+      if (selectedElement !== void 0) {
+        const referenceGroupId = this.list.getElementGroupId(selectedElement);
+        if (referenceGroupId !== void 0) {
+          rangeSelection = this.list.filterIndicesByGroup(rangeSelection, referenceGroupId);
+        }
+      }
       const selection = this.list.getSelection();
       const contiguousRange = getContiguousRangeContaining(disjunction(selection, [anchor]), anchor);
       if (contiguousRange.length === 0) {
@@ -670,8 +686,13 @@ class MouseController {
       const newSelection = selection.filter((i) => i !== focus);
       this.list.setFocus([focus]);
       this.list.setAnchor(focus);
+      const focusGroupId = this.list.getElementGroupId(focus);
+      if (focusGroupId === NotSelectableGroupId) {
+        return;
+      }
       if (selection.length === newSelection.length) {
-        this.list.setSelection([...newSelection, focus], e.browserEvent);
+        const itemsToBeSelected = focusGroupId !== void 0 ? this.list.filterIndicesByGroup([...newSelection, focus], focusGroupId) : [...newSelection, focus];
+        this.list.setSelection(itemsToBeSelected, e.browserEvent);
       } else {
         this.list.setSelection(newSelection, e.browserEvent);
       }
@@ -1313,6 +1334,7 @@ class List {
         throw new ListError(this.user, `Invalid index ${index}`);
       }
     }
+    indexes = indexes.filter((i) => this.getElementGroupId(i) !== NotSelectableGroupId);
     this.selection.set(indexes, browserEvent);
   }
   getSelection() {
@@ -1337,6 +1359,37 @@ class List {
   getAnchorElement() {
     const anchor = this.getAnchor();
     return typeof anchor === "undefined" ? void 0 : this.element(anchor);
+  }
+  /**
+   * Gets the group ID for an element at the given index.
+   * Returns undefined if no identity provider, no getGroupId method, or if the group ID is undefined.
+   */
+  getElementGroupId(index) {
+    const identityProvider = this.options.identityProvider;
+    if (!identityProvider?.getGroupId) {
+      return void 0;
+    }
+    const element = this.element(index);
+    return identityProvider.getGroupId(element);
+  }
+  /**
+   * Filters the given indices to only include those with a matching group ID.
+   * If no identity provider or getGroupId method exists, returns the original indices.
+   * If referenceGroupId is undefined, returns an empty array (elements without group IDs are not selectable).
+   */
+  filterIndicesByGroup(indices, referenceGroupId) {
+    const identityProvider = this.options.identityProvider;
+    if (!identityProvider?.getGroupId) {
+      return indices;
+    }
+    if (referenceGroupId === NotSelectableGroupId) {
+      return [];
+    }
+    return indices.filter((index) => {
+      const element = this.element(index);
+      const groupId = identityProvider.getGroupId(element);
+      return groupId === referenceGroupId;
+    });
   }
   setFocus(indexes, browserEvent) {
     for (const index of indexes) {

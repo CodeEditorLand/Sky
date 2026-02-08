@@ -8,6 +8,8 @@ import { IChatModeInstructions, IVariableReference } from '../../chatModes.js';
 import { PromptsType } from '../promptTypes.js';
 import { IHandOff, ParsedPromptFile } from '../promptFileParser.js';
 import { ResourceSet } from '../../../../../../base/common/map.js';
+import { IChatRequestHooks } from '../hookSchema.js';
+import { IResolvedPromptSourceFolder } from '../config/promptFileLocations.js';
 /**
  * Activation events for prompt file providers.
  */
@@ -28,16 +30,6 @@ export interface IPromptFileResource {
      * The URI to the agent or prompt resource file.
      */
     readonly uri: URI;
-    /**
-     * Indicates whether the custom agent resource is editable. Defaults to false.
-     */
-    readonly isEditable?: boolean;
-    /**
-     * The inline content for virtual prompt files. This property is only used
-     * during IPC transfer from extension host to main thread - the content is
-     * immediately registered with the ChatPromptContentStore and not passed further.
-     */
-    readonly content?: string;
 }
 /**
  * Provides prompt services.
@@ -103,6 +95,18 @@ export type IAgentSource = {
 } | {
     readonly storage: PromptsStorage.local | PromptsStorage.user;
 };
+/**
+ * The visibility/availability of an agent.
+ * - 'all': available as custom agent in picker AND can be used as subagent
+ * - 'user': only available in the custom agent picker
+ * - 'agent': only usable as subagent by the subagent tool
+ * - 'hidden': neither in picker nor usable as subagent
+ */
+export type ICustomAgentVisibility = {
+    readonly userInvokable: boolean;
+    readonly agentInvokable: boolean;
+};
+export declare function isCustomAgentVisibility(obj: unknown): obj is ICustomAgentVisibility;
 export interface ICustomAgent {
     /**
      * URI of a custom agent file.
@@ -123,7 +127,7 @@ export interface ICustomAgent {
     /**
      * Model metadata in the prompt header.
      */
-    readonly model?: string;
+    readonly model?: readonly string[];
     /**
      * Argument hint metadata in the prompt header that describes what inputs the agent expects or supports.
      */
@@ -133,9 +137,9 @@ export interface ICustomAgent {
      */
     readonly target?: string;
     /**
-     * Infer metadata in the prompt header.
+     * What visibility the agent has (user invokable, subagent invokable).
      */
-    readonly infer?: boolean;
+    readonly visibility: ICustomAgentVisibility;
     /**
      * Contents of the custom agent file body and other agent instructions.
      */
@@ -144,6 +148,11 @@ export interface ICustomAgent {
      * Hand-offs defined in the custom agent file.
      */
     readonly handOffs?: readonly IHandOff[];
+    /**
+     * List of subagent names that can be used by the agent.
+     * If empty, no subagents are available. If ['*'] or undefined, all agents can be used.
+     */
+    readonly agents?: readonly string[];
     /**
      * Where the agent was loaded from.
      */
@@ -168,6 +177,33 @@ export interface IAgentSkill {
     readonly description: string | undefined;
 }
 /**
+ * Reason why a prompt file was skipped during discovery.
+ */
+export type PromptFileSkipReason = 'missing-name' | 'missing-description' | 'name-mismatch' | 'duplicate-name' | 'parse-error' | 'disabled';
+/**
+ * Result of discovering a single prompt file.
+ */
+export interface IPromptFileDiscoveryResult {
+    readonly uri: URI;
+    readonly storage: PromptsStorage;
+    readonly status: 'loaded' | 'skipped';
+    readonly name?: string;
+    readonly skipReason?: PromptFileSkipReason;
+    /** Error message if parse-error */
+    readonly errorMessage?: string;
+    /** For duplicates, the URI of the file that took precedence */
+    readonly duplicateOf?: URI;
+    /** Extension ID if from extension */
+    readonly extensionId?: string;
+}
+/**
+ * Summary of prompt file discovery for a specific type.
+ */
+export interface IPromptDiscoveryInfo {
+    readonly type: PromptsType;
+    readonly files: readonly IPromptFileDiscoveryResult[];
+}
+/**
  * Provides prompt services.
  */
 export interface IPromptsService extends IDisposable {
@@ -189,6 +225,12 @@ export interface IPromptsService extends IDisposable {
      * Get a list of prompt source folders based on the provided prompt type.
      */
     getSourceFolders(type: PromptsType): Promise<readonly IPromptPath[]>;
+    /**
+     * Get a list of resolved prompt source folders with full metadata.
+     * This includes displayPath, isDefault, and storage information.
+     * Used for diagnostics and config-info displays.
+     */
+    getResolvedSourceFolders(type: PromptsType): Promise<readonly IResolvedPromptSourceFolder[]>;
     /**
      * Validates if the provided command name is a valid prompt slash command.
      */
@@ -270,4 +312,15 @@ export interface IPromptsService extends IDisposable {
      * Gets list of agent skills files.
      */
     findAgentSkills(token: CancellationToken): Promise<IAgentSkill[] | undefined>;
+    /**
+     * Gets detailed discovery information for a prompt type.
+     * This includes all files found and their load/skip status with reasons.
+     * Used for diagnostics and config-info displays.
+     */
+    getPromptDiscoveryInfo(type: PromptsType, token: CancellationToken): Promise<IPromptDiscoveryInfo>;
+    /**
+     * Gets all hooks collected from hooks.json files.
+     * The result is cached and invalidated when hook files change.
+     */
+    getHooks(token: CancellationToken): Promise<IChatRequestHooks | undefined>;
 }

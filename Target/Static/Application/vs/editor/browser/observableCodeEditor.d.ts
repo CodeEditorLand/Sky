@@ -89,6 +89,23 @@ export declare class ObservableCodeEditor extends Disposable {
     private readonly _onDidHiddenAreasChanged;
     private readonly _onDidLineHeightChanged;
     /**
+     * Tracks whether getWidthOfLine returned 0, indicating the editor may be hidden.
+     * When resize happens and this flag is set, we reset cached line widths.
+     */
+    private _sawZeroLineWidth;
+    /**
+     * Fires when the editor container resizes.
+     * This is lazily created only when someone subscribes to it.
+     * Useful for detecting when a parent element's display changes from 'none' to 'block'.
+     */
+    private readonly _onDidContainerResize;
+    /**
+     * Get the width of a line in pixels.
+     * Reading the returned value depends on layoutInfo, value, scrollTop, and container resize events.
+     * The container resize dependency ensures correct values when the editor becomes visible after being hidden.
+     */
+    getWidthOfLine(lineNumber: number, reader: IReader | undefined): number;
+    /**
      * Get the vertical position (top offset) for the line's bottom w.r.t. to the first line.
      */
     observeTopForLineNumber(lineNumber: number): IObservable<number>;

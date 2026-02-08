@@ -14,7 +14,6 @@ var __param = function(paramIndex, decorator) {
 var NotebookTextDiffEditor_1;
 import * as nls from "../../../../../nls.js";
 import * as DOM from "../../../../../base/browser/dom.js";
-import { findLastIdx } from "../../../../../base/common/arraysFind.js";
 import { IStorageService } from "../../../../../platform/storage/common/storage.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 import { IThemeService, registerThemingParticipant } from "../../../../../platform/theme/common/themeService.js";
@@ -613,7 +612,7 @@ let NotebookTextDiffEditor = class NotebookTextDiffEditor2 extends EditorPane {
       this._list.setFocus([prevChangeIndex]);
       this._list.reveal(prevChangeIndex);
     } else {
-      const index = findLastIdx(currentViewModels, (vm) => vm.type !== "unchanged" && vm.type !== "unchangedMetadata" && vm.type !== "placeholder");
+      const index = currentViewModels.findLastIndex((vm) => vm.type !== "unchanged" && vm.type !== "unchangedMetadata" && vm.type !== "placeholder");
       if (index >= 0) {
         this._list.setFocus([index]);
         this._list.reveal(index);

@@ -8,11 +8,12 @@ import { NOTEBOOK_IS_ACTIVE_EDITOR } from "../../notebook/common/notebookContext
 var InlineChatConfigKeys;
 (function(InlineChatConfigKeys2) {
   InlineChatConfigKeys2["FinishOnType"] = "inlineChat.finishOnType";
-  InlineChatConfigKeys2["StartWithOverlayWidget"] = "inlineChat.startWithOverlayWidget";
   InlineChatConfigKeys2["HoldToSpeech"] = "inlineChat.holdToSpeech";
   InlineChatConfigKeys2["EnableV2"] = "inlineChat.enableV2";
   InlineChatConfigKeys2["notebookAgent"] = "inlineChat.notebookAgent";
-  InlineChatConfigKeys2["PersistModelChoice"] = "inlineChat.persistModelChoice";
+  InlineChatConfigKeys2["DefaultModel"] = "inlineChat.defaultModel";
+  InlineChatConfigKeys2["Affordance"] = "inlineChat.affordance";
+  InlineChatConfigKeys2["RenderMode"] = "inlineChat.renderMode";
 })(InlineChatConfigKeys || (InlineChatConfigKeys = {}));
 Registry.as(Extensions.Configuration).registerConfiguration({
   id: "editor",
@@ -58,15 +59,33 @@ Registry.as(Extensions.Configuration).registerConfiguration({
       }
     },
     [
-      "inlineChat.persistModelChoice"
-      /* InlineChatConfigKeys.PersistModelChoice */
+      "inlineChat.affordance"
+      /* InlineChatConfigKeys.Affordance */
     ]: {
-      description: localize("persistModelChoice", "Whether to persist the selected language model choice across inline chat sessions. The default is not to persist and to use the vendor's default model for inline chat because that yields the best experience."),
-      default: false,
-      type: "boolean",
-      experiment: {
-        mode: "auto"
-      }
+      description: localize("affordance", "Controls whether an inline chat affordance is shown when text is selected."),
+      default: "off",
+      type: "string",
+      enum: ["off", "gutter", "editor"],
+      enumDescriptions: [
+        localize("affordance.off", "No affordance is shown."),
+        localize("affordance.gutter", "Show an affordance in the gutter."),
+        localize("affordance.editor", "Show an affordance in the editor at the cursor position.")
+      ],
+      tags: ["experimental"]
+    },
+    [
+      "inlineChat.renderMode"
+      /* InlineChatConfigKeys.RenderMode */
+    ]: {
+      description: localize("renderMode", "Controls how inline chat is rendered."),
+      default: "zone",
+      type: "string",
+      enum: ["zone", "hover"],
+      enumDescriptions: [
+        localize("renderMode.zone", "Render inline chat as a zone widget below the current line."),
+        localize("renderMode.hover", "Render inline chat as a hover overlay.")
+      ],
+      tags: ["experimental"]
     }
   }
 });
@@ -97,6 +116,7 @@ const CTX_INLINE_CHAT_REQUEST_IN_PROGRESS = new RawContextKey("inlineChatRequest
 const CTX_INLINE_CHAT_RESPONSE_TYPE = new RawContextKey("inlineChatResponseType", "none", localize("inlineChatResponseTypes", "What type was the responses have been receieved, nothing yet, just messages, or messaged and local edits"));
 const CTX_INLINE_CHAT_V1_ENABLED = ContextKeyExpr.or(ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, CTX_INLINE_CHAT_HAS_NOTEBOOK_INLINE));
 const CTX_INLINE_CHAT_V2_ENABLED = ContextKeyExpr.or(CTX_INLINE_CHAT_HAS_AGENT2, ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, CTX_INLINE_CHAT_HAS_NOTEBOOK_AGENT));
+const CTX_HOVER_MODE = ContextKeyExpr.equals("config.inlineChat.renderMode", "hover");
 const ACTION_START = "inlineChat.start";
 const ACTION_ACCEPT_CHANGES = "inlineChat.acceptChanges";
 const ACTION_DISCARD_CHANGES = "inlineChat.discardHunkChange";
@@ -129,6 +149,7 @@ export {
   ACTION_START,
   ACTION_TOGGLE_DIFF,
   ACTION_VIEW_IN_CHAT,
+  CTX_HOVER_MODE,
   CTX_INLINE_CHAT_CHANGE_HAS_DIFF,
   CTX_INLINE_CHAT_CHANGE_SHOWS_DIFF,
   CTX_INLINE_CHAT_EDITING,

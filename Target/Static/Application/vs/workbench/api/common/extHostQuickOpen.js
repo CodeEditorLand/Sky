@@ -177,10 +177,10 @@ function createExtHostQuickOpen(mainContext, workspace, commands) {
       const session = this._sessions.get(sessionId);
       session?._fireDidTriggerButton(handle, checked);
     }
-    $onDidTriggerItemButton(sessionId, itemHandle, buttonHandle) {
+    $onDidTriggerItemButton(sessionId, itemHandle, buttonHandle, checked) {
       const session = this._sessions.get(sessionId);
       if (session instanceof ExtHostQuickPick) {
-        session._fireDidTriggerItemButton(itemHandle, buttonHandle);
+        session._fireDidTriggerItemButton(itemHandle, buttonHandle, checked);
       }
     }
     $onDidHide(sessionId) {
@@ -440,7 +440,8 @@ function createExtHostQuickOpen(mainContext, workspace, commands) {
               return {
                 iconPathDto: IconPath.from(button.iconPath),
                 tooltip: button.tooltip,
-                handle: i
+                handle: i,
+                toggle: typeof button.toggle === "object" && typeof button.toggle.checked === "boolean" ? { checked: button.toggle.checked } : void 0
               };
             })
           });
@@ -516,13 +517,16 @@ function createExtHostQuickOpen(mainContext, workspace, commands) {
       this._selectedItems = items;
       this._onDidChangeSelectionEmitter.fire(items);
     }
-    _fireDidTriggerItemButton(itemHandle, buttonHandle) {
+    _fireDidTriggerItemButton(itemHandle, buttonHandle, checked) {
       const item = this._handlesToItems.get(itemHandle);
       if (!item || !item.buttons || !item.buttons.length) {
         return;
       }
       const button = item.buttons[buttonHandle];
       if (button) {
+        if (checked !== void 0 && button.toggle) {
+          button.toggle.checked = checked;
+        }
         this._onDidTriggerItemButtonEmitter.fire({
           button,
           item

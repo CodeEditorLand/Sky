@@ -640,4 +640,8 @@ export declare const codiconsLibrary: {
     readonly removeSmall: import("./themables.ts").ThemeIcon;
     readonly worktreeSmall: import("./themables.ts").ThemeIcon;
     readonly worktree: import("./themables.ts").ThemeIcon;
+    readonly screenCut: import("./themables.ts").ThemeIcon;
+    readonly ask: import("./themables.ts").ThemeIcon;
+    readonly openai: import("./themables.ts").ThemeIcon;
+    readonly claude: import("./themables.ts").ThemeIcon;
 };

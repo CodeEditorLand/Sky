@@ -55,4 +55,7 @@
       var(--vscode-button-background)) 1;
   animation: 3s shift linear infinite;
 }
+.monaco-workbench .terminal-inline-chat .inline-chat .chat-widget .interactive-session .interactive-input-part {
+  padding: 0 0 4px 0;
+}
 /*# sourceMappingURL=terminalChatWidget.css.map */

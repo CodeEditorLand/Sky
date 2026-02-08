@@ -25,7 +25,7 @@ class ColorizedBracketPairsDecorationProvider extends Disposable {
     this.colorizationOptions = this.textModel.getOptions().bracketPairColorizationOptions;
   }
   //#endregion
-  getDecorationsInRange(range, ownerId, filterOutValidation, onlyMinimapDecorations) {
+  getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations) {
     if (onlyMinimapDecorations) {
       return [];
     }
@@ -46,14 +46,14 @@ class ColorizedBracketPairsDecorationProvider extends Disposable {
     })).toArray();
     return result;
   }
-  getAllDecorations(ownerId, filterOutValidation) {
+  getAllDecorations(ownerId, filterOutValidation, filterFontDecorations) {
     if (ownerId === void 0) {
       return [];
     }
     if (!this.colorizationOptions.enabled) {
       return [];
     }
-    return this.getDecorationsInRange(new Range(1, 1, this.textModel.getLineCount(), 1), ownerId, filterOutValidation);
+    return this.getDecorationsInRange(new Range(1, 1, this.textModel.getLineCount(), 1), ownerId, filterOutValidation, filterFontDecorations);
   }
 }
 class ColorProvider {

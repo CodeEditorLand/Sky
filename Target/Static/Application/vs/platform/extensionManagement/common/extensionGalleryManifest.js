@@ -6,7 +6,6 @@ var ExtensionGalleryResourceType;
   ExtensionGalleryResourceType2["ExtensionQueryService"] = "ExtensionQueryService";
   ExtensionGalleryResourceType2["ExtensionLatestVersionUri"] = "ExtensionLatestVersionUriTemplate";
   ExtensionGalleryResourceType2["ExtensionStatisticsUri"] = "ExtensionStatisticsUriTemplate";
-  ExtensionGalleryResourceType2["WebExtensionStatisticsUri"] = "WebExtensionStatisticsUriTemplate";
   ExtensionGalleryResourceType2["PublisherViewUri"] = "PublisherViewUriTemplate";
   ExtensionGalleryResourceType2["ExtensionDetailsViewUri"] = "ExtensionDetailsViewUriTemplate";
   ExtensionGalleryResourceType2["ExtensionRatingViewUri"] = "ExtensionRatingViewUriTemplate";

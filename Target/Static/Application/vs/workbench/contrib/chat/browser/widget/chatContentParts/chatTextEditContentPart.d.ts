@@ -1,4 +1,3 @@
-import { Event } from '../../../../../../base/common/event.js';
 import { Disposable, IDisposable, IReference } from '../../../../../../base/common/lifecycle.js';
 import { IResolvedTextEditorModel } from '../../../../../../editor/common/services/resolverService.js';
 import { IChatProgressRenderableResponseContent, IChatTextEditGroup } from '../../../common/model/chatModel.js';
@@ -19,8 +18,6 @@ export declare class ChatTextEditContentPart extends Disposable implements IChat
     private readonly codeCompareModelService;
     readonly domNode: HTMLElement;
     private readonly comparePart;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: Event<void>;
     constructor(chatTextEdit: IChatTextEditGroup, context: IChatContentPartRenderContext, rendererOptions: IChatListItemRendererOptions, diffEditorPool: DiffEditorPool, currentWidth: number, codeCompareModelService: ICodeCompareModelService);
     layout(width: number): void;
     hasSameContent(other: IChatProgressRenderableResponseContent): boolean;

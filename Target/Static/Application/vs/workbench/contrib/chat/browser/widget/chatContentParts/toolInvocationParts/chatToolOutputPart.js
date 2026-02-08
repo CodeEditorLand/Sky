@@ -11,12 +11,12 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-var ChatToolOutputSubPart_1;
 import * as dom from "../../../../../../../base/browser/dom.js";
 import { renderMarkdown } from "../../../../../../../base/browser/markdownRenderer.js";
 import { decodeBase64 } from "../../../../../../../base/common/buffer.js";
 import { CancellationTokenSource } from "../../../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { isCancellationError } from "../../../../../../../base/common/errors.js";
 import { ThemeIcon } from "../../../../../../../base/common/themables.js";
 import { generateUuid } from "../../../../../../../base/common/uuid.js";
 import { localize } from "../../../../../../../nls.js";
@@ -26,22 +26,19 @@ import { IChatWidgetService } from "../../../chat.js";
 import { IChatOutputRendererService } from "../../../chatOutputItemRenderer.js";
 import { ChatProgressSubPart } from "../chatProgressContentPart.js";
 import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
+import { IChatToolOutputStateCache } from "./chatToolOutputStateCache.js";
 let ChatToolOutputSubPart = class ChatToolOutputSubPart2 extends BaseChatToolInvocationSubPart {
   static {
     __name(this, "ChatToolOutputSubPart");
   }
-  static {
-    ChatToolOutputSubPart_1 = this;
-  }
-  static {
-    this._cachedStates = /* @__PURE__ */ new WeakMap();
-  }
-  constructor(toolInvocation, context, chatOutputItemRendererService, chatWidgetService, instantiationService) {
+  constructor(toolInvocation, context, onDidRemount, chatOutputItemRendererService, chatWidgetService, instantiationService, stateCache) {
     super(toolInvocation);
     this.context = context;
+    this.onDidRemount = onDidRemount;
     this.chatOutputItemRendererService = chatOutputItemRendererService;
     this.chatWidgetService = chatWidgetService;
     this.instantiationService = instantiationService;
+    this.stateCache = stateCache;
     this.codeblocks = [];
     this._disposeCts = this._register(new CancellationTokenSource());
     const details = toolInvocation.kind === "toolInvocation" ? IChatToolInvocation.resultDetails(toolInvocation) : {
@@ -52,13 +49,15 @@ let ChatToolOutputSubPart = class ChatToolOutputSubPart2 extends BaseChatToolInv
       }
     };
     this.domNode = dom.$("div.tool-output-part");
-    const titleEl = dom.$(".output-title");
-    this.domNode.appendChild(titleEl);
-    if (typeof toolInvocation.invocationMessage === "string") {
-      titleEl.textContent = toolInvocation.invocationMessage;
-    } else {
-      const md = this._register(renderMarkdown(toolInvocation.invocationMessage));
-      titleEl.appendChild(md.element);
+    if (toolInvocation.invocationMessage) {
+      const titleEl = dom.$(".output-title");
+      this.domNode.appendChild(titleEl);
+      if (typeof toolInvocation.invocationMessage === "string") {
+        titleEl.textContent = toolInvocation.invocationMessage;
+      } else {
+        const md = this._register(renderMarkdown(toolInvocation.invocationMessage));
+        titleEl.appendChild(md.element);
+      }
     }
     this.domNode.appendChild(this.createOutputPart(toolInvocation, details));
   }
@@ -67,39 +66,30 @@ let ChatToolOutputSubPart = class ChatToolOutputSubPart2 extends BaseChatToolInv
     super.dispose();
   }
   createOutputPart(toolInvocation, details) {
-    const vm = this.chatWidgetService.getWidgetBySessionResource(this.context.element.sessionResource)?.viewModel;
     const parent = dom.$("div.webview-output");
     parent.style.maxHeight = "80vh";
-    let partState = { height: 0, webviewOrigin: generateUuid() };
-    if (vm) {
-      let allStates = ChatToolOutputSubPart_1._cachedStates.get(vm);
-      if (!allStates) {
-        allStates = /* @__PURE__ */ new Map();
-        ChatToolOutputSubPart_1._cachedStates.set(vm, allStates);
-      }
-      const cachedState = allStates.get(toolInvocation.toolCallId);
-      if (cachedState) {
-        partState = cachedState;
-      } else {
-        allStates.set(toolInvocation.toolCallId, partState);
-      }
-    }
+    const partState = this.stateCache.get(toolInvocation.toolCallId) ?? { height: 0, webviewOrigin: generateUuid() };
+    this.stateCache.set(toolInvocation.toolCallId, partState);
     if (partState.height) {
       parent.style.height = `${partState.height}px`;
+    }
+    if (partState.webviewOrigin) {
+      partState.webviewOrigin = partState.webviewOrigin;
     }
     const progressMessage = dom.$("span");
     progressMessage.textContent = localize("loading", "Rendering tool output...");
     const progressPart = this._register(this.instantiationService.createInstance(ChatProgressSubPart, progressMessage, ThemeIcon.modify(Codicon.loading, "spin"), void 0));
     parent.appendChild(progressPart.domNode);
-    this.chatOutputItemRendererService.renderOutputPart(details.output.mimeType, details.output.value.buffer, parent, { origin: partState.webviewOrigin }, this._disposeCts.token).then((renderedItem) => {
+    this.chatOutputItemRendererService.renderOutputPart(details.output.mimeType, details.output.value.buffer, parent, { origin: partState.webviewOrigin, webviewState: partState.webviewState }, this._disposeCts.token).then((renderedItem) => {
       if (this._disposeCts.token.isCancellationRequested) {
         return;
       }
       this._register(renderedItem);
       progressPart.domNode.remove();
-      this._onDidChangeHeight.fire();
+      this._register(renderedItem.webview.onDidUpdateState((e) => {
+        partState.webviewState = e;
+      }));
       this._register(renderedItem.onDidChangeHeight((newHeight) => {
-        this._onDidChangeHeight.fire();
         partState.height = newHeight;
       }));
       this._register(renderedItem.webview.onDidWheel((e) => {
@@ -111,13 +101,18 @@ let ChatToolOutputSubPart = class ChatToolOutputSubPart2 extends BaseChatToolInv
           }, "stopPropagation")
         });
       }));
-      const widget = this.chatWidgetService.getWidgetBySessionResource(this.context.element.sessionResource);
-      if (widget) {
-        this._register(widget?.onDidShow(() => {
+      this._register(this.context.onDidChangeVisibility((visible) => {
+        if (visible) {
           renderedItem.reinitialize();
-        }));
-      }
+        }
+      }));
+      this._register(this.onDidRemount(() => {
+        renderedItem.reinitialize();
+      }));
     }, (error) => {
+      if (isCancellationError(error)) {
+        return;
+      }
       console.error("Error rendering tool output:", error);
       const errorNode = dom.$(".output-error");
       const errorHeaderNode = dom.$(".output-error-header");
@@ -136,10 +131,11 @@ let ChatToolOutputSubPart = class ChatToolOutputSubPart2 extends BaseChatToolInv
     return parent;
   }
 };
-ChatToolOutputSubPart = ChatToolOutputSubPart_1 = __decorate([
-  __param(2, IChatOutputRendererService),
-  __param(3, IChatWidgetService),
-  __param(4, IInstantiationService)
+ChatToolOutputSubPart = __decorate([
+  __param(3, IChatOutputRendererService),
+  __param(4, IChatWidgetService),
+  __param(5, IInstantiationService),
+  __param(6, IChatToolOutputStateCache)
 ], ChatToolOutputSubPart);
 export {
   ChatToolOutputSubPart

@@ -1,7 +1,7 @@
 import { IReference } from '../../../../../base/common/lifecycle.js';
-import { ITransaction, IObservable } from '../../../../../base/common/observable.js';
+import { IObservable, ITransaction } from '../../../../../base/common/observable.js';
 import { URI } from '../../../../../base/common/uri.js';
-import { Location, TextEdit } from '../../../../../editor/common/languages.js';
+import { TextEdit } from '../../../../../editor/common/languages.js';
 import { ITextModel } from '../../../../../editor/common/model.js';
 import { IModelService } from '../../../../../editor/common/services/model.js';
 import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
@@ -11,19 +11,19 @@ import { IInstantiationService } from '../../../../../platform/instantiation/com
 import { IUndoRedoElement, IUndoRedoService } from '../../../../../platform/undoRedo/common/undoRedo.js';
 import { IEditorPane } from '../../../../common/editor.js';
 import { IFilesConfigurationService } from '../../../../services/filesConfiguration/common/filesConfigurationService.js';
+import { IAiEditTelemetryService } from '../../../editTelemetry/browser/telemetry/aiEditTelemetry/aiEditTelemetryService.js';
 import { CellDiffInfo } from '../../../notebook/browser/diff/notebookDiffViewModel.js';
 import { NotebookCellTextModel } from '../../../notebook/common/model/notebookCellTextModel.js';
 import { ICellEditOperation, IResolvedNotebookEditorModel, NotebookTextModelChangedEvent, TransientOptions } from '../../../notebook/common/notebookCommon.js';
 import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
 import { INotebookLoggingService } from '../../../notebook/common/notebookLoggingService.js';
 import { INotebookEditorWorkerService } from '../../../notebook/common/services/notebookWorkerService.js';
+import { IChatService } from '../../common/chatService/chatService.js';
 import { ChatEditKind, IModifiedEntryTelemetryInfo, IModifiedFileEntryEditorIntegration, ISnapshotEntry } from '../../common/editing/chatEditingService.js';
 import { IChatResponseModel } from '../../common/model/chatModel.js';
-import { IChatService } from '../../common/chatService/chatService.js';
 import { AbstractChatEditingModifiedFileEntry } from './chatEditingModifiedFileEntry.js';
 import { ChatEditingNotebookCellEntry } from './notebook/chatEditingNotebookCellEntry.js';
 import { ICellDiffInfo } from './notebook/notebookCellChanges.js';
-import { IAiEditTelemetryService } from '../../../editTelemetry/browser/telemetry/aiEditTelemetry/aiEditTelemetryService.js';
 export declare class ChatEditingModifiedNotebookEntry extends AbstractChatEditingModifiedFileEntry {
     private readonly modifiedResourceRef;
     private readonly _multiDiffEntryDelegate;
@@ -75,7 +75,6 @@ export declare class ChatEditingModifiedNotebookEntry extends AbstractChatEditin
     constructor(modifiedResourceRef: IReference<IResolvedNotebookEditorModel>, originalResourceRef: IReference<IResolvedNotebookEditorModel>, _multiDiffEntryDelegate: {
         collapse: (transaction: ITransaction | undefined) => void;
     }, transientOptions: TransientOptions | undefined, telemetryInfo: IModifiedEntryTelemetryInfo, kind: ChatEditKind, initialContent: string, configurationService: IConfigurationService, fileConfigService: IFilesConfigurationService, chatService: IChatService, fileService: IFileService, instantiationService: IInstantiationService, textModelService: ITextModelService, modelService: IModelService, undoRedoService: IUndoRedoService, notebookEditorWorkerService: INotebookEditorWorkerService, loggingService: INotebookLoggingService, notebookResolver: INotebookEditorModelResolverService, aiEditTelemetryService: IAiEditTelemetryService);
-    hasModificationAt(location: Location): boolean;
     initializeModelsFromDiffImpl(cellsDiffInfo: CellDiffInfo[]): void;
     getIndexOfCellHandle(handle: number): number;
     private computeRequestId;

@@ -11,14 +11,24 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key2, paramIndex);
   };
 };
-import { CancellationToken } from "../../../../../base/common/cancellation.js";
-import { DisposableMap } from "../../../../../base/common/lifecycle.js";
+import { Disposable, DisposableMap } from "../../../../../base/common/lifecycle.js";
 import { joinPath, isEqualOrParent } from "../../../../../base/common/resources.js";
 import { localize } from "../../../../../nls.js";
-import { CommandsRegistry } from "../../../../../platform/commands/common/commands.js";
 import * as extensionsRegistry from "../../../../services/extensions/common/extensionsRegistry.js";
 import { IPromptsService, PromptsStorage } from "./service/promptsService.js";
 import { PromptsType } from "./promptTypes.js";
+import { CommandsRegistry } from "../../../../../platform/commands/common/commands.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { SyncDescriptor } from "../../../../../platform/instantiation/common/descriptors.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { Extensions } from "../../../../services/extensionManagement/common/extensionFeatures.js";
+var ChatContributionPoint;
+(function(ChatContributionPoint2) {
+  ChatContributionPoint2["chatInstructions"] = "chatInstructions";
+  ChatContributionPoint2["chatAgents"] = "chatAgents";
+  ChatContributionPoint2["chatPromptFiles"] = "chatPromptFiles";
+  ChatContributionPoint2["chatSkills"] = "chatSkills";
+})(ChatContributionPoint || (ChatContributionPoint = {}));
 function registerChatFilesExtensionPoint(point) {
   return extensionsRegistry.ExtensionsRegistry.registerExtensionPoint({
     extensionPoint: point,
@@ -55,20 +65,24 @@ function registerChatFilesExtensionPoint(point) {
   });
 }
 __name(registerChatFilesExtensionPoint, "registerChatFilesExtensionPoint");
-const epPrompt = registerChatFilesExtensionPoint("chatPromptFiles");
-const epInstructions = registerChatFilesExtensionPoint("chatInstructions");
-const epAgents = registerChatFilesExtensionPoint("chatAgents");
-const epSkills = registerChatFilesExtensionPoint("chatSkills");
+const epPrompt = registerChatFilesExtensionPoint(ChatContributionPoint.chatPromptFiles);
+const epInstructions = registerChatFilesExtensionPoint(ChatContributionPoint.chatInstructions);
+const epAgents = registerChatFilesExtensionPoint(ChatContributionPoint.chatAgents);
+const epSkills = registerChatFilesExtensionPoint(ChatContributionPoint.chatSkills);
 function pointToType(contributionPoint) {
   switch (contributionPoint) {
-    case "chatPromptFiles":
+    case ChatContributionPoint.chatPromptFiles:
       return PromptsType.prompt;
-    case "chatInstructions":
+    case ChatContributionPoint.chatInstructions:
       return PromptsType.instructions;
-    case "chatAgents":
+    case ChatContributionPoint.chatAgents:
       return PromptsType.agent;
-    case "chatSkills":
+    case ChatContributionPoint.chatSkills:
       return PromptsType.skill;
+    default: {
+      const exhaustiveCheck = contributionPoint;
+      throw new Error(`Unknown contribution point: ${exhaustiveCheck}`);
+    }
   }
 }
 __name(pointToType, "pointToType");
@@ -86,10 +100,10 @@ let ChatPromptFilesExtensionPointHandler = class ChatPromptFilesExtensionPointHa
   constructor(promptsService) {
     this.promptsService = promptsService;
     this.registrations = new DisposableMap();
-    this.handle(epPrompt, "chatPromptFiles");
-    this.handle(epInstructions, "chatInstructions");
-    this.handle(epAgents, "chatAgents");
-    this.handle(epSkills, "chatSkills");
+    this.handle(epPrompt, ChatContributionPoint.chatPromptFiles);
+    this.handle(epInstructions, ChatContributionPoint.chatInstructions);
+    this.handle(epAgents, ChatContributionPoint.chatAgents);
+    this.handle(epSkills, ChatContributionPoint.chatSkills);
   }
   handle(extensionPoint, contributionPoint) {
     extensionPoint.setHandler((_extensions, delta) => {
@@ -128,19 +142,92 @@ ChatPromptFilesExtensionPointHandler = __decorate([
 ], ChatPromptFilesExtensionPointHandler);
 CommandsRegistry.registerCommand("_listExtensionPromptFiles", async (accessor) => {
   const promptsService = accessor.get(IPromptsService);
-  const [agents, instructions, prompts, skills] = await Promise.all([
+  const [agents, instructions, prompts, skills, hooks] = await Promise.all([
     promptsService.listPromptFiles(PromptsType.agent, CancellationToken.None),
     promptsService.listPromptFiles(PromptsType.instructions, CancellationToken.None),
     promptsService.listPromptFiles(PromptsType.prompt, CancellationToken.None),
-    promptsService.listPromptFiles(PromptsType.skill, CancellationToken.None)
+    promptsService.listPromptFiles(PromptsType.skill, CancellationToken.None),
+    promptsService.listPromptFiles(PromptsType.hook, CancellationToken.None)
   ]);
   const result = [];
-  for (const file of [...agents, ...instructions, ...prompts, ...skills]) {
+  for (const file of [...agents, ...instructions, ...prompts, ...skills, ...hooks]) {
     if (file.storage === PromptsStorage.extension) {
       result.push({ uri: file.uri.toJSON(), type: file.type });
     }
   }
   return result;
+});
+class ChatPromptFilesDataRenderer extends Disposable {
+  static {
+    __name(this, "ChatPromptFilesDataRenderer");
+  }
+  constructor(contributionPoint) {
+    super();
+    this.contributionPoint = contributionPoint;
+    this.type = "table";
+  }
+  shouldRender(manifest) {
+    return !!manifest.contributes?.[this.contributionPoint];
+  }
+  render(manifest) {
+    const contributions = manifest.contributes?.[this.contributionPoint] ?? [];
+    if (!contributions.length) {
+      return { data: { headers: [], rows: [] }, dispose: /* @__PURE__ */ __name(() => {
+      }, "dispose") };
+    }
+    const headers = [
+      localize("chatFilesName", "Name"),
+      localize("chatFilesDescription", "Description"),
+      localize("chatFilesPath", "Path")
+    ];
+    const rows = contributions.map((d) => {
+      return [
+        d.name ?? "-",
+        d.description ?? "-",
+        d.path
+      ];
+    });
+    return {
+      data: {
+        headers,
+        rows
+      },
+      dispose: /* @__PURE__ */ __name(() => {
+      }, "dispose")
+    };
+  }
+}
+Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
+  id: ChatContributionPoint.chatPromptFiles,
+  label: localize("chatPromptFiles", "Chat Prompt Files"),
+  access: {
+    canToggle: false
+  },
+  renderer: new SyncDescriptor(ChatPromptFilesDataRenderer, [ChatContributionPoint.chatPromptFiles])
+});
+Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
+  id: ChatContributionPoint.chatInstructions,
+  label: localize("chatInstructions", "Chat Instructions"),
+  access: {
+    canToggle: false
+  },
+  renderer: new SyncDescriptor(ChatPromptFilesDataRenderer, [ChatContributionPoint.chatInstructions])
+});
+Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
+  id: ChatContributionPoint.chatAgents,
+  label: localize("chatAgents", "Chat Agents"),
+  access: {
+    canToggle: false
+  },
+  renderer: new SyncDescriptor(ChatPromptFilesDataRenderer, [ChatContributionPoint.chatAgents])
+});
+Registry.as(Extensions.ExtensionFeaturesRegistry).registerExtensionFeature({
+  id: ChatContributionPoint.chatSkills,
+  label: localize("chatSkills", "Chat Skills"),
+  access: {
+    canToggle: false
+  },
+  renderer: new SyncDescriptor(ChatPromptFilesDataRenderer, [ChatContributionPoint.chatSkills])
 });
 export {
   ChatPromptFilesExtensionPointHandler

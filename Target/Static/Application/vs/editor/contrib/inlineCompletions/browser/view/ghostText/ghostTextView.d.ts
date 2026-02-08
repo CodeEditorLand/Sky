@@ -36,16 +36,19 @@ export declare class GhostTextView extends Disposable {
     private readonly _shouldKeepCursorStable;
     private readonly _minReservedLineCount;
     private readonly _useSyntaxHighlighting;
+    private readonly _highlightShortText;
     constructor(_editor: ICodeEditor, _data: IObservable<IGhostTextWidgetData | undefined>, options: {
         extraClasses?: readonly string[];
         isClickable?: boolean;
         shouldKeepCursorStable?: boolean;
         minReservedLineCount?: IObservable<number>;
         useSyntaxHighlighting?: IObservable<boolean>;
+        highlightShortSuggestions?: boolean;
     }, _languageService: ILanguageService);
     static getWarningWidgetContext(domNode: HTMLElement): {
         range: Range;
     } | undefined;
+    private readonly _nonWhitespaceCount;
     private readonly _extraClassNames;
     private readonly _state;
     private readonly _decorations;

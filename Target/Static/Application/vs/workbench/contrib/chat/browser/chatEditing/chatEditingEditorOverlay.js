@@ -13,7 +13,7 @@ var __param = function(paramIndex, decorator) {
 };
 import "./media/chatEditingEditorOverlay.css";
 import { combinedDisposable, Disposable, DisposableMap, DisposableStore, MutableDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
-import { autorun, derived, derivedOpts, observableFromEvent, observableFromEventOpts, observableSignalFromEvent, observableValue, transaction } from "../../../../../base/common/observable.js";
+import { autorun, derived, derivedOpts, observableFromEvent, observableSignalFromEvent, observableValue, transaction } from "../../../../../base/common/observable.js";
 import { MenuWorkbenchToolBar } from "../../../../../platform/actions/browser/toolbar.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { IChatEditingService } from "../../common/editing/chatEditingService.js";
@@ -23,30 +23,78 @@ import { $, addDisposableGenericMouseMoveListener, append } from "../../../../..
 import { assertType } from "../../../../../base/common/types.js";
 import { localize } from "../../../../../nls.js";
 import { AcceptAction, navigationBearingFakeActionId, RejectAction } from "./chatEditingEditorActions.js";
-import { IChatService } from "../../common/chatService/chatService.js";
 import { IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
 import { EditorGroupView } from "../../../../browser/parts/editor/editorGroupView.js";
 import { Event } from "../../../../../base/common/event.js";
 import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
 import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
 import { EditorResourceAccessor, SideBySideEditor } from "../../../../common/editor.js";
-import { IInlineChatSessionService } from "../../../inlineChat/browser/inlineChatSessionService.js";
 import { isEqual } from "../../../../../base/common/resources.js";
-import { ObservableEditorSession } from "./chatEditingEditorContextKeys.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
 import { renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
-import * as arrays from "../../../../../base/common/arrays.js";
-import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
 import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+class ChatEditingAcceptRejectActionViewItem extends ActionViewItem {
+  static {
+    __name(this, "ChatEditingAcceptRejectActionViewItem");
+  }
+  constructor(action, options, _entry, _editor, _keybindingService, _primaryActionIds = [AcceptAction.ID]) {
+    super(void 0, action, { ...options, icon: false, label: true, keybindingNotRenderedWithLabel: true });
+    this._entry = _entry;
+    this._editor = _editor;
+    this._keybindingService = _keybindingService;
+    this._primaryActionIds = _primaryActionIds;
+    this._reveal = this._store.add(new MutableDisposable());
+  }
+  render(container) {
+    super.render(container);
+    if (this._primaryActionIds.includes(this._action.id)) {
+      this.element?.classList.add("primary");
+    }
+    if (this._action.id === AcceptAction.ID) {
+      const listener = this._store.add(new MutableDisposable());
+      this._store.add(autorun((r) => {
+        assertType(this.label);
+        assertType(this.element);
+        const ctrl = this._entry.read(r)?.autoAcceptController.read(r);
+        if (ctrl) {
+          const ratio = -100 * (ctrl.remaining / ctrl.total);
+          this.element.style.setProperty("--vscode-action-item-auto-timeout", `${ratio}%`);
+          this.element.classList.toggle("auto", true);
+          listener.value = addDisposableGenericMouseMoveListener(this.element, () => ctrl.cancel());
+        } else {
+          this.element.classList.toggle("auto", false);
+          listener.clear();
+        }
+      }));
+    }
+  }
+  set actionRunner(actionRunner) {
+    super.actionRunner = actionRunner;
+    if (this._editor) {
+      this._reveal.value = actionRunner.onWillRun((_e) => {
+        this._editor.focus();
+      });
+    }
+  }
+  get actionRunner() {
+    return super.actionRunner;
+  }
+  getTooltip() {
+    const value = super.getTooltip();
+    if (!value || this.options.keybinding) {
+      return value;
+    }
+    return this._keybindingService.appendKeybinding(value, this._action.id);
+  }
+}
 let ChatEditorOverlayWidget = class ChatEditorOverlayWidget2 extends Disposable {
   static {
     __name(this, "ChatEditorOverlayWidget");
   }
-  constructor(_editor, _chatService, _keybindingService, _instaService) {
+  constructor(_editor, _keybindingService, _instaService) {
     super();
     this._editor = _editor;
-    this._chatService = _chatService;
     this._keybindingService = _keybindingService;
     this._instaService = _instaService;
     this._showStore = this._store.add(new DisposableStore());
@@ -57,27 +105,7 @@ let ChatEditorOverlayWidget = class ChatEditorOverlayWidget2 extends Disposable 
     this._domNode.classList.add("chat-editor-overlay-widget");
     this._isBusy = derived((r) => {
       const entry = this._entry.read(r);
-      const session = this._session.read(r);
-      return entry?.waitsForLastEdits.read(r) ?? !session?.isGlobalEditingSession;
-    });
-    const requestMessage = derived((r) => {
-      const session = this._session.read(r);
-      const chatModel = session?.chatSessionResource && this._chatService.getSession(session?.chatSessionResource);
-      if (!session || !chatModel) {
-        return void 0;
-      }
-      const response = this._entry.read(r)?.lastModifyingResponse.read(r);
-      if (!response) {
-        return { message: localize("working", "Working...") };
-      }
-      const lastPart = observableFromEventOpts({ equalsFn: arrays.equals }, response.onDidChange, () => response.response.value).read(r).filter((part) => part.kind === "progressMessage" || part.kind === "toolInvocation").at(-1);
-      if (lastPart?.kind === "toolInvocation") {
-        return { message: lastPart.invocationMessage };
-      } else if (lastPart?.kind === "progressMessage") {
-        return { message: lastPart.content };
-      } else {
-        return { message: localize("working", "Working...") };
-      }
+      return entry?.waitsForLastEdits.read(r);
     });
     const progressNode = document.createElement("div");
     progressNode.classList.add("chat-editor-overlay-progress");
@@ -85,14 +113,9 @@ let ChatEditorOverlayWidget = class ChatEditorOverlayWidget2 extends Disposable 
     const textProgress = append(progressNode, $("span.progress-message"));
     this._domNode.appendChild(progressNode);
     this._store.add(autorun((r) => {
-      const value = requestMessage.read(r);
       const busy = this._isBusy.read(r);
       this._domNode.classList.toggle("busy", busy);
-      if (!busy || !value || this._session.read(r)?.isGlobalEditingSession) {
-        textProgress.innerText = "";
-      } else if (value) {
-        textProgress.innerText = renderAsPlaintext(value.message);
-      }
+      textProgress.innerText = "";
     }));
     this._toolbarNode = document.createElement("div");
     this._toolbarNode.classList.add("chat-editor-overlay-toolbar");
@@ -180,49 +203,7 @@ let ChatEditorOverlayWidget = class ChatEditorOverlayWidget2 extends Disposable 
           }();
         }
         if (action.id === AcceptAction.ID || action.id === RejectAction.ID) {
-          return new class extends ActionViewItem {
-            constructor() {
-              super(void 0, action, { ...options, icon: false, label: true, keybindingNotRenderedWithLabel: true });
-              this._reveal = this._store.add(new MutableDisposable());
-            }
-            render(container) {
-              super.render(container);
-              if (action.id === AcceptAction.ID) {
-                this.element?.classList.add("primary");
-                const listener = this._store.add(new MutableDisposable());
-                this._store.add(autorun((r) => {
-                  assertType(this.label);
-                  assertType(this.element);
-                  const ctrl = that._entry.read(r)?.autoAcceptController.read(r);
-                  if (ctrl) {
-                    const r2 = -100 * (ctrl.remaining / ctrl.total);
-                    this.element.style.setProperty("--vscode-action-item-auto-timeout", `${r2}%`);
-                    this.element.classList.toggle("auto", true);
-                    listener.value = addDisposableGenericMouseMoveListener(this.element, () => ctrl.cancel());
-                  } else {
-                    this.element.classList.toggle("auto", false);
-                    listener.clear();
-                  }
-                }));
-              }
-            }
-            set actionRunner(actionRunner) {
-              super.actionRunner = actionRunner;
-              this._reveal.value = actionRunner.onWillRun((_e) => {
-                that._editor.focus();
-              });
-            }
-            get actionRunner() {
-              return super.actionRunner;
-            }
-            getTooltip() {
-              const value = super.getTooltip();
-              if (!value) {
-                return value;
-              }
-              return that._keybindingService.appendKeybinding(value, action.id);
-            }
-          }();
+          return new ChatEditingAcceptRejectActionViewItem(action, options, that._entry, that._editor, that._keybindingService);
         }
         return void 0;
       }, "actionViewItemProvider")
@@ -238,15 +219,14 @@ let ChatEditorOverlayWidget = class ChatEditorOverlayWidget2 extends Disposable 
   }
 };
 ChatEditorOverlayWidget = __decorate([
-  __param(1, IChatService),
-  __param(2, IKeybindingService),
-  __param(3, IInstantiationService)
+  __param(1, IKeybindingService),
+  __param(2, IInstantiationService)
 ], ChatEditorOverlayWidget);
 let ChatEditingOverlayController = class ChatEditingOverlayController2 {
   static {
     __name(this, "ChatEditingOverlayController");
   }
-  constructor(container, group, instaService, chatService, chatEditingService, inlineChatService) {
+  constructor(container, group, instaService, chatEditingService) {
     this._store = new DisposableStore();
     this._domNode = document.createElement("div");
     this._domNode.classList.add("chat-editing-editor-overlay");
@@ -282,15 +262,16 @@ let ChatEditingOverlayController = class ChatEditingOverlayController2 {
       if (!uri) {
         return void 0;
       }
-      return new ObservableEditorSession(uri, chatEditingService, inlineChatService).value.read(r);
-    });
-    const isInProgress = derived((r) => {
-      const session = sessionAndEntry.read(r)?.session;
-      if (!session) {
-        return false;
+      for (const session of chatEditingService.editingSessionsObs.read(r)) {
+        if (!session.isGlobalEditingSession) {
+          continue;
+        }
+        const entry = session.readEntry(uri, r);
+        if (entry) {
+          return { session, entry };
+        }
       }
-      const chatModel = chatService.getSession(session.chatSessionResource);
-      return chatModel.requestInProgress.read(r);
+      return void 0;
     });
     this._store.add(autorun((r) => {
       const data = sessionAndEntry.read(r);
@@ -299,11 +280,7 @@ let ChatEditingOverlayController = class ChatEditingOverlayController2 {
         return;
       }
       const { session, entry } = data;
-      if (!session.isGlobalEditingSession) {
-        hide();
-        return;
-      }
-      if (entry?.state.read(r) === 0 || !session.isGlobalEditingSession && isInProgress.read(r)) {
+      if (entry?.state.read(r) === 0) {
         const editorPane = group.activeEditorPane;
         assertType(editorPane);
         const changeIndex = derived((r2) => entry ? entry.getEditorIntegration(editorPane).currentIndex.read(r2) : 0);
@@ -321,9 +298,7 @@ let ChatEditingOverlayController = class ChatEditingOverlayController2 {
 };
 ChatEditingOverlayController = __decorate([
   __param(2, IInstantiationService),
-  __param(3, IChatService),
-  __param(4, IChatEditingService),
-  __param(5, IInlineChatSessionService)
+  __param(3, IChatEditingService)
 ], ChatEditingOverlayController);
 let ChatEditingEditorOverlay = class ChatEditingEditorOverlay2 {
   static {
@@ -335,7 +310,7 @@ let ChatEditingEditorOverlay = class ChatEditingEditorOverlay2 {
   constructor(editorGroupsService, instantiationService) {
     this._store = new DisposableStore();
     const editorGroups = observableFromEvent(this, Event.any(editorGroupsService.onDidAddGroup, editorGroupsService.onDidRemoveGroup), () => editorGroupsService.groups);
-    const overlayWidgets = new DisposableMap();
+    const overlayWidgets = this._store.add(new DisposableMap());
     this._store.add(autorun((r) => {
       const toDelete = new Set(overlayWidgets.keys());
       const groups = editorGroups.read(r);
@@ -365,6 +340,7 @@ ChatEditingEditorOverlay = __decorate([
   __param(1, IInstantiationService)
 ], ChatEditingEditorOverlay);
 export {
+  ChatEditingAcceptRejectActionViewItem,
   ChatEditingEditorOverlay
 };
 //# sourceMappingURL=chatEditingEditorOverlay.js.map

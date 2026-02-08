@@ -9,6 +9,7 @@ import { IWorkingCopyService } from '../services/workingCopy/common/workingCopyS
 import { IPaneCompositePartService } from '../services/panecomposite/browser/panecomposite.js';
 import { IProductService } from '../../platform/product/common/productService.js';
 import { IEditorService } from '../services/editor/common/editorService.js';
+import { IWorkbenchModeService } from '../services/layout/common/workbenchModeService.js';
 export declare class WorkbenchContextKeysHandler extends Disposable {
     private readonly contextKeyService;
     private readonly contextService;
@@ -20,6 +21,7 @@ export declare class WorkbenchContextKeysHandler extends Disposable {
     private readonly layoutService;
     private readonly paneCompositeService;
     private readonly workingCopyService;
+    private readonly workbenchModeService;
     private dirtyWorkingCopiesContext;
     private activeEditorGroupEmpty;
     private activeEditorGroupIndex;
@@ -35,6 +37,8 @@ export declare class WorkbenchContextKeysHandler extends Disposable {
     private emptyWorkspaceSupportContext;
     private virtualWorkspaceContext;
     private temporaryWorkspaceContext;
+    private isAgentSessionsWorkspaceContext;
+    private workbenchModeContext;
     private inAutomationContext;
     private inZenModeContext;
     private isMainWindowFullscreenContext;
@@ -51,7 +55,7 @@ export declare class WorkbenchContextKeysHandler extends Disposable {
     private editorTabsVisibleContext;
     private titleAreaVisibleContext;
     private titleBarStyleContext;
-    constructor(contextKeyService: IContextKeyService, contextService: IWorkspaceContextService, configurationService: IConfigurationService, environmentService: IWorkbenchEnvironmentService, productService: IProductService, editorGroupService: IEditorGroupsService, editorService: IEditorService, layoutService: IWorkbenchLayoutService, paneCompositeService: IPaneCompositePartService, workingCopyService: IWorkingCopyService);
+    constructor(contextKeyService: IContextKeyService, contextService: IWorkspaceContextService, configurationService: IConfigurationService, environmentService: IWorkbenchEnvironmentService, productService: IProductService, editorGroupService: IEditorGroupsService, editorService: IEditorService, layoutService: IWorkbenchLayoutService, paneCompositeService: IPaneCompositePartService, workingCopyService: IWorkingCopyService, workbenchModeService: IWorkbenchModeService);
     private registerListeners;
     private updateVisiblePanesContextKeys;
     private updateActiveEditorGroupContextKeys;

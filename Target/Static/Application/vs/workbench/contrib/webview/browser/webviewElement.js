@@ -34,6 +34,7 @@ import { ILogService } from "../../../../platform/log/common/log.js";
 import { INotificationService } from "../../../../platform/notification/common/notification.js";
 import { IRemoteAuthorityResolverService } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
 import { ITunnelService } from "../../../../platform/tunnel/common/tunnel.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
 import { WebviewPortMappingManager } from "../../../../platform/webview/common/webviewPortMapping.js";
 import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
 import { decodeAuthority, webviewGenericCspSource, webviewRootResourceAuthority } from "../common/webview.js";
@@ -88,7 +89,7 @@ let WebviewElement = class WebviewElement2 extends Disposable {
     }
     return true;
   }
-  constructor(initInfo, webviewThemeDataProvider, configurationService, contextMenuService, notificationService, _environmentService, _fileService, _logService, _remoteAuthorityResolverService, _tunnelService, instantiationService, _accessibilityService) {
+  constructor(initInfo, webviewThemeDataProvider, configurationService, contextMenuService, notificationService, _environmentService, _fileService, _logService, _remoteAuthorityResolverService, _tunnelService, instantiationService, _accessibilityService, _uriIdentityService) {
     super();
     this.webviewThemeDataProvider = webviewThemeDataProvider;
     this._environmentService = _environmentService;
@@ -97,6 +98,7 @@ let WebviewElement = class WebviewElement2 extends Disposable {
     this._remoteAuthorityResolverService = _remoteAuthorityResolverService;
     this._tunnelService = _tunnelService;
     this._accessibilityService = _accessibilityService;
+    this._uriIdentityService = _uriIdentityService;
     this.id = generateUuid();
     this._windowId = void 0;
     this._expectedServiceWorkerVersion = 4;
@@ -461,6 +463,7 @@ let WebviewElement = class WebviewElement2 extends Disposable {
     this._state = new WebviewState.Initializing([]);
     this._messagePort = void 0;
     this.mountTo(this.element.parentElement, getWindow(this.element));
+    this.style();
     this.reload();
   }
   setHtml(html) {
@@ -575,7 +578,7 @@ let WebviewElement = class WebviewElement2 extends Disposable {
       const result = await loadLocalResource(uri, {
         ifNoneMatch,
         roots: this._content.options.localResourceRoots || []
-      }, this._fileService, this._logService, this._resourceLoadingCts.token);
+      }, this._uriIdentityService, this._fileService, this._logService, this._resourceLoadingCts.token);
       switch (result.type) {
         case WebviewResourceResponse.Type.Success: {
           const buffer = await this.streamToBuffer(result.stream);
@@ -699,7 +702,8 @@ WebviewElement = __decorate([
   __param(8, IRemoteAuthorityResolverService),
   __param(9, ITunnelService),
   __param(10, IInstantiationService),
-  __param(11, IAccessibilityService)
+  __param(11, IAccessibilityService),
+  __param(12, IUriIdentityService)
 ], WebviewElement);
 export {
   WebviewElement

@@ -35,6 +35,7 @@ export declare class ChatTerminalToolProgressPart extends BaseChatToolInvocation
     private readonly _showOutputAction;
     private _showOutputActionAdded;
     private readonly _focusAction;
+    private readonly _continueInBackgroundAction;
     private readonly _terminalData;
     private _terminalCommandUri;
     private _storedCommandId;
@@ -52,6 +53,7 @@ export declare class ChatTerminalToolProgressPart extends BaseChatToolInvocation
     constructor(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized, terminalData: IChatTerminalToolInvocationData | ILegacyChatTerminalToolInvocationData, context: IChatContentPartRenderContext, renderer: IMarkdownRenderer, editorPool: EditorPool, currentWidthDelegate: () => number, codeBlockStartIndex: number, codeBlockModelCollection: CodeBlockModelCollection, _instantiationService: IInstantiationService, _terminalChatService: ITerminalChatService, _terminalService: ITerminalService, _contextKeyService: IContextKeyService, _chatWidgetService: IChatWidgetService, _keybindingService: IKeybindingService, _configurationService: IConfigurationService);
     private _createCollapsibleWrapper;
     expandCollapsibleWrapper(): void;
+    markCollapsibleWrapperComplete(): void;
     private _initializeTerminalActions;
     private _addActions;
     private _getResolvedCommand;
@@ -59,6 +61,7 @@ export declare class ChatTerminalToolProgressPart extends BaseChatToolInvocation
     private _clearCommandAssociation;
     private _registerInstanceListener;
     private _removeFocusAction;
+    private _removeContinueInBackgroundAction;
     private _toggleOutput;
     private _ensureTerminalInstance;
     private _handleOutputFocus;
@@ -100,4 +103,10 @@ export declare class FocusChatInstanceAction extends Action implements IAction {
     refreshKeybindingTooltip(): void;
     private _resolveCommand;
     private _updateTooltip;
+}
+export declare class ContinueInBackgroundAction extends Action implements IAction {
+    private readonly _terminalToolSessionId;
+    private readonly _terminalChatService;
+    constructor(_terminalToolSessionId: string, _terminalChatService: ITerminalChatService);
+    run(): Promise<void>;
 }

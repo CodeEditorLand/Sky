@@ -19,6 +19,7 @@ export interface IRemoteAgentEnvironmentDTO {
     pid: number;
     connectionToken: string;
     appRoot: UriComponents;
+    tmpDir: UriComponents;
     settingsPath: UriComponents;
     mcpResource: UriComponents;
     logsPath: UriComponents;

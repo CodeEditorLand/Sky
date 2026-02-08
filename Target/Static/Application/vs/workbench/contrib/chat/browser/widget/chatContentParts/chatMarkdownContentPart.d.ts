@@ -47,8 +47,6 @@ export declare class ChatMarkdownContentPart extends Disposable implements IChat
     readonly codeblocksPartId: string;
     readonly domNode: HTMLElement;
     private readonly allRefs;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     private readonly _codeblocks;
     get codeblocks(): IChatCodeBlockInfo[];
     private readonly mathLayoutParticipants;
@@ -57,6 +55,7 @@ export declare class ChatMarkdownContentPart extends Disposable implements IChat
     private renderCodeBlock;
     hasSameContent(other: IChatProgressRenderableResponseContent): boolean;
     layout(width: number): void;
+    onDidRemount(): void;
     addDisposable(disposable: IDisposable): void;
 }
 export declare function codeblockHasClosingBackticks(str: string): boolean;

@@ -11,12 +11,16 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
+var ChatToolOutputContentSubPart_1;
 import * as dom from "../../../../../../base/browser/dom.js";
+import { disposableTimeout } from "../../../../../../base/common/async.js";
+import { decodeBase64 } from "../../../../../../base/common/buffer.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { basename, joinPath } from "../../../../../../base/common/resources.js";
 import { generateUuid } from "../../../../../../base/common/uuid.js";
+import { ILanguageService } from "../../../../../../editor/common/languages/language.js";
+import { IModelService } from "../../../../../../editor/common/services/model.js";
 import { localize, localize2 } from "../../../../../../nls.js";
 import { MenuWorkbenchToolBar } from "../../../../../../platform/actions/browser/toolbar.js";
 import { Action2, MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
@@ -39,7 +43,10 @@ let ChatToolOutputContentSubPart = class ChatToolOutputContentSubPart2 extends D
   static {
     __name(this, "ChatToolOutputContentSubPart");
   }
-  constructor(context, parts, _instantiationService, contextKeyService, _contextMenuService, _fileService, _markdownRendererService) {
+  static {
+    ChatToolOutputContentSubPart_1 = this;
+  }
+  constructor(context, parts, _instantiationService, contextKeyService, _contextMenuService, _fileService, _markdownRendererService, modelService, languageService) {
     super();
     this.context = context;
     this.parts = parts;
@@ -48,13 +55,11 @@ let ChatToolOutputContentSubPart = class ChatToolOutputContentSubPart2 extends D
     this._contextMenuService = _contextMenuService;
     this._fileService = _fileService;
     this._markdownRendererService = _markdownRendererService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
-    this._currentWidth = 0;
+    this.modelService = modelService;
+    this.languageService = languageService;
     this._editorReferences = [];
     this.codeblocks = [];
     this.domNode = this.createOutputContents();
-    this._currentWidth = context.currentWidth.get();
   }
   toMdString(value) {
     if (typeof value === "string") {
@@ -67,7 +72,11 @@ let ChatToolOutputContentSubPart = class ChatToolOutputContentSubPart2 extends D
     for (let i = 0; i < this.parts.length; i++) {
       const part = this.parts[i];
       if (part.kind === "code") {
-        this.addCodeBlock(part, container);
+        const codeParts = [part];
+        while (i + 1 < this.parts.length && this.parts[i + 1].kind === "code") {
+          codeParts.push(this.parts[++i]);
+        }
+        this.addCodeBlock(codeParts, container);
         continue;
       }
       const group = [];
@@ -88,19 +97,39 @@ let ChatToolOutputContentSubPart = class ChatToolOutputContentSubPart2 extends D
       dom.h(".chat-collapsible-io-resource-items@items"),
       dom.h(".chat-collapsible-io-resource-actions@actions")
     ]);
-    this.fillInResourceGroup(parts, el.items, el.actions).then(() => this._onDidChangeHeight.fire());
+    this.fillInResourceGroup(parts, el.items, el.actions);
     container.appendChild(el.root);
     return el.root;
   }
+  static {
+    this.IMAGE_DECODE_DELAY_MS = 100;
+  }
   async fillInResourceGroup(parts, itemsContainer, actionsContainer) {
-    const entries = await Promise.all(parts.map(async (part) => {
+    const entries = [];
+    const deferredImageParts = [];
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
       if (part.mimeType && getAttachableImageExtension(part.mimeType)) {
-        const value = part.value ?? await this._fileService.readFile(part.uri).then((f) => f.value.buffer, () => void 0);
-        return { kind: "image", id: generateUuid(), name: basename(part.uri), value, mimeType: part.mimeType, isURL: false, references: [{ kind: "reference", reference: part.uri }] };
+        if (part.base64Value) {
+          entries.push({ kind: "file", id: generateUuid(), name: basename(part.uri), fullName: part.uri.path, value: part.uri });
+          deferredImageParts.push({ index: i, part });
+        } else if (part.value) {
+          entries.push({ kind: "image", id: generateUuid(), name: basename(part.uri), value: part.value, mimeType: part.mimeType, isURL: false, references: [{ kind: "reference", reference: part.uri }] });
+        } else {
+          const value = await this._fileService.readFile(part.uri).then((f) => f.value.buffer, () => void 0);
+          if (!value) {
+            entries.push({ kind: "file", id: generateUuid(), name: basename(part.uri), fullName: part.uri.path, value: part.uri });
+          } else {
+            entries.push({ kind: "image", id: generateUuid(), name: basename(part.uri), value, mimeType: part.mimeType, isURL: false, references: [{ kind: "reference", reference: part.uri }] });
+          }
+        }
       } else {
-        return { kind: "file", id: generateUuid(), name: basename(part.uri), fullName: part.uri.path, value: part.uri };
+        entries.push({ kind: "file", id: generateUuid(), name: basename(part.uri), fullName: part.uri.path, value: part.uri });
       }
-    }));
+    }
+    if (this._store.isDisposed) {
+      return;
+    }
     const attachments = this._register(this._instantiationService.createInstance(ChatAttachmentsContentPart, {
       variables: entries,
       limit: 5,
@@ -128,42 +157,67 @@ let ChatToolOutputContentSubPart = class ChatToolOutputContentSubPart2 extends D
       }
     }));
     toolbar.context = { parts };
+    if (deferredImageParts.length > 0) {
+      this._register(disposableTimeout(() => {
+        for (const { index, part } of deferredImageParts) {
+          try {
+            const value = decodeBase64(part.base64Value).buffer;
+            entries[index] = { kind: "image", id: generateUuid(), name: basename(part.uri), value, mimeType: part.mimeType, isURL: false, references: [{ kind: "reference", reference: part.uri }] };
+          } catch {
+          }
+        }
+        attachments.updateVariables(entries);
+      }, ChatToolOutputContentSubPart_1.IMAGE_DECODE_DELAY_MS));
+    }
   }
-  addCodeBlock(part, container) {
-    if (part.title) {
+  addCodeBlock(parts, container) {
+    const firstPart = parts[0];
+    if (firstPart.title) {
       const title = dom.$("div.chat-confirmation-widget-title");
-      const renderedTitle = this._register(this._markdownRendererService.render(this.toMdString(part.title)));
+      const renderedTitle = this._register(this._markdownRendererService.render(this.toMdString(firstPart.title)));
       title.appendChild(renderedTitle.element);
       container.appendChild(title);
     }
+    const combinedText = parts.map((p) => p.data).join("\n");
+    const textModel = this._register(this.modelService.createModel(combinedText, this.languageService.createById(firstPart.languageId), void 0, true));
     const data = {
-      languageId: part.languageId,
-      textModel: Promise.resolve(part.textModel),
-      codeBlockIndex: part.codeBlockInfo.codeBlockIndex,
+      languageId: firstPart.languageId,
+      textModel: Promise.resolve(textModel),
+      codeBlockIndex: firstPart.codeBlockIndex,
       codeBlockPartIndex: 0,
       element: this.context.element,
       parentContextKeyService: this.contextKeyService,
-      renderOptions: part.options,
+      renderOptions: firstPart.options,
       chatSessionResource: this.context.element.sessionResource
     };
     const editorReference = this._register(this.context.editorPool.get());
-    editorReference.object.render(data, this._currentWidth || 300);
-    this._register(editorReference.object.onDidChangeContentHeight(() => this._onDidChangeHeight.fire()));
+    editorReference.object.render(data, this.context.currentWidth.get());
     container.appendChild(editorReference.object.element);
     this._editorReferences.push(editorReference);
-    this.codeblocks.push(part.codeBlockInfo);
+    this.codeblocks.push({
+      ownerMarkdownPartId: firstPart.ownerMarkdownPartId,
+      codeBlockIndex: firstPart.codeBlockIndex,
+      elementId: this.context.element.id,
+      uri: textModel.uri,
+      uriPromise: Promise.resolve(textModel.uri),
+      codemapperUri: void 0,
+      chatSessionResource: this.context.element.sessionResource,
+      focus: /* @__PURE__ */ __name(() => {
+      }, "focus")
+    });
   }
   layout(width) {
-    this._currentWidth = width;
     this._editorReferences.forEach((r) => r.object.layout(width));
   }
 };
-ChatToolOutputContentSubPart = __decorate([
+ChatToolOutputContentSubPart = ChatToolOutputContentSubPart_1 = __decorate([
   __param(2, IInstantiationService),
   __param(3, IContextKeyService),
   __param(4, IContextMenuService),
   __param(5, IFileService),
-  __param(6, IMarkdownRendererService)
+  __param(6, IMarkdownRendererService),
+  __param(7, IModelService),
+  __param(8, ILanguageService)
 ], ChatToolOutputContentSubPart);
 class SaveResourcesAction extends Action2 {
   static {

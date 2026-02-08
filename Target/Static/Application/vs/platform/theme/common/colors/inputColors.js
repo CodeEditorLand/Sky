@@ -3,6 +3,7 @@ import { Color, RGBA } from "../../../../base/common/color.js";
 import { registerColor, transparent, lighten, darken } from "../colorUtils.js";
 import { foreground, contrastBorder, focusBorder, iconForeground } from "./baseColors.js";
 import { editorWidgetBackground } from "./editorColors.js";
+import { listHoverBackground } from "./listColors.js";
 const inputBackground = registerColor("input.background", { dark: "#3C3C3C", light: Color.white, hcDark: Color.black, hcLight: Color.white }, nls.localize("inputBoxBackground", "Input box background."));
 const inputForeground = registerColor("input.foreground", foreground, nls.localize("inputBoxForeground", "Input box foreground."));
 const inputBorder = registerColor("input.border", { dark: null, light: null, hcDark: contrastBorder, hcLight: contrastBorder }, nls.localize("inputBoxBorder", "Input box border."));
@@ -29,9 +30,10 @@ const buttonSeparator = registerColor("button.separator", transparent(buttonFore
 const buttonBackground = registerColor("button.background", { dark: "#0E639C", light: "#007ACC", hcDark: Color.black, hcLight: "#0F4A85" }, nls.localize("buttonBackground", "Button background color."));
 const buttonHoverBackground = registerColor("button.hoverBackground", { dark: lighten(buttonBackground, 0.2), light: darken(buttonBackground, 0.2), hcDark: buttonBackground, hcLight: buttonBackground }, nls.localize("buttonHoverBackground", "Button background color when hovering."));
 const buttonBorder = registerColor("button.border", contrastBorder, nls.localize("buttonBorder", "Button border color."));
-const buttonSecondaryForeground = registerColor("button.secondaryForeground", { dark: Color.white, light: Color.white, hcDark: Color.white, hcLight: foreground }, nls.localize("buttonSecondaryForeground", "Secondary button foreground color."));
-const buttonSecondaryBackground = registerColor("button.secondaryBackground", { dark: "#3A3D41", light: "#5F6A79", hcDark: null, hcLight: Color.white }, nls.localize("buttonSecondaryBackground", "Secondary button background color."));
-const buttonSecondaryHoverBackground = registerColor("button.secondaryHoverBackground", { dark: lighten(buttonSecondaryBackground, 0.2), light: darken(buttonSecondaryBackground, 0.2), hcDark: null, hcLight: null }, nls.localize("buttonSecondaryHoverBackground", "Secondary button background color when hovering."));
+const buttonSecondaryForeground = registerColor("button.secondaryForeground", { dark: foreground, light: foreground, hcDark: Color.white, hcLight: foreground }, nls.localize("buttonSecondaryForeground", "Secondary button foreground color."));
+const buttonSecondaryBackground = registerColor("button.secondaryBackground", { dark: listHoverBackground, light: listHoverBackground, hcDark: null, hcLight: Color.white }, nls.localize("buttonSecondaryBackground", "Secondary button background color."));
+const buttonSecondaryBorder = registerColor("button.secondaryBorder", contrastBorder, nls.localize("buttonSecondaryBorder", "Secondary button border color."));
+const buttonSecondaryHoverBackground = registerColor("button.secondaryHoverBackground", { dark: lighten(listHoverBackground, 0.2), light: lighten(listHoverBackground, 0.2), hcDark: null, hcLight: null }, nls.localize("buttonSecondaryHoverBackground", "Secondary button background color when hovering."));
 const radioActiveForeground = registerColor("radio.activeForeground", inputActiveOptionForeground, nls.localize("radioActiveForeground", "Foreground color of active radio option."));
 const radioActiveBackground = registerColor("radio.activeBackground", inputActiveOptionBackground, nls.localize("radioBackground", "Background color of active radio option."));
 const radioActiveBorder = registerColor("radio.activeBorder", inputActiveOptionBorder, nls.localize("radioActiveBorder", "Border color of the active radio option."));
@@ -56,6 +58,7 @@ export {
   buttonForeground,
   buttonHoverBackground,
   buttonSecondaryBackground,
+  buttonSecondaryBorder,
   buttonSecondaryForeground,
   buttonSecondaryHoverBackground,
   buttonSeparator,

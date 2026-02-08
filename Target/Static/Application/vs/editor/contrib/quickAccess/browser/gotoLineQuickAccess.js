@@ -45,6 +45,7 @@ class AbstractGotoLineQuickAccessProvider extends AbstractEditorNavigationQuickA
   provideWithTextEditor(context, picker, token) {
     const editor = context.editor;
     const disposables = new DisposableStore();
+    picker.ariaLabel = localize("gotoLine.ariaLabel", "Go to line. Type a line number, optionally followed by colon and column number.");
     disposables.add(picker.onDidAccept((event) => {
       const [item] = picker.selectedItems;
       if (item) {
@@ -70,7 +71,8 @@ class AbstractGotoLineQuickAccessProvider extends AbstractEditorNavigationQuickA
       picker.items = [{
         lineNumber,
         column,
-        label
+        label,
+        ariaLabel: lineNumber ? localize("gotoLine.itemAriaLabel", "Go to line {0}, column {1}. Press Enter to navigate.", lineNumber, column || 1) : label
       }];
       if (!lineNumber) {
         this.clearDecorations(editor);

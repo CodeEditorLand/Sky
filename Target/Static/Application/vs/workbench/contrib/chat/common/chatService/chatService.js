@@ -314,6 +314,36 @@ var ResponseModelState;
   ResponseModelState2[ResponseModelState2["Failed"] = 3] = "Failed";
   ResponseModelState2[ResponseModelState2["NeedsInput"] = 4] = "NeedsInput";
 })(ResponseModelState || (ResponseModelState = {}));
+var ChatSendResult;
+(function(ChatSendResult2) {
+  function isSent(result) {
+    return result.kind === "sent";
+  }
+  __name(isSent, "isSent");
+  ChatSendResult2.isSent = isSent;
+  function isRejected(result) {
+    return result.kind === "rejected";
+  }
+  __name(isRejected, "isRejected");
+  ChatSendResult2.isRejected = isRejected;
+  function isQueued(result) {
+    return result.kind === "queued";
+  }
+  __name(isQueued, "isQueued");
+  ChatSendResult2.isQueued = isQueued;
+  function assertSent(result) {
+    if (result.kind !== "sent") {
+      throw new Error(`Expected ChatSendResult to be 'sent', but was '${result.kind}'`);
+    }
+  }
+  __name(assertSent, "assertSent");
+  ChatSendResult2.assertSent = assertSent;
+})(ChatSendResult || (ChatSendResult = {}));
+var ChatRequestQueueKind;
+(function(ChatRequestQueueKind2) {
+  ChatRequestQueueKind2["Queued"] = "queued";
+  ChatRequestQueueKind2["Steering"] = "steering";
+})(ChatRequestQueueKind || (ChatRequestQueueKind = {}));
 const IChatService = createDecorator("IChatService");
 const KEYWORD_ACTIVIATION_SETTING_ID = "accessibility.voice.keywordActivation";
 export {
@@ -323,8 +353,10 @@ export {
   ChatErrorLevel,
   ChatMcpServersStarting,
   ChatMultiDiffData,
+  ChatRequestQueueKind,
   ChatResponseClearToPreviousToolInvocationReason,
   ChatResponseReferencePartStatusKind,
+  ChatSendResult,
   ElicitationState,
   IChatService,
   IChatToolInvocation,

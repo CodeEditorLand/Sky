@@ -22,7 +22,6 @@ import { MarkdownString } from "../../../../../base/common/htmlContent.js";
 import { DisposableStore } from "../../../../../base/common/lifecycle.js";
 import { IMarkdownRendererService } from "../../../../../platform/markdown/browser/markdownRenderer.js";
 import { localize } from "../../../../../nls.js";
-import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { createWorkbenchDialogOptions } from "../../../../../platform/dialogs/browser/dialog.js";
 import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
 import { ILayoutService } from "../../../../../platform/layout/browser/layoutService.js";
@@ -31,9 +30,10 @@ import product from "../../../../../platform/product/common/product.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 import { IWorkspaceTrustRequestService } from "../../../../../platform/workspace/common/workspaceTrust.js";
 import { IWorkbenchLayoutService } from "../../../../services/layout/browser/layoutService.js";
-import { ChatEntitlement, ChatEntitlementRequests, IChatEntitlementService, isProUser } from "../../../../services/chat/common/chatEntitlementService.js";
+import { ChatEntitlement, IChatEntitlementService, isProUser } from "../../../../services/chat/common/chatEntitlementService.js";
 import { IChatWidgetService } from "../chat.js";
 import { ChatSetupAnonymous, ChatSetupStrategy } from "./chatSetup.js";
+import { IDefaultAccountService } from "../../../../../platform/defaultAccount/common/defaultAccount.js";
 const defaultChat = {
   publicCodeMatchesUrl: product.defaultChatAgent?.publicCodeMatchesUrl ?? "",
   provider: product.defaultChatAgent?.provider ?? { default: { id: "", name: "" }, enterprise: { id: "", name: "" }, apple: { id: "", name: "" }, google: { id: "", name: "" } },
@@ -57,12 +57,12 @@ let ChatSetup = class ChatSetup2 {
     let instance = ChatSetup_1.instance;
     if (!instance) {
       instance = ChatSetup_1.instance = instantiationService.invokeFunction((accessor) => {
-        return new ChatSetup_1(context, controller, accessor.get(ITelemetryService), accessor.get(IWorkbenchLayoutService), accessor.get(IKeybindingService), accessor.get(IChatEntitlementService), accessor.get(ILogService), accessor.get(IConfigurationService), accessor.get(IChatWidgetService), accessor.get(IWorkspaceTrustRequestService), accessor.get(IMarkdownRendererService));
+        return new ChatSetup_1(context, controller, accessor.get(ITelemetryService), accessor.get(IWorkbenchLayoutService), accessor.get(IKeybindingService), accessor.get(IChatEntitlementService), accessor.get(ILogService), accessor.get(IChatWidgetService), accessor.get(IWorkspaceTrustRequestService), accessor.get(IMarkdownRendererService), accessor.get(IDefaultAccountService));
       });
     }
     return instance;
   }
-  constructor(context, controller, telemetryService, layoutService, keybindingService, chatEntitlementService, logService, configurationService, widgetService, workspaceTrustRequestService, markdownRendererService) {
+  constructor(context, controller, telemetryService, layoutService, keybindingService, chatEntitlementService, logService, widgetService, workspaceTrustRequestService, markdownRendererService, defaultAccountService) {
     this.context = context;
     this.controller = controller;
     this.telemetryService = telemetryService;
@@ -70,10 +70,10 @@ let ChatSetup = class ChatSetup2 {
     this.keybindingService = keybindingService;
     this.chatEntitlementService = chatEntitlementService;
     this.logService = logService;
-    this.configurationService = configurationService;
     this.widgetService = widgetService;
     this.workspaceTrustRequestService = workspaceTrustRequestService;
     this.markdownRendererService = markdownRendererService;
+    this.defaultAccountService = defaultAccountService;
     this.pendingRun = void 0;
     this.skipDialogOnce = false;
   }
@@ -115,7 +115,7 @@ let ChatSetup = class ChatSetup2 {
     } else {
       setupStrategy = await this.showDialog(options);
     }
-    if (setupStrategy === ChatSetupStrategy.DefaultSetup && ChatEntitlementRequests.providerId(this.configurationService) === defaultChat.provider.enterprise.id) {
+    if (setupStrategy === ChatSetupStrategy.DefaultSetup && this.defaultAccountService.getDefaultAccountAuthenticationProvider().enterprise) {
       setupStrategy = ChatSetupStrategy.SetupWithEnterpriseProvider;
     }
     if (setupStrategy !== ChatSetupStrategy.Canceled && !options?.disableChatViewReveal) {
@@ -179,7 +179,7 @@ let ChatSetup = class ChatSetup2 {
       const enterpriseProviderLink = [enterpriseProviderButton[0], enterpriseProviderButton[1], styleButton("link-button")];
       const googleProviderButton = [localize("continueWith", "Continue with {0}", defaultChat.provider.google.name), ChatSetupStrategy.SetupWithGoogleProvider, styleButton("continue-button", "google")];
       const appleProviderButton = [localize("continueWith", "Continue with {0}", defaultChat.provider.apple.name), ChatSetupStrategy.SetupWithAppleProvider, styleButton("continue-button", "apple")];
-      if (ChatEntitlementRequests.providerId(this.configurationService) !== defaultChat.provider.enterprise.id) {
+      if (!this.defaultAccountService.getDefaultAccountAuthenticationProvider().enterprise) {
         buttons = coalesce([
           defaultProviderButton,
           googleProviderButton,
@@ -231,10 +231,10 @@ ChatSetup = ChatSetup_1 = __decorate([
   __param(4, IKeybindingService),
   __param(5, IChatEntitlementService),
   __param(6, ILogService),
-  __param(7, IConfigurationService),
-  __param(8, IChatWidgetService),
-  __param(9, IWorkspaceTrustRequestService),
-  __param(10, IMarkdownRendererService)
+  __param(7, IChatWidgetService),
+  __param(8, IWorkspaceTrustRequestService),
+  __param(9, IMarkdownRendererService),
+  __param(10, IDefaultAccountService)
 ], ChatSetup);
 function refreshTokens(commandService) {
   commandService.executeCommand(defaultChat.completionsRefreshTokenCommand);

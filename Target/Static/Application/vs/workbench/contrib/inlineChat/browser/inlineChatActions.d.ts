@@ -31,6 +31,9 @@ declare class KeepOrUndoSessionAction extends AbstractInlineChatAction {
 export declare class KeepSessionAction2 extends KeepOrUndoSessionAction {
     constructor();
 }
+export declare class UndoSessionAction2 extends KeepOrUndoSessionAction {
+    constructor();
+}
 export declare class UndoAndCloseSessionAction2 extends KeepOrUndoSessionAction {
     constructor();
 }

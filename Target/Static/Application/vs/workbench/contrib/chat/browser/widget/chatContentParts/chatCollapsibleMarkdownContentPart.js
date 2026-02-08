@@ -30,9 +30,7 @@ let ChatCollapsibleMarkdownContentPart = class ChatCollapsibleMarkdownContentPar
     const wrapper = $(".chat-collapsible-markdown-content.chat-used-context-list");
     if (this.markdownContent) {
       this.contentElement = $(".chat-collapsible-markdown-body");
-      const rendered = this._register(this.chatContentMarkdownRenderer.render(new MarkdownString(this.markdownContent), {
-        asyncRenderCallback: /* @__PURE__ */ __name(() => this._onDidChangeHeight.fire(), "asyncRenderCallback")
-      }));
+      const rendered = this._register(this.chatContentMarkdownRenderer.render(new MarkdownString(this.markdownContent)));
       this.contentElement.appendChild(rendered.element);
       wrapper.appendChild(this.contentElement);
     }

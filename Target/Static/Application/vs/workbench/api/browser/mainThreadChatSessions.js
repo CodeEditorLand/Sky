@@ -25,12 +25,14 @@ import { localize } from "../../../nls.js";
 import { IDialogService } from "../../../platform/dialogs/common/dialogs.js";
 import { ILogService } from "../../../platform/log/common/log.js";
 import { hasValidDiff } from "../../contrib/chat/browser/agentSessions/agentSessionsModel.js";
-import { ChatViewPaneTarget, IChatWidgetService, isIChatViewViewContext } from "../../contrib/chat/browser/chat.js";
+import { IAgentSessionsService } from "../../contrib/chat/browser/agentSessions/agentSessionsService.js";
+import { IChatWidgetService, isIChatViewViewContext } from "../../contrib/chat/browser/chat.js";
 import { ChatEditorInput } from "../../contrib/chat/browser/widgetHosts/editor/chatEditorInput.js";
 import { awaitStatsForSession } from "../../contrib/chat/common/chat.js";
 import { IChatService } from "../../contrib/chat/common/chatService/chatService.js";
 import { IChatSessionsService } from "../../contrib/chat/common/chatSessionsService.js";
 import { ChatAgentLocation } from "../../contrib/chat/common/constants.js";
+import { IChatTodoListService } from "../../contrib/chat/common/tools/chatTodoListService.js";
 import { IEditorGroupsService } from "../../services/editor/common/editorGroupsService.js";
 import { IEditorService } from "../../services/editor/common/editorService.js";
 import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
@@ -237,12 +239,14 @@ let MainThreadChatSessions = class MainThreadChatSessions2 extends Disposable {
   static {
     __name(this, "MainThreadChatSessions");
   }
-  constructor(_extHostContext, _chatSessionsService, _chatService, _chatWidgetService, _dialogService, _editorService, editorGroupService, _logService) {
+  constructor(_extHostContext, _agentSessionsService, _chatSessionsService, _chatService, _chatWidgetService, _chatTodoListService, _dialogService, _editorService, editorGroupService, _logService) {
     super();
     this._extHostContext = _extHostContext;
+    this._agentSessionsService = _agentSessionsService;
     this._chatSessionsService = _chatSessionsService;
     this._chatService = _chatService;
     this._chatWidgetService = _chatWidgetService;
+    this._chatTodoListService = _chatTodoListService;
     this._dialogService = _dialogService;
     this._editorService = _editorService;
     this.editorGroupService = editorGroupService;
@@ -253,12 +257,22 @@ let MainThreadChatSessions = class MainThreadChatSessions2 extends Disposable {
     this._activeSessions = new ResourceMap();
     this._sessionDisposables = new ResourceMap();
     this._proxy = this._extHostContext.getProxy(ExtHostContext.ExtHostChatSessions);
-    this._chatSessionsService.setOptionsChangeCallback(async (sessionResource, updates) => {
+    this._register(this._chatSessionsService.onRequestNotifyExtension(({ sessionResource, updates, waitUntil }) => {
       const handle = this._getHandleForSessionType(sessionResource.scheme);
+      this._logService.trace(`[MainThreadChatSessions] onRequestNotifyExtension received: scheme '${sessionResource.scheme}', handle ${handle}, ${updates.length} update(s)`);
       if (handle !== void 0) {
-        await this.notifyOptionsChange(handle, sessionResource, updates);
+        waitUntil(this.notifyOptionsChange(handle, sessionResource, updates));
+      } else {
+        this._logService.warn(`[MainThreadChatSessions] Cannot notify option change for scheme '${sessionResource.scheme}': no provider registered. Registered schemes: [${Array.from(this._sessionTypeToHandle.keys()).join(", ")}]`);
       }
-    });
+    }));
+    this._register(this._agentSessionsService.model.onDidChangeSessionArchivedState((session) => {
+      for (const [handle, { provider }] of this._itemProvidersRegistrations) {
+        if (provider.chatSessionType === session.providerType) {
+          this._proxy.$onDidChangeChatSessionItemState(handle, session.resource, session.isArchived());
+        }
+      }
+    }));
   }
   _getHandleForSessionType(chatSessionType) {
     return this._sessionTypeToHandle.get(chatSessionType);
@@ -296,39 +310,44 @@ let MainThreadChatSessions = class MainThreadChatSessions2 extends Disposable {
       return;
     }
     const originalEditor = this._editorService.editors.find((editor) => editor.resource?.toString() === originalResource.toString());
-    const originalModel = this._chatService.getSession(originalResource);
+    const originalModel = this._chatService.getActiveSessionReference(originalResource);
     const contribution = this._chatSessionsService.getAllChatSessionContributions().find((c) => c.type === chatSessionType);
-    const originalGroup = this.editorGroupService.groups.find((group) => group.editors.some((editor) => isEqual(editor.resource, originalResource))) ?? this.editorGroupService.activeGroup;
-    const options = {
-      title: {
-        preferred: originalEditor?.getName() || void 0,
-        fallback: localize("chatEditorContributionName", "{0}", contribution?.displayName)
-      }
-    };
-    const newSession = await this._chatSessionsService.getOrCreateChatSession(URI.revive(modifiedResource), CancellationToken.None);
-    if (originalEditor) {
-      newSession.transferredState = originalEditor instanceof ChatEditorInput ? { editingSession: originalEditor.transferOutEditingSession(), inputState: originalModel?.inputModel.toJSON() } : void 0;
-      this._editorService.replaceEditors([{
-        editor: originalEditor,
-        replacement: {
-          resource: modifiedResource,
-          options
+    try {
+      this._chatTodoListService.migrateTodos(originalResource, modifiedResource);
+      const originalGroup = this.editorGroupService.groups.find((group) => group.editors.some((editor) => isEqual(editor.resource, originalResource))) ?? this.editorGroupService.activeGroup;
+      const options = {
+        title: {
+          preferred: originalEditor?.getName() || void 0,
+          fallback: localize("chatEditorContributionName", "{0}", contribution?.displayName)
         }
-      }], originalGroup);
-      return;
-    }
-    if (originalModel) {
-      newSession.transferredState = {
-        editingSession: originalModel.editingSession,
-        inputState: originalModel.inputModel.toJSON()
       };
-    }
-    const chatViewWidget = this._chatWidgetService.getWidgetBySessionResource(originalResource);
-    if (chatViewWidget && isIChatViewViewContext(chatViewWidget.viewContext)) {
-      await this._chatWidgetService.openSession(modifiedResource, ChatViewPaneTarget, { preserveFocus: true });
-    } else {
-      const ref = await this._chatService.loadSessionForResource(modifiedResource, ChatAgentLocation.Chat, CancellationToken.None);
-      ref?.dispose();
+      const newSession = await this._chatSessionsService.getOrCreateChatSession(URI.revive(modifiedResource), CancellationToken.None);
+      if (originalEditor) {
+        newSession.transferredState = originalEditor instanceof ChatEditorInput ? { editingSession: originalEditor.transferOutEditingSession(), inputState: originalModel?.object?.inputModel.toJSON() } : void 0;
+        await this._editorService.replaceEditors([{
+          editor: originalEditor,
+          replacement: {
+            resource: modifiedResource,
+            options
+          }
+        }], originalGroup);
+        return;
+      }
+      if (originalModel) {
+        newSession.transferredState = {
+          editingSession: originalModel.object.editingSession,
+          inputState: originalModel.object.inputModel.toJSON()
+        };
+      }
+      const chatViewWidget = this._chatWidgetService.getWidgetBySessionResource(originalResource);
+      if (chatViewWidget && isIChatViewViewContext(chatViewWidget.viewContext)) {
+        await this._chatWidgetService.openSession(modifiedResource, void 0, { preserveFocus: true });
+      } else {
+        const ref = await this._chatService.loadSessionForResource(modifiedResource, ChatAgentLocation.Chat, CancellationToken.None);
+        ref?.dispose();
+      }
+    } finally {
+      originalModel?.dispose();
     }
   }
   async _provideChatSessionItems(handle, token) {
@@ -520,22 +539,26 @@ let MainThreadChatSessions = class MainThreadChatSessions2 extends Disposable {
    * Notify the extension about option changes for a session
    */
   async notifyOptionsChange(handle, sessionResource, updates) {
+    this._logService.trace(`[MainThreadChatSessions] notifyOptionsChange: starting proxy call for handle ${handle}, sessionResource ${sessionResource}`);
     try {
       await this._proxy.$provideHandleOptionsChange(handle, sessionResource, updates, CancellationToken.None);
+      this._logService.trace(`[MainThreadChatSessions] notifyOptionsChange: proxy call completed for handle ${handle}, sessionResource ${sessionResource}`);
     } catch (error) {
-      this._logService.error(`Error notifying extension about options change for handle ${handle}, sessionResource ${sessionResource}:`, error);
+      this._logService.error(`[MainThreadChatSessions] notifyOptionsChange: error for handle ${handle}, sessionResource ${sessionResource}:`, error);
     }
   }
 };
 MainThreadChatSessions = __decorate([
   extHostNamedCustomer(MainContext.MainThreadChatSessions),
-  __param(1, IChatSessionsService),
-  __param(2, IChatService),
-  __param(3, IChatWidgetService),
-  __param(4, IDialogService),
-  __param(5, IEditorService),
-  __param(6, IEditorGroupsService),
-  __param(7, ILogService)
+  __param(1, IAgentSessionsService),
+  __param(2, IChatSessionsService),
+  __param(3, IChatService),
+  __param(4, IChatWidgetService),
+  __param(5, IChatTodoListService),
+  __param(6, IDialogService),
+  __param(7, IEditorService),
+  __param(8, IEditorGroupsService),
+  __param(9, ILogService)
 ], MainThreadChatSessions);
 export {
   MainThreadChatSessions,

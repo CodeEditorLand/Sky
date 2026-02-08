@@ -132,6 +132,12 @@ let CodeEditorWidget = class CodeEditorWidget2 extends Disposable {
     this.onDidCompositionEnd = this._onDidCompositionEnd.event;
     this._onDidPaste = this._register(new InteractionEmitter(this._contributions, this._deliveryQueue));
     this.onDidPaste = this._onDidPaste.event;
+    this._onWillCopy = this._register(new InteractionEmitter(this._contributions, this._deliveryQueue));
+    this.onWillCopy = this._onWillCopy.event;
+    this._onWillCut = this._register(new InteractionEmitter(this._contributions, this._deliveryQueue));
+    this.onWillCut = this._onWillCut.event;
+    this._onWillPaste = this._register(new InteractionEmitter(this._contributions, this._deliveryQueue));
+    this.onWillPaste = this._onWillPaste.event;
     this._onMouseUp = this._register(new InteractionEmitter(this._contributions, this._deliveryQueue));
     this.onMouseUp = this._onMouseUp.event;
     this._onMouseDown = this._register(new InteractionEmitter(this._contributions, this._deliveryQueue));
@@ -978,7 +984,7 @@ let CodeEditorWidget = class CodeEditorWidget2 extends Disposable {
       reason = source;
       sourceStr = source.metadata.source;
     } else {
-      reason = EditSources.unknown({ name: sourceStr });
+      reason = EditSources.unknown({ name: source });
       sourceStr = source;
     }
     this._onBeforeExecuteEdit.fire({ source: sourceStr ?? void 0 });
@@ -1307,12 +1313,26 @@ let CodeEditorWidget = class CodeEditorWidget2 extends Disposable {
     }
     return this._modelData.view.getLineWidth(lineNumber);
   }
+  resetLineWidthCaches() {
+    if (!this._modelData || !this._modelData.hasRealView) {
+      return;
+    }
+    this._modelData.view.resetLineWidthCaches();
+  }
   render(forceRedraw = false) {
     if (!this._modelData || !this._modelData.hasRealView) {
       return;
     }
     this._modelData.viewModel.batchEvents(() => {
       this._modelData.view.render(true, forceRedraw);
+    });
+  }
+  renderAsync(forceRedraw = false) {
+    if (!this._modelData || !this._modelData.hasRealView) {
+      return;
+    }
+    this._modelData.viewModel.batchEvents(() => {
+      this._modelData.view.render(false, forceRedraw);
     });
   }
   setAriaOptions(options) {
@@ -1475,6 +1495,9 @@ let CodeEditorWidget = class CodeEditorWidget2 extends Disposable {
       }
       view.render(false, true);
       view.domNode.domNode.setAttribute("data-uri", model.uri.toString());
+      listenersToRemove.push(view.onWillCopy((e) => this._onWillCopy.fire(e)));
+      listenersToRemove.push(view.onWillCut((e) => this._onWillCut.fire(e)));
+      listenersToRemove.push(view.onWillPaste((e) => this._onWillPaste.fire(e)));
     }
     this._modelData = new ModelData(model, viewModel, view, hasRealView, listenersToRemove, attachedView);
   }

@@ -44,6 +44,7 @@ export declare abstract class AbstractNativeEnvironmentService implements INativ
     get argvResource(): URI;
     get isExtensionDevelopment(): boolean;
     get untitledWorkspacesHome(): URI;
+    get builtinWorkbenchModesHome(): URI;
     get builtinExtensionsPath(): string;
     get extensionsDownloadLocation(): URI;
     get extensionsPath(): string;
@@ -65,6 +66,7 @@ export declare abstract class AbstractNativeEnvironmentService implements INativ
     get disableWorkspaceTrust(): boolean;
     get useInMemorySecretStorage(): boolean;
     get policyFile(): URI | undefined;
+    get agentSessionsWorkspace(): URI;
     get editSessionId(): string | undefined;
     get exportPolicyData(): string | undefined;
     get continueOn(): string | undefined;

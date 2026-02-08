@@ -1,5 +1,6 @@
 import './media/agentsessionsviewer.css';
-import { IIdentityProvider, IListVirtualDelegate } from '../../../../../base/browser/ui/list/list.js';
+import { IIdentityProvider, IListVirtualDelegate, NotSelectableGroupIdType } from '../../../../../base/browser/ui/list/list.js';
+import { AriaRole } from '../../../../../base/browser/ui/aria/aria.js';
 import { IListAccessibilityProvider } from '../../../../../base/browser/ui/list/listWidget.js';
 import { ITreeCompressionDelegate } from '../../../../../base/browser/ui/tree/asyncDataTree.js';
 import { ICompressedTreeNode } from '../../../../../base/browser/ui/tree/compressedObjectTreeModel.js';
@@ -19,6 +20,7 @@ import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
 import { MenuWorkbenchToolBar } from '../../../../../platform/actions/browser/toolbar.js';
 import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
 import { Event } from '../../../../../base/common/event.js';
+import { AgentSessionsGrouping } from './agentSessionsFilter.js';
 export type AgentSessionListItem = IAgentSession | IAgentSessionSection;
 interface IAgentSessionItemTemplate {
     readonly element: HTMLElement;
@@ -26,7 +28,6 @@ interface IAgentSessionItemTemplate {
     readonly title: IconLabel;
     readonly titleToolbar: MenuWorkbenchToolBar;
     readonly diffContainer: HTMLElement;
-    readonly diffFilesSpan: HTMLSpanElement;
     readonly diffAddedSpan: HTMLSpanElement;
     readonly diffRemovedSpan: HTMLSpanElement;
     readonly badge: HTMLElement;
@@ -41,7 +42,7 @@ interface IAgentSessionItemTemplate {
 export interface IAgentSessionRendererOptions {
     getHoverPosition(): HoverPosition;
 }
-export declare class AgentSessionRenderer implements ICompressibleTreeRenderer<IAgentSession, FuzzyScore, IAgentSessionItemTemplate> {
+export declare class AgentSessionRenderer extends Disposable implements ICompressibleTreeRenderer<IAgentSession, FuzzyScore, IAgentSessionItemTemplate> {
     private readonly options;
     private readonly markdownRendererService;
     private readonly productService;
@@ -50,6 +51,7 @@ export declare class AgentSessionRenderer implements ICompressibleTreeRenderer<I
     private readonly contextKeyService;
     static readonly TEMPLATE_ID = "agent-session";
     readonly templateId = "agent-session";
+    private readonly sessionHover;
     constructor(options: IAgentSessionRendererOptions, markdownRendererService: IMarkdownRendererService, productService: IProductService, hoverService: IHoverService, instantiationService: IInstantiationService, contextKeyService: IContextKeyService);
     renderTemplate(container: HTMLElement): IAgentSessionItemTemplate;
     renderElement(session: ITreeNode<IAgentSession, FuzzyScore>, index: number, template: IAgentSessionItemTemplate, details?: ITreeElementRenderDetails): void;
@@ -61,11 +63,12 @@ export declare class AgentSessionRenderer implements ICompressibleTreeRenderer<I
     private toDuration;
     private renderStatus;
     private renderHover;
-    private buildTooltip;
+    private buildHoverContent;
     renderCompressedElements(node: ITreeNode<ICompressedTreeNode<IAgentSession>, FuzzyScore>, index: number, templateData: IAgentSessionItemTemplate, details?: ITreeElementRenderDetails): void;
     disposeElement(element: ITreeNode<IAgentSession, FuzzyScore>, index: number, template: IAgentSessionItemTemplate, details?: ITreeElementRenderDetails): void;
     disposeTemplate(templateData: IAgentSessionItemTemplate): void;
 }
+export declare function toStatusLabel(status: AgentSessionStatus): string;
 interface IAgentSessionSectionTemplate {
     readonly container: HTMLElement;
     readonly label: HTMLSpanElement;
@@ -92,6 +95,8 @@ export declare class AgentSessionsListDelegate implements IListVirtualDelegate<A
     getTemplateId(element: AgentSessionListItem): string;
 }
 export declare class AgentSessionsAccessibilityProvider implements IListAccessibilityProvider<AgentSessionListItem> {
+    getWidgetRole(): AriaRole;
+    getRole(element: AgentSessionListItem): AriaRole | undefined;
     getWidgetAriaLabel(): string;
     getAriaLabel(element: AgentSessionListItem): string | null;
 }
@@ -113,9 +118,9 @@ export interface IAgentSessionsFilter {
     readonly limitResults?: () => number | undefined;
     /**
      * Whether to show section headers to group sessions.
-     * When false, sessions are shown as a flat list.
+     * When undefined, sessions are shown as a flat list.
      */
-    readonly groupResults?: () => boolean | undefined;
+    readonly groupResults?: () => AgentSessionsGrouping | undefined;
     /**
      * A callback to notify the filter about the number of
      * results after filtering.
@@ -133,10 +138,13 @@ export interface IAgentSessionsFilter {
 export declare class AgentSessionsDataSource implements IAsyncDataSource<IAgentSessionsModel, AgentSessionListItem> {
     private readonly filter;
     private readonly sorter;
+    private static readonly CAPPED_SESSIONS_LIMIT;
     constructor(filter: IAgentSessionsFilter | undefined, sorter: ITreeSorter<IAgentSession>);
     hasChildren(element: IAgentSessionsModel | AgentSessionListItem): boolean;
     getChildren(element: IAgentSessionsModel | AgentSessionListItem): Iterable<AgentSessionListItem>;
     private groupSessionsIntoSections;
+    private groupSessionsCapped;
+    private groupSessionsByDate;
 }
 export declare const AgentSessionSectionLabels: {
     inProgress: string;
@@ -145,10 +153,13 @@ export declare const AgentSessionSectionLabels: {
     week: string;
     older: string;
     archived: string;
+    more: string;
 };
-export declare function groupAgentSessions(sessions: IAgentSession[]): Map<AgentSessionSection, IAgentSessionSection>;
+export declare function groupAgentSessionsByDate(sessions: IAgentSession[]): Map<AgentSessionSection, IAgentSessionSection>;
+export declare function sessionDateFromNow(sessionTime: number): string;
 export declare class AgentSessionsIdentityProvider implements IIdentityProvider<IAgentSessionsModel | AgentSessionListItem> {
     getId(element: IAgentSessionsModel | AgentSessionListItem): string;
+    getGroupId(element: IAgentSessionsModel | AgentSessionListItem): number | NotSelectableGroupIdType;
 }
 export declare class AgentSessionsCompressionDelegate implements ITreeCompressionDelegate<AgentSessionListItem> {
     isIncompressible(element: AgentSessionListItem): boolean;

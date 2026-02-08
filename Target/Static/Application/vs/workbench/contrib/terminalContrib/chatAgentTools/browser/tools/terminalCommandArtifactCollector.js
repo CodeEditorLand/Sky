@@ -41,6 +41,11 @@ let TerminalCommandArtifactCollector = class TerminalCommandArtifactCollector2 {
         this._applyTheme(toolSpecificData, instance);
         return;
       }
+      const partialSnapshot = await this._capturePartialCommandOutput(instance, commandId);
+      if (partialSnapshot) {
+        toolSpecificData.terminalCommandOutput = partialSnapshot;
+        this._logService.debug(`RunInTerminalTool: Captured partial command output for ${commandId}`);
+      }
     }
     this._applyTheme(toolSpecificData, instance);
   }
@@ -58,6 +63,47 @@ let TerminalCommandArtifactCollector = class TerminalCommandArtifactCollector2 {
       const suffix = reason === "fallback" ? " (fallback)" : "";
       this._logService.debug(`RunInTerminalTool: Failed to snapshot command output${suffix}`, error);
     });
+  }
+  /**
+   * Captures output from a partial/current command that hasn't finished yet.
+   * This is used when the command is cancelled mid-execution.
+   */
+  async _capturePartialCommandOutput(instance, commandId) {
+    try {
+      await instance.xtermReadyPromise;
+    } catch {
+      return void 0;
+    }
+    const xterm = instance.xterm;
+    if (!xterm) {
+      return void 0;
+    }
+    const commandDetection = instance.capabilities.get(
+      2
+      /* TerminalCapability.CommandDetection */
+    );
+    const currentCommand = commandDetection?.currentCommand;
+    if (currentCommand && currentCommand.id === commandId) {
+      const executedMarker = currentCommand.commandExecutedMarker;
+      if (executedMarker && !executedMarker.isDisposed) {
+        try {
+          const raw = xterm.raw;
+          const buffer = raw.buffer.active;
+          const endLine = buffer.baseY + buffer.cursorY;
+          const startLine = executedMarker.line;
+          const lineCount = Math.max(endLine - startLine, 0);
+          if (lineCount > 0) {
+            const text = await xterm.getRangeAsVT(executedMarker, void 0, true);
+            if (text) {
+              return { text, lineCount };
+            }
+          }
+        } catch (error) {
+          this._logService.debug(`RunInTerminalTool: Failed to capture partial command output`, error);
+        }
+      }
+    }
+    return void 0;
   }
   _applyTheme(toolSpecificData, instance) {
     const theme = instance.xterm?.getXtermTheme();

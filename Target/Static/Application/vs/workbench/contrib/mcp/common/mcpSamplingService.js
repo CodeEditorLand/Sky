@@ -26,7 +26,7 @@ import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
 import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
 import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
-import { ChatAgentLocation } from "../../chat/common/constants.js";
+import { ChatAgentLocation, ChatConfiguration } from "../../chat/common/constants.js";
 import { ILanguageModelsService } from "../../chat/common/languageModels.js";
 import { mcpServerSamplingSection } from "./mcpConfiguration.js";
 import { McpSamplingLog } from "./mcpSamplingLog.js";
@@ -109,13 +109,22 @@ let McpSamplingService = class McpSamplingService2 extends Disposable {
   }
   async _getMatchingModel(opts) {
     const model = await this._getMatchingModelInner(opts.server, opts.isDuringToolCall, opts.params.modelPreferences);
+    const globalAutoApprove = this._configurationService.getValue(ChatConfiguration.GlobalAutoApprove);
     if (model === 0) {
+      if (globalAutoApprove) {
+        this._sessionSets.allowedDuringChat.set(opts.server.definition.id, true);
+        return this._getMatchingModel(opts);
+      }
       const retry = await this._showContextual(opts.isDuringToolCall, localize("mcp.sampling.allowDuringChat.title", 'Allow MCP tools from "{0}" to make LLM requests?', opts.server.definition.label), localize("mcp.sampling.allowDuringChat.desc", 'The MCP server "{0}" has issued a request to make a language model call. Do you want to allow it to make requests during chat?', opts.server.definition.label), this.allowButtons(opts.server, "allowedDuringChat"));
       if (retry) {
         return this._getMatchingModel(opts);
       }
       throw McpError.notAllowed();
     } else if (model === 1) {
+      if (globalAutoApprove) {
+        this._sessionSets.allowedOutsideChat.set(opts.server.definition.id, true);
+        return this._getMatchingModel(opts);
+      }
       const retry = await this._showContextual(opts.isDuringToolCall, localize("mcp.sampling.allowOutsideChat.title", 'Allow MCP server "{0}" to make LLM requests?', opts.server.definition.label), localize("mcp.sampling.allowOutsideChat.desc", 'The MCP server "{0}" has issued a request to make a language model call. Do you want to allow it to make requests, outside of tool calls during chat?', opts.server.definition.label), this.allowButtons(opts.server, "allowedOutsideChat"));
       if (retry) {
         return this._getMatchingModel(opts);

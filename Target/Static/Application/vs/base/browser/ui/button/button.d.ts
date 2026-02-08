@@ -28,6 +28,7 @@ export interface IButtonStyles {
     readonly buttonSecondaryBackground: string | undefined;
     readonly buttonSecondaryHoverBackground: string | undefined;
     readonly buttonSecondaryForeground: string | undefined;
+    readonly buttonSecondaryBorder: string | undefined;
     readonly buttonBorder: string | undefined;
 }
 export declare const unthemedButtonStyles: IButtonStyles;

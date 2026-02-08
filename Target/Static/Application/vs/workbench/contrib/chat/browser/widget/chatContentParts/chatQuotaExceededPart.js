@@ -14,7 +14,6 @@ var __param = function(paramIndex, decorator) {
 import * as dom from "../../../../../../base/browser/dom.js";
 import { Button } from "../../../../../../base/browser/ui/button/button.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { MarkdownString } from "../../../../../../base/common/htmlContent.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { ThemeIcon } from "../../../../../../base/common/themables.js";
@@ -36,8 +35,6 @@ let ChatQuotaExceededPart = class ChatQuotaExceededPart2 extends Disposable {
   constructor(element, content, renderer, chatWidgetService, commandService, telemetryService, chatEntitlementService) {
     super();
     this.content = content;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     const errorDetails = element.errorDetails;
     assertType(!!errorDetails, "errorDetails");
     this.domNode = $(".chat-quota-error-widget");
@@ -76,7 +73,6 @@ let ChatQuotaExceededPart = class ChatQuotaExceededPart2 extends Disposable {
       }));
       retryButton.element.classList.add("chat-quota-error-secondary-button");
       retryButton.label = localize("clickToContinue", "Click to Retry");
-      this._onDidChangeHeight.fire();
       this._register(retryButton.onDidClick(() => {
         const widget = chatWidgetService.getWidgetBySessionResource(element.sessionResource);
         if (!widget) {

@@ -13,8 +13,6 @@ export declare class ChatElicitationContentPart extends Disposable implements IC
     private readonly contextKeyService;
     private readonly keybindingService;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     private readonly _confirmWidget;
     get codeblocks(): import("../../chat.js").IChatCodeBlockInfo[] | undefined;
     get codeblocksPartId(): string | undefined;

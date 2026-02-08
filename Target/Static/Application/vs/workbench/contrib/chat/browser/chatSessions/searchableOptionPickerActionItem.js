@@ -26,6 +26,8 @@ import { IQuickInputService } from "../../../../../platform/quickinput/common/qu
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { ChatSessionPickerActionItem } from "./chatSessionPickerActionItem.js";
 import { ILogService } from "../../../../../platform/log/common/log.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 function isSearchableOptionQuickPickItem(item) {
   return !!item && typeof item.optionItem === "object";
 }
@@ -40,8 +42,8 @@ let SearchableOptionPickerActionItem = class SearchableOptionPickerActionItem2 e
   static {
     this.SEE_MORE_ID = "__see_more__";
   }
-  constructor(action, initialState, delegate, actionWidgetService, contextKeyService, keybindingService, quickInputService, logService) {
-    super(action, initialState, delegate, actionWidgetService, contextKeyService, keybindingService);
+  constructor(action, initialState, delegate, actionWidgetService, contextKeyService, keybindingService, quickInputService, logService, commandService, telemetryService) {
+    super(action, initialState, delegate, actionWidgetService, contextKeyService, keybindingService, commandService, telemetryService);
     this.quickInputService = quickInputService;
     this.logService = logService;
   }
@@ -190,7 +192,9 @@ SearchableOptionPickerActionItem = SearchableOptionPickerActionItem_1 = __decora
   __param(4, IContextKeyService),
   __param(5, IKeybindingService),
   __param(6, IQuickInputService),
-  __param(7, ILogService)
+  __param(7, ILogService),
+  __param(8, ICommandService),
+  __param(9, ITelemetryService)
 ], SearchableOptionPickerActionItem);
 export {
   SearchableOptionPickerActionItem

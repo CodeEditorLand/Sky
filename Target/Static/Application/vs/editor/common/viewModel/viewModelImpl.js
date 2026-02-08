@@ -120,6 +120,9 @@ class ViewModel extends Disposable {
     this._viewportStart.dispose();
     this._eventDispatcher.dispose();
   }
+  getEditorOption(id) {
+    return this._configuration.options.get(id);
+  }
   createLineBreaksComputer() {
     return this._lines.createLineBreaksComputer();
   }
@@ -137,6 +140,10 @@ class ViewModel extends Disposable {
     if (!allowVariableLineHeights) {
       return [];
     }
+    const defaultLineHeight = this._configuration.options.get(
+      75
+      /* EditorOption.lineHeight */
+    );
     const decorations = this.model.getCustomLineHeightsDecorations(this._editorId);
     return decorations.map((d) => {
       const lineNumber = d.range.startLineNumber;
@@ -145,7 +152,7 @@ class ViewModel extends Disposable {
         decorationId: d.id,
         startLineNumber: viewRange.startLineNumber,
         endLineNumber: viewRange.endLineNumber,
-        lineHeight: d.options.lineHeight || 0
+        lineHeight: d.options.lineHeight ? d.options.lineHeight * defaultLineHeight : 0
       };
     });
   }
@@ -717,12 +724,14 @@ class ViewModel extends Disposable {
   }
   getViewportViewLineRenderingData(visibleRange, lineNumber) {
     const viewportDecorationsCollection = this._decorations.getDecorationsViewportData(visibleRange);
-    const inlineDecorations = viewportDecorationsCollection.inlineDecorations[lineNumber - visibleRange.startLineNumber];
-    return this._getViewLineRenderingData(lineNumber, inlineDecorations, viewportDecorationsCollection.hasVariableFonts, viewportDecorationsCollection.decorations);
+    const relativeLineNumber = lineNumber - visibleRange.startLineNumber;
+    const inlineDecorations = viewportDecorationsCollection.inlineDecorations[relativeLineNumber];
+    const hasVariableFonts = viewportDecorationsCollection.hasVariableFonts[relativeLineNumber];
+    return this._getViewLineRenderingData(lineNumber, inlineDecorations, hasVariableFonts, viewportDecorationsCollection.decorations);
   }
   getViewLineRenderingData(lineNumber) {
     const decorationsCollection = this._decorations.getDecorationsOnLine(lineNumber);
-    return this._getViewLineRenderingData(lineNumber, decorationsCollection.inlineDecorations[0], decorationsCollection.hasVariableFonts, decorationsCollection.decorations);
+    return this._getViewLineRenderingData(lineNumber, decorationsCollection.inlineDecorations[0], decorationsCollection.hasVariableFonts[0], decorationsCollection.decorations);
   }
   _getViewLineRenderingData(lineNumber, inlineDecorations, hasVariableFonts, decorations) {
     const mightContainRTL = this.model.mightContainRTL();
@@ -813,39 +822,39 @@ class ViewModel extends Disposable {
       }
     }
     if (!hasNonEmptyRange && !emptySelectionClipboard) {
-      return "";
+      return { sourceRanges: [], sourceText: "" };
     }
+    const ranges = [];
+    const result = [];
+    const pushRange = /* @__PURE__ */ __name((modelRange, append = "") => {
+      ranges.push(modelRange);
+      result.push(this.model.getValueInRange(
+        modelRange,
+        forceCRLF ? 2 : 0
+        /* EndOfLinePreference.TextDefined */
+      ) + append);
+    }, "pushRange");
     if (hasEmptyRange && emptySelectionClipboard) {
-      const result2 = [];
       let prevModelLineNumber = 0;
       for (const modelRange of modelRanges) {
         const modelLineNumber = modelRange.startLineNumber;
         if (modelRange.isEmpty()) {
           if (modelLineNumber !== prevModelLineNumber) {
-            result2.push(this.model.getLineContent(modelLineNumber) + newLineCharacter);
+            pushRange(new Range(modelLineNumber, this.model.getLineMinColumn(modelLineNumber), modelLineNumber, this.model.getLineMaxColumn(modelLineNumber)), newLineCharacter);
           }
         } else {
-          result2.push(this.model.getValueInRange(
-            modelRange,
-            forceCRLF ? 2 : 0
-            /* EndOfLinePreference.TextDefined */
-          ));
+          pushRange(modelRange);
         }
         prevModelLineNumber = modelLineNumber;
       }
-      return result2.length === 1 ? result2[0] : result2;
-    }
-    const result = [];
-    for (const modelRange of modelRanges) {
-      if (!modelRange.isEmpty()) {
-        result.push(this.model.getValueInRange(
-          modelRange,
-          forceCRLF ? 2 : 0
-          /* EndOfLinePreference.TextDefined */
-        ));
+    } else {
+      for (const modelRange of modelRanges) {
+        if (!modelRange.isEmpty()) {
+          pushRange(modelRange);
+        }
       }
     }
-    return result.length === 1 ? result[0] : result;
+    return { sourceRanges: ranges, sourceText: result.length === 1 ? result[0] : result };
   }
   getRichTextToCopy(modelRanges, emptySelectionClipboard) {
     const languageId = this.model.getLanguageId();

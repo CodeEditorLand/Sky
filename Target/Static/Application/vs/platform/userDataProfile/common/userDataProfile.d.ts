@@ -24,6 +24,8 @@ export type UseDefaultProfileFlags = {
     [key in ProfileResourceType]?: boolean;
 };
 export type ProfileResourceTypeFlags = UseDefaultProfileFlags;
+export type SettingValue = string | boolean | number | undefined | null | object;
+export type ISettingsDictionary = Record<string, SettingValue>;
 export interface IUserDataProfile {
     readonly id: string;
     readonly isDefault: boolean;
@@ -44,6 +46,15 @@ export interface IUserDataProfile {
     readonly workspaces?: readonly URI[];
 }
 export declare function isUserDataProfile(thing: unknown): thing is IUserDataProfile;
+export interface IParsedUserDataProfileTemplate {
+    readonly name: string;
+    readonly icon?: string;
+    readonly settings?: ISettingsDictionary;
+    readonly globalState?: IStringDictionary<string>;
+}
+export interface ISystemProfileTemplate extends IParsedUserDataProfileTemplate {
+    readonly id: string;
+}
 export type DidChangeProfilesEvent = {
     readonly added: readonly IUserDataProfile[];
     readonly removed: readonly IUserDataProfile[];
@@ -97,19 +108,20 @@ export type StoredUserDataProfile = {
     location: URI;
     icon?: string;
     useDefaultFlags?: UseDefaultProfileFlags;
+    isSystem?: boolean;
 };
 export type StoredProfileAssociations = {
     workspaces?: IStringDictionary<string>;
     emptyWindows?: IStringDictionary<string>;
 };
 export declare class UserDataProfilesService extends Disposable implements IUserDataProfilesService {
-    protected readonly environmentService: IEnvironmentService;
-    protected readonly fileService: IFileService;
-    protected readonly uriIdentityService: IUriIdentityService;
-    protected readonly logService: ILogService;
+    protected environmentService: IEnvironmentService;
+    protected fileService: IFileService;
+    protected uriIdentityService: IUriIdentityService;
+    protected logService: ILogService;
+    readonly _serviceBrand: undefined;
     protected static readonly PROFILES_KEY = "userDataProfiles";
     protected static readonly PROFILE_ASSOCIATIONS_KEY = "profileAssociations";
-    readonly _serviceBrand: undefined;
     readonly profilesHome: URI;
     private readonly profilesCacheHome;
     get defaultProfile(): IUserDataProfile;
@@ -128,6 +140,7 @@ export declare class UserDataProfilesService extends Disposable implements IUser
     init(): void;
     protected _profilesObject: UserDataProfilesObject | undefined;
     protected get profilesObject(): UserDataProfilesObject;
+    private isInvalidProfile;
     private createDefaultProfile;
     createTransientProfile(workspaceIdentifier?: IAnyWorkspaceIdentifier): Promise<IUserDataProfile>;
     createNamedProfile(name: string, options?: IUserDataProfileOptions, workspaceIdentifier?: IAnyWorkspaceIdentifier): Promise<IUserDataProfile>;

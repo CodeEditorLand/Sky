@@ -21,15 +21,15 @@ import { ProgressLocation as MainProgressLocation } from '../../../platform/prog
 import { SaveReason } from '../../common/editor.js';
 import { IViewBadge } from '../../common/views.js';
 import { IChatAgentRequest, IChatAgentResult } from '../../contrib/chat/common/participants/chatAgents.js';
-import { IChatRequestDraft } from '../../contrib/chat/common/editing/chatEditingService.js';
 import { IChatRequestModeInstructions } from '../../contrib/chat/common/model/chatModel.js';
-import { IChatAgentMarkdownContentWithVulnerability, IChatCodeCitation, IChatCommandButton, IChatConfirmation, IChatContentInlineReference, IChatContentReference, IChatExtensionsContent, IChatFollowup, IChatMarkdownContent, IChatMoveMessage, IChatMultiDiffDataSerialized, IChatProgressMessage, IChatPullRequestContent, IChatResponseCodeblockUriPart, IChatTaskDto, IChatTaskResult, IChatTextEdit, IChatThinkingPart, IChatToolInvocationSerialized, IChatTreeData, IChatUserActionEvent, IChatWarningMessage } from '../../contrib/chat/common/chatService/chatService.js';
+import { IChatAgentMarkdownContentWithVulnerability, IChatCodeCitation, IChatCommandButton, IChatConfirmation, IChatContentInlineReference, IChatContentReference, IChatExtensionsContent, IChatFollowup, IChatMarkdownContent, IChatMoveMessage, IChatMultiDiffDataSerialized, IChatProgressMessage, IChatPullRequestContent, IChatQuestionCarousel, IChatResponseCodeblockUriPart, IChatTaskDto, IChatTaskResult, IChatTextEdit, IChatThinkingPart, IChatToolInvocationSerialized, IChatTreeData, IChatUserActionEvent, IChatWarningMessage, IChatWorkspaceEdit } from '../../contrib/chat/common/chatService/chatService.js';
 import { IChatRequestVariableEntry } from '../../contrib/chat/common/attachments/chatVariableEntries.js';
 import { ChatAgentLocation } from '../../contrib/chat/common/constants.js';
+import { IHookResult } from '../../contrib/chat/common/hooksExecutionService.js';
 import { IToolResult, ToolDataSource } from '../../contrib/chat/common/tools/languageModelToolsService.js';
 import * as chatProvider from '../../contrib/chat/common/languageModels.js';
 import { IDebugVisualizationTreeItem } from '../../contrib/debug/common/debug.js';
-import { McpServerLaunch } from '../../contrib/mcp/common/mcpTypes.js';
+import { McpServerDefinition as McpServerDefinitionType, McpServerLaunch } from '../../contrib/mcp/common/mcpTypes.js';
 import * as notebooks from '../../contrib/notebook/common/notebookCommon.js';
 import { ICellRange } from '../../contrib/notebook/common/notebookRange.js';
 import { InputValidationType } from '../../contrib/scm/common/scm.js';
@@ -459,6 +459,10 @@ export declare namespace ChatResponseMarkdownWithVulnerabilitiesPart {
 export declare namespace ChatResponseConfirmationPart {
     function from(part: vscode.ChatResponseConfirmationPart): Dto<IChatConfirmation>;
 }
+export declare namespace ChatResponseQuestionCarouselPart {
+    function from(part: vscode.ChatResponseQuestionCarouselPart): Dto<IChatQuestionCarousel>;
+    function to(part: Dto<IChatQuestionCarousel>): vscode.ChatResponseQuestionCarouselPart;
+}
 export declare namespace ChatResponseFilesPart {
     function from(part: vscode.ChatResponseFileTreePart): IChatTreeData;
     function to(part: Dto<IChatTreeData>): vscode.ChatResponseFileTreePart;
@@ -517,6 +521,9 @@ export declare namespace NotebookEdit {
 export declare namespace ChatResponseNotebookEditPart {
     function from(part: vscode.ChatResponseNotebookEditPart): extHostProtocol.IChatNotebookEditDto;
 }
+export declare namespace ChatResponseWorkspaceEditPart {
+    function from(part: vscode.ChatResponseWorkspaceEditPart): IChatWorkspaceEdit;
+}
 export declare namespace ChatResponseReferencePart {
     function from(part: types.ChatResponseReferencePart): Dto<IChatContentReference>;
     function to(part: Dto<IChatContentReference>): vscode.ChatResponseReferencePart;
@@ -530,10 +537,7 @@ export declare namespace ChatResponsePart {
     function toContent(part: extHostProtocol.IChatContentProgressDto, commandsConverter: CommandsConverter): vscode.ChatResponseMarkdownPart | vscode.ChatResponseFileTreePart | vscode.ChatResponseAnchorPart | vscode.ChatResponseCommandButtonPart | undefined;
 }
 export declare namespace ChatAgentRequest {
-    function to(request: IChatAgentRequest, location2: vscode.ChatRequestEditorData | vscode.ChatRequestNotebookData | undefined, model: vscode.LanguageModelChat, diagnostics: readonly [vscode.Uri, readonly vscode.Diagnostic[]][], tools: Map<string, boolean>, extension: IRelaxedExtensionDescription, logService: ILogService): vscode.ChatRequest;
-}
-export declare namespace ChatRequestDraft {
-    function to(request: IChatRequestDraft): vscode.ChatRequestDraft;
+    function to(request: IChatAgentRequest, location2: vscode.ChatRequestEditorData | vscode.ChatRequestNotebookData | undefined, model: vscode.LanguageModelChat, diagnostics: readonly [vscode.Uri, readonly vscode.Diagnostic[]][], tools: Map<vscode.LanguageModelToolInformation, boolean>, extension: IRelaxedExtensionDescription, logService: ILogService): vscode.ChatRequest;
 }
 export declare namespace ChatLocation {
     function to(loc: ChatAgentLocation): types.ChatLocation;
@@ -590,7 +594,7 @@ export declare namespace LanguageModelToolSource {
     function to(source: Dto<ToolDataSource>): vscode.LanguageModelToolInformation['source'];
 }
 export declare namespace LanguageModelToolResult {
-    function to(result: IToolResult): vscode.LanguageModelToolResult;
+    function to(result: IToolResult): vscode.ExtendedLanguageModelToolResult;
     function from(result: vscode.ExtendedLanguageModelToolResult2, extension: IExtensionDescription): Dto<IToolResult> | SerializableObjectWithBuffers<Dto<IToolResult>>;
 }
 export declare namespace IconPath {
@@ -617,7 +621,12 @@ export declare namespace AiSettingsSearch {
 }
 export declare namespace McpServerDefinition {
     function from(item: vscode.McpServerDefinition): McpServerLaunch.Serialized;
+    /** Converts from the IPC DTO to the API type. */
+    function to(dto: McpServerDefinitionType.Serialized): vscode.McpServerDefinition;
 }
 export declare namespace SourceControlInputBoxValidationType {
     function from(type: number): InputValidationType;
+}
+export declare namespace ChatHookResult {
+    function to(result: IHookResult): vscode.ChatHookResult;
 }

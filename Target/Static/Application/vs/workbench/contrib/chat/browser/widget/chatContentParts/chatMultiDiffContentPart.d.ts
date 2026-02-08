@@ -1,4 +1,3 @@
-import { Event } from '../../../../../../base/common/event.js';
 import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
 import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
 import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
@@ -16,8 +15,6 @@ export declare class ChatMultiDiffContentPart extends Disposable implements ICha
     private readonly themeService;
     private readonly contextKeyService;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: Event<void>;
     private list;
     private isCollapsed;
     private readonly readOnly;

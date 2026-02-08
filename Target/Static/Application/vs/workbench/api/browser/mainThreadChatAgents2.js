@@ -32,8 +32,6 @@ import { AddDynamicVariableAction } from "../../contrib/chat/browser/attachments
 import { IChatAgentService } from "../../contrib/chat/common/participants/chatAgents.js";
 import { IPromptsService } from "../../contrib/chat/common/promptSyntax/service/promptsService.js";
 import { isValidPromptType } from "../../contrib/chat/common/promptSyntax/promptTypes.js";
-import { IChatPromptContentStore } from "../../contrib/chat/common/promptSyntax/chatPromptContentStore.js";
-import { IChatEditingService } from "../../contrib/chat/common/editing/chatEditingService.js";
 import { ChatRequestAgentPart } from "../../contrib/chat/common/requestParser/chatParserTypes.js";
 import { ChatRequestParser } from "../../contrib/chat/common/requestParser/chatRequestParser.js";
 import { IChatService } from "../../contrib/chat/common/chatService/chatService.js";
@@ -83,12 +81,11 @@ let MainThreadChatAgents2 = class MainThreadChatAgents22 extends Disposable {
   static {
     __name(this, "MainThreadChatAgents2");
   }
-  constructor(extHostContext, _chatAgentService, _chatSessionService, _chatService, _chatEditingService, _languageFeaturesService, _chatWidgetService, _instantiationService, _logService, _extensionService, _uriIdentityService, _promptsService, _chatPromptContentStore, _languageModelToolsService) {
+  constructor(extHostContext, _chatAgentService, _chatSessionService, _chatService, _languageFeaturesService, _chatWidgetService, _instantiationService, _logService, _extensionService, _uriIdentityService, _promptsService, _languageModelToolsService) {
     super();
     this._chatAgentService = _chatAgentService;
     this._chatSessionService = _chatSessionService;
     this._chatService = _chatService;
-    this._chatEditingService = _chatEditingService;
     this._languageFeaturesService = _languageFeaturesService;
     this._chatWidgetService = _chatWidgetService;
     this._instantiationService = _instantiationService;
@@ -96,13 +93,11 @@ let MainThreadChatAgents2 = class MainThreadChatAgents22 extends Disposable {
     this._extensionService = _extensionService;
     this._uriIdentityService = _uriIdentityService;
     this._promptsService = _promptsService;
-    this._chatPromptContentStore = _chatPromptContentStore;
     this._languageModelToolsService = _languageModelToolsService;
     this._agents = this._register(new DisposableMap());
     this._agentCompletionProviders = this._register(new DisposableMap());
     this._agentIdsToCompletionProviders = this._register(new DisposableMap());
     this._chatParticipantDetectionProviders = this._register(new DisposableMap());
-    this._chatRelatedFilesProviders = this._register(new DisposableMap());
     this._promptFileProviders = this._register(new DisposableMap());
     this._promptFileProviderEmitters = this._register(new DisposableMap());
     this._promptFileContentRegistrations = this._register(new DisposableMap());
@@ -128,6 +123,9 @@ let MainThreadChatAgents2 = class MainThreadChatAgents22 extends Disposable {
           }
         }
       }
+    }));
+    this._register(this._chatService.onDidReceiveQuestionCarouselAnswer((e) => {
+      this._proxy.$handleQuestionCarouselAnswer(e.requestId, e.resolveId, e.answers);
     }));
   }
   $unregisterAgent(handle) {
@@ -231,10 +229,10 @@ let MainThreadChatAgents2 = class MainThreadChatAgents22 extends Disposable {
     }
     const { progress, chatSession } = pendingProgress;
     const chatProgressParts = [];
+    const response = chatSession?.getRequests().find((req) => req.id === requestId)?.response;
     for (const item of chunks) {
       const [progress2, responsePartHandle] = Array.isArray(item) ? item : [item];
       if (progress2.kind === "externalEdits") {
-        const response = chatSession?.getRequests().at(-1)?.response;
         if (chatSession?.editingSession && responsePartHandle !== void 0 && response) {
           const parts = progress2.start ? await chatSession.editingSession.startExternalEdits(response, responsePartHandle, revive(progress2.resources), progress2.undoStopId) : await chatSession.editingSession.stopExternalEdits(response, responsePartHandle);
           chatProgressParts.push(...parts);
@@ -253,6 +251,17 @@ let MainThreadChatAgents2 = class MainThreadChatAgents22 extends Disposable {
       }
       if (progress2.kind === "updateToolInvocation") {
         this._languageModelToolsService.updateToolStream(progress2.toolCallId, progress2.streamData?.partialInput, CancellationToken.None);
+        continue;
+      }
+      if (progress2.kind === "usage") {
+        if (response) {
+          response.setUsage({
+            kind: "usage",
+            promptTokens: progress2.promptTokens,
+            completionTokens: progress2.completionTokens,
+            promptTokenDetails: progress2.promptTokenDetails
+          });
+        }
         continue;
       }
       const revivedProgress = progress2.kind === "notebookEdit" ? ChatNotebookEdit.fromChatEdit(progress2) : revive(progress2);
@@ -371,17 +380,6 @@ let MainThreadChatAgents2 = class MainThreadChatAgents22 extends Disposable {
   $unregisterChatParticipantDetectionProvider(handle) {
     this._chatParticipantDetectionProviders.deleteAndDispose(handle);
   }
-  $registerRelatedFilesProvider(handle, metadata) {
-    this._chatRelatedFilesProviders.set(handle, this._chatEditingService.registerRelatedFilesProvider(handle, {
-      description: metadata.description,
-      provideRelatedFiles: /* @__PURE__ */ __name(async (request, token) => {
-        return (await this._proxy.$provideRelatedFiles(handle, request, token))?.map((v) => ({ uri: URI.from(v.uri), description: v.description })) ?? [];
-      }, "provideRelatedFiles")
-    }));
-  }
-  $unregisterRelatedFilesProvider(handle) {
-    this._chatRelatedFilesProviders.deleteAndDispose(handle);
-  }
   async $registerPromptFileProvider(handle, type, extensionId) {
     const extension = await this._extensionService.getExtension(extensionId.value);
     if (!extension) {
@@ -404,15 +402,8 @@ let MainThreadChatAgents2 = class MainThreadChatAgents22 extends Disposable {
           return void 0;
         }
         return contributions.map((c) => {
-          const uri = URI.revive(c.uri);
-          if (c.content && uri.scheme === Schemas.vscodeChatPrompt) {
-            const uriKey = uri.toString();
-            contentRegistrations.deleteAndDispose(uriKey);
-            contentRegistrations.set(uriKey, this._chatPromptContentStore.registerContent(uri, c.content));
-          }
           return {
-            uri,
-            isEditable: c.isEditable
+            uri: URI.revive(c.uri)
           };
         });
       }, "providePromptFiles")
@@ -436,16 +427,14 @@ MainThreadChatAgents2 = __decorate([
   __param(1, IChatAgentService),
   __param(2, IChatSessionsService),
   __param(3, IChatService),
-  __param(4, IChatEditingService),
-  __param(5, ILanguageFeaturesService),
-  __param(6, IChatWidgetService),
-  __param(7, IInstantiationService),
-  __param(8, ILogService),
-  __param(9, IExtensionService),
-  __param(10, IUriIdentityService),
-  __param(11, IPromptsService),
-  __param(12, IChatPromptContentStore),
-  __param(13, ILanguageModelToolsService)
+  __param(4, ILanguageFeaturesService),
+  __param(5, IChatWidgetService),
+  __param(6, IInstantiationService),
+  __param(7, ILogService),
+  __param(8, IExtensionService),
+  __param(9, IUriIdentityService),
+  __param(10, IPromptsService),
+  __param(11, ILanguageModelToolsService)
 ], MainThreadChatAgents2);
 function computeCompletionRanges(model, position, reg) {
   const varWord = getWordAtText(position.column, reg, model.getLineContent(position.lineNumber), 0);

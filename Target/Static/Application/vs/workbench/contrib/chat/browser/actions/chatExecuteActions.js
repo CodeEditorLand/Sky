@@ -1,6 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { Codicon } from "../../../../../base/common/codicons.js";
+import { hash } from "../../../../../base/common/hash.js";
 import { basename } from "../../../../../base/common/resources.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { assertType } from "../../../../../base/common/types.js";
@@ -19,11 +20,14 @@ import { chatVariableLeader } from "../../common/requestParser/chatParserTypes.j
 import { IChatService } from "../../common/chatService/chatService.js";
 import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../common/constants.js";
 import { ILanguageModelToolsService } from "../../common/tools/languageModelToolsService.js";
+import { PromptsStorage } from "../../common/promptSyntax/service/promptsService.js";
+import { IChatSessionsService } from "../../common/chatSessionsService.js";
 import { IChatWidgetService } from "../chat.js";
+import { getAgentSessionProvider, AgentSessionProviders } from "../agentSessions/agentSessions.js";
 import { getEditingSessionContext } from "../chatEditing/chatEditingActions.js";
-import { ctxHasEditorModification } from "../chatEditing/chatEditingEditorContextKeys.js";
+import { ctxHasEditorModification, ctxHasRequestInProgress, ctxIsGlobalEditingSession } from "../chatEditing/chatEditingEditorContextKeys.js";
 import { ACTION_ID_NEW_CHAT, CHAT_CATEGORY, handleCurrentEditingSession, handleModeSwitch } from "./chatActions.js";
-import { ContinueChatInSessionAction } from "./chatContinueInAction.js";
+import { CreateRemoteAgentJobAction } from "./chatContinueInAction.js";
 class SubmitAction extends Action2 {
   static {
     __name(this, "SubmitAction");
@@ -33,6 +37,10 @@ class SubmitAction extends Action2 {
     const telemetryService = accessor.get(ITelemetryService);
     const widgetService = accessor.get(IChatWidgetService);
     const widget = context?.widget ?? widgetService.lastFocusedWidget;
+    const pendingDelegationTarget = widget?.input.pendingDelegationTarget;
+    if (pendingDelegationTarget && pendingDelegationTarget !== AgentSessionProviders.Local) {
+      return await this.handleDelegation(accessor, widget, pendingDelegationTarget);
+    }
     if (widget?.viewModel?.editing) {
       const configurationService = accessor.get(IConfigurationService);
       const dialogService = accessor.get(IDialogService);
@@ -99,6 +107,21 @@ class SubmitAction extends Action2 {
       widget.viewModel.model.setCheckpoint(void 0);
     }
     widget?.acceptInput(context?.inputValue);
+  }
+  async handleDelegation(accessor, widget, delegationTarget) {
+    const chatSessionsService = accessor.get(IChatSessionsService);
+    const contributions = chatSessionsService.getAllChatSessionContributions();
+    const targetContribution = contributions.find((contrib) => {
+      const providerType = getAgentSessionProvider(contrib.type);
+      return providerType === delegationTarget;
+    });
+    if (!targetContribution) {
+      throw new Error(`No contribution found for delegation target: ${delegationTarget}`);
+    }
+    if (targetContribution.canDelegate === false) {
+      throw new Error(`The contribution for delegation target: ${delegationTarget} does not support delegation.`);
+    }
+    return new CreateRemoteAgentJobAction().run(accessor, targetContribution, widget);
   }
 }
 const whenNotInProgress = ChatContextKeys.requestInProgress.negate();
@@ -188,7 +211,7 @@ class ToggleChatModeAction extends Action2 {
     }
     const chatSession = widget.viewModel?.model;
     const requestCount = chatSession?.getRequests().length ?? 0;
-    const switchToMode = (arg && modeService.findModeById(arg.modeId)) ?? this.getNextMode(widget, requestCount, configurationService, modeService);
+    const switchToMode = (arg && (modeService.findModeById(arg.modeId) || modeService.findModeByName(arg.modeId))) ?? this.getNextMode(widget, requestCount, configurationService, modeService);
     const currentMode = widget.input.currentModeObs.get();
     if (switchToMode.id === currentMode.id) {
       return;
@@ -201,9 +224,16 @@ class ToggleChatModeAction extends Action2 {
     const extensionId = switchToMode.source?.storage === "extension" ? switchToMode.source.extensionId.value : void 0;
     const toolsCount = switchToMode.customTools?.get()?.length ?? 0;
     const handoffsCount = switchToMode.handOffs?.get()?.length ?? 0;
+    const getModeNameForTelemetry = /* @__PURE__ */ __name((mode) => {
+      const modeStorage = mode.source?.storage;
+      if (modeStorage === PromptsStorage.local || modeStorage === PromptsStorage.user) {
+        return String(hash(mode.name.get()));
+      }
+      return mode.name.get();
+    }, "getModeNameForTelemetry");
     telemetryService.publicLog2("chat.modeChange", {
-      fromMode: currentMode.name.get(),
-      mode: switchToMode.name.get(),
+      fromMode: getModeNameForTelemetry(currentMode),
+      mode: getModeNameForTelemetry(switchToMode),
       requestCount,
       storage,
       extensionId,
@@ -273,7 +303,12 @@ class OpenModelPickerAction extends Action2 {
         id: MenuId.ChatInput,
         order: 3,
         group: "navigation",
-        when: ContextKeyExpr.and(ChatContextKeys.lockedToCodingAgent.negate(), ContextKeyExpr.or(ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.Chat), ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.EditorInline), ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.Notebook), ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.Terminal)))
+        when: ContextKeyExpr.and(
+          ChatContextKeys.lockedToCodingAgent.negate(),
+          ContextKeyExpr.or(ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.Chat), ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.EditorInline), ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.Notebook), ContextKeyExpr.equals(ChatContextKeys.location.key, ChatAgentLocation.Terminal)),
+          // Hide in welcome view when session type is not local
+          ContextKeyExpr.or(ChatContextKeys.inAgentSessionsWelcome.negate(), ChatContextKeys.agentSessionType.isEqualTo(AgentSessionProviders.Local))
+        )
       }
     });
   }
@@ -311,7 +346,14 @@ class OpenModePickerAction extends Action2 {
         {
           id: MenuId.ChatInput,
           order: 1,
-          when: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.location.isEqualTo(ChatAgentLocation.Chat), ChatContextKeys.inQuickChat.negate(), ChatContextKeys.lockedToCodingAgent.negate()),
+          when: ContextKeyExpr.and(
+            ChatContextKeys.enabled,
+            ChatContextKeys.location.isEqualTo(ChatAgentLocation.Chat),
+            ChatContextKeys.inQuickChat.negate(),
+            ContextKeyExpr.or(ChatContextKeys.lockedToCodingAgent.negate(), ChatContextKeys.chatSessionHasCustomAgentTarget),
+            // Hide in welcome view when session type is not local
+            ContextKeyExpr.or(ChatContextKeys.inAgentSessionsWelcome.negate(), ChatContextKeys.agentSessionType.isEqualTo(AgentSessionProviders.Local))
+          ),
           group: "navigation"
         }
       ]
@@ -339,12 +381,12 @@ class OpenSessionTargetPickerAction extends Action2 {
       tooltip: localize("setSessionTarget", "Set Session Target"),
       category: CHAT_CATEGORY,
       f1: false,
-      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.hasCanDelegateProviders, ContextKeyExpr.or(ChatContextKeys.chatSessionIsEmpty, ChatContextKeys.inAgentSessionsWelcome)),
+      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ContextKeyExpr.or(ChatContextKeys.chatSessionIsEmpty, ChatContextKeys.inAgentSessionsWelcome), ChatContextKeys.currentlyEditingInput.negate(), ChatContextKeys.currentlyEditing.negate()),
       menu: [
         {
           id: MenuId.ChatInput,
           order: 0,
-          when: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.location.isEqualTo(ChatAgentLocation.Chat), ChatContextKeys.inQuickChat.negate(), ChatContextKeys.hasCanDelegateProviders),
+          when: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.location.isEqualTo(ChatAgentLocation.Chat), ChatContextKeys.inQuickChat.negate(), ChatContextKeys.chatSessionIsEmpty),
           group: "navigation"
         }
       ]
@@ -358,6 +400,67 @@ class OpenSessionTargetPickerAction extends Action2 {
     }
   }
 }
+class OpenDelegationPickerAction extends Action2 {
+  static {
+    __name(this, "OpenDelegationPickerAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.openDelegationPicker";
+  }
+  constructor() {
+    super({
+      id: OpenDelegationPickerAction.ID,
+      title: localize2("interactive.openDelegationPicker.label", "Open Delegation Picker"),
+      tooltip: localize("delegateSession", "Delegate Session"),
+      category: CHAT_CATEGORY,
+      f1: false,
+      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.chatSessionIsEmpty.negate(), ChatContextKeys.currentlyEditingInput.negate(), ChatContextKeys.currentlyEditing.negate()),
+      menu: [
+        {
+          id: MenuId.ChatInput,
+          order: 0.5,
+          when: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.location.isEqualTo(ChatAgentLocation.Chat), ChatContextKeys.inQuickChat.negate(), ChatContextKeys.chatSessionIsEmpty.negate()),
+          group: "navigation"
+        }
+      ]
+    });
+  }
+  async run(accessor, ...args) {
+    const widgetService = accessor.get(IChatWidgetService);
+    const widget = widgetService.lastFocusedWidget;
+    if (widget) {
+      widget.input.openDelegationPicker();
+    }
+  }
+}
+class OpenWorkspacePickerAction extends Action2 {
+  static {
+    __name(this, "OpenWorkspacePickerAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.openWorkspacePicker";
+  }
+  constructor() {
+    super({
+      id: OpenWorkspacePickerAction.ID,
+      title: localize2("interactive.openWorkspacePicker.label", "Open Workspace Picker"),
+      tooltip: localize("selectWorkspace", "Select Target Workspace"),
+      category: CHAT_CATEGORY,
+      f1: false,
+      precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatContextKeys.inAgentSessionsWelcome),
+      menu: [
+        {
+          id: MenuId.ChatInput,
+          order: 0.6,
+          when: ContextKeyExpr.and(ChatContextKeys.inAgentSessionsWelcome, ChatContextKeys.chatSessionType.isEqualTo("local")),
+          group: "navigation"
+        }
+      ]
+    });
+  }
+  async run(accessor, ...args) {
+  }
+}
 class ChatSessionPrimaryPickerAction extends Action2 {
   static {
     __name(this, "ChatSessionPrimaryPickerAction");
@@ -368,7 +471,7 @@ class ChatSessionPrimaryPickerAction extends Action2 {
   constructor() {
     super({
       id: ChatSessionPrimaryPickerAction.ID,
-      title: localize2("interactive.openChatSessionPrimaryPicker.label", "Open Picker"),
+      title: localize2("interactive.openChatSessionPrimaryPicker.label", "Open Model Picker"),
       category: CHAT_CATEGORY,
       f1: false,
       precondition: ChatContextKeys.enabled,
@@ -581,13 +684,13 @@ class CancelAction extends Action2 {
       menu: [
         {
           id: MenuId.ChatExecute,
-          when: ContextKeyExpr.and(ChatContextKeys.requestInProgress, ChatContextKeys.remoteJobCreating.negate()),
+          when: ContextKeyExpr.and(ChatContextKeys.requestInProgress, ChatContextKeys.remoteJobCreating.negate(), ChatContextKeys.currentlyEditing.negate()),
           order: 4,
           group: "navigation"
         },
         {
           id: MenuId.ChatEditorInlineExecute,
-          when: ContextKeyExpr.and(ChatContextKeys.requestInProgress, ChatContextKeys.remoteJobCreating.negate()),
+          when: ContextKeyExpr.and(ctxIsGlobalEditingSession.negate(), ctxHasRequestInProgress),
           order: 4,
           group: "navigation"
         }
@@ -595,6 +698,7 @@ class CancelAction extends Action2 {
       keybinding: {
         weight: 200,
         primary: 2048 | 9,
+        when: ContextKeyExpr.and(ChatContextKeys.requestInProgress, ChatContextKeys.remoteJobCreating.negate()),
         win: {
           primary: 512 | 1
           /* KeyCode.Backspace */
@@ -662,12 +766,13 @@ function registerChatExecuteActions() {
   registerAction2(CancelAction);
   registerAction2(SendToNewChatAction);
   registerAction2(ChatSubmitWithCodebaseAction);
-  registerAction2(ContinueChatInSessionAction);
   registerAction2(ToggleChatModeAction);
   registerAction2(SwitchToNextModelAction);
   registerAction2(OpenModelPickerAction);
   registerAction2(OpenModePickerAction);
   registerAction2(OpenSessionTargetPickerAction);
+  registerAction2(OpenDelegationPickerAction);
+  registerAction2(OpenWorkspacePickerAction);
   registerAction2(ChatSessionPrimaryPickerAction);
   registerAction2(ChangeChatModelAction);
   registerAction2(CancelEdit);
@@ -683,9 +788,11 @@ export {
   ChatSessionPrimaryPickerAction,
   ChatSubmitAction,
   ChatSubmitWithCodebaseAction,
+  OpenDelegationPickerAction,
   OpenModePickerAction,
   OpenModelPickerAction,
   OpenSessionTargetPickerAction,
+  OpenWorkspacePickerAction,
   ToggleAgentModeActionId,
   registerChatExecuteActions
 };

@@ -14,4 +14,5 @@ export interface ICommandLineRewriterOptions {
 export interface ICommandLineRewriterResult {
     rewritten: string;
     reasoning: string;
+    forDisplay?: string;
 }

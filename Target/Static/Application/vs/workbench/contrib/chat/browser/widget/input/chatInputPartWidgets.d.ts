@@ -1,4 +1,3 @@
-import { Event } from '../../../../../../base/common/event.js';
 import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
 import { ContextKeyExpression, IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
 import { BrandedService, IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
@@ -10,10 +9,6 @@ export interface IChatInputPartWidget extends IDisposable {
      * The DOM node of the widget.
      */
     readonly domNode: HTMLElement;
-    /**
-     * Fired when the height of the widget changes.
-     */
-    readonly onDidChangeHeight: Event<void>;
     /**
      * The current height of the widget in pixels.
      */
@@ -41,8 +36,6 @@ export declare class ChatInputPartWidgetController extends Disposable {
     private readonly container;
     private readonly contextKeyService;
     private readonly instantiationService;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: Event<void>;
     private readonly renderedWidgets;
     constructor(container: HTMLElement, contextKeyService: IContextKeyService, instantiationService: IInstantiationService);
     private update;

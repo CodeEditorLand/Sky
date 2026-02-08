@@ -13,6 +13,7 @@ export interface IChatExecuteActionContext {
 }
 declare abstract class SubmitAction extends Action2 {
     run(accessor: ServicesAccessor, ...args: unknown[]): Promise<void>;
+    private handleDelegation;
 }
 export declare class ChatSubmitAction extends SubmitAction {
     static readonly ID = "workbench.action.chat.submit";
@@ -35,6 +36,16 @@ export declare class OpenModePickerAction extends Action2 {
 }
 export declare class OpenSessionTargetPickerAction extends Action2 {
     static readonly ID = "workbench.action.chat.openSessionTargetPicker";
+    constructor();
+    run(accessor: ServicesAccessor, ...args: unknown[]): Promise<void>;
+}
+export declare class OpenDelegationPickerAction extends Action2 {
+    static readonly ID = "workbench.action.chat.openDelegationPicker";
+    constructor();
+    run(accessor: ServicesAccessor, ...args: unknown[]): Promise<void>;
+}
+export declare class OpenWorkspacePickerAction extends Action2 {
+    static readonly ID = "workbench.action.chat.openWorkspacePicker";
     constructor();
     run(accessor: ServicesAccessor, ...args: unknown[]): Promise<void>;
 }

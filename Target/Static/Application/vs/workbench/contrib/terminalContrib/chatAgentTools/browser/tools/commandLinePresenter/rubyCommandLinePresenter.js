@@ -6,7 +6,8 @@ class RubyCommandLinePresenter {
     __name(this, "RubyCommandLinePresenter");
   }
   present(options) {
-    const extractedRuby = extractRubyCommand(options.commandLine, options.shell, options.os);
+    const commandLine = options.commandLine.forDisplay;
+    const extractedRuby = extractRubyCommand(commandLine, options.shell, options.os);
     if (extractedRuby) {
       return {
         commandLine: extractedRuby,

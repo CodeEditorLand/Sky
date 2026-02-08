@@ -10,6 +10,7 @@ import { Position } from '../../../../common/core/position.js';
 import { IVisibleRangeProvider } from '../textArea/textAreaEditContext.js';
 import { IEditorAriaOptions } from '../../../editorBrowser.js';
 import { ILogService } from '../../../../../platform/log/common/log.js';
+import { ViewportData } from '../../../../common/viewLayout/viewLinesViewportData.js';
 export declare class NativeEditContext extends AbstractEditContext {
     private readonly _viewController;
     private readonly _visibleRangeProvider;
@@ -21,6 +22,7 @@ export declare class NativeEditContext extends AbstractEditContext {
     private _previousEditContextSelection;
     private _editContextPrimarySelection;
     private readonly _parent;
+    private _parentBounds;
     private _decorations;
     private _primarySelection;
     private _targetWindowId;
@@ -31,8 +33,8 @@ export declare class NativeEditContext extends AbstractEditContext {
     dispose(): void;
     setAriaOptions(options: IEditorAriaOptions): void;
     getLastRenderData(): Position | null;
+    onBeforeRender(viewportData: ViewportData): void;
     prepareRender(ctx: RenderingContext): void;
-    onDidRender(): void;
     render(ctx: RestrictedRenderingContext): void;
     onCursorStateChanged(e: ViewCursorStateChangedEvent): boolean;
     onConfigurationChanged(e: ViewConfigurationChangedEvent): boolean;
@@ -44,9 +46,9 @@ export declare class NativeEditContext extends AbstractEditContext {
     private _updateEditContextOnLineChange;
     onScrollChanged(e: ViewScrollChangedEvent): boolean;
     onZonesChanged(e: ViewZonesChangedEvent): boolean;
-    onWillPaste(): void;
-    private _onWillPaste;
-    onWillCopy(): void;
+    handleWillPaste(): void;
+    private _prepareScreenReaderForPaste;
+    handleWillCopy(): void;
     writeScreenReaderContent(): void;
     isFocused(): boolean;
     focus(): void;
@@ -63,6 +65,6 @@ export declare class NativeEditContext extends AbstractEditContext {
     private _handleTextFormatUpdate;
     private _linesVisibleRanges;
     private _updateSelectionAndControlBoundsData;
-    private _updateSelectionAndControlBoundsAfterRender;
+    private _updateSelectionAndControlBounds;
     private _updateCharacterBounds;
 }

@@ -233,6 +233,7 @@ export declare class MenuId {
     static readonly ChatWelcomeContext: MenuId;
     static readonly ChatMessageFooter: MenuId;
     static readonly ChatExecute: MenuId;
+    static readonly ChatExecuteQueue: MenuId;
     static readonly ChatInput: MenuId;
     static readonly ChatInputSide: MenuId;
     static readonly ChatModePicker: MenuId;
@@ -258,8 +259,10 @@ export declare class MenuId {
     static readonly ChatToolOutputResourceContext: MenuId;
     static readonly ChatMultiDiffContext: MenuId;
     static readonly ChatConfirmationMenu: MenuId;
+    static readonly ChatEditorInlineGutter: MenuId;
     static readonly ChatEditorInlineExecute: MenuId;
     static readonly ChatEditorInlineInputSide: MenuId;
+    static readonly InlineChatEditorAffordance: MenuId;
     static readonly AccessibleView: MenuId;
     static readonly MultiDiffEditorContent: MenuId;
     static readonly MultiDiffEditorFileToolbar: MenuId;
@@ -274,9 +277,10 @@ export declare class MenuId {
     static readonly AgentSessionsToolbar: MenuId;
     static readonly AgentSessionItemToolbar: MenuId;
     static readonly AgentSessionSectionToolbar: MenuId;
-    static readonly AgentsControlMenu: MenuId;
+    static readonly AgentsTitleBarControlMenu: MenuId;
     static readonly ChatViewSessionTitleNavigationToolbar: MenuId;
     static readonly ChatViewSessionTitleToolbar: MenuId;
+    static readonly ChatContextUsageActions: MenuId;
     /**
      * Create or reuse a `MenuId` with the given identifier
      */
@@ -291,6 +295,7 @@ export declare class MenuId {
 }
 export interface IMenuActionOptions {
     arg?: unknown;
+    args?: unknown[];
     shouldForwardArgs?: boolean;
     renderShortTitle?: boolean;
 }

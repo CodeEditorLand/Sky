@@ -56,6 +56,24 @@ class ObservableCodeEditor extends Disposable {
   constructor(editor) {
     super();
     this.editor = editor;
+    this._sawZeroLineWidth = false;
+    this._onDidContainerResize = observableFromEventOpts(
+      { owner: this, getTransaction: /* @__PURE__ */ __name(() => this._currentTransaction, "getTransaction") },
+      (e) => {
+        const container = this.editor.getContainerDomNode();
+        const resizeObserver = new ResizeObserver(() => {
+          if (this._sawZeroLineWidth) {
+            this._sawZeroLineWidth = false;
+            this.editor.resetLineWidthCaches();
+          }
+          e(void 0);
+        });
+        resizeObserver.observe(container);
+        return { dispose: /* @__PURE__ */ __name(() => resizeObserver.disconnect(), "dispose") };
+      },
+      () => ({})
+      // Return new object each time to ensure change detection
+    );
     this._updateCounter = 0;
     this._currentTransaction = void 0;
     this._model = observableValue(this, this.editor.getModel());
@@ -397,6 +415,22 @@ class ObservableCodeEditor extends Disposable {
       }
       return heights;
     });
+  }
+  /**
+   * Get the width of a line in pixels.
+   * Reading the returned value depends on layoutInfo, value, scrollTop, and container resize events.
+   * The container resize dependency ensures correct values when the editor becomes visible after being hidden.
+   */
+  getWidthOfLine(lineNumber, reader) {
+    this.layoutInfo.read(reader);
+    this.value.read(reader);
+    this.scrollTop.read(reader);
+    const width = this.editor.getWidthOfLine(lineNumber);
+    this._onDidContainerResize.read(reader);
+    if (width === 0) {
+      this._sawZeroLineWidth = true;
+    }
+    return width;
   }
   /**
    * Get the vertical position (top offset) for the line's bottom w.r.t. to the first line.

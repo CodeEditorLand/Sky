@@ -132,18 +132,21 @@ let ExtHostLanguageModels = class ExtHostLanguageModels2 {
     }
     return toDisposable(() => {
       this._languageModelProviders.delete(vendor);
-      this._clearModelCache(vendor);
+      this._localModels.forEach((value, key) => {
+        if (value.metadata.vendor === vendor) {
+          this._localModels.delete(key);
+        }
+      });
       providerChangeEventDisposable?.dispose();
       this._proxy.$unregisterProvider(vendor);
     });
   }
-  // Helper function to clear the local cache for a specific vendor. There's no lookup, so this involves iterating over all models.
-  _clearModelCache(vendor) {
-    this._localModels.forEach((value, key) => {
-      if (value.metadata.vendor === vendor) {
-        this._localModels.delete(key);
-      }
-    });
+  toModelIdentifier(vendor, group, modelId) {
+    return group ? `${vendor}/${group}/${modelId}` : `${vendor}/${modelId}`;
+  }
+  getVendorFromModelIdentifier(modelIdentifier) {
+    const firstSlash = modelIdentifier.indexOf("/");
+    return firstSlash === -1 ? void 0 : modelIdentifier.substring(0, firstSlash);
   }
   async $provideLanguageModelChatInfo(vendor, options, token) {
     const data = this._languageModelProviders.get(vendor);
@@ -187,6 +190,7 @@ let ExtHostLanguageModels = class ExtHostLanguageModels2 {
           detail: m.detail,
           tooltip: m.tooltip,
           version: m.version,
+          multiplier: m.multiplier,
           maxInputTokens: m.maxInputTokens,
           maxOutputTokens: m.maxOutputTokens,
           auth,
@@ -201,12 +205,17 @@ let ExtHostLanguageModels = class ExtHostLanguageModels2 {
             agentMode: !!m.capabilities.toolCalling
           } : void 0
         },
-        identifier: options.group ? `${vendor}/${options.group}/${m.id}` : `${vendor}/${m.id}`
+        identifier: this.toModelIdentifier(vendor, options.group, m.id)
       };
     });
-    this._clearModelCache(vendor);
+    this._localModels.forEach((value, key) => {
+      if (value.metadata.vendor === vendor && value.group === options.group) {
+        this._localModels.delete(key);
+      }
+    });
     for (let i = 0; i < modelMetadataAndIdentifier.length; i++) {
       this._localModels.set(modelMetadataAndIdentifier[i].identifier, {
+        group: options.group,
         metadata: modelMetadataAndIdentifier[i].metadata,
         info: modelInformation[i]
       });
@@ -307,9 +316,20 @@ let ExtHostLanguageModels = class ExtHostLanguageModels2 {
     if (!modelId) {
       return void 0;
     }
-    const model = this._localModels.get(modelId);
+    let model = this._localModels.get(modelId);
     if (!model) {
-      return (await this.selectLanguageModels(extension, { id: modelId }))[0];
+      this._logService.warn(`[LanguageModelProxy](${extension.identifier.value}) Could not find model '${modelId}' in local cache. Trying to resolve model again.`);
+      const vendor = this.getVendorFromModelIdentifier(modelId);
+      if (!vendor) {
+        this._logService.warn(`[LanguageModelProxy](${extension.identifier.value}) Could not extract vendor from model identifier '${modelId}'.`);
+        return void 0;
+      }
+      await this.selectLanguageModels(extension, { vendor });
+      model = this._localModels.get(modelId);
+      if (!model) {
+        this._logService.warn(`[LanguageModelProxy](${extension.identifier.value}) Could not find model '${modelId}' in local cache after re-resolving models.`);
+        return void 0;
+      }
     }
     if (this._isUsingAuth(extension.identifier, model.metadata)) {
       await this._fakeAuthPopulate(model.metadata);

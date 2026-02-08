@@ -21,7 +21,7 @@ export interface IViewDecorationsCollection {
     /**
      * Whether the decorations affect the fonts.
      */
-    readonly hasVariableFonts: boolean;
+    readonly hasVariableFonts: boolean[];
 }
 export declare class ViewModelDecorations implements IDisposable {
     private readonly editorId;

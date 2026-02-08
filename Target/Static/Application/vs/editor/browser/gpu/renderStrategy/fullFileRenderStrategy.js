@@ -106,6 +106,9 @@ class FullFileRenderStrategy extends BaseRenderStrategy {
     return true;
   }
   onScrollChanged(e) {
+    if (this._store.isDisposed) {
+      return false;
+    }
     const dpr = getActiveWindow().devicePixelRatio;
     this._scrollOffsetValueBuffer[0] = (e?.scrollLeft ?? this._context.viewLayout.getCurrentScrollLeft()) * dpr;
     this._scrollOffsetValueBuffer[1] = (e?.scrollTop ?? this._context.viewLayout.getCurrentScrollTop()) * dpr;

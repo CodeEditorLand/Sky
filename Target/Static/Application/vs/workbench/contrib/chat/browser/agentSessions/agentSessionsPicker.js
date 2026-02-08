@@ -13,7 +13,6 @@ var __param = function(paramIndex, decorator) {
 };
 import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
-import { fromNow } from "../../../../../base/common/date.js";
 import { DisposableStore } from "../../../../../base/common/lifecycle.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { localize } from "../../../../../nls.js";
@@ -23,8 +22,9 @@ import { IQuickInputService } from "../../../../../platform/quickinput/common/qu
 import { openSession } from "./agentSessionsOpener.js";
 import { isLocalAgentSessionItem } from "./agentSessionsModel.js";
 import { IAgentSessionsService } from "./agentSessionsService.js";
-import { AgentSessionsSorter, groupAgentSessions } from "./agentSessionsViewer.js";
-import { AGENT_SESSION_DELETE_ACTION_ID, AGENT_SESSION_RENAME_ACTION_ID } from "./agentSessions.js";
+import { AgentSessionsSorter, groupAgentSessionsByDate, sessionDateFromNow } from "./agentSessionsViewer.js";
+import { AGENT_SESSION_DELETE_ACTION_ID, AGENT_SESSION_RENAME_ACTION_ID, getAgentSessionTime } from "./agentSessions.js";
+import { AgentSessionsFilter } from "./agentSessionsFilter.js";
 const archiveButton = {
   iconClass: ThemeIcon.asClassName(Codicon.archive),
   tooltip: localize("archiveSession", "Archive")
@@ -43,7 +43,7 @@ const deleteButton = {
 };
 function getSessionDescription(session) {
   const descriptionText = typeof session.description === "string" ? session.description : session.description ? renderAsPlaintext(session.description) : void 0;
-  const timeAgo = fromNow(session.timing.lastRequestEnded ?? session.timing.lastRequestStarted ?? session.timing.created);
+  const timeAgo = sessionDateFromNow(getAgentSessionTime(session.timing));
   const descriptionParts = [descriptionText, session.providerLabel, timeAgo].filter((part) => !!part);
   return descriptionParts.join(" \u2022 ");
 }
@@ -72,7 +72,8 @@ let AgentSessionsPicker = class AgentSessionsPicker2 {
   async pickAgentSession() {
     const disposables = new DisposableStore();
     const picker = disposables.add(this.quickInputService.createQuickPick({ useSeparators: true }));
-    picker.items = this.createPickerItems();
+    const filter = disposables.add(this.instantiationService.createInstance(AgentSessionsFilter, {}));
+    picker.items = this.createPickerItems(filter);
     picker.canAcceptInBackground = true;
     picker.placeholder = localize("chatAgentPickerPlaceholder", "Search agent sessions by name");
     disposables.add(picker.onDidAccept((e) => {
@@ -107,16 +108,16 @@ let AgentSessionsPicker = class AgentSessionsPicker2 {
         await this.agentSessionsService.model.resolve(session.providerType);
         this.pickAgentSession();
       } else {
-        picker.items = this.createPickerItems();
+        picker.items = this.createPickerItems(filter);
       }
     }));
     disposables.add(picker.onDidHide(() => disposables.dispose()));
     picker.show();
   }
-  createPickerItems() {
-    const sessions = this.agentSessionsService.model.sessions.sort(this.sorter.compare.bind(this.sorter));
+  createPickerItems(filter) {
+    const sessions = this.agentSessionsService.model.sessions.filter((session) => !filter.exclude(session)).sort(this.sorter.compare.bind(this.sorter));
     const items = [];
-    const groupedSessions = groupAgentSessions(sessions);
+    const groupedSessions = groupAgentSessionsByDate(sessions);
     for (const group of groupedSessions.values()) {
       if (group.sessions.length > 0) {
         items.push({ type: "separator", label: group.label });

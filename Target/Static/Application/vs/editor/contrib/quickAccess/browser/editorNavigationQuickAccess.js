@@ -2,6 +2,7 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { createSingleCallFunction } from "../../../../base/common/functional.js";
 import { DisposableStore, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
 import { getCodeEditor, isDiffEditor } from "../../../browser/editorBrowser.js";
 import { OverviewRulerLane } from "../../../common/model.js";
 import { overviewRulerRangeHighlight } from "../../../common/core/editorColorRegistry.js";
@@ -75,7 +76,8 @@ class AbstractEditorNavigationQuickAccessProvider {
     }
     const model = this.getModel(editor);
     if (model) {
-      status(`${model.getLineContent(options.range.startLineNumber)}`);
+      const lineContent = model.getLineContent(options.range.startLineNumber);
+      status(localize("gotoLocation.status", "Line {0}, column {1}: {2}", options.range.startLineNumber, options.range.startColumn, lineContent));
     }
   }
   getModel(editor) {

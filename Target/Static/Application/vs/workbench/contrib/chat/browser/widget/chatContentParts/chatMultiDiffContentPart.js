@@ -14,7 +14,7 @@ var __param = function(paramIndex, decorator) {
 import * as dom from "../../../../../../base/browser/dom.js";
 import { ButtonWithIcon } from "../../../../../../base/browser/ui/button/button.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Event } from "../../../../../../base/common/event.js";
 import { Disposable, DisposableStore, toDisposable } from "../../../../../../base/common/lifecycle.js";
 import { autorun, constObservable, isObservable } from "../../../../../../base/common/observable.js";
 import { ThemeIcon } from "../../../../../../base/common/themables.js";
@@ -50,8 +50,6 @@ let ChatMultiDiffContentPart = class ChatMultiDiffContentPart2 extends Disposabl
     this.editorService = editorService;
     this.themeService = themeService;
     this.contextKeyService = contextKeyService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this.isCollapsed = false;
     this.readOnly = content.readOnly ?? false;
     this.diffData = isObservable(this.content.multiDiffData) ? this.content.multiDiffData.map((d) => d) : constObservable(this.content.multiDiffData);
@@ -72,7 +70,6 @@ let ChatMultiDiffContentPart = class ChatMultiDiffContentPart2 extends Disposabl
     const setExpansionState = /* @__PURE__ */ __name(() => {
       viewListButton.icon = this.isCollapsed ? Codicon.chevronRight : Codicon.chevronDown;
       this.domNode.classList.toggle("chat-file-changes-collapsed", this.isCollapsed);
-      this._onDidChangeHeight.fire();
     }, "setExpansionState");
     setExpansionState();
     const disposables = new DisposableStore();
@@ -113,7 +110,7 @@ let ChatMultiDiffContentPart = class ChatMultiDiffContentPart2 extends Disposabl
       $mid: 1
       /* MarshalledId.Uri */
     };
-    const toolbar = disposables.add(nestedInsta.createInstance(MenuWorkbenchToolBar, buttonsContainer, MenuId.ChatMultiDiffContext, {
+    disposables.add(nestedInsta.createInstance(MenuWorkbenchToolBar, buttonsContainer, MenuId.ChatMultiDiffContext, {
       menuOptions: {
         arg: marshalledUri,
         shouldForwardArgs: true
@@ -122,7 +119,6 @@ let ChatMultiDiffContentPart = class ChatMultiDiffContentPart2 extends Disposabl
         primaryGroup: /* @__PURE__ */ __name(() => true, "primaryGroup")
       }
     }));
-    disposables.add(toolbar.onDidChangeMenuItems(() => this._onDidChangeHeight.fire()));
     return disposables;
   }
   renderFilesList(container) {
@@ -171,7 +167,6 @@ let ChatMultiDiffContentPart = class ChatMultiDiffContentPart2 extends Disposabl
       const height = Math.min(items.length, MAX_ITEMS_SHOWN) * ELEMENT_HEIGHT;
       this.list.layout(height);
       listContainer.style.height = `${height}px`;
-      this._onDidChangeHeight.fire();
     }));
     if (!this.readOnly) {
       store.add(this.list.onDidOpen((e) => {

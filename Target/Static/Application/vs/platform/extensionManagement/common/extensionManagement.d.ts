@@ -188,6 +188,7 @@ export interface IDeprecationInfo {
         readonly displayName: string;
         readonly autoMigrate?: {
             readonly storage: boolean;
+            readonly donotDisable?: boolean;
         };
         readonly preRelease?: boolean;
     };

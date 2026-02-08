@@ -46,7 +46,9 @@ import { ObservableSuggestWidgetAdapter } from "../model/suggestWidgetAdapter.js
 import { ObservableContextKeyService } from "../utils.js";
 import { InlineSuggestionsView } from "../view/inlineSuggestionsView.js";
 import { inlineSuggestCommitId } from "./commandIds.js";
+import { setInlineCompletionsControllerGetter } from "./common.js";
 import { InlineCompletionContextKeys } from "./inlineCompletionContextKeys.js";
+setInlineCompletionsControllerGetter((editor) => InlineCompletionsController.get(editor));
 let InlineCompletionsController = class InlineCompletionsController2 extends Disposable {
   static {
     __name(this, "InlineCompletionsController");
@@ -399,7 +401,7 @@ let InlineCompletionsController = class InlineCompletionsController2 extends Dis
         m.stop("explicitCancel", tx);
         if (this._focusIsInEditorOrMenu.get()) {
           for (const ctrl of InlineCompletionsController_1._instances) {
-            if (ctrl !== this) {
+            if (ctrl !== this && !ctrl._focusIsInEditorOrMenu.get()) {
               ctrl.model.get()?.stop("automatic", tx);
             }
           }

@@ -23,7 +23,7 @@ import { whenEditorClosed } from "../../../browser/editor.js";
 import { IFileService } from "../../../../platform/files/common/files.js";
 import { ILabelService } from "../../../../platform/label/common/label.js";
 import { EventType, ModifierKeyEmitter, addDisposableListener, addDisposableThrottledListener, detectFullscreen, disposableWindowInterval, getActiveDocument, getActiveWindow, getWindowId, onDidRegisterWindow, trackFocus, getWindows as getDOMWindows } from "../../../../base/browser/dom.js";
-import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { Disposable, DisposableSet, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
 import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
 import { memoize } from "../../../../base/common/decorators.js";
 import { parseLineAndColumnAware } from "../../../../base/common/extpath.js";
@@ -45,6 +45,7 @@ import { isIOS, isMacintosh } from "../../../../base/common/platform.js";
 import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
 import { VSBuffer } from "../../../../base/common/buffer.js";
 import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { showBrowserToast } from "./toasts.js";
 var HostShutdownReason;
 (function(HostShutdownReason2) {
   HostShutdownReason2[HostShutdownReason2["Unknown"] = 1] = "Unknown";
@@ -69,6 +70,7 @@ let BrowserHostService = class BrowserHostService2 extends Disposable {
     this.contextService = contextService;
     this.userDataProfilesService = userDataProfilesService;
     this.shutdownReason = HostShutdownReason.Unknown;
+    this.activeToasts = this._register(new DisposableSet());
     if (environmentService.options?.workspaceProvider) {
       this.workspaceProvider = environmentService.options.workspaceProvider;
     } else {
@@ -87,6 +89,11 @@ let BrowserHostService = class BrowserHostService2 extends Disposable {
   registerListeners() {
     this._register(this.lifecycleService.onBeforeShutdown((e) => this.onBeforeShutdown(e)));
     this._register(ModifierKeyEmitter.getInstance().event(() => this.updateShutdownReasonFromEvent()));
+    this._register(this.onDidChangeFocus((focus) => {
+      if (focus) {
+        this.clearToasts();
+      }
+    }));
   }
   onBeforeShutdown(e) {
     switch (this.shutdownReason) {
@@ -544,6 +551,15 @@ let BrowserHostService = class BrowserHostService2 extends Disposable {
   //#region Native Handle
   async getNativeWindowHandle(_windowId) {
     return void 0;
+  }
+  async showToast(options, token) {
+    return showBrowserToast({
+      onDidCreateToast: /* @__PURE__ */ __name((disposable) => this.activeToasts.add(disposable), "onDidCreateToast"),
+      onDidDisposeToast: /* @__PURE__ */ __name((disposable) => this.activeToasts.deleteAndDispose(disposable), "onDidDisposeToast")
+    }, options, token);
+  }
+  async clearToasts() {
+    this.activeToasts.clearAndDisposeAll();
   }
 };
 __decorate([

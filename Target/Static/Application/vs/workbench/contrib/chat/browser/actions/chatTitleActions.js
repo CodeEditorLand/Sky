@@ -19,7 +19,7 @@ import { applyingChatEditsFailedContextKey, isChatEditingActionContext } from ".
 import { ChatAgentVoteDirection, IChatService } from "../../common/chatService/chatService.js";
 import { isResponseVM } from "../../common/model/chatViewModel.js";
 import { ChatModeKind } from "../../common/constants.js";
-import { IChatWidgetService } from "../chat.js";
+import { IChatAccessibilityService, IChatWidgetService } from "../chat.js";
 import { CHAT_CATEGORY } from "./chatActions.js";
 const MarkUnhelpfulActionId = "workbench.action.chat.markUnhelpful";
 const enableFeedbackConfig = "config.telemetry.feedback.enabled";
@@ -192,6 +192,10 @@ function registerChatTitleActions() {
     }
     async run(accessor, ...args) {
       const chatWidgetService = accessor.get(IChatWidgetService);
+      const chatAccessibilityService = accessor.get(IChatAccessibilityService);
+      const chatService = accessor.get(IChatService);
+      const configurationService = accessor.get(IConfigurationService);
+      const dialogService = accessor.get(IDialogService);
       let item = args[0];
       if (isChatEditingActionContext(item)) {
         item = chatWidgetService.getWidgetBySessionResource(item.sessionResource)?.viewModel?.getItems().at(-1);
@@ -199,7 +203,6 @@ function registerChatTitleActions() {
       if (!isResponseVM(item)) {
         return;
       }
-      const chatService = accessor.get(IChatService);
       const chatModel = chatService.getSession(item.sessionResource);
       const chatRequests = chatModel?.getRequests();
       if (!chatRequests) {
@@ -209,8 +212,6 @@ function registerChatTitleActions() {
       const widget = chatWidgetService.getWidgetBySessionResource(item.sessionResource);
       const mode = widget?.input.currentModeKind;
       if (chatModel && (mode === ChatModeKind.Edit || mode === ChatModeKind.Agent)) {
-        const configurationService = accessor.get(IConfigurationService);
-        const dialogService = accessor.get(IDialogService);
         const currentEditingSession = widget?.viewModel?.model.editingSession;
         if (!currentEditingSession) {
           return;
@@ -237,6 +238,7 @@ function registerChatTitleActions() {
       }
       const request = chatModel?.getRequests().find((candidate) => candidate.id === item.requestId);
       const languageModelId = widget?.input.currentLanguageModel;
+      chatAccessibilityService.acceptRequest(item.sessionResource);
       chatService.resendRequest(request, {
         userSelectedModelId: languageModelId,
         attempt: (request?.attempt ?? -1) + 1,

@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-import { ChatViewPaneTarget, IChatWidgetService } from "../../chat/browser/chat.js";
+import { IChatWidgetService } from "../../chat/browser/chat.js";
 import { IChatService } from "../../chat/common/chatService/chatService.js";
 import { ChatAgentLocation } from "../../chat/common/constants.js";
 const IInlineChatSessionService = createDecorator("IInlineChatSessionService");
@@ -31,7 +31,7 @@ async function askInPanelChat(accessor, request, state) {
   const newModelRef = chatService.startSession(ChatAgentLocation.Chat);
   const newModel = newModelRef.object;
   newModel.inputModel.setState({ ...state });
-  const widget = await widgetService.openSession(newModelRef.object.sessionResource, ChatViewPaneTarget);
+  const widget = await widgetService.openSession(newModelRef.object.sessionResource);
   newModelRef.dispose();
   widget?.acceptInput(request.message.text);
 }

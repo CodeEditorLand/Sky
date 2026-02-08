@@ -1448,6 +1448,11 @@ export declare class ChatResponseMultiDiffPart {
     readOnly?: boolean;
     constructor(value: vscode.ChatResponseDiffEntry[], title: string, readOnly?: boolean);
 }
+export declare class McpToolInvocationContentData {
+    mimeType: string;
+    data: Uint8Array;
+    constructor(data: Uint8Array, mimeType: string);
+}
 export declare class ChatResponseExternalEditPart {
     uris: vscode.Uri[];
     callback: () => Thenable<unknown>;
@@ -1557,6 +1562,69 @@ export declare class ChatResponsePullRequestPart {
         author: string;
     };
 }
+/**
+ * The type of question for a chat question carousel.
+ */
+export declare enum ChatQuestionType {
+    /**
+     * A free-form text input question.
+     */
+    Text = 1,
+    /**
+     * A single-select question with radio buttons.
+     */
+    SingleSelect = 2,
+    /**
+     * A multi-select question with checkboxes.
+     */
+    MultiSelect = 3
+}
+/**
+ * Represents a question to be displayed in a chat question carousel.
+ * Questions can be of type 'text' for free-form input, 'singleSelect' for radio buttons,
+ * or 'multiSelect' for checkboxes.
+ */
+export declare class ChatQuestion {
+    /** Unique identifier for the question. */
+    id: string;
+    /** The type of question: Text for free-form input, SingleSelect for radio buttons, MultiSelect for checkboxes. */
+    type: ChatQuestionType;
+    /** The title/header of the question. */
+    title: string;
+    /** Optional detailed message or description for the question. */
+    message?: string | vscode.MarkdownString;
+    /** Options for singleSelect or multiSelect questions. */
+    options?: {
+        id: string;
+        label: string;
+        value: unknown;
+    }[];
+    /** The id(s) of the default selected option(s). */
+    defaultValue?: string | string[];
+    /** Whether to allow free-form text input in addition to predefined options. */
+    allowFreeformInput?: boolean;
+    constructor(id: string, type: ChatQuestionType, title: string, options?: {
+        message?: string | vscode.MarkdownString;
+        options?: {
+            id: string;
+            label: string;
+            value: unknown;
+        }[];
+        defaultValue?: string | string[];
+        allowFreeformInput?: boolean;
+    });
+}
+/**
+ * A carousel view for presenting multiple questions inline in the chat response.
+ * Users can navigate between questions and submit their answers.
+ */
+export declare class ChatResponseQuestionCarouselPart {
+    /** The questions to display in the carousel. */
+    questions: ChatQuestion[];
+    /** Whether users can skip answering the questions. */
+    allowSkip: boolean;
+    constructor(questions: ChatQuestion[], allowSkip?: boolean);
+}
 export declare class ChatResponseTextEditPart implements vscode.ChatResponseTextEditPart {
     uri: vscode.Uri;
     edits: vscode.TextEdit[];
@@ -1569,6 +1637,10 @@ export declare class ChatResponseNotebookEditPart implements vscode.ChatResponse
     isDone?: boolean;
     constructor(uri: vscode.Uri, editsOrDone: vscode.NotebookEdit | vscode.NotebookEdit[] | true);
 }
+export declare class ChatResponseWorkspaceEditPart implements vscode.ChatResponseWorkspaceEditPart {
+    edits: vscode.ChatWorkspaceFileEdit[];
+    constructor(edits: vscode.ChatWorkspaceFileEdit[]);
+}
 export interface ChatTerminalToolInvocationData2 {
     commandLine: {
         original: string;
@@ -1576,6 +1648,11 @@ export interface ChatTerminalToolInvocationData2 {
         toolEdited?: string;
     };
     language: string;
+}
+export declare enum ChatTodoStatus {
+    NotStarted = 1,
+    InProgress = 2,
+    Completed = 3
 }
 export declare class ChatToolInvocationPart {
     toolName: string;
@@ -1588,6 +1665,7 @@ export declare class ChatToolInvocationPart {
     isComplete?: boolean;
     toolSpecificData?: ChatTerminalToolInvocationData2;
     subAgentInvocationId?: string;
+    subAgentName?: string;
     presentation?: 'hidden' | 'hiddenAfterComplete' | undefined;
     constructor(toolName: string, toolCallId: string, isError?: boolean);
 }
@@ -1632,6 +1710,14 @@ export declare class ChatSessionChangedFile {
     readonly deletions: number;
     readonly originalUri?: vscode.Uri | undefined;
     constructor(modifiedUri: vscode.Uri, insertions: number, deletions: number, originalUri?: vscode.Uri | undefined);
+}
+export declare class ChatSessionChangedFile2 {
+    readonly uri: vscode.Uri;
+    readonly originalUri: vscode.Uri | undefined;
+    readonly modifiedUri: vscode.Uri | undefined;
+    readonly insertions: number;
+    readonly deletions: number;
+    constructor(uri: vscode.Uri, originalUri: vscode.Uri | undefined, modifiedUri: vscode.Uri | undefined, insertions: number, deletions: number);
 }
 export declare enum ChatResponseReferencePartStatusKind {
     Complete = 1,
@@ -1851,6 +1937,10 @@ export declare enum SettingsSearchResultKind {
     LLM_RANKED = 2,
     CANCELED = 3
 }
+export declare enum ChatHookResultKind {
+    Success = 1,
+    Error = 2
+}
 export declare enum SpeechToTextStatus {
     Started = 1,
     Recognizing = 2,
@@ -1895,20 +1985,4 @@ export declare class McpHttpServerDefinition implements vscode.McpHttpServerDefi
         providerId: string;
         scopes: string[];
     } | undefined);
-}
-export declare class CustomAgentChatResource implements vscode.CustomAgentChatResource {
-    readonly resource: vscode.ChatResourceDescriptor;
-    constructor(resource: vscode.ChatResourceDescriptor);
-}
-export declare class InstructionsChatResource implements vscode.InstructionsChatResource {
-    readonly resource: vscode.ChatResourceDescriptor;
-    constructor(resource: vscode.ChatResourceDescriptor);
-}
-export declare class PromptFileChatResource implements vscode.PromptFileChatResource {
-    readonly resource: vscode.ChatResourceDescriptor;
-    constructor(resource: vscode.ChatResourceDescriptor);
-}
-export declare class SkillChatResource implements vscode.SkillChatResource {
-    readonly resource: vscode.ChatResourceUriDescriptor;
-    constructor(resource: vscode.ChatResourceUriDescriptor);
 }

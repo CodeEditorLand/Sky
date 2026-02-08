@@ -25,7 +25,9 @@ import { ChatContextKeys } from "../../../chat/common/actions/chatContextKeys.js
 import { ILanguageModelToolsService } from "../../../chat/common/tools/languageModelToolsService.js";
 import { registerActiveInstanceAction, sharedWhenClause } from "../../../terminal/browser/terminalActions.js";
 import { TerminalContextKeys } from "../../../terminal/common/terminalContextKey.js";
+import { AwaitTerminalTool, AwaitTerminalToolData } from "./tools/awaitTerminalTool.js";
 import { GetTerminalLastCommandTool, GetTerminalLastCommandToolData } from "./tools/getTerminalLastCommandTool.js";
+import { KillTerminalTool, KillTerminalToolData } from "./tools/killTerminalTool.js";
 import { GetTerminalOutputTool, GetTerminalOutputToolData } from "./tools/getTerminalOutputTool.js";
 import { GetTerminalSelectionTool, GetTerminalSelectionToolData } from "./tools/getTerminalSelectionTool.js";
 import { ConfirmTerminalCommandTool, ConfirmTerminalCommandToolData } from "./tools/runInTerminalConfirmationTool.js";
@@ -116,6 +118,12 @@ let ChatAgentToolsContribution = class ChatAgentToolsContribution2 extends Dispo
     const getTerminalOutputTool = instantiationService.createInstance(GetTerminalOutputTool);
     this._register(toolsService.registerTool(GetTerminalOutputToolData, getTerminalOutputTool));
     this._register(toolsService.executeToolSet.addTool(GetTerminalOutputToolData));
+    const awaitTerminalTool = instantiationService.createInstance(AwaitTerminalTool);
+    this._register(toolsService.registerTool(AwaitTerminalToolData, awaitTerminalTool));
+    this._register(toolsService.executeToolSet.addTool(AwaitTerminalToolData));
+    const killTerminalTool = instantiationService.createInstance(KillTerminalTool);
+    this._register(toolsService.registerTool(KillTerminalToolData, killTerminalTool));
+    this._register(toolsService.executeToolSet.addTool(KillTerminalToolData));
     instantiationService.invokeFunction(createRunInTerminalToolData).then((runInTerminalToolData) => {
       const runInTerminalTool = instantiationService.createInstance(RunInTerminalTool);
       this._register(toolsService.registerTool(runInTerminalToolData, runInTerminalTool));

@@ -3,21 +3,18 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 import { assertNever } from "../../../../../base/common/assert.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
 import { Emitter, Event } from "../../../../../base/common/event.js";
-import { createMarkdownCommandLink } from "../../../../../base/common/htmlContent.js";
 import { DisposableStore } from "../../../../../base/common/lifecycle.js";
-import Severity from "../../../../../base/common/severity.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { localize } from "../../../../../nls.js";
-import { CommandsRegistry, ICommandService } from "../../../../../platform/commands/common/commands.js";
-import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
 import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
 import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 import { IEditorService } from "../../../../services/editor/common/editorService.js";
 import { IExtensionsWorkbenchService } from "../../../extensions/common/extensions.js";
 import { IMcpRegistry } from "../../../mcp/common/mcpRegistryTypes.js";
 import { IMcpService, IMcpWorkbenchService } from "../../../mcp/common/mcpTypes.js";
 import { startServerAndWaitForLiveTools } from "../../../mcp/common/mcpTypesUtils.js";
-import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { ILanguageModelToolsService, ToolDataSource } from "../../common/tools/languageModelToolsService.js";
 import { ConfigureToolSets } from "../tools/toolSetsContribution.js";
 var BucketOrdinal;
@@ -95,7 +92,7 @@ function createToolSetTreeItem(toolset, checked, editorService) {
   };
 }
 __name(createToolSetTreeItem, "createToolSetTreeItem");
-async function showToolsPicker(accessor, placeHolder, description, getToolsEntries, token) {
+async function showToolsPicker(accessor, placeHolder, source, description, getToolsEntries, model, token) {
   const quickPickService = accessor.get(IQuickInputService);
   const mcpService = accessor.get(IMcpService);
   const mcpRegistry = accessor.get(IMcpRegistry);
@@ -104,7 +101,7 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
   const editorService = accessor.get(IEditorService);
   const mcpWorkbenchService = accessor.get(IMcpWorkbenchService);
   const toolsService = accessor.get(ILanguageModelToolsService);
-  const toolLimit = accessor.get(IContextKeyService).getContextKeyValue(ChatContextKeys.chatToolGroupingThreshold.key);
+  const telemetryService = accessor.get(ITelemetryService);
   const mcpServerByTool = /* @__PURE__ */ new Map();
   for (const server of mcpService.servers.get()) {
     for (const tool of server.tools.get()) {
@@ -112,29 +109,29 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
     }
   }
   function computeItems(previousToolsEntries) {
-    let toolsEntries = getToolsEntries ? new Map(getToolsEntries()) : void 0;
+    let toolsEntries = getToolsEntries ? new Map([...getToolsEntries()].map(([k, enabled]) => [k.id, enabled])) : void 0;
     if (!toolsEntries) {
       const defaultEntries = /* @__PURE__ */ new Map();
-      for (const tool of toolsService.getTools()) {
+      for (const tool of toolsService.getTools(model)) {
         if (tool.canBeReferencedInPrompt) {
           defaultEntries.set(tool, false);
         }
       }
-      for (const toolSet of toolsService.toolSets.get()) {
+      for (const toolSet of toolsService.getToolSetsForModel(model)) {
         defaultEntries.set(toolSet, false);
       }
       toolsEntries = defaultEntries;
     }
     previousToolsEntries?.forEach((value, key) => {
-      toolsEntries.set(key, value);
+      toolsEntries.set(key.id, value);
     });
     const treeItems = [];
     const bucketMap = /* @__PURE__ */ new Map();
-    const getKey = /* @__PURE__ */ __name((source) => {
-      switch (source.type) {
+    const getKey = /* @__PURE__ */ __name((source2) => {
+      switch (source2.type) {
         case "mcp":
         case "extension":
-          return ToolDataSource.toKey(source);
+          return ToolDataSource.toKey(source2);
         case "internal":
           return 1 .toString();
         case "user":
@@ -142,13 +139,13 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
         case "external":
           throw new Error("should not be reachable");
         default:
-          assertNever(source);
+          assertNever(source2);
       }
     }, "getKey");
     const mcpServers = new Map(mcpService.servers.get().map((s) => [s.definition.id, { server: s, seen: false }]));
-    const createBucket = /* @__PURE__ */ __name((source, key) => {
-      if (source.type === "mcp") {
-        const mcpServerEntry = mcpServers.get(source.definitionId);
+    const createBucket = /* @__PURE__ */ __name((source2, key) => {
+      if (source2.type === "mcp") {
+        const mcpServerEntry = mcpServers.get(source2.definitionId);
         if (!mcpServerEntry) {
           return void 0;
         }
@@ -211,7 +208,7 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
           itemType: "bucket",
           ordinal: 2,
           id: key,
-          label: source.label,
+          label: source2.label,
           checked: void 0,
           collapsed,
           children,
@@ -225,12 +222,12 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
           bucket.iconClass = ThemeIcon.asClassName(Codicon.mcp);
         }
         return bucket;
-      } else if (source.type === "extension") {
+      } else if (source2.type === "extension") {
         return {
           itemType: "bucket",
           ordinal: 3,
           id: key,
-          label: source.label,
+          label: source2.label,
           checked: void 0,
           children: [],
           buttons: [],
@@ -238,7 +235,7 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
           iconClass: ThemeIcon.asClassName(Codicon.extensions),
           sortOrder: 3
         };
-      } else if (source.type === "internal") {
+      } else if (source2.type === "internal") {
         return {
           itemType: "bucket",
           ordinal: 1,
@@ -264,26 +261,26 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
         };
       }
     }, "createBucket");
-    const getBucket = /* @__PURE__ */ __name((source) => {
-      const key = getKey(source);
+    const getBucket = /* @__PURE__ */ __name((source2) => {
+      const key = getKey(source2);
       let bucket = bucketMap.get(key);
       if (!bucket) {
-        bucket = createBucket(source, key);
+        bucket = createBucket(source2, key);
         if (bucket) {
           bucketMap.set(key, bucket);
         }
       }
       return bucket;
     }, "getBucket");
-    for (const toolSet of toolsService.toolSets.get()) {
-      if (!toolsEntries.has(toolSet)) {
+    for (const toolSet of toolsService.getToolSetsForModel(model)) {
+      if (!toolsEntries.has(toolSet.id)) {
         continue;
       }
       const bucket = getBucket(toolSet.source);
       if (!bucket) {
         continue;
       }
-      const toolSetChecked = toolsEntries.get(toolSet) === true;
+      const toolSetChecked = toolsEntries.get(toolSet.id) === true;
       if (toolSet.source.type === "mcp") {
         bucket.toolset = toolSet;
         if (toolSetChecked) {
@@ -294,7 +291,7 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
         bucket.children.push(treeItem);
         const children = [];
         for (const tool of toolSet.getTools()) {
-          const toolChecked = toolSetChecked || toolsEntries.get(tool) === true;
+          const toolChecked = toolSetChecked || toolsEntries.get(tool.id) === true;
           const toolTreeItem = createToolTreeItemFromData(tool, toolChecked);
           children.push(toolTreeItem);
         }
@@ -303,15 +300,15 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
         }
       }
     }
-    for (const tool of toolsService.getTools()) {
-      if (!tool.canBeReferencedInPrompt || !toolsEntries.has(tool)) {
+    for (const tool of toolsService.getAllToolsIncludingDisabled()) {
+      if (!tool.canBeReferencedInPrompt || !toolsEntries.has(tool.id)) {
         continue;
       }
       const bucket = getBucket(tool.source);
       if (!bucket) {
         continue;
       }
-      const toolChecked = bucket.checked === true || toolsEntries.get(tool) === true;
+      const toolChecked = bucket.checked === true || toolsEntries.get(tool.id) === true;
       const toolTreeItem = createToolTreeItemFromData(tool, toolChecked);
       bucket.children.push(toolTreeItem);
     }
@@ -347,7 +344,6 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
   const store = new DisposableStore();
   const treePicker = store.add(quickPickService.createQuickTree());
   treePicker.placeholder = placeHolder;
-  treePicker.ignoreFocusOut = true;
   treePicker.description = description;
   treePicker.matchOnDescription = true;
   treePicker.matchOnLabel = true;
@@ -359,31 +355,6 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
       store.dispose();
     }
   }));
-  const updateToolLimitMessage = /* @__PURE__ */ __name(() => {
-    if (toolLimit) {
-      let count = 0;
-      const traverse = /* @__PURE__ */ __name((items) => {
-        for (const item of items) {
-          if (isBucketTreeItem(item) || isToolSetTreeItem(item)) {
-            if (item.children) {
-              traverse(item.children);
-            }
-          } else if (isToolTreeItem(item) && item.checked) {
-            count++;
-          }
-        }
-      }, "traverse");
-      traverse(treePicker.itemTree);
-      if (count > toolLimit) {
-        treePicker.severity = Severity.Warning;
-        treePicker.validationMessage = localize("toolLimitExceeded", "{0} tools are enabled. You may experience degraded tool calling above {1} tools.", count, createMarkdownCommandLink({ title: String(toolLimit), id: "_chat.toolPicker.closeAndOpenVirtualThreshold" }));
-      } else {
-        treePicker.severity = Severity.Ignore;
-        treePicker.validationMessage = void 0;
-      }
-    }
-  }, "updateToolLimitMessage");
-  updateToolLimitMessage();
   const collectResults = /* @__PURE__ */ __name(() => {
     const result = /* @__PURE__ */ new Map();
     const traverse = /* @__PURE__ */ __name((items) => {
@@ -407,14 +378,6 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
     traverse(treePicker.itemTree);
     return result;
   }, "collectResults");
-  store.add(CommandsRegistry.registerCommand({
-    id: "_chat.toolPicker.closeAndOpenVirtualThreshold",
-    handler: /* @__PURE__ */ __name(() => {
-      treePicker.hide();
-      commandService.executeCommand("workbench.action.openSettings", "github.copilot.chat.virtualTools.threshold");
-    }, "handler")
-  }));
-  store.add(treePicker.onDidChangeCheckedLeafItems(() => updateToolLimitMessage()));
   let didAccept = false;
   const didAcceptFinalItem = store.add(new Emitter());
   store.add(treePicker.onDidAccept(() => {
@@ -462,12 +425,126 @@ async function showToolsPicker(accessor, placeHolder, description, getToolsEntri
       treePicker.hide();
     }));
   }
+  const initialState = collectResults();
   treePicker.show();
   await Promise.race([Event.toPromise(Event.any(treePicker.onDidHide, didAcceptFinalItem.event), store)]);
+  sendDidChangeEvent(source, telemetryService, initialState, collectResults(), mcpRegistry);
   store.dispose();
   return didAccept ? collectResults() : void 0;
 }
 __name(showToolsPicker, "showToolsPicker");
+function categorizeTool(item, mcpRegistry) {
+  const source = item.source;
+  switch (source.type) {
+    case "internal":
+      return { category: "builtin", name: item.id };
+    case "extension":
+      return { category: "extension", name: item.id, extensionId: source.extensionId.value };
+    case "mcp": {
+      const collection = mcpRegistry.collections.get().find((c) => c.id === source.collectionId);
+      if (collection?.source instanceof ExtensionIdentifier) {
+        return { category: "extension-mcp", extensionId: collection.source.value };
+      }
+      return { category: "user-mcp" };
+    }
+    case "user":
+      return { category: "user-toolset" };
+    case "external":
+      return { category: "user-toolset" };
+    default:
+      assertNever(source);
+  }
+}
+__name(categorizeTool, "categorizeTool");
+function computeToolToggleSummary(initialState, finalState, mcpRegistry) {
+  const summary = {
+    builtinEnabled: 0,
+    builtinDisabled: 0,
+    extensionEnabled: 0,
+    extensionDisabled: 0,
+    extensionMcpEnabled: 0,
+    extensionMcpDisabled: 0,
+    userMcpEnabled: 0,
+    userMcpDisabled: 0,
+    userToolsetEnabled: 0,
+    userToolsetDisabled: 0,
+    details: ""
+  };
+  const detailItems = [];
+  for (const [item, finalEnabled] of finalState) {
+    const initialEnabled = initialState.get(item) ?? false;
+    if (initialEnabled === finalEnabled) {
+      continue;
+    }
+    const categorized = categorizeTool(item, mcpRegistry);
+    const enabled = finalEnabled;
+    switch (categorized.category) {
+      case "builtin":
+        if (enabled) {
+          summary.builtinEnabled++;
+        } else {
+          summary.builtinDisabled++;
+        }
+        detailItems.push({ category: "builtin", name: categorized.name, enabled });
+        break;
+      case "extension":
+        if (enabled) {
+          summary.extensionEnabled++;
+        } else {
+          summary.extensionDisabled++;
+        }
+        detailItems.push({ category: "extension", name: categorized.name, extensionId: categorized.extensionId, enabled });
+        break;
+      case "extension-mcp":
+        if (enabled) {
+          summary.extensionMcpEnabled++;
+        } else {
+          summary.extensionMcpDisabled++;
+        }
+        detailItems.push({ category: "extension-mcp", extensionId: categorized.extensionId, enabled });
+        break;
+      case "user-mcp":
+        if (enabled) {
+          summary.userMcpEnabled++;
+        } else {
+          summary.userMcpDisabled++;
+        }
+        detailItems.push({ category: "user-mcp", enabled });
+        break;
+      case "user-toolset":
+        if (enabled) {
+          summary.userToolsetEnabled++;
+        } else {
+          summary.userToolsetDisabled++;
+        }
+        detailItems.push({ category: "user-toolset", enabled });
+        break;
+    }
+  }
+  summary.details = JSON.stringify(detailItems);
+  return summary;
+}
+__name(computeToolToggleSummary, "computeToolToggleSummary");
+function sendDidChangeEvent(source, telemetryService, initialState, finalState, mcpRegistry) {
+  const summary = computeToolToggleSummary(initialState, finalState, mcpRegistry);
+  const changed = summary.builtinEnabled > 0 || summary.builtinDisabled > 0 || summary.extensionEnabled > 0 || summary.extensionDisabled > 0 || summary.extensionMcpEnabled > 0 || summary.extensionMcpDisabled > 0 || summary.userMcpEnabled > 0 || summary.userMcpDisabled > 0 || summary.userToolsetEnabled > 0 || summary.userToolsetDisabled > 0;
+  telemetryService.publicLog2("chatToolPickerClosed", {
+    source,
+    changed,
+    builtinEnabled: summary.builtinEnabled,
+    builtinDisabled: summary.builtinDisabled,
+    extensionEnabled: summary.extensionEnabled,
+    extensionDisabled: summary.extensionDisabled,
+    extensionMcpEnabled: summary.extensionMcpEnabled,
+    extensionMcpDisabled: summary.extensionMcpDisabled,
+    userMcpEnabled: summary.userMcpEnabled,
+    userMcpDisabled: summary.userMcpDisabled,
+    userToolsetEnabled: summary.userToolsetEnabled,
+    userToolsetDisabled: summary.userToolsetDisabled,
+    details: summary.details
+  });
+}
+__name(sendDidChangeEvent, "sendDidChangeEvent");
 export {
   showToolsPicker
 };

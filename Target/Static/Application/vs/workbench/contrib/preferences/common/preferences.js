@@ -82,7 +82,7 @@ async function getExperimentalExtensionToggleData(chatEntitlementService, extens
   if (cachedExtensionToggleData) {
     return cachedExtensionToggleData;
   }
-  if (productService.extensionRecommendations && productService.commonlyUsedSettings) {
+  if (productService.extensionRecommendations) {
     const settingsEditorRecommendedExtensions = {};
     Object.keys(productService.extensionRecommendations).forEach((extensionId) => {
       const extensionInfo = productService.extensionRecommendations[extensionId];
@@ -107,8 +107,7 @@ async function getExperimentalExtensionToggleData(chatEntitlementService, extens
     }
     cachedExtensionToggleData = {
       settingsEditorRecommendedExtensions,
-      recommendedExtensionsGalleryInfo,
-      commonlyUsed: productService.commonlyUsedSettings
+      recommendedExtensionsGalleryInfo
     };
     return cachedExtensionToggleData;
   }

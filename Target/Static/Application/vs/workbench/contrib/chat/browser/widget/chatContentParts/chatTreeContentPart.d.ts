@@ -12,8 +12,6 @@ import { IChatContentPart } from './chatContentParts.js';
 export declare class ChatTreeContentPart extends Disposable implements IChatContentPart {
     private readonly openerService;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: Event<void>;
     readonly onDidFocus: Event<void>;
     private tree;
     constructor(data: IChatResponseProgressFileTreeData, treePool: TreePool, openerService: IOpenerService);
@@ -21,14 +19,19 @@ export declare class ChatTreeContentPart extends Disposable implements IChatCont
     hasSameContent(other: IChatProgressRenderableResponseContent): boolean;
     addDisposable(disposable: IDisposable): void;
 }
+interface ITreePoolWrapper extends IDisposable {
+    tree: WorkbenchCompressibleAsyncDataTree<IChatResponseProgressFileTreeData, IChatResponseProgressFileTreeData, void>;
+}
 export declare class TreePool extends Disposable {
     private _onDidChangeVisibility;
     private readonly instantiationService;
     private readonly configService;
     private readonly themeService;
     private _pool;
-    get inUse(): ReadonlySet<WorkbenchCompressibleAsyncDataTree<IChatResponseProgressFileTreeData, IChatResponseProgressFileTreeData, void>>;
+    get inUse(): ReadonlySet<ITreePoolWrapper>;
     constructor(_onDidChangeVisibility: Event<boolean>, instantiationService: IInstantiationService, configService: IConfigurationService, themeService: IThemeService);
     private treeFactory;
     get(): IDisposableReference<WorkbenchCompressibleAsyncDataTree<IChatResponseProgressFileTreeData, IChatResponseProgressFileTreeData, void>>;
+    clear(): void;
 }
+export {};

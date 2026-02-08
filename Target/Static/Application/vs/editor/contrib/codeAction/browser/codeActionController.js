@@ -18,6 +18,7 @@ import { onUnexpectedError } from "../../../../base/common/errors.js";
 import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
 import { Lazy } from "../../../../base/common/lazy.js";
 import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { derived } from "../../../../base/common/observable.js";
 import { localize } from "../../../../nls.js";
 import { IActionWidgetService } from "../../../../platform/actionWidget/browser/actionWidget.js";
 import { ICommandService } from "../../../../platform/commands/common/commands.js";
@@ -63,6 +64,13 @@ let CodeActionController = class CodeActionController2 extends Disposable {
     this._activeCodeActions = this._register(new MutableDisposable());
     this._showDisabled = false;
     this._disposed = false;
+    this.lightBulbState = derived(this, (reader) => {
+      const widget = this._lightBulbWidget.rawValue;
+      if (!widget) {
+        return void 0;
+      }
+      return widget.lightBulbInfo.read(reader);
+    });
     this._editor = editor;
     this._model = this._register(new CodeActionModel(this._editor, languageFeaturesService.codeActionProvider, markerService, contextKeyService, progressService, _configurationService));
     this._register(this._model.onDidChangeState((newState) => this.update(newState)));

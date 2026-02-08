@@ -16,7 +16,7 @@ import { Action } from "../../../../base/common/actions.js";
 import { Emitter, Event } from "../../../../base/common/event.js";
 import * as glob from "../../../../base/common/glob.js";
 import * as json from "../../../../base/common/json.js";
-import { Disposable, DisposableStore, dispose, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { Disposable, dispose, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
 import { LRUCache } from "../../../../base/common/map.js";
 import * as Objects from "../../../../base/common/objects.js";
 import { ValidationStatus } from "../../../../base/common/parsers.js";
@@ -259,7 +259,7 @@ let AbstractTaskService = class AbstractTaskService2 extends Disposable {
     this._taskRunStartTimes = /* @__PURE__ */ new Map();
     this._taskRunSources = /* @__PURE__ */ new Map();
     this._activatedTaskProviders = /* @__PURE__ */ new Set();
-    this.notification = this._register(new MutableDisposable());
+    this.toast = this._register(new MutableDisposable());
     this._whenTaskSystemReady = Event.toPromise(this.onDidChangeTaskSystemInfo);
     this._workspaceTasksPromise = void 0;
     this._taskSystem = void 0;
@@ -497,21 +497,15 @@ let AbstractTaskService = class AbstractTaskService2 extends Disposable {
       mode: 1
       /* FocusMode.Notify */
     });
-    const notification = await dom.triggerNotification(message);
-    if (notification) {
-      const disposables = this.notification.value = new DisposableStore();
-      disposables.add(notification);
-      disposables.add(Event.once(notification.onClick)(() => {
-        this._hostService.focus(targetWindow, {
-          mode: 2
-          /* FocusMode.Force */
-        });
-      }));
-      disposables.add(this._hostService.onDidChangeFocus((focus) => {
-        if (focus) {
-          disposables.dispose();
-        }
-      }));
+    const cts = new CancellationTokenSource();
+    this.toast.value = toDisposable(() => cts.dispose(true));
+    const { clicked } = await this._hostService.showToast({ title: message }, cts.token);
+    this.toast.clear();
+    if (clicked) {
+      this._hostService.focus(targetWindow, {
+        mode: 2
+        /* FocusMode.Force */
+      });
     }
   }
   _formatTaskDuration(durationMs) {

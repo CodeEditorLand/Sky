@@ -29,7 +29,9 @@ export declare class SidebarPart extends AbstractPaneCompositePart {
     readonly priority: LayoutPriority;
     get preferredWidth(): number | undefined;
     private readonly activityBarPart;
+    private readonly visibleViewContainersTracker;
     constructor(notificationService: INotificationService, storageService: IStorageService, contextMenuService: IContextMenuService, layoutService: IWorkbenchLayoutService, keybindingService: IKeybindingService, hoverService: IHoverService, instantiationService: IInstantiationService, themeService: IThemeService, viewDescriptorService: IViewDescriptorService, contextKeyService: IContextKeyService, extensionService: IExtensionService, configurationService: IConfigurationService, menuService: IMenuService);
+    private onDidChangeAutoHideViewContainers;
     private onDidChangeActivityBarLocation;
     updateStyles(): void;
     layout(width: number, height: number, top: number, left: number): void;

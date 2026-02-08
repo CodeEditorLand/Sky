@@ -6,6 +6,7 @@ export declare const PROMPT_DOCUMENTATION_URL = "https://aka.ms/vscode-ghcp-prom
 export declare const INSTRUCTIONS_DOCUMENTATION_URL = "https://aka.ms/vscode-ghcp-custom-instructions";
 export declare const AGENT_DOCUMENTATION_URL = "https://aka.ms/vscode-ghcp-custom-chat-modes";
 export declare const SKILL_DOCUMENTATION_URL = "https://aka.ms/vscode-agent-skills";
+export declare const HOOK_DOCUMENTATION_URL = "https://aka.ms/vscode-chat-hooks";
 /**
  * Language ID for the reusable prompt syntax.
  */
@@ -38,6 +39,7 @@ export declare enum PromptsType {
     instructions = "instructions",
     prompt = "prompt",
     agent = "agent",
-    skill = "skill"
+    skill = "skill",
+    hook = "hook"
 }
 export declare function isValidPromptType(type: string): type is PromptsType;

@@ -14,12 +14,16 @@ export declare class ChatAttachmentsContentPart extends Disposable {
     private readonly _onDidChangeVisibility;
     private readonly _contextResourceLabels;
     private _showingAll;
-    private readonly variables;
+    private _variables;
     private readonly contentReferences;
     private readonly limit?;
     readonly domNode: HTMLElement | undefined;
     contextMenuHandler?: (attachment: IChatRequestVariableEntry, event: MouseEvent) => void;
     constructor(options: IChatAttachmentsContentPartOptions, instantiationService: IInstantiationService);
+    /**
+     * Update the variables and re-render the attachments in place.
+     */
+    updateVariables(variables: readonly IChatRequestVariableEntry[]): void;
     private initAttachedContext;
     private getVisibleAttachments;
     private renderShowMoreButton;

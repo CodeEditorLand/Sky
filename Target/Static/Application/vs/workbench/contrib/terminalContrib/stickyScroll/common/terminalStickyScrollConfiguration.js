@@ -3,6 +3,7 @@ var TerminalStickyScrollSettingId;
 (function(TerminalStickyScrollSettingId2) {
   TerminalStickyScrollSettingId2["Enabled"] = "terminal.integrated.stickyScroll.enabled";
   TerminalStickyScrollSettingId2["MaxLineCount"] = "terminal.integrated.stickyScroll.maxLineCount";
+  TerminalStickyScrollSettingId2["IgnoredCommands"] = "terminal.integrated.stickyScroll.ignoredCommands";
 })(TerminalStickyScrollSettingId || (TerminalStickyScrollSettingId = {}));
 const terminalStickyScrollConfiguration = {
   [
@@ -22,6 +23,25 @@ const terminalStickyScrollConfiguration = {
     default: 5,
     minimum: 1,
     maximum: 10
+  },
+  [
+    "terminal.integrated.stickyScroll.ignoredCommands"
+    /* TerminalStickyScrollSettingId.IgnoredCommands */
+  ]: {
+    markdownDescription: localize("stickyScroll.ignoredCommands", "A list of commands that should not trigger sticky scroll. When a command from this list is detected, the sticky scroll overlay will be hidden."),
+    type: "array",
+    items: {
+      type: "string"
+    },
+    default: [
+      "clear",
+      "cls",
+      "clear-host",
+      "copilot",
+      "claude",
+      "codex",
+      "gemini"
+    ]
   }
 };
 export {

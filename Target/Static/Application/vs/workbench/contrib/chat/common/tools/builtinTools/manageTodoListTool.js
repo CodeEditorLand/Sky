@@ -20,51 +20,38 @@ import { ITelemetryService } from "../../../../../../platform/telemetry/common/t
 import { IChatTodoListService } from "../chatTodoListService.js";
 import { localize } from "../../../../../../nls.js";
 import { MarkdownString } from "../../../../../../base/common/htmlContent.js";
-import { chatSessionResourceToId, LocalChatSessionUri } from "../../model/chatUri.js";
-const TodoListToolWriteOnlySettingId = "chat.todoListTool.writeOnly";
-const TodoListToolDescriptionFieldSettingId = "chat.todoListTool.descriptionField";
+import { URI } from "../../../../../../base/common/uri.js";
 const ManageTodoListToolToolId = "manage_todo_list";
-function createManageTodoListToolData(writeOnly, includeDescription = true) {
-  const baseProperties = {
-    todoList: {
-      type: "array",
-      description: writeOnly ? "Complete array of all todo items. Must include ALL items - both existing and new." : "Complete array of all todo items (required for write operation, ignored for read). Must include ALL items - both existing and new.",
-      items: {
-        type: "object",
-        properties: {
-          id: {
-            type: "number",
-            description: "Unique identifier for the todo. Use sequential numbers starting from 1."
-          },
-          title: {
-            type: "string",
-            description: "Concise action-oriented todo label (3-7 words). Displayed in UI."
-          },
-          ...includeDescription && {
-            description: {
+function createManageTodoListToolData() {
+  const inputSchema = {
+    type: "object",
+    properties: {
+      todoList: {
+        type: "array",
+        description: "Complete array of all todo items. Must include ALL items - both existing and new.",
+        items: {
+          type: "object",
+          properties: {
+            id: {
+              type: "number",
+              description: "Unique identifier for the todo. Use sequential numbers starting from 1."
+            },
+            title: {
               type: "string",
-              description: "Detailed context, requirements, or implementation notes. Include file paths, specific methods, or acceptance criteria."
+              description: "Concise action-oriented todo label (3-7 words). Displayed in UI."
+            },
+            status: {
+              type: "string",
+              enum: ["not-started", "in-progress", "completed"],
+              description: "not-started: Not begun | in-progress: Currently working (max 1) | completed: Fully finished with no blockers"
             }
           },
-          status: {
-            type: "string",
-            enum: ["not-started", "in-progress", "completed"],
-            description: "not-started: Not begun | in-progress: Currently working (max 1) | completed: Fully finished with no blockers"
-          }
-        },
-        required: includeDescription ? ["id", "title", "description", "status"] : ["id", "title", "status"]
+          required: ["id", "title", "status"]
+        }
       }
-    }
+    },
+    required: ["todoList"]
   };
-  const requiredFields = writeOnly ? ["todoList"] : [];
-  if (!writeOnly) {
-    baseProperties.operation = {
-      type: "string",
-      enum: ["write", "read"],
-      description: "write: Replace entire todo list with new content. read: Retrieve current todo list. ALWAYS provide complete list when writing - partial updates not supported."
-    };
-    requiredFields.unshift("operation");
-  }
   return {
     id: ManageTodoListToolToolId,
     toolReferenceName: "todo",
@@ -75,23 +62,17 @@ function createManageTodoListToolData(writeOnly, includeDescription = true) {
     userDescription: localize("tool.manageTodoList.userDescription", "Manage and track todo items for task planning"),
     modelDescription: "Manage a structured todo list to track progress and plan tasks throughout your coding session. Use this tool VERY frequently to ensure task visibility and proper planning.\n\nWhen to use this tool:\n- Complex multi-step work requiring planning and tracking\n- When user provides multiple tasks or requests (numbered/comma-separated)\n- After receiving new instructions that require multiple steps\n- BEFORE starting work on any todo (mark as in-progress)\n- IMMEDIATELY after completing each todo (mark completed individually)\n- When breaking down larger tasks into smaller actionable steps\n- To give users visibility into your progress and planning\n\nWhen NOT to use:\n- Single, trivial tasks that can be completed in one step\n- Purely conversational/informational requests\n- When just reading files or performing simple searches\n\nCRITICAL workflow:\n1. Plan tasks by writing todo list with specific, actionable items\n2. Mark ONE todo as in-progress before starting work\n3. Complete the work for that specific todo\n4. Mark that todo as completed IMMEDIATELY\n5. Move to next todo and repeat\n\nTodo states:\n- not-started: Todo not yet begun\n- in-progress: Currently working (limit ONE at a time)\n- completed: Finished successfully\n\nIMPORTANT: Mark todos completed as soon as they are done. Do not batch completions.",
     source: ToolDataSource.Internal,
-    inputSchema: {
-      type: "object",
-      properties: baseProperties,
-      required: requiredFields
-    }
+    inputSchema
   };
 }
 __name(createManageTodoListToolData, "createManageTodoListToolData");
-const ManageTodoListToolData = createManageTodoListToolData(false);
+const ManageTodoListToolData = createManageTodoListToolData();
 let ManageTodoListTool = class ManageTodoListTool2 extends Disposable {
   static {
     __name(this, "ManageTodoListTool");
   }
-  constructor(writeOnly, includeDescription, chatTodoListService, logService, telemetryService) {
+  constructor(chatTodoListService, logService, telemetryService) {
     super();
-    this.writeOnly = writeOnly;
-    this.includeDescription = includeDescription;
     this.chatTodoListService = chatTodoListService;
     this.logService = logService;
     this.telemetryService = telemetryService;
@@ -99,30 +80,28 @@ let ManageTodoListTool = class ManageTodoListTool2 extends Disposable {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async invoke(invocation, _countTokens, _progress, _token) {
     const args = invocation.parameters;
-    const DEFAULT_TODO_SESSION_ID = "default";
-    const chatSessionId = invocation.context?.sessionId ?? args.chatSessionId ?? DEFAULT_TODO_SESSION_ID;
+    let chatSessionResource = invocation.context?.sessionResource;
+    if (!chatSessionResource && args.operation === "read" && args.chatSessionResource) {
+      try {
+        chatSessionResource = URI.parse(args.chatSessionResource);
+      } catch (error) {
+        this.logService.error("ManageTodoListTool: Invalid chatSessionResource URI", error);
+      }
+    }
+    if (!chatSessionResource) {
+      return {
+        content: [{
+          kind: "text",
+          value: "Error: No session resource available"
+        }]
+      };
+    }
     this.logService.debug(`ManageTodoListTool: Invoking with options ${JSON.stringify(args)}`);
     try {
-      const operation = this.writeOnly ? "write" : args.operation;
-      if (!operation) {
-        return {
-          content: [{
-            kind: "text",
-            value: "Error: operation parameter is required"
-          }]
-        };
-      }
-      if (operation === "read") {
-        return this.handleReadOperation(LocalChatSessionUri.forSession(chatSessionId));
-      } else if (operation === "write") {
-        return this.handleWriteOperation(args, LocalChatSessionUri.forSession(chatSessionId));
+      if (args.operation === "read") {
+        return this.handleReadOperation(chatSessionResource);
       } else {
-        return {
-          content: [{
-            kind: "text",
-            value: "Error: Unknown operation"
-          }]
-        };
+        return this.handleWriteOperation(args, chatSessionResource);
       }
     } catch (error) {
       const errorMessage = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
@@ -136,37 +115,27 @@ let ManageTodoListTool = class ManageTodoListTool2 extends Disposable {
   }
   async prepareToolInvocation(context, _token) {
     const args = context.parameters;
-    const DEFAULT_TODO_SESSION_ID = "default";
-    const chatSessionId = context.chatSessionId ?? args.chatSessionId ?? DEFAULT_TODO_SESSION_ID;
-    const currentTodoItems = this.chatTodoListService.getTodos(LocalChatSessionUri.forSession(chatSessionId));
+    const chatSessionResource = context.chatSessionResource;
+    if (!chatSessionResource) {
+      return void 0;
+    }
+    const currentTodoItems = this.chatTodoListService.getTodos(chatSessionResource);
     let message;
-    const operation = this.writeOnly ? "write" : args.operation;
-    switch (operation) {
-      case "write": {
-        if (args.todoList) {
-          message = this.generatePastTenseMessage(currentTodoItems, args.todoList);
-        }
-        break;
-      }
-      case "read": {
-        message = localize("todo.readOperation", "Read todo list");
-        break;
-      }
-      default:
-        break;
+    if (args.operation === "read") {
+      message = localize("todo.readOperation", "Read todo list");
+    } else if (args.todoList) {
+      message = this.generatePastTenseMessage(currentTodoItems, args.todoList);
     }
     const items = args.todoList ?? currentTodoItems;
     const todoList = items.map((todo) => ({
       id: todo.id.toString(),
       title: todo.title,
-      description: todo.description || "",
       status: todo.status
     }));
     return {
       pastTenseMessage: new MarkdownString(message ?? localize("todo.updatedList", "Updated todo list")),
       toolSpecificData: {
         kind: "todoList",
-        sessionId: chatSessionId,
         todoList
       }
     };
@@ -219,8 +188,7 @@ ${markdownTaskList}`;
       operation: "read",
       notStartedCount: statusCounts.notStartedCount,
       inProgressCount: statusCounts.inProgressCount,
-      completedCount: statusCounts.completedCount,
-      chatSessionId: chatSessionResourceToId(chatSessionResource)
+      completedCount: statusCounts.completedCount
     });
     return {
       content: [{
@@ -241,7 +209,6 @@ ${markdownTaskList}`;
     const todoList = args.todoList.map((parsedTodo) => ({
       id: parsedTodo.id,
       title: parsedTodo.title,
-      description: parsedTodo.description || "",
       status: parsedTodo.status
     }));
     const existingTodos = this.chatTodoListService.getTodos(chatSessionResource);
@@ -261,8 +228,7 @@ ${markdownTaskList}`;
       operation: "write",
       notStartedCount: statusCounts.notStartedCount,
       inProgressCount: statusCounts.inProgressCount,
-      completedCount: statusCounts.completedCount,
-      chatSessionId: chatSessionResourceToId(chatSessionResource)
+      completedCount: statusCounts.completedCount
     });
     return {
       content: [{
@@ -299,9 +265,6 @@ ${markdownTaskList}`;
           break;
       }
       const lines = [`- ${checkbox} ${todo.title}`];
-      if (this.includeDescription && todo.description && todo.description.trim()) {
-        lines.push(`  - ${todo.description.trim()}`);
-      }
       return lines.join("\n");
     }).join("\n");
   }
@@ -311,7 +274,7 @@ ${markdownTaskList}`;
     for (let i = 0; i < minLen; i++) {
       const o = oldList[i];
       const n = newList[i];
-      if (o.title !== n.title || (o.description ?? "") !== (n.description ?? "") || o.status !== n.status) {
+      if (o.title !== n.title || o.status !== n.status) {
         modified++;
       }
     }
@@ -322,16 +285,14 @@ ${markdownTaskList}`;
   }
 };
 ManageTodoListTool = __decorate([
-  __param(2, IChatTodoListService),
-  __param(3, ILogService),
-  __param(4, ITelemetryService)
+  __param(0, IChatTodoListService),
+  __param(1, ILogService),
+  __param(2, ITelemetryService)
 ], ManageTodoListTool);
 export {
   ManageTodoListTool,
   ManageTodoListToolData,
   ManageTodoListToolToolId,
-  TodoListToolDescriptionFieldSettingId,
-  TodoListToolWriteOnlySettingId,
   createManageTodoListToolData
 };
 //# sourceMappingURL=manageTodoListTool.js.map

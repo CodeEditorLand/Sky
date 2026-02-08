@@ -11,7 +11,7 @@ export declare class ArcTelemetryReporter extends Disposable {
     private readonly _gitRepo;
     private readonly _trackedEdit;
     private readonly _sendTelemetryEvent;
-    private readonly _onBeforeDispose;
+    private readonly _dispose;
     private readonly _telemetryService;
     private readonly _arcTracker;
     private readonly _initialBranchName;
@@ -20,7 +20,7 @@ export declare class ArcTelemetryReporter extends Disposable {
         value: IObservableWithChange<StringText, {
             edit: BaseStringEdit;
         }>;
-    }, _gitRepo: IObservable<ScmRepoAdapter | undefined>, _trackedEdit: BaseStringEdit, _sendTelemetryEvent: (res: ArcTelemetryReporterData) => void, _onBeforeDispose: () => void, _telemetryService: ITelemetryService);
+    }, _gitRepo: IObservable<ScmRepoAdapter | undefined>, _trackedEdit: BaseStringEdit, _sendTelemetryEvent: (res: ArcTelemetryReporterData) => void, _dispose: () => void, _telemetryService: ITelemetryService);
     private _reportAfter;
     private _report;
 }

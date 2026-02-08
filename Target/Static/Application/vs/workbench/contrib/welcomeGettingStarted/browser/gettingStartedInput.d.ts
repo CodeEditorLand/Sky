@@ -11,6 +11,8 @@ export interface GettingStartedEditorOptions extends IEditorOptions {
     showWelcome?: boolean;
     walkthroughPageTitle?: string;
     showNewExperience?: boolean;
+    /** Command to execute when pressing "Go Back" instead of showing the categories slide */
+    returnToCommand?: string;
 }
 export declare class GettingStartedInput extends EditorInput {
     static readonly ID = "workbench.editors.gettingStartedInput";
@@ -19,6 +21,7 @@ export declare class GettingStartedInput extends EditorInput {
     private _selectedStep;
     private _showTelemetryNotice;
     private _showWelcome;
+    private _returnToCommand;
     private _walkthroughPageTitle;
     get typeId(): string;
     get editorId(): string | undefined;
@@ -37,4 +40,6 @@ export declare class GettingStartedInput extends EditorInput {
     set showWelcome(value: boolean);
     get walkthroughPageTitle(): string | undefined;
     set walkthroughPageTitle(value: string | undefined);
+    get returnToCommand(): string | undefined;
+    set returnToCommand(value: string | undefined);
 }

@@ -15,19 +15,20 @@ export declare const overviewRulerAddedForeground: string;
 export declare const overviewRulerDeletedForeground: string;
 export declare const editorGutterItemGlyphForeground: string;
 export declare const editorGutterItemBackground: string;
+type QuickDiffProviderKind = 'primary' | 'secondary' | 'contributed';
 export interface QuickDiffProvider {
     readonly id: string;
     readonly label: string;
     readonly rootUri: URI | undefined;
     readonly selector?: LanguageSelector;
-    readonly kind: 'primary' | 'secondary' | 'contributed';
+    readonly kind: QuickDiffProviderKind;
     getOriginalResource(uri: URI): Promise<URI | null>;
 }
 export interface QuickDiff {
     readonly id: string;
     readonly label: string;
     readonly originalResource: URI;
-    readonly kind: 'primary' | 'secondary' | 'contributed';
+    readonly kind: QuickDiffProviderKind;
 }
 export interface QuickDiffChange {
     readonly providerId: string;
@@ -37,6 +38,8 @@ export interface QuickDiffChange {
     readonly change2: LineRangeMapping;
 }
 export interface QuickDiffResult {
+    readonly providerId: string;
+    readonly providerKind: QuickDiffProviderKind;
     readonly original: URI;
     readonly modified: URI;
     readonly changes: IChange[];
@@ -62,3 +65,4 @@ export declare function compareChanges(a: IChange, b: IChange): number;
 export declare function getChangeHeight(change: IChange): number;
 export declare function getModifiedEndLineNumber(change: IChange): number;
 export declare function lineIntersectsChange(lineNumber: number, change: IChange): boolean;
+export {};

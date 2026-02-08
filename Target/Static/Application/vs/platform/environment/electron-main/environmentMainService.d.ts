@@ -12,6 +12,7 @@ export interface IEnvironmentMainService extends INativeEnvironmentService {
     readonly mainIPCHandle: string;
     readonly mainLockfile: string;
     readonly disableUpdates: boolean;
+    readonly isPortable: boolean;
     readonly enableRDPDisplayTracking: boolean;
     unsetSnapExportedVariables(): void;
     restoreSnapExportedVariables(): void;
@@ -22,6 +23,7 @@ export declare class EnvironmentMainService extends NativeEnvironmentService imp
     get mainIPCHandle(): string;
     get mainLockfile(): string;
     get disableUpdates(): boolean;
+    get isPortable(): boolean;
     get crossOriginIsolated(): boolean;
     get enableRDPDisplayTracking(): boolean;
     get codeCachePath(): string | undefined;

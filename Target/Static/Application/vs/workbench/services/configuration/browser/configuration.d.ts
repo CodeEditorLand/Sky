@@ -1,6 +1,6 @@
 import { URI } from '../../../../base/common/uri.js';
 import { Event, Emitter } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
+import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ConfigurationModel, ConfigurationParseOptions, UserSettings } from '../../../../platform/configuration/common/configurationModels.js';
 import { IConfigurationCache } from '../common/configuration.js';
@@ -10,17 +10,17 @@ import { IRemoteAgentService } from '../../remote/common/remoteAgentService.js';
 import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
 import { IStringDictionary } from '../../../../base/common/collections.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
 import { DefaultConfiguration as BaseDefaultConfiguration } from '../../../../platform/configuration/common/configurations.js';
 import { IJSONEditingService } from '../common/jsonEditing.js';
 import { IUserDataProfilesService } from '../../../../platform/userDataProfile/common/userDataProfile.js';
+import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
 export declare class DefaultConfiguration extends BaseDefaultConfiguration {
     private readonly configurationCache;
     static readonly DEFAULT_OVERRIDES_CACHE_EXISTS_KEY = "DefaultOverridesCacheExists";
     private readonly configurationRegistry;
     private cachedConfigurationDefaultsOverrides;
     private readonly cacheKey;
-    constructor(configurationCache: IConfigurationCache, environmentService: IBrowserWorkbenchEnvironmentService, logService: ILogService);
+    constructor(cacheScope: string, configurationCache: IConfigurationCache, environmentService: IBrowserWorkbenchEnvironmentService, logService: ILogService);
     protected getConfigurationDefaultOverrides(): IStringDictionary<unknown>;
     initialize(): Promise<ConfigurationModel>;
     reload(): ConfigurationModel;
@@ -127,4 +127,5 @@ export declare class FolderConfiguration extends Disposable {
     private onDidFolderConfigurationChange;
     private createFileServiceBasedConfiguration;
     private updateCache;
+    addRelated(disposable: IDisposable): void;
 }

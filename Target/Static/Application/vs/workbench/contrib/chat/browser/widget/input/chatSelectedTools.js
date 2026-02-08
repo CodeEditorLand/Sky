@@ -19,15 +19,15 @@ import { IInstantiationService } from "../../../../../../platform/instantiation/
 import { observableMemento } from "../../../../../../platform/observable/common/observableMemento.js";
 import { IStorageService } from "../../../../../../platform/storage/common/storage.js";
 import { ChatModeKind } from "../../../common/constants.js";
-import { ILanguageModelToolsService, ToolSet } from "../../../common/tools/languageModelToolsService.js";
 import { PromptsStorage } from "../../../common/promptSyntax/service/promptsService.js";
+import { ILanguageModelToolsService, isToolSet } from "../../../common/tools/languageModelToolsService.js";
 import { PromptFileRewriter } from "../../promptSyntax/promptFileRewriter.js";
 var ToolEnablementStates;
 (function(ToolEnablementStates2) {
   function fromMap(map) {
     const toolSets = /* @__PURE__ */ new Map(), tools = /* @__PURE__ */ new Map();
     for (const [entry, enabled] of map.entries()) {
-      if (entry instanceof ToolSet) {
+      if (isToolSet(entry)) {
         toolSets.set(entry.id, enabled);
       } else {
         tools.set(entry.id, enabled);
@@ -83,32 +83,34 @@ let ChatSelectedTools = class ChatSelectedTools2 extends Disposable {
   static {
     __name(this, "ChatSelectedTools");
   }
-  constructor(_mode, _toolsService, _storageService, _instantiationService) {
+  constructor(_mode, languageModel, _toolsService, _storageService, _instantiationService) {
     super();
     this._mode = _mode;
+    this.languageModel = languageModel;
     this._toolsService = _toolsService;
     this._instantiationService = _instantiationService;
     this._sessionStates = new ObservableMap();
     this.entriesMap = derived((r) => {
       const map = /* @__PURE__ */ new Map();
+      const lm = this.languageModel.read(r)?.metadata;
       const currentMode = this._mode.read(r);
       let currentMap = this._sessionStates.observable.read(r).get(currentMode.id);
       if (!currentMap && currentMode.kind === ChatModeKind.Agent) {
         const modeTools = currentMode.customTools?.read(r);
         if (modeTools) {
           const target = currentMode.target?.read(r);
-          currentMap = ToolEnablementStates.fromMap(this._toolsService.toToolAndToolSetEnablementMap(modeTools, target));
+          currentMap = ToolEnablementStates.fromMap(this._toolsService.toToolAndToolSetEnablementMap(modeTools, target, lm));
         }
       }
       if (!currentMap) {
         currentMap = this._globalState.read(r);
       }
-      for (const tool of this._toolsService.toolsObservable.read(r)) {
+      for (const tool of this._currentTools.read(r)) {
         if (tool.canBeReferencedInPrompt) {
           map.set(tool, currentMap.tools.get(tool.id) !== false);
         }
       }
-      for (const toolSet of this._toolsService.toolSets.read(r)) {
+      for (const toolSet of this._toolsService.getToolSetsForModel(lm, r)) {
         const toolSetEnabled = currentMap.toolSets.get(toolSet.id) !== false;
         map.set(toolSet, toolSetEnabled);
         for (const tool of toolSet.getTools(r)) {
@@ -121,7 +123,7 @@ let ChatSelectedTools = class ChatSelectedTools2 extends Disposable {
       const result = {};
       const map = this.entriesMap.read(r);
       for (const [item, enabled] of map) {
-        if (!(item instanceof ToolSet)) {
+        if (!isToolSet(item)) {
           result[item.id] = enabled;
         }
       }
@@ -134,6 +136,7 @@ let ChatSelectedTools = class ChatSelectedTools2 extends Disposable {
       toStorage: ToolEnablementStates.toStorage
     });
     this._globalState = this._store.add(globalStateMemento(0, 1, _storageService));
+    this._currentTools = languageModel.map((lm) => _toolsService.observeTools(lm?.metadata)).map((o, r) => o.read(r));
   }
   get entriesScope() {
     const mode = this._mode.get();
@@ -174,9 +177,9 @@ let ChatSelectedTools = class ChatSelectedTools2 extends Disposable {
   }
 };
 ChatSelectedTools = __decorate([
-  __param(1, ILanguageModelToolsService),
-  __param(2, IStorageService),
-  __param(3, IInstantiationService)
+  __param(2, ILanguageModelToolsService),
+  __param(3, IStorageService),
+  __param(4, IInstantiationService)
 ], ChatSelectedTools);
 export {
   ChatSelectedTools,

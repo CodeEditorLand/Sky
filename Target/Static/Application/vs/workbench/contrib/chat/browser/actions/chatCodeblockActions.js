@@ -55,7 +55,7 @@ function isCodeBlockActionContext(thing) {
 }
 __name(isCodeBlockActionContext, "isCodeBlockActionContext");
 function isCodeCompareBlockActionContext(thing) {
-  return typeof thing === "object" && thing !== null && "element" in thing;
+  return typeof thing === "object" && thing !== null && "element" in thing && "diffEditor" in thing && "toggleDiffViewMode" in thing;
 }
 __name(isCodeCompareBlockActionContext, "isCodeCompareBlockActionContext");
 function isResponseFiltered(context) {
@@ -590,11 +590,12 @@ function registerChatCodeCompareBlockActions() {
         f1: false,
         category: CHAT_CATEGORY,
         icon: Codicon.gitPullRequestGoToChanges,
-        precondition: ContextKeyExpr.and(EditorContextKeys.hasChanges, ChatContextKeys.editApplied.negate()),
+        precondition: ContextKeyExpr.and(EditorContextKeys.hasChanges, ChatContextKeys.editApplied.negate(), EditorContextKeys.readOnly.negate()),
         menu: {
           id: MenuId.ChatCompareBlock,
           group: "navigation",
-          order: 1
+          order: 10,
+          when: EditorContextKeys.readOnly.negate()
         }
       });
     }
@@ -636,11 +637,12 @@ function registerChatCodeCompareBlockActions() {
         f1: false,
         category: CHAT_CATEGORY,
         icon: Codicon.trash,
-        precondition: ContextKeyExpr.and(EditorContextKeys.hasChanges, ChatContextKeys.editApplied.negate()),
+        precondition: ContextKeyExpr.and(EditorContextKeys.hasChanges, ChatContextKeys.editApplied.negate(), EditorContextKeys.readOnly.negate()),
         menu: {
           id: MenuId.ChatCompareBlock,
           group: "navigation",
-          order: 2
+          order: 11,
+          when: EditorContextKeys.readOnly.negate()
         }
       });
     }
@@ -649,6 +651,62 @@ function registerChatCodeCompareBlockActions() {
       const instaService = accessor.get(IInstantiationService);
       const editor = instaService.createInstance(DefaultChatTextEditor);
       editor.discard(context.element, context.edit);
+    }
+  });
+  registerAction2(class ToggleDiffViewModeAction extends ChatCompareCodeBlockAction {
+    static {
+      __name(this, "ToggleDiffViewModeAction");
+    }
+    constructor() {
+      super({
+        id: "workbench.action.chat.toggleCompareBlockDiffViewMode",
+        title: localize2("interactive.compare.toggleDiffViewMode", "Toggle Inline/Side-by-Side Diff"),
+        f1: false,
+        category: CHAT_CATEGORY,
+        icon: Codicon.diffSingle,
+        toggled: {
+          condition: EditorContextKeys.diffEditorInlineMode,
+          icon: Codicon.diff
+        },
+        menu: {
+          id: MenuId.ChatCompareBlock,
+          group: "navigation",
+          order: 1
+        }
+      });
+    }
+    runWithContext(_accessor, context) {
+      context.toggleDiffViewMode();
+    }
+  });
+  registerAction2(class OpenCompareBlockInDiffEditor extends ChatCompareCodeBlockAction {
+    static {
+      __name(this, "OpenCompareBlockInDiffEditor");
+    }
+    constructor() {
+      super({
+        id: "workbench.action.chat.openCompareBlockInDiffEditor",
+        title: localize2("interactive.compare.openInDiffEditor", "Open in Diff Editor"),
+        f1: false,
+        category: CHAT_CATEGORY,
+        icon: Codicon.goToFile,
+        menu: {
+          id: MenuId.ChatCompareBlock,
+          group: "navigation",
+          order: 2
+        }
+      });
+    }
+    async runWithContext(accessor, context) {
+      const editorService = accessor.get(IEditorService);
+      const model = context.diffEditor.getModel();
+      if (!model) {
+        return;
+      }
+      await editorService.openEditor({
+        original: { resource: model.original.uri },
+        modified: { resource: model.modified.uri }
+      });
     }
   });
 }

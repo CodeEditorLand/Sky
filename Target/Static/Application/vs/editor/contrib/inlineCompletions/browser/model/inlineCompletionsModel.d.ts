@@ -153,6 +153,11 @@ export declare class InlineCompletionsModel extends Disposable {
     readonly inAcceptFlow: IObservable<boolean>;
     jump(): void;
     handleInlineSuggestionShown(inlineCompletion: InlineSuggestionItem, viewKind: InlineCompletionViewKind, viewData: InlineCompletionViewData, timeWhenShown: number): Promise<void>;
+    /**
+     * Transplants an inline completion from another model to this one.
+     * Used for cross-file inline edits.
+     */
+    transplantCompletion(item: InlineSuggestionItem): void;
 }
 interface Repro {
     documentValue: string;

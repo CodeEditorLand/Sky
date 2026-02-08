@@ -592,6 +592,9 @@ class MenuId {
     this.ChatExecute = new MenuId("ChatExecute");
   }
   static {
+    this.ChatExecuteQueue = new MenuId("ChatExecuteQueue");
+  }
+  static {
     this.ChatInput = new MenuId("ChatInput");
   }
   static {
@@ -667,10 +670,16 @@ class MenuId {
     this.ChatConfirmationMenu = new MenuId("ChatConfirmationMenu");
   }
   static {
+    this.ChatEditorInlineGutter = new MenuId("ChatEditorInlineGutter");
+  }
+  static {
     this.ChatEditorInlineExecute = new MenuId("ChatEditorInputExecute");
   }
   static {
     this.ChatEditorInlineInputSide = new MenuId("ChatEditorInputSide");
+  }
+  static {
+    this.InlineChatEditorAffordance = new MenuId("InlineChatEditorAffordance");
   }
   static {
     this.AccessibleView = new MenuId("AccessibleView");
@@ -715,13 +724,16 @@ class MenuId {
     this.AgentSessionSectionToolbar = new MenuId("AgentSessionSectionToolbar");
   }
   static {
-    this.AgentsControlMenu = new MenuId("AgentsControlMenu");
+    this.AgentsTitleBarControlMenu = new MenuId("AgentsTitleBarControlMenu");
   }
   static {
     this.ChatViewSessionTitleNavigationToolbar = new MenuId("ChatViewSessionTitleNavigationToolbar");
   }
   static {
     this.ChatViewSessionTitleToolbar = new MenuId("ChatViewSessionTitleToolbar");
+  }
+  static {
+    this.ChatContextUsageActions = new MenuId("ChatContextUsageActions");
   }
   /**
    * Create or reuse a `MenuId` with the given identifier
@@ -897,7 +909,9 @@ let MenuItemAction = MenuItemAction_1 = class MenuItemAction2 {
   }
   run(...args) {
     let runArgs = [];
-    if (this._options?.arg) {
+    if (this._options?.args) {
+      runArgs = [...runArgs, ...this._options.args];
+    } else if (this._options?.arg) {
       runArgs = [...runArgs, this._options.arg];
     }
     if (this._options?.shouldForwardArgs) {

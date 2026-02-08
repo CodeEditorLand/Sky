@@ -13,6 +13,7 @@ import { IOpenerService } from '../../../../../platform/opener/common/opener.js'
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
 import { ChatAgentLocation } from '../../common/constants.js';
 import { IChatWidgetService } from '../chat.js';
+import { IChatViewsWelcomeDescriptor } from './chatViewsWelcome.js';
 export interface IViewWelcomeDelegate {
     readonly onDidChangeViewWelcomeState: Event<void>;
     shouldShowWelcome(): boolean;
@@ -30,6 +31,7 @@ export declare class ChatViewWelcomeController extends Disposable {
     private readonly _isShowingWelcome;
     get isShowingWelcome(): IObservable<boolean>;
     constructor(container: HTMLElement, delegate: IViewWelcomeDelegate, location: ChatAgentLocation, contextKeyService: IContextKeyService, instantiationService: IInstantiationService);
+    getMatchingWelcomeView(): IChatViewsWelcomeDescriptor | undefined;
     private update;
     private render;
 }

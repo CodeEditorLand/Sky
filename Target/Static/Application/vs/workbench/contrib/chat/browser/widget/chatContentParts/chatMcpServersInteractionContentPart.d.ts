@@ -15,8 +15,6 @@ export declare class ChatMcpServersInteractionContentPart extends Disposable imp
     private readonly _openerService;
     private readonly _markdownRendererService;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     private workingProgressPart;
     private interactionContainer;
     private readonly interactionMd;

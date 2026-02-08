@@ -15,6 +15,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { IRemoteAuthorityResolverService } from '../../../../platform/remote/common/remoteAuthorityResolver.js';
 import { ITunnelService } from '../../../../platform/tunnel/common/tunnel.js';
+import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
 import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
 import { WebviewThemeDataProvider } from './themeing.js';
 import { IWebviewElement, WebviewContentOptions, WebviewExtensionDescription, WebviewInitInfo, WebviewMessageReceivedEvent } from './webview.js';
@@ -27,6 +28,7 @@ export declare class WebviewElement extends Disposable implements IWebviewElemen
     private readonly _remoteAuthorityResolverService;
     private readonly _tunnelService;
     private readonly _accessibilityService;
+    private readonly _uriIdentityService;
     protected readonly id: string;
     /**
      * The provided identifier of this webview.
@@ -66,7 +68,7 @@ export declare class WebviewElement extends Disposable implements IWebviewElemen
     private _disposed;
     extension: WebviewExtensionDescription | undefined;
     private readonly _options;
-    constructor(initInfo: WebviewInitInfo, webviewThemeDataProvider: WebviewThemeDataProvider, configurationService: IConfigurationService, contextMenuService: IContextMenuService, notificationService: INotificationService, _environmentService: IWorkbenchEnvironmentService, _fileService: IFileService, _logService: ILogService, _remoteAuthorityResolverService: IRemoteAuthorityResolverService, _tunnelService: ITunnelService, instantiationService: IInstantiationService, _accessibilityService: IAccessibilityService);
+    constructor(initInfo: WebviewInitInfo, webviewThemeDataProvider: WebviewThemeDataProvider, configurationService: IConfigurationService, contextMenuService: IContextMenuService, notificationService: INotificationService, _environmentService: IWorkbenchEnvironmentService, _fileService: IFileService, _logService: ILogService, _remoteAuthorityResolverService: IRemoteAuthorityResolverService, _tunnelService: ITunnelService, instantiationService: IInstantiationService, _accessibilityService: IAccessibilityService, _uriIdentityService: IUriIdentityService);
     dispose(): void;
     setContextKeyService(contextKeyService: IContextKeyService): void;
     private readonly _onMissingCsp;

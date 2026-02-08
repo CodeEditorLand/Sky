@@ -53,15 +53,21 @@ import { LocalChatSessionUri } from "../model/chatUri.js";
 import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../constants.js";
 import { ILanguageModelToolsService } from "../tools/languageModelToolsService.js";
 import { ChatSessionOperationLog } from "../model/chatSessionOperationLog.js";
+import { IPromptsService } from "../promptSyntax/service/promptsService.js";
+import { IHooksExecutionService } from "../hooksExecutionService.js";
 const serializedChatKey = "interactive.sessions";
 let CancellableRequest = class CancellableRequest2 {
   static {
     __name(this, "CancellableRequest");
   }
+  get yieldRequested() {
+    return this._yieldRequested;
+  }
   constructor(cancellationTokenSource, requestId, toolsService) {
     this.cancellationTokenSource = cancellationTokenSource;
     this.requestId = requestId;
     this.toolsService = toolsService;
+    this._yieldRequested = false;
   }
   dispose() {
     this.cancellationTokenSource.dispose();
@@ -71,6 +77,9 @@ let CancellableRequest = class CancellableRequest2 {
       this.toolsService.cancelToolCallsForRequest(this.requestId);
     }
     this.cancellationTokenSource.cancel();
+  }
+  setYieldRequested() {
+    this._yieldRequested = true;
   }
 };
 CancellableRequest = __decorate([
@@ -105,7 +114,7 @@ let ChatService = class ChatService2 extends Disposable {
     const workspace = this.workspaceContextService.getWorkspace();
     return !workspace.configuration && workspace.folders.length === 0;
   }
-  constructor(storageService, logService, extensionService, instantiationService, workspaceContextService, chatSlashCommandService, chatAgentService, configurationService, chatTransferService, chatSessionService, mcpService) {
+  constructor(storageService, logService, extensionService, instantiationService, workspaceContextService, chatSlashCommandService, chatAgentService, configurationService, chatTransferService, chatSessionService, mcpService, promptsService, hooksExecutionService) {
     super();
     this.storageService = storageService;
     this.logService = logService;
@@ -118,12 +127,17 @@ let ChatService = class ChatService2 extends Disposable {
     this.chatTransferService = chatTransferService;
     this.chatSessionService = chatSessionService;
     this.mcpService = mcpService;
+    this.promptsService = promptsService;
+    this.hooksExecutionService = hooksExecutionService;
     this._pendingRequests = this._register(new DisposableResourceMap());
+    this._queuedRequestDeferreds = /* @__PURE__ */ new Map();
     this._saveModelsEnabled = true;
     this._onDidSubmitRequest = this._register(new Emitter());
     this.onDidSubmitRequest = this._onDidSubmitRequest.event;
     this._onDidPerformUserAction = this._register(new Emitter());
     this.onDidPerformUserAction = this._onDidPerformUserAction.event;
+    this._onDidReceiveQuestionCarouselAnswer = this._register(new Emitter());
+    this.onDidReceiveQuestionCarouselAnswer = this._onDidReceiveQuestionCarouselAnswer.event;
     this._onDidDisposeSession = this._register(new Emitter());
     this.onDidDisposeSession = this._onDidDisposeSession.event;
     this._sessionFollowupCancelTokens = this._register(new DisposableResourceMap());
@@ -206,6 +220,9 @@ let ChatService = class ChatService2 extends Disposable {
         model.notifyEditingAction(action.action);
       }
     }
+  }
+  notifyQuestionCarouselAnswer(requestId, resolveId, answers) {
+    this._onDidReceiveQuestionCarouselAnswer.fire({ requestId, resolveId, answers });
   }
   async setChatSessionTitle(sessionResource, title) {
     const model = this._sessionModels.get(sessionResource);
@@ -319,15 +336,7 @@ let ChatService = class ChatService2 extends Disposable {
       return {
         ...entry,
         sessionResource,
-        // TODO@roblourens- missing for old data- normalize inside the store
-        timing: entry.timing ?? {
-          created: entry.lastMessageDate,
-          lastRequestStarted: void 0,
-          lastRequestEnded: entry.lastMessageDate
-        },
-        isActive: this._sessionModels.has(sessionResource),
-        // TODO@roblourens- missing for old data- normalize inside the store
-        lastResponseState: entry.lastResponseState ?? 1
+        isActive: this._sessionModels.has(sessionResource)
       };
     });
   }
@@ -338,15 +347,7 @@ let ChatService = class ChatService2 extends Disposable {
       return {
         ...metadata,
         sessionResource,
-        // TODO@roblourens- missing for old data- normalize inside the store
-        timing: metadata.timing ?? {
-          created: metadata.lastMessageDate,
-          lastRequestStarted: void 0,
-          lastRequestEnded: metadata.lastMessageDate
-        },
-        isActive: this._sessionModels.has(sessionResource),
-        // TODO@roblourens- missing for old data- normalize inside the store
-        lastResponseState: metadata.lastResponseState ?? 1
+        isActive: this._sessionModels.has(sessionResource)
       };
     }
     return void 0;
@@ -608,19 +609,52 @@ let ChatService = class ChatService2 extends Disposable {
     };
     await this._sendRequestAsync(model, model.sessionResource, request.message, attempt, enableCommandDetection, defaultAgent, location, resendOptions).responseCompletePromise;
   }
+  queuePendingRequest(model, sessionResource, request, options) {
+    const location = options.location ?? model.initialLocation;
+    const parsedRequest = this.parseChatRequest(sessionResource, request, location, options);
+    const requestModel = new ChatRequestModel({
+      session: model,
+      message: parsedRequest,
+      variableData: { variables: [] },
+      timestamp: Date.now(),
+      modeInfo: options.modeInfo,
+      locationData: options.locationData,
+      attachedContext: options.attachedContext,
+      modelId: options.userSelectedModelId,
+      userSelectedTools: options.userSelectedTools?.get()
+    });
+    const deferred = new DeferredPromise();
+    this._queuedRequestDeferreds.set(requestModel.id, deferred);
+    model.addPendingRequest(requestModel, options.queue ?? "queued", { ...options, queue: void 0 });
+    if (options.queue === "steering") {
+      this.setYieldRequested(sessionResource);
+    }
+    this.trace("sendRequest", `Queued message for session ${sessionResource}`);
+    return { kind: "queued", deferred: deferred.p };
+  }
   async sendRequest(sessionResource, request, options) {
     this.trace("sendRequest", `sessionResource: ${sessionResource.toString()}, message: ${request.substring(0, 20)}${request.length > 20 ? "[...]" : ""}}`);
     if (!request.trim() && !options?.slashCommand && !options?.agentId && !options?.agentIdSilent) {
       this.trace("sendRequest", "Rejected empty message");
-      return;
+      return { kind: "rejected", reason: "Empty message" };
     }
     const model = this._sessionModels.get(sessionResource);
     if (!model) {
       throw new Error(`Unknown session: ${sessionResource}`);
     }
-    if (this._pendingRequests.has(sessionResource)) {
+    const hasPendingRequest = this._pendingRequests.has(sessionResource);
+    const hasPendingQueue = model.getPendingRequests().length > 0;
+    if (hasPendingRequest) {
+      if (options?.queue) {
+        return this.queuePendingRequest(model, sessionResource, request, options);
+      }
       this.trace("sendRequest", `Session ${sessionResource} already has a pending request`);
-      return;
+      return { kind: "rejected", reason: "Request already in progress" };
+    }
+    if (options?.queue && hasPendingQueue) {
+      const queued = this.queuePendingRequest(model, sessionResource, request, options);
+      this.processNextPendingRequest(model);
+      return queued;
     }
     const requests = model.getRequests();
     for (let i = requests.length - 1; i >= 0; i -= 1) {
@@ -641,9 +675,12 @@ let ChatService = class ChatService2 extends Disposable {
     const agent = silentAgent ?? parsedRequest.parts.find((r) => r instanceof ChatRequestAgentPart)?.agent ?? defaultAgent;
     const agentSlashCommandPart = parsedRequest.parts.find((r) => r instanceof ChatRequestAgentSubcommandPart);
     return {
-      ...this._sendRequestAsync(model, sessionResource, parsedRequest, attempt, !options?.noCommandDetection, silentAgent ?? defaultAgent, location, options),
-      agent,
-      slashCommand: agentSlashCommandPart?.command
+      kind: "sent",
+      data: {
+        ...this._sendRequestAsync(model, sessionResource, parsedRequest, attempt, !options?.noCommandDetection, silentAgent ?? defaultAgent, location, options),
+        agent,
+        slashCommand: agentSlashCommandPart?.command
+      }
     };
   }
   parseChatRequest(sessionResource, request, location, options) {
@@ -716,6 +753,15 @@ let ChatService = class ChatService2 extends Disposable {
       }, "progressCallback");
       let detectedAgent;
       let detectedCommand;
+      let collectedHooks;
+      try {
+        collectedHooks = await this.promptsService.getHooks(token);
+      } catch (error) {
+        this.logService.warn("[ChatService] Failed to collect hooks:", error);
+      }
+      if (collectedHooks) {
+        store.add(this.hooksExecutionService.registerHooks(model.sessionResource, collectedHooks));
+      }
       const stopWatch = new StopWatch(false);
       store.add(token.onCancellationRequested(() => {
         this.trace("sendRequest", `Request for session ${model.sessionResource} was cancelled`);
@@ -769,7 +815,8 @@ let ChatService = class ChatService2 extends Disposable {
               userSelectedModelId: options?.userSelectedModelId,
               userSelectedTools: options?.userSelectedTools?.get(),
               modeInstructions: options?.modeInfo?.modeInstructions,
-              editedFileEvents: request.editedFileEvents
+              editedFileEvents: request.editedFileEvents,
+              hooks: collectedHooks
             };
             let isInitialTools = true;
             store.add(autorun((reader) => {
@@ -860,6 +907,7 @@ let ChatService = class ChatService2 extends Disposable {
           model.setResponse(request, rawResult);
           completeResponseCreated();
           this.trace("sendRequest", `Provider returned response for session ${model.sessionResource}`);
+          shouldProcessPending = !rawResult.errorDetails && !token.isCancellationRequested;
           request.response?.complete();
           if (agentOrCommandFollowups) {
             agentOrCommandFollowups.then((followups) => {
@@ -889,16 +937,60 @@ let ChatService = class ChatService2 extends Disposable {
         store.dispose();
       }
     }, "sendRequestInternal");
+    let shouldProcessPending = false;
     const rawResponsePromise = sendRequestInternal();
     this._pendingRequests.set(model.sessionResource, this.instantiationService.createInstance(CancellableRequest, source, void 0));
     rawResponsePromise.finally(() => {
       this._pendingRequests.deleteAndDispose(model.sessionResource);
+      if (shouldProcessPending) {
+        this.processNextPendingRequest(model);
+      }
     });
     this._onDidSubmitRequest.fire({ chatSessionResource: model.sessionResource });
     return {
       responseCreatedPromise: responseCreated.p,
       responseCompletePromise: rawResponsePromise
     };
+  }
+  processPendingRequests(sessionResource) {
+    const model = this._sessionModels.get(sessionResource);
+    if (model && !this._pendingRequests.has(sessionResource)) {
+      this.processNextPendingRequest(model);
+    }
+  }
+  /**
+   * Process the next pending request from the model's queue, if any.
+   * Called after a request completes to continue processing queued requests.
+   */
+  processNextPendingRequest(model) {
+    const pendingRequest = model.dequeuePendingRequest();
+    if (!pendingRequest) {
+      return;
+    }
+    this.trace("processNextPendingRequest", `Processing queued request for session ${model.sessionResource}`);
+    const deferred = this._queuedRequestDeferreds.get(pendingRequest.request.id);
+    this._queuedRequestDeferreds.delete(pendingRequest.request.id);
+    const sendOptions = pendingRequest.sendOptions;
+    const location = sendOptions.location ?? sendOptions.locationData?.type ?? model.initialLocation;
+    const defaultAgent = this.chatAgentService.getDefaultAgent(location, sendOptions.modeInfo?.kind);
+    if (!defaultAgent) {
+      this.logService.warn("processNextPendingRequest", `No default agent for location ${location}`);
+      deferred?.complete({ kind: "rejected", reason: "No default agent available" });
+      return;
+    }
+    const parsedRequest = pendingRequest.request.message;
+    const silentAgent = sendOptions.agentIdSilent ? this.chatAgentService.getAgent(sendOptions.agentIdSilent) : void 0;
+    const agent = silentAgent ?? parsedRequest.parts.find((r) => r instanceof ChatRequestAgentPart)?.agent ?? defaultAgent;
+    const agentSlashCommandPart = parsedRequest.parts.find((r) => r instanceof ChatRequestAgentSubcommandPart);
+    const responseState = this._sendRequestAsync(model, model.sessionResource, parsedRequest, pendingRequest.request.attempt, !sendOptions.noCommandDetection, silentAgent ?? defaultAgent, location, sendOptions);
+    deferred?.complete({
+      kind: "sent",
+      data: {
+        ...responseState,
+        agent,
+        slashCommand: agentSlashCommandPart?.command
+      }
+    });
   }
   generateInitialChatTitleIfNeeded(model, request, defaultAgent, token) {
     if (model.getRequests().length !== 1 || model.customTitle) {
@@ -1018,6 +1110,29 @@ let ChatService = class ChatService2 extends Disposable {
     this._pendingRequests.get(sessionResource)?.cancel();
     this._pendingRequests.deleteAndDispose(sessionResource);
   }
+  setYieldRequested(sessionResource) {
+    const pendingRequest = this._pendingRequests.get(sessionResource);
+    if (pendingRequest) {
+      pendingRequest.setYieldRequested();
+    }
+  }
+  removePendingRequest(sessionResource, requestId) {
+    const model = this._sessionModels.get(sessionResource);
+    if (model) {
+      model.removePendingRequest(requestId);
+    }
+    const deferred = this._queuedRequestDeferreds.get(requestId);
+    if (deferred) {
+      deferred.complete({ kind: "rejected", reason: "Request was removed from queue" });
+      this._queuedRequestDeferreds.delete(requestId);
+    }
+  }
+  setPendingRequests(sessionResource, requests) {
+    const model = this._sessionModels.get(sessionResource);
+    if (model) {
+      model.setPendingRequests(requests);
+    }
+  }
   hasSessions() {
     return this._chatSessionStore.hasSessions();
   }
@@ -1075,7 +1190,9 @@ ChatService = __decorate([
   __param(7, IConfigurationService),
   __param(8, IChatTransferService),
   __param(9, IChatSessionsService),
-  __param(10, IMcpService)
+  __param(10, IMcpService),
+  __param(11, IPromptsService),
+  __param(12, IHooksExecutionService)
 ], ChatService);
 export {
   ChatService

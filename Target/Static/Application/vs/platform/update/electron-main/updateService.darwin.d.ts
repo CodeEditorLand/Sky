@@ -5,7 +5,7 @@ import { ILogService } from '../../log/common/log.js';
 import { IProductService } from '../../product/common/productService.js';
 import { IRequestService } from '../../request/common/request.js';
 import { ITelemetryService } from '../../telemetry/common/telemetry.js';
-import { AbstractUpdateService } from './abstractUpdateService.js';
+import { AbstractUpdateService, IUpdateURLOptions } from './abstractUpdateService.js';
 export declare class DarwinUpdateService extends AbstractUpdateService implements IRelaunchHandler {
     private readonly telemetryService;
     private readonly disposables;
@@ -17,8 +17,9 @@ export declare class DarwinUpdateService extends AbstractUpdateService implement
     handleRelaunch(options?: IRelaunchOptions): boolean;
     protected initialize(): Promise<void>;
     private onError;
-    protected buildUpdateFeedUrl(quality: string): string | undefined;
-    protected doCheckForUpdates(explicit: boolean): void;
+    protected buildUpdateFeedUrl(quality: string, commit: string, options?: IUpdateURLOptions): string | undefined;
+    checkForUpdates(explicit: boolean): Promise<void>;
+    protected doCheckForUpdates(explicit: boolean, pendingCommit?: string): void;
     private onUpdateAvailable;
     private onUpdateDownloaded;
     private onUpdateNotAvailable;

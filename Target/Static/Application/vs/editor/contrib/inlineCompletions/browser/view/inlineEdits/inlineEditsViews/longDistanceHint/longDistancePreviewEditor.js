@@ -27,6 +27,7 @@ import { InlineCompletionContextKeys } from "../../../../controller/inlineComple
 import { InlineEditsGutterIndicator, InlineEditsGutterIndicatorData } from "../../components/gutterIndicatorView.js";
 import { classNames, maxContentWidthInRange } from "../../utils/utils.js";
 import { JumpToView } from "../jumpToView.js";
+import { TextModelValueReference } from "../../../../model/textModelValueReference.js";
 let LongDistancePreviewEditor = class LongDistancePreviewEditor2 extends Disposable {
   static {
     __name(this, "LongDistancePreviewEditor");
@@ -61,7 +62,7 @@ let LongDistancePreviewEditor = class LongDistancePreviewEditor2 extends Disposa
           visibleRange = LineRange.ofLength(props.diff[0].modified.startLineNumber, 1);
         }
       }
-      const textModel = mode === "original" ? this._parentEditorObs.model.read(reader) : this._previewTextModel;
+      const textModel = mode === "modified" ? TextModelValueReference.snapshot(this._previewTextModel) : props.target;
       return {
         mode,
         visibleLineRange: visibleRange,
@@ -165,7 +166,7 @@ let LongDistancePreviewEditor = class LongDistancePreviewEditor2 extends Disposa
     this._register(autorun((reader) => {
       const tm = this._state.read(reader)?.textModel || null;
       if (tm) {
-        this.previewEditor.setModel(tm);
+        this.previewEditor.setModel(tm.dangerouslyGetUnderlyingModel());
       }
     }));
     this._previewEditorObs = observableCodeEditor(this.previewEditor);

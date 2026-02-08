@@ -60,7 +60,6 @@ let ChatToolStreamingSubPart = class ChatToolStreamingSubPart2 extends BaseChatT
       };
       const part = reader.store.add(this.instantiationService.createInstance(ChatProgressContentPart, progressMessage, this.renderer, this.context, void 0, true, this.getIcon(), toolInvocation));
       dom.reset(container, part.domNode);
-      this._onDidChangeHeight.fire();
     }));
     return container;
   }

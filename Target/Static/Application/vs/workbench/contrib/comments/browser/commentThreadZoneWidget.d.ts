@@ -38,6 +38,7 @@ export declare class ReviewZoneWidget extends ZoneWidget implements ICommentThre
     private _commentThreadWidget;
     private readonly _onDidClose;
     private readonly _onDidCreateThread;
+    private readonly _onDidChangeExpandedState;
     private _isExpanded?;
     private _initialCollapsibleState?;
     private _commentGlyph?;
@@ -54,6 +55,7 @@ export declare class ReviewZoneWidget extends ZoneWidget implements ICommentThre
     } | undefined, instantiationService: IInstantiationService, themeService: IThemeService, commentService: ICommentService, contextKeyService: IContextKeyService, configurationService: IConfigurationService, dialogService: IDialogService);
     get onDidClose(): Event<ReviewZoneWidget | undefined>;
     get onDidCreateThread(): Event<ReviewZoneWidget>;
+    get onDidChangeExpandedState(): Event<boolean>;
     getPosition(): IPosition | undefined;
     protected revealRange(): void;
     reveal(commentUniqueId?: number, focus?: CommentWidgetFocus): void;

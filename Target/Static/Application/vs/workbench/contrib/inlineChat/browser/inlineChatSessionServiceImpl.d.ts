@@ -27,7 +27,7 @@ export declare class InlineChatSessionServiceImpl implements IInlineChatSessionS
     readonly onWillStartSession: Event<IActiveCodeEditor>;
     private readonly _onDidChangeSessions;
     readonly onDidChangeSessions: Event<this>;
-    constructor(_chatService: IChatService);
+    constructor(_chatService: IChatService, chatAgentService: IChatAgentService);
     dispose(): void;
     createSession(editor: IActiveCodeEditor): IInlineChatSession2;
     getSessionByTextModel(uri: URI): IInlineChatSession2 | undefined;

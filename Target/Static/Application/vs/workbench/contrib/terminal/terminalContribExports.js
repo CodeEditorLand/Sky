@@ -21,6 +21,7 @@ var TerminalContribCommandId;
   TerminalContribCommandId2["FocusMostRecentChatTerminal"] = "workbench.action.terminal.chat.focusMostRecentChatTerminal";
   TerminalContribCommandId2["ToggleChatTerminalOutput"] = "workbench.action.terminal.chat.toggleChatTerminalOutput";
   TerminalContribCommandId2["FocusChatInstanceAction"] = "workbench.action.terminal.chat.focusChatInstance";
+  TerminalContribCommandId2["ContinueInBackground"] = "workbench.action.terminal.chat.continueInBackground";
 })(TerminalContribCommandId || (TerminalContribCommandId = {}));
 var TerminalContribSettingId;
 (function(TerminalContribSettingId2) {

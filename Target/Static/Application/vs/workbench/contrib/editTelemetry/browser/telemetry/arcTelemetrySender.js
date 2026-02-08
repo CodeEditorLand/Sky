@@ -62,7 +62,7 @@ let EditTelemetryReportInlineEditArcSender = class EditTelemetryReportInlineEdit
           ...forwardToChannelIf(isCopilotLikeExtension(data.$extensionId))
         });
       }, () => {
-        this._store.deleteAndLeak(reporter);
+        this._store.delete(reporter);
       }));
     }));
   }
@@ -168,7 +168,7 @@ let EditTelemetryReportEditArcForChatOrInlineChatSender = class EditTelemetryRep
           ...forwardToChannelIf(isCopilotLikeExtension(data.props.$extensionId))
         });
       }, () => {
-        this._store.deleteAndLeak(reporter);
+        this._store.delete(reporter);
       }));
     }));
   }

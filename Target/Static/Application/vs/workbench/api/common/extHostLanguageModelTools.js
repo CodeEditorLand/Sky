@@ -3,7 +3,6 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 import { raceCancellation } from "../../../base/common/async.js";
 import { CancellationToken } from "../../../base/common/cancellation.js";
 import { CancellationError } from "../../../base/common/errors.js";
-import { Lazy } from "../../../base/common/lazy.js";
 import { toDisposable } from "../../../base/common/lifecycle.js";
 import { revive } from "../../../base/common/marshalling.js";
 import { generateUuid } from "../../../base/common/uuid.js";
@@ -15,65 +14,45 @@ import { checkProposedApiEnabled, isProposedApiEnabled } from "../../services/ex
 import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
 import { MainContext } from "./extHost.protocol.js";
 import * as typeConvert from "./extHostTypeConverters.js";
+import { URI } from "../../../base/common/uri.js";
 class Tool {
   static {
     __name(this, "Tool");
   }
   constructor(data) {
-    this._apiObject = new Lazy(() => {
-      const that = this;
-      return Object.freeze({
-        get name() {
-          return that._data.id;
-        },
-        get description() {
-          return that._data.modelDescription;
-        },
-        get inputSchema() {
-          return that._data.inputSchema;
-        },
-        get tags() {
-          return that._data.tags ?? [];
-        },
-        get source() {
-          return void 0;
-        }
-      });
-    });
-    this._apiObjectWithChatParticipantAdditions = new Lazy(() => {
-      const that = this;
-      const source = typeConvert.LanguageModelToolSource.to(that._data.source);
-      return Object.freeze({
-        get name() {
-          return that._data.id;
-        },
-        get description() {
-          return that._data.modelDescription;
-        },
-        get inputSchema() {
-          return that._data.inputSchema;
-        },
-        get tags() {
-          return that._data.tags ?? [];
-        },
-        get source() {
-          return source;
-        }
-      });
-    });
     this._data = data;
   }
   update(newData) {
     this._data = newData;
+    this._apiObject = void 0;
+    this._apiObjectWithChatParticipantAdditions = void 0;
   }
   get data() {
     return this._data;
   }
   get apiObject() {
-    return this._apiObject.value;
+    if (!this._apiObject) {
+      this._apiObject = Object.freeze({
+        name: this._data.id,
+        description: this._data.modelDescription,
+        inputSchema: this._data.inputSchema,
+        tags: this._data.tags ?? [],
+        source: void 0
+      });
+    }
+    return this._apiObject;
   }
   get apiObjectWithChatParticipantAdditions() {
-    return this._apiObjectWithChatParticipantAdditions.value;
+    if (!this._apiObjectWithChatParticipantAdditions) {
+      this._apiObjectWithChatParticipantAdditions = Object.freeze({
+        name: this._data.id,
+        description: this._data.modelDescription,
+        inputSchema: this._data.inputSchema,
+        tags: this._data.tags ?? [],
+        source: typeConvert.LanguageModelToolSource.to(this._data.source)
+      });
+    }
+    return this._apiObjectWithChatParticipantAdditions;
   }
 }
 class ExtHostLanguageModelTools {
@@ -99,7 +78,8 @@ class ExtHostLanguageModelTools {
     }
     return await fn(input, token);
   }
-  async invokeTool(extension, toolId, options, token) {
+  async invokeTool(extension, toolIdOrInfo, options, token) {
+    const toolId = typeof toolIdOrInfo === "string" ? toolIdOrInfo : toolIdOrInfo.name;
     const callId = generateUuid();
     if (options.tokenizationOptions) {
       this._tokenCountFuncs.set(callId, options.tokenizationOptions.countTokens);
@@ -129,7 +109,7 @@ class ExtHostLanguageModelTools {
     }
   }
   $onDidChangeTools(tools) {
-    const oldTools = new Set(this._registeredTools.keys());
+    const oldTools = new Set(this._allTools.keys());
     for (const tool of tools) {
       oldTools.delete(tool.id);
       const existing = this._allTools.get(tool.id);
@@ -170,6 +150,7 @@ class ExtHostLanguageModelTools {
       options.chatRequestId = dto.chatRequestId;
       options.chatInteractionId = dto.chatInteractionId;
       options.chatSessionId = dto.context?.sessionId;
+      options.chatSessionResource = URI.revive(dto.context?.sessionResource);
       options.subAgentInvocationId = dto.subAgentInvocationId;
     }
     if (isProposedApiEnabled(item.extension, "chatParticipantAdditions") && dto.modelId) {
@@ -231,6 +212,7 @@ class ExtHostLanguageModelTools {
       rawInput: context.rawInput,
       chatRequestId: context.chatRequestId,
       chatSessionId: context.chatSessionId,
+      chatSessionResource: context.chatSessionResource,
       chatInteractionId: context.chatInteractionId
     };
     const result = await item.tool.handleToolStream(options, token);
@@ -250,6 +232,7 @@ class ExtHostLanguageModelTools {
       input: context.parameters,
       chatRequestId: context.chatRequestId,
       chatSessionId: context.chatSessionId,
+      chatSessionResource: context.chatSessionResource,
       chatInteractionId: context.chatInteractionId
     };
     if (item.tool.prepareInvocation) {
@@ -275,6 +258,32 @@ class ExtHostLanguageModelTools {
   registerTool(extension, id, tool) {
     this._registeredTools.set(id, { extension, tool });
     this._proxy.$registerTool(id, typeof tool.handleToolStream === "function");
+    return toDisposable(() => {
+      this._registeredTools.delete(id);
+      this._proxy.$unregisterTool(id);
+    });
+  }
+  registerToolDefinition(extension, definition, tool) {
+    checkProposedApiEnabled(extension, "languageModelToolSupportsModel");
+    const id = definition.name;
+    const dto = {
+      id,
+      displayName: definition.displayName,
+      toolReferenceName: definition.toolReferenceName,
+      userDescription: definition.userDescription,
+      modelDescription: definition.description,
+      inputSchema: definition.inputSchema,
+      source: {
+        type: "extension",
+        label: extension.displayName ?? extension.name,
+        extensionId: extension.identifier
+      },
+      icon: typeConvert.IconPath.from(definition.icon),
+      models: definition.models,
+      toolSet: definition.toolSet
+    };
+    this._registeredTools.set(id, { extension, tool });
+    this._proxy.$registerToolWithDefinition(extension.identifier, dto, typeof tool.handleToolStream === "function");
     return toDisposable(() => {
       this._registeredTools.delete(id);
       this._proxy.$unregisterTool(id);

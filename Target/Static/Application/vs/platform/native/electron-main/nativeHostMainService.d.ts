@@ -10,7 +10,7 @@ import { IEnvironmentMainService } from '../../environment/electron-main/environ
 import { IInstantiationService } from '../../instantiation/common/instantiation.js';
 import { ILifecycleMainService, IRelaunchOptions } from '../../lifecycle/electron-main/lifecycleMainService.js';
 import { ILogService } from '../../log/common/log.js';
-import { FocusMode, ICommonNativeHostService, INativeHostOptions, IOSProperties, IOSStatistics } from '../common/native.js';
+import { FocusMode, ICommonNativeHostService, INativeHostOptions, IOSProperties, IOSStatistics, IToastOptions, IToastResult } from '../common/native.js';
 import { IProductService } from '../../product/common/productService.js';
 import { IPartsSplash } from '../../theme/common/themeService.js';
 import { IThemeMainService } from '../../theme/electron-main/themeMainService.js';
@@ -185,6 +185,10 @@ export declare class NativeHostMainService extends Disposable implements INative
     openContentTracingWindow(): Promise<void>;
     stopTracing(windowId: number | undefined): Promise<void>;
     profileRenderer(windowId: number | undefined, session: string, duration: number): Promise<IV8Profile>;
+    private readonly activeToasts;
+    showToast(windowId: number | undefined, options: IToastOptions): Promise<IToastResult>;
+    clearToast(windowId: number | undefined, toastId: string): Promise<void>;
+    clearToasts(): Promise<void>;
     windowsGetStringRegKey(windowId: number | undefined, hive: 'HKEY_CURRENT_USER' | 'HKEY_LOCAL_MACHINE' | 'HKEY_CLASSES_ROOT' | 'HKEY_USERS' | 'HKEY_CURRENT_CONFIG', path: string, name: string): Promise<string | undefined>;
     createZipFile(windowId: number | undefined, zipPath: URI, files: {
         path: string;

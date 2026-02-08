@@ -1192,6 +1192,13 @@ class ListView {
   }
   probeDynamicHeight(index) {
     const item = this.items[index];
+    const diff = this.probeDynamicHeightForItem(item, index);
+    if (diff > 0) {
+      this.virtualDelegate.setDynamicHeight?.(item.element, item.size);
+    }
+    return diff;
+  }
+  probeDynamicHeightForItem(item, index) {
     if (!!this.virtualDelegate.getDynamicHeight) {
       const newSize = this.virtualDelegate.getDynamicHeight(item.element);
       if (newSize !== null) {
@@ -1231,7 +1238,6 @@ class ListView {
     renderer.renderElement(item.element, index, row.templateData);
     item.size = row.domNode.offsetHeight;
     renderer.disposeElement?.(item.element, index, row.templateData);
-    this.virtualDelegate.setDynamicHeight?.(item.element, item.size);
     item.lastDynamicHeightWidth = this.renderWidth;
     row.domNode.remove();
     this.cache.release(row);

@@ -49,7 +49,7 @@ export declare class ChatToolInvocation implements IChatToolInvocation {
      */
     transitionFromStreaming(preparedInvocation: IPreparedToolInvocation | undefined, parameters: unknown, autoConfirmed: ConfirmedReason | undefined): void;
     private _setCompleted;
-    didExecuteTool(result: IToolResult | undefined, final?: boolean): IChatToolInvocation.State;
+    didExecuteTool(result: IToolResult | undefined, final?: boolean, checkIfResultAutoApproved?: () => Promise<ConfirmedReason | undefined>): Promise<IChatToolInvocation.State>;
     acceptProgress(step: IToolProgressStep): void;
     toJSON(): IChatToolInvocationSerialized;
 }

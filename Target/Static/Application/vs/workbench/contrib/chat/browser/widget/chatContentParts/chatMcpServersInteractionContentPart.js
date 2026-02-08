@@ -14,7 +14,6 @@ var __param = function(paramIndex, decorator) {
 import * as dom from "../../../../../../base/browser/dom.js";
 import { RunOnceScheduler } from "../../../../../../base/common/async.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { escapeMarkdownSyntaxTokens, createMarkdownCommandLink, MarkdownString } from "../../../../../../base/common/htmlContent.js";
 import { Lazy } from "../../../../../../base/common/lazy.js";
 import { Disposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
@@ -41,8 +40,6 @@ let ChatMcpServersInteractionContentPart = class ChatMcpServersInteractionConten
     this.instantiationService = instantiationService;
     this._openerService = _openerService;
     this._markdownRendererService = _markdownRendererService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this.interactionMd = this._register(new MutableDisposable());
     this.showSpecificServersScheduler = this._register(new RunOnceScheduler(() => this.updateDetailedProgress(this.data.state.get()), 2500));
     this.previousParts = new Lazy(() => {
@@ -90,7 +87,6 @@ let ChatMcpServersInteractionContentPart = class ChatMcpServersInteractionConten
       this.interactionContainer.remove();
       this.interactionContainer = void 0;
     }
-    this._onDidChangeHeight.fire();
   }
   createServerCommandLinks(servers) {
     return servers.map((s) => createMarkdownCommandLink({
@@ -129,7 +125,6 @@ let ChatMcpServersInteractionContentPart = class ChatMcpServersInteractionConten
       ));
       this.domNode.appendChild(this.workingProgressPart.domNode);
     }
-    this._onDidChangeHeight.fire();
   }
   renderInteractionRequired(serversRequiringInteraction) {
     this.interactionContainer = dom.$(".chat-mcp-servers-interaction-hint");
@@ -152,7 +147,6 @@ let ChatMcpServersInteractionContentPart = class ChatMcpServersInteractionConten
     const content = count === 1 ? localize("mcp.start.single", "The MCP server {0} may have new tools and requires interaction to start. [Start it now?]({1})", links, "#start") : localize("mcp.start.multiple", "The MCP servers {0} may have new tools and require interaction to start. [Start them now?]({1})", links, "#start");
     const str = new MarkdownString(content, { isTrusted: true });
     const messageMd = this.interactionMd.value = this._markdownRendererService.render(str, {
-      asyncRenderCallback: /* @__PURE__ */ __name(() => this._onDidChangeHeight.fire(), "asyncRenderCallback"),
       actionHandler: /* @__PURE__ */ __name((content2) => {
         if (!content2.startsWith("command:")) {
           this._start(startLink);
@@ -181,7 +175,6 @@ let ChatMcpServersInteractionContentPart = class ChatMcpServersInteractionConten
       for (let i = 0; i < serversToStart.length; i++) {
         const serverInfo = serversToStart[i];
         startLink.textContent = localize("mcp.starting", "Starting {0}...", serverInfo.label);
-        this._onDidChangeHeight.fire();
         const server = this.mcpService.servers.get().find((s) => s.definition.id === serverInfo.id);
         if (server) {
           await startServerAndWaitForLiveTools(server, { promptType: "all-untrusted" });
@@ -197,8 +190,6 @@ let ChatMcpServersInteractionContentPart = class ChatMcpServersInteractionConten
       startLink.style.pointerEvents = "";
       startLink.style.opacity = "";
       startLink.textContent = "Start now?";
-    } finally {
-      this._onDidChangeHeight.fire();
     }
   }
   hasSameContent(other) {

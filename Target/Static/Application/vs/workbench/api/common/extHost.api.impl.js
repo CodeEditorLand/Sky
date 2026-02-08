@@ -58,6 +58,7 @@ import { IExtHostConsumerFileSystem } from "./extHostFileSystemConsumer.js";
 import { ExtHostFileSystemEventService } from "./extHostFileSystemEventService.js";
 import { IExtHostFileSystemInfo } from "./extHostFileSystemInfo.js";
 import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { IExtHostHooks } from "./extHostHooks.js";
 import { ExtHostInteractive } from "./extHostInteractive.js";
 import { ExtHostLabelService } from "./extHostLabelService.js";
 import { ExtHostLanguageFeatures } from "./extHostLanguageFeatures.js";
@@ -208,6 +209,7 @@ function createApiFactoryAndRegisterActors(accessor) {
   const extHostSpeech = rpcProtocol.set(ExtHostContext.ExtHostSpeech, new ExtHostSpeech(rpcProtocol));
   const extHostEmbeddings = rpcProtocol.set(ExtHostContext.ExtHostEmbeddings, new ExtHostEmbeddings(rpcProtocol));
   rpcProtocol.set(ExtHostContext.ExtHostMcp, accessor.get(IExtHostMpcService));
+  rpcProtocol.set(ExtHostContext.ExtHostHooks, accessor.get(IExtHostHooks));
   const expected = Object.values(ExtHostContext);
   rpcProtocol.assertRegistered(expected);
   const extHostBulkEdits = new ExtHostBulkEdits(rpcProtocol, extHostDocumentsAndEditors);
@@ -215,6 +217,7 @@ function createApiFactoryAndRegisterActors(accessor) {
   const extHostMessageService = new ExtHostMessageService(rpcProtocol, extHostLogService);
   const extHostDialogs = new ExtHostDialogs(rpcProtocol);
   const extHostChatStatus = new ExtHostChatStatus(rpcProtocol);
+  const extHostHooks = accessor.get(IExtHostHooks);
   ExtHostApiCommands.register(extHostCommands);
   return function(extension, extensionInfo, configProvider) {
     function _asExtensionEvent(actual) {
@@ -333,6 +336,10 @@ function createApiFactoryAndRegisterActors(accessor) {
       get devDeviceId() {
         checkProposedApiEnabled(extension, "devDeviceId");
         return initData.telemetryInfo.devDeviceId ?? initData.telemetryInfo.machineId;
+      },
+      get isAppPortable() {
+        checkProposedApiEnabled(extension, "envIsAppPortable");
+        return initData.environment.isPortable ?? false;
       },
       get sessionId() {
         return initData.telemetryInfo.sessionId;
@@ -932,6 +939,10 @@ function createApiFactoryAndRegisterActors(accessor) {
       set workspaceFile(value) {
         throw new errors.ReadonlyError("workspaceFile");
       },
+      get isAgentSessionsWorkspace() {
+        checkProposedApiEnabled(extension, "agentSessionsWorkspace");
+        return extHostWorkspace.isAgentSessionsWorkspace;
+      },
       updateWorkspaceFolders: /* @__PURE__ */ __name((index, deleteCount, ...workspaceFoldersToAdd) => {
         return extHostWorkspace.updateWorkspaceFolders(extension, index, deleteCount || 0, ...workspaceFoldersToAdd);
       }, "updateWorkspaceFolders"),
@@ -1169,10 +1180,22 @@ function createApiFactoryAndRegisterActors(accessor) {
       get isTrusted() {
         return extHostWorkspace.trusted;
       },
+      requestResourceTrust: /* @__PURE__ */ __name((options) => {
+        checkProposedApiEnabled(extension, "workspaceTrust");
+        return extHostWorkspace.requestResourceTrust(options);
+      }, "requestResourceTrust"),
       requestWorkspaceTrust: /* @__PURE__ */ __name((options) => {
         checkProposedApiEnabled(extension, "workspaceTrust");
         return extHostWorkspace.requestWorkspaceTrust(options);
       }, "requestWorkspaceTrust"),
+      isResourceTrusted: /* @__PURE__ */ __name((resource) => {
+        checkProposedApiEnabled(extension, "workspaceTrust");
+        return extHostWorkspace.isResourceTrusted(resource);
+      }, "isResourceTrusted"),
+      onDidChangeWorkspaceTrustedFolders: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        checkProposedApiEnabled(extension, "workspaceTrust");
+        return _asExtensionEvent(extHostWorkspace.onDidChangeWorkspaceTrustedFolders)(listener, thisArgs, disposables);
+      }, "onDidChangeWorkspaceTrustedFolders"),
       onDidGrantWorkspaceTrust: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
         return _asExtensionEvent(extHostWorkspace.onDidGrantWorkspaceTrust)(listener, thisArgs, disposables);
       }, "onDidGrantWorkspaceTrust"),
@@ -1409,10 +1432,6 @@ function createApiFactoryAndRegisterActors(accessor) {
         checkProposedApiEnabled(extension, "chatParticipantPrivate");
         return extHostChatAgents2.registerChatParticipantDetectionProvider(extension, provider);
       },
-      registerRelatedFilesProvider(provider, metadata) {
-        checkProposedApiEnabled(extension, "chatEditing");
-        return extHostChatAgents2.registerRelatedFilesProvider(extension, provider, metadata);
-      },
       onDidDisposeChatSession: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
         checkProposedApiEnabled(extension, "chatParticipantPrivate");
         return _asExtensionEvent(extHostChatAgents2.onDidDisposeChatSession)(listeners, thisArgs, disposables);
@@ -1433,6 +1452,19 @@ function createApiFactoryAndRegisterActors(accessor) {
         checkProposedApiEnabled(extension, "chatOutputRenderer");
         return extHostChatOutputRenderer.registerChatOutputRenderer(extension, viewType, renderer);
       }, "registerChatOutputRenderer"),
+      registerChatWorkspaceContextProvider(id, provider) {
+        checkProposedApiEnabled(extension, "chatContextProvider");
+        return extHostChatContext.registerChatWorkspaceContextProvider(`${extension.id}-${id}`, provider);
+      },
+      registerChatExplicitContextProvider(id, provider) {
+        checkProposedApiEnabled(extension, "chatContextProvider");
+        return extHostChatContext.registerChatExplicitContextProvider(`${extension.id}-${id}`, provider);
+      },
+      registerChatResourceContextProvider(selector, id, provider) {
+        checkProposedApiEnabled(extension, "chatContextProvider");
+        return extHostChatContext.registerChatResourceContextProvider(checkSelector(selector), `${extension.id}-${id}`, provider);
+      },
+      /** @deprecated Use registerChatWorkspaceContextProvider, registerChatExplicitContextProvider, or registerChatResourceContextProvider instead. */
       registerChatContextProvider(selector, id, provider) {
         checkProposedApiEnabled(extension, "chatContextProvider");
         return extHostChatContext.registerChatContextProvider(selector ? checkSelector(selector) : void 0, `${extension.id}-${id}`, provider);
@@ -1452,6 +1484,10 @@ function createApiFactoryAndRegisterActors(accessor) {
       registerSkillProvider(provider) {
         checkProposedApiEnabled(extension, "chatPromptFiles");
         return extHostChatAgents2.registerPromptFileProvider(extension, PromptsType.skill, provider);
+      },
+      async executeHook(hookType, options, token) {
+        checkProposedApiEnabled(extension, "chatHooks");
+        return extHostHooks.executeHook(hookType, options, token);
       }
     };
     const lm = {
@@ -1504,8 +1540,14 @@ function createApiFactoryAndRegisterActors(accessor) {
       registerTool(name, tool) {
         return extHostLanguageModelTools.registerTool(extension, name, tool);
       },
-      invokeTool(name, parameters, token) {
-        return extHostLanguageModelTools.invokeTool(extension, name, parameters, token);
+      registerToolDefinition(definition, tool) {
+        return extHostLanguageModelTools.registerToolDefinition(extension, definition, tool);
+      },
+      invokeTool(nameOrInfo, parameters, token) {
+        if (typeof nameOrInfo !== "string") {
+          checkProposedApiEnabled(extension, "chatParticipantAdditions");
+        }
+        return extHostLanguageModelTools.invokeTool(extension, nameOrInfo, parameters, token);
       },
       get tools() {
         return extHostLanguageModelTools.getTools(extension);
@@ -1518,6 +1560,14 @@ function createApiFactoryAndRegisterActors(accessor) {
       },
       registerMcpServerDefinitionProvider(id, provider) {
         return extHostMcp.registerMcpConfigurationProvider(extension, id, provider);
+      },
+      onDidChangeMcpServerDefinitions: /* @__PURE__ */ __name((...args) => {
+        checkProposedApiEnabled(extension, "mcpServerDefinitions");
+        return _asExtensionEvent(extHostMcp.onDidChangeMcpServerDefinitions)(...args);
+      }, "onDidChangeMcpServerDefinitions"),
+      get mcpServerDefinitions() {
+        checkProposedApiEnabled(extension, "mcpServerDefinitions");
+        return extHostMcp.mcpServerDefinitions;
       },
       onDidChangeChatRequestTools(...args) {
         checkProposedApiEnabled(extension, "chatParticipantAdditions");
@@ -1767,6 +1817,7 @@ function createApiFactoryAndRegisterActors(accessor) {
       InteractiveSessionVoteDirection: extHostTypes.InteractiveSessionVoteDirection,
       ChatCopyKind: extHostTypes.ChatCopyKind,
       ChatSessionChangedFile: extHostTypes.ChatSessionChangedFile,
+      ChatSessionChangedFile2: extHostTypes.ChatSessionChangedFile2,
       ChatEditingSessionActionOutcome: extHostTypes.ChatEditingSessionActionOutcome,
       InteractiveEditorResponseFeedbackKind: extHostTypes.InteractiveEditorResponseFeedbackKind,
       DebugStackFrame: extHostTypes.DebugStackFrame,
@@ -1792,9 +1843,13 @@ function createApiFactoryAndRegisterActors(accessor) {
       ChatResponseWarningPart: extHostTypes.ChatResponseWarningPart,
       ChatResponseTextEditPart: extHostTypes.ChatResponseTextEditPart,
       ChatResponseNotebookEditPart: extHostTypes.ChatResponseNotebookEditPart,
+      ChatResponseWorkspaceEditPart: extHostTypes.ChatResponseWorkspaceEditPart,
       ChatResponseMarkdownWithVulnerabilitiesPart: extHostTypes.ChatResponseMarkdownWithVulnerabilitiesPart,
       ChatResponseCommandButtonPart: extHostTypes.ChatResponseCommandButtonPart,
       ChatResponseConfirmationPart: extHostTypes.ChatResponseConfirmationPart,
+      ChatQuestion: extHostTypes.ChatQuestion,
+      ChatQuestionType: extHostTypes.ChatQuestionType,
+      ChatResponseQuestionCarouselPart: extHostTypes.ChatResponseQuestionCarouselPart,
       ChatResponseMovePart: extHostTypes.ChatResponseMovePart,
       ChatResponseExtensionsPart: extHostTypes.ChatResponseExtensionsPart,
       ChatResponseExternalEditPart: extHostTypes.ChatResponseExternalEditPart,
@@ -1849,11 +1904,10 @@ function createApiFactoryAndRegisterActors(accessor) {
       McpStdioServerDefinition: extHostTypes.McpStdioServerDefinition,
       McpStdioServerDefinition2: extHostTypes.McpStdioServerDefinition,
       McpToolAvailability: extHostTypes.McpToolAvailability,
+      McpToolInvocationContentData: extHostTypes.McpToolInvocationContentData,
       SettingsSearchResultKind: extHostTypes.SettingsSearchResultKind,
-      CustomAgentChatResource: extHostTypes.CustomAgentChatResource,
-      InstructionsChatResource: extHostTypes.InstructionsChatResource,
-      PromptFileChatResource: extHostTypes.PromptFileChatResource,
-      SkillChatResource: extHostTypes.SkillChatResource
+      ChatHookResultKind: extHostTypes.ChatHookResultKind,
+      ChatTodoStatus: extHostTypes.ChatTodoStatus
     };
   };
 }

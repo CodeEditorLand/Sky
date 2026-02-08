@@ -11,7 +11,6 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-import { Emitter } from "../../../../../../base/common/event.js";
 import { isMarkdownString, MarkdownString } from "../../../../../../base/common/htmlContent.js";
 import { Disposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
 import { autorun } from "../../../../../../base/common/observable.js";
@@ -39,8 +38,6 @@ let ChatElicitationContentPart = class ChatElicitationContentPart2 extends Dispo
     this.chatAccessibilityService = chatAccessibilityService;
     this.contextKeyService = contextKeyService;
     this.keybindingService = keybindingService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     const buttons = [];
     if (elicitation.kind === "elicitation2") {
       const acceptTooltip = this.keybindingService.appendKeybinding(elicitation.acceptButtonLabel, AcceptElicitationRequestActionId);
@@ -84,7 +81,6 @@ let ChatElicitationContentPart = class ChatElicitationContentPart2 extends Dispo
       elicitation.kind === "elicitation2" && elicitation.state.get() === "pending"
       /* ElicitationState.Pending */
     );
-    this._register(confirmationWidget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
     this._register(confirmationWidget.onDidClick(async (e) => {
       if (elicitation.kind !== "elicitation2") {
         return;
@@ -104,7 +100,6 @@ let ChatElicitationContentPart = class ChatElicitationContentPart2 extends Dispo
       }
       confirmationWidget.setShowButtons(false);
       confirmationWidget.updateMessage(this.getMessageToRender(elicitation));
-      this._onDidChangeHeight.fire();
     }));
     this.domNode = confirmationWidget.domNode;
     this.domNode.tabIndex = 0;

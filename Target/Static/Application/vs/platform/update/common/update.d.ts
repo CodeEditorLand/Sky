@@ -15,13 +15,16 @@ export interface IUpdate {
  *          ↓  ↑
  *   Checking for Updates  →  Available for Download
  *         ↓
- *     Downloading  →   Ready
- *         ↓               ↑
- *     Downloaded   →  Updating
+ *                     ←   Overwriting
+ *     Downloading              ↑
+ *                     →      Ready
+ *         ↓                    ↑
+ *     Downloaded      →     Updating
  *
  * Available: There is an update available for download (linux).
  * Ready: Code will be updated as soon as it restarts (win32, darwin).
  * Downloaded: There is an update ready to be installed in the background (win32).
+ * Overwriting: A newer update is being downloaded to replace the pending update (darwin).
  */
 export declare const enum StateType {
     Uninitialized = "uninitialized",
@@ -32,7 +35,8 @@ export declare const enum StateType {
     Downloading = "downloading",
     Downloaded = "downloaded",
     Updating = "updating",
-    Ready = "ready"
+    Ready = "ready",
+    Overwriting = "overwriting"
 }
 export declare const enum UpdateType {
     Setup = 0,
@@ -69,10 +73,18 @@ export type AvailableForDownload = {
 };
 export type Downloading = {
     type: StateType.Downloading;
+    update?: IUpdate;
+    explicit: boolean;
+    overwrite: boolean;
+    downloadedBytes?: number;
+    totalBytes?: number;
+    startTime?: number;
 };
 export type Downloaded = {
     type: StateType.Downloaded;
     update: IUpdate;
+    explicit: boolean;
+    overwrite: boolean;
 };
 export type Updating = {
     type: StateType.Updating;
@@ -81,18 +93,26 @@ export type Updating = {
 export type Ready = {
     type: StateType.Ready;
     update: IUpdate;
+    explicit: boolean;
+    overwrite: boolean;
 };
-export type State = Uninitialized | Disabled | Idle | CheckingForUpdates | AvailableForDownload | Downloading | Downloaded | Updating | Ready;
+export type Overwriting = {
+    type: StateType.Overwriting;
+    update: IUpdate;
+    explicit: boolean;
+};
+export type State = Uninitialized | Disabled | Idle | CheckingForUpdates | AvailableForDownload | Downloading | Downloaded | Updating | Ready | Overwriting;
 export declare const State: {
     Uninitialized: Uninitialized;
     Disabled: (reason: DisablementReason) => Disabled;
     Idle: (updateType: UpdateType, error?: string) => Idle;
     CheckingForUpdates: (explicit: boolean) => CheckingForUpdates;
     AvailableForDownload: (update: IUpdate) => AvailableForDownload;
-    Downloading: Downloading;
-    Downloaded: (update: IUpdate) => Downloaded;
+    Downloading: (update: IUpdate | undefined, explicit: boolean, overwrite: boolean, downloadedBytes?: number, totalBytes?: number, startTime?: number) => Downloading;
+    Downloaded: (update: IUpdate, explicit: boolean, overwrite: boolean) => Downloaded;
     Updating: (update: IUpdate) => Updating;
-    Ready: (update: IUpdate) => Ready;
+    Ready: (update: IUpdate, explicit: boolean, overwrite: boolean) => Ready;
+    Overwriting: (update: IUpdate, explicit: boolean) => Overwriting;
 };
 export interface IAutoUpdater extends Event.NodeEventEmitter {
     setFeedURL(url: string): void;
@@ -111,4 +131,5 @@ export interface IUpdateService {
     quitAndInstall(): Promise<void>;
     isLatestVersion(): Promise<boolean | undefined>;
     _applySpecificUpdate(packagePath: string): Promise<void>;
+    disableProgressiveReleases(): Promise<void>;
 }

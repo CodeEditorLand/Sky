@@ -15,11 +15,8 @@ import { distinct } from "../../../../../base/common/arrays.js";
 import { or, matchesCamelCase, matchesWords, matchesBaseContiguousSubString } from "../../../../../base/common/filters.js";
 import { Emitter } from "../../../../../base/common/event.js";
 import { ILanguageModelsService } from "../../../chat/common/languageModels.js";
-import { IChatEntitlementService } from "../../../../services/chat/common/chatEntitlementService.js";
 import { localize } from "../../../../../nls.js";
 import { Disposable } from "../../../../../base/common/lifecycle.js";
-import { ILanguageModelsConfigurationService } from "../../common/languageModelsConfiguration.js";
-import { Throttler } from "../../../../../base/common/async.js";
 const MODEL_ENTRY_TEMPLATE_ID = "model.entry.template";
 const VENDOR_ENTRY_TEMPLATE_ID = "vendor.entry.template";
 const GROUP_ENTRY_TEMPLATE_ID = "group.entry.template";
@@ -76,11 +73,9 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
       this._onDidChangeGrouping.fire(groupBy);
     }
   }
-  constructor(languageModelsService, languageModelsConfigurationService, chatEntitlementService) {
+  constructor(languageModelsService) {
     super();
     this.languageModelsService = languageModelsService;
-    this.languageModelsConfigurationService = languageModelsConfigurationService;
-    this.chatEntitlementService = chatEntitlementService;
     this._onDidChange = this._register(new Emitter());
     this.onDidChange = this._onDidChange.event;
     this._onDidChangeGrouping = this._register(new Emitter());
@@ -91,11 +86,9 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
     this.searchValue = "";
     this.modelsSorted = false;
     this._groupBy = "vendor";
-    this.refreshThrottler = this._register(new Throttler());
     this._viewModelEntries = [];
     this.languageModels = [];
-    this._register(this.chatEntitlementService.onDidChangeEntitlement(() => this.refresh()));
-    this._register(this.languageModelsConfigurationService.onDidChangeLanguageModelGroups(() => this.refresh()));
+    this._register(this.languageModelsService.onDidChangeLanguageModels((vendor) => this.refreshVendor(vendor)));
   }
   get viewModelEntries() {
     return this._viewModelEntries;
@@ -112,13 +105,13 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
   }
   filter(searchValue) {
     if (searchValue !== this.searchValue) {
+      this.searchValue = searchValue;
       this.collapsedGroups.clear();
+      if (!this.modelsSorted) {
+        this.languageModelGroups = this.groupModels(this.languageModels);
+      }
+      this.doFilter();
     }
-    this.searchValue = searchValue;
-    if (!this.modelsSorted) {
-      this.languageModelGroups = this.groupModels(this.languageModels);
-    }
-    this.doFilter();
     return this.viewModelEntries;
   }
   doFilter() {
@@ -188,7 +181,7 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
     const lowerProviders = providerNames.map((p) => p.toLowerCase().trim());
     for (const modelEntry of modelEntries) {
       if (visible !== void 0) {
-        if ((modelEntry.metadata.isUserSelectable ?? false) !== visible) {
+        if (modelEntry.visible !== visible) {
           continue;
         }
       }
@@ -278,7 +271,7 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
     if (this.groupBy === "visibility") {
       const visible = [], hidden = [];
       for (const model of languageModels) {
-        if (model.metadata.isUserSelectable) {
+        if (model.visible) {
           visible.push(model);
         } else {
           hidden.push(model);
@@ -334,10 +327,10 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
         };
       }
       result.sort((a, b) => {
-        if (a.models[0]?.provider.vendor.vendor === "copilot") {
+        if (a.models[0]?.provider.vendor.isDefault) {
           return -1;
         }
-        if (b.models[0]?.provider.vendor.vendor === "copilot") {
+        if (b.models[0]?.provider.vendor.isDefault) {
           return 1;
         }
         return a.group.label.localeCompare(b.group.label);
@@ -345,13 +338,13 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
     }
     for (const group of result) {
       group.models.sort((a, b) => {
-        if (a.provider.vendor.vendor === "copilot" && b.provider.vendor.vendor === "copilot") {
+        if (a.provider.vendor.isDefault && b.provider.vendor.isDefault) {
           return a.metadata.name.localeCompare(b.metadata.name);
         }
-        if (a.provider.vendor.vendor === "copilot") {
+        if (a.provider.vendor.isDefault) {
           return -1;
         }
-        if (b.provider.vendor.vendor === "copilot") {
+        if (b.provider.vendor.isDefault) {
           return 1;
         }
         if (a.provider.group.name === b.provider.group.name) {
@@ -379,78 +372,118 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
   }
   getVendors() {
     return [...this.languageModelsService.getVendors()].sort((a, b) => {
-      if (a.vendor === "copilot") {
+      if (a.isDefault) {
         return -1;
       }
-      if (b.vendor === "copilot") {
+      if (b.isDefault) {
         return 1;
       }
       return a.displayName.localeCompare(b.displayName);
     });
   }
-  refresh() {
-    return this.refreshThrottler.queue(() => this.doRefresh());
+  async refresh() {
+    await this.languageModelsService.selectLanguageModels({});
+    await this.refreshAllVendors();
   }
-  async doRefresh() {
+  async refreshAllVendors() {
     this.languageModels = [];
     this.languageModelGroupStatuses = [];
     for (const vendor of this.getVendors()) {
-      const models = [];
-      const languageModelsGroups = await this.languageModelsService.fetchLanguageModelGroups(vendor.vendor);
-      for (const group of languageModelsGroups) {
-        const provider = {
-          group: group.group ?? {
-            vendor: vendor.vendor,
-            name: vendor.displayName
-          },
-          vendor
-        };
-        if (group.status) {
-          this.languageModelGroupStatuses.push({
-            provider,
-            status: {
-              message: group.status.message,
-              severity: group.status.severity
-            }
-          });
-        }
-        for (const identifier of group.modelIdentifiers) {
-          const metadata = this.languageModelsService.lookupLanguageModel(identifier);
-          if (!metadata) {
-            continue;
-          }
-          if (vendor.vendor === "copilot" && metadata.id === "auto") {
-            continue;
-          }
-          models.push({
-            identifier,
-            metadata,
-            provider
-          });
-        }
-      }
-      this.languageModels.push(...models.sort((a, b) => a.metadata.name.localeCompare(b.metadata.name)));
-      this.languageModelGroups = this.groupModels(this.languageModels);
-      this.doFilter();
+      this.addVendorModels(vendor);
     }
+    this.languageModelGroups = this.groupModels(this.languageModels);
+    this.doFilter();
+  }
+  refreshVendor(vendorId) {
+    const vendor = this.getVendors().find((v) => v.vendor === vendorId);
+    if (!vendor) {
+      return;
+    }
+    this.languageModels = this.languageModels.filter((m) => m.provider.vendor.vendor !== vendorId);
+    this.languageModelGroupStatuses = this.languageModelGroupStatuses.filter((s) => s.provider.vendor.vendor !== vendorId);
+    this.addVendorModels(vendor);
+    this.languageModelGroups = this.groupModels(this.languageModels);
+    this.doFilter();
+  }
+  addVendorModels(vendor) {
+    const models = [];
+    const languageModelsGroups = this.languageModelsService.getLanguageModelGroups(vendor.vendor);
+    for (const group of languageModelsGroups) {
+      const provider = {
+        group: group.group ?? {
+          vendor: vendor.vendor,
+          name: vendor.displayName
+        },
+        vendor
+      };
+      if (group.status) {
+        this.languageModelGroupStatuses.push({
+          provider,
+          status: {
+            message: group.status.message,
+            severity: group.status.severity
+          }
+        });
+      }
+      for (const identifier of group.modelIdentifiers) {
+        const metadata = this.languageModelsService.lookupLanguageModel(identifier);
+        if (!metadata) {
+          continue;
+        }
+        if (vendor.isDefault && metadata.id === "auto") {
+          continue;
+        }
+        models.push({
+          identifier,
+          metadata,
+          provider,
+          visible: metadata.isUserSelectable ?? false
+        });
+      }
+    }
+    this.languageModels.push(...models.sort((a, b) => a.metadata.name.localeCompare(b.metadata.name)));
   }
   toggleVisibility(model) {
-    const isVisible = model.model.metadata.isUserSelectable ?? false;
-    const newVisibility = !isVisible;
+    const newVisibility = !model.model.visible;
     this.languageModelsService.updateModelPickerPreference(model.model.identifier, newVisibility);
     const metadata = this.languageModelsService.lookupLanguageModel(model.model.identifier);
     const index = this.viewModelEntries.indexOf(model);
     if (metadata && index !== -1) {
-      model.id = this.getModelId(model.model);
+      model.model.visible = newVisibility;
       model.model.metadata = metadata;
+      model.id = this.getModelId(model.model);
       if (this.groupBy === "visibility") {
         this.modelsSorted = false;
       }
       this.splice(index, 1, [model]);
     }
   }
+  setModelsVisibility(models, visible) {
+    for (const model of models) {
+      this.languageModelsService.updateModelPickerPreference(model.model.identifier, visible);
+      model.model.visible = visible;
+    }
+    this.languageModelGroups = this.groupModels(this.languageModels);
+    this.doFilter();
+  }
+  setGroupVisibility(group, visible) {
+    const models = this.getModelsForGroup(group);
+    for (const model of models) {
+      this.languageModelsService.updateModelPickerPreference(model.identifier, visible);
+      model.visible = visible;
+    }
+    this.languageModelGroups = this.groupModels(this.languageModels);
+    this.doFilter();
+  }
+  getModelsForGroup(group) {
+    if (isLanguageModelProviderEntry(group)) {
+      return this.languageModels.filter((m) => this.getProviderGroupId(m.provider.group) === group.id);
+    } else {
+      return this.languageModels.filter((m) => group.id === "visible" && m.visible || group.id === "hidden" && !m.visible);
+    }
+  }
   getModelId(modelEntry) {
-    return `${modelEntry.provider.group.name}.${modelEntry.identifier}.${modelEntry.metadata.version}-visible:${modelEntry.metadata.isUserSelectable}`;
+    return `${modelEntry.provider.group.name}.${modelEntry.identifier}.${modelEntry.metadata.version}-visible:${modelEntry.visible}`;
   }
   getProviderGroupId(group) {
     return `${group.vendor}-${group.name}`;
@@ -473,7 +506,7 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
         this.collapsedGroups.add(entry.id);
       }
     }
-    this.filter(this.searchValue);
+    this.doFilter();
   }
   getConfiguredVendors() {
     const result = [];
@@ -488,9 +521,7 @@ let ChatModelsViewModel = class ChatModelsViewModel2 extends Disposable {
   }
 };
 ChatModelsViewModel = __decorate([
-  __param(0, ILanguageModelsService),
-  __param(1, ILanguageModelsConfigurationService),
-  __param(2, IChatEntitlementService)
+  __param(0, ILanguageModelsService)
 ], ChatModelsViewModel);
 class ModelItemMatches {
   static {

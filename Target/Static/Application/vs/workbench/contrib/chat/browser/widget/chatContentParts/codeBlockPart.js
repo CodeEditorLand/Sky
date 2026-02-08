@@ -16,7 +16,7 @@ import * as dom from "../../../../../../base/browser/dom.js";
 import { renderFormattedText } from "../../../../../../base/browser/formattedTextRenderer.js";
 import { Button } from "../../../../../../base/browser/ui/button/button.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Event } from "../../../../../../base/common/event.js";
 import { combinedDisposable, Disposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
 import { Schemas } from "../../../../../../base/common/network.js";
 import { isEqual } from "../../../../../../base/common/resources.js";
@@ -56,7 +56,7 @@ import { ServiceCollection } from "../../../../../../platform/instantiation/comm
 import { ILabelService } from "../../../../../../platform/label/common/label.js";
 import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
 import { ResourceLabel } from "../../../../../browser/labels.js";
-import { ResourceContextKey } from "../../../../../common/contextkeys.js";
+import { StaticResourceContextKey } from "../../../../../common/contextkeys.js";
 import { InspectEditorTokensController } from "../../../../codeEditor/browser/inspectEditorTokens/inspectEditorTokens.js";
 import { MenuPreventer } from "../../../../codeEditor/browser/menuPreventer.js";
 import { SelectionClipboardContributionID } from "../../../../codeEditor/browser/selectionClipboard.js";
@@ -66,6 +66,7 @@ import { isRequestVM, isResponseVM } from "../../../common/model/chatViewModel.j
 import { emptyProgressRunner, IEditorProgressService } from "../../../../../../platform/progress/common/progress.js";
 import { SuggestController } from "../../../../../../editor/contrib/suggest/browser/suggestController.js";
 import { SnippetController2 } from "../../../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { EditorContextKeys } from "../../../../../../editor/common/editorContextKeys.js";
 const $ = dom.$;
 const localFileLanguageId = "vscode-local-file";
 function parseLocalFileData(text) {
@@ -104,12 +105,10 @@ let CodeBlockPart = class CodeBlockPart2 extends Disposable {
     this.modelService = modelService;
     this.configurationService = configurationService;
     this.accessibilityService = accessibilityService;
-    this._onDidChangeContentHeight = this._register(new Emitter());
-    this.onDidChangeContentHeight = this._onDidChangeContentHeight.event;
     this.currentScrollWidth = 0;
     this.isDisposed = false;
     this.element = $(".interactive-result-code-block");
-    this.resourceContextKey = this._register(instantiationService.createInstance(ResourceContextKey));
+    this.resourceContextKey = instantiationService.createInstance(StaticResourceContextKey);
     this.contextKeyService = this._register(contextKeyService.createScoped(this.element));
     const scopedInstantiationService = this._register(instantiationService.createChild(new ServiceCollection([IContextKeyService, this.contextKeyService])));
     const editorElement = dom.append(this.element, $(".interactive-result-editor"));
@@ -166,7 +165,7 @@ let CodeBlockPart = class CodeBlockPart2 extends Disposable {
       element.vulnerabilitiesListExpanded = !element.vulnerabilitiesListExpanded;
       this.vulnsButton.label = this.getVulnerabilitiesLabel();
       this.element.classList.toggle("chat-vulnerabilities-collapsed", !element.vulnerabilitiesListExpanded);
-      this._onDidChangeContentHeight.fire();
+      this.layout();
     }));
     this._register(this.toolbar.onDidChangeDropdownVisibility((e) => {
       toolbarElement.classList.toggle("force-visibility", e);
@@ -189,7 +188,7 @@ let CodeBlockPart = class CodeBlockPart2 extends Disposable {
     }));
     this._register(this.editor.onDidContentSizeChange((e) => {
       if (e.contentHeightChanged) {
-        this._onDidChangeContentHeight.fire();
+        this.layout();
       }
     }));
     this._register(this.editor.onDidBlurEditorWidget(() => {
@@ -271,7 +270,11 @@ let CodeBlockPart = class CodeBlockPart2 extends Disposable {
       ...this.currentCodeBlockData?.renderOptions?.editorOptions
     };
   }
-  layout(width) {
+  layout(width = this.lastLayoutWidth) {
+    if (width === void 0) {
+      return;
+    }
+    this.lastLayoutWidth = width;
     const contentHeight = this.getContentHeight();
     let height = contentHeight;
     if (this.currentCodeBlockData?.renderOptions?.maxHeightInLines) {
@@ -282,7 +285,11 @@ let CodeBlockPart = class CodeBlockPart2 extends Disposable {
     }
     const editorBorder = 2;
     width = width - editorBorder - (this.currentCodeBlockData?.renderOptions?.reserveWidth ?? 0);
-    this.editor.layout({ width: isRequestVM(this.currentCodeBlockData?.element) ? width * 0.9 : width, height });
+    this.editor.layout(
+      { width: isRequestVM(this.currentCodeBlockData?.element) ? width * 0.9 : width, height },
+      /* postponeRendering */
+      true
+    );
     this.updatePaddingForLayout();
   }
   getContentHeight() {
@@ -292,7 +299,7 @@ let CodeBlockPart = class CodeBlockPart2 extends Disposable {
         75
         /* EditorOption.lineHeight */
       );
-      return lineCount * lineHeight;
+      return lineCount * lineHeight + 2 * this.verticalPadding;
     }
     return this.editor.getContentHeight();
   }
@@ -335,11 +342,16 @@ let CodeBlockPart = class CodeBlockPart2 extends Disposable {
     } else {
       this.element.classList.add("no-vulns");
     }
-    this._onDidChangeContentHeight.fire();
+    this.layout();
   }
   reset() {
     this.clearWidgets();
     this.currentCodeBlockData = void 0;
+  }
+  onDidRemount() {
+    if (this.currentCodeBlockData) {
+      this.editor.renderAsync(true);
+    }
   }
   clearWidgets() {
     ContentHoverController.get(this.editor)?.hideContentHover();
@@ -432,8 +444,6 @@ let CodeCompareBlockPart = class CodeCompareBlockPart2 extends Disposable {
     this.accessibilityService = accessibilityService;
     this.labelService = labelService;
     this.openerService = openerService;
-    this._onDidChangeContentHeight = this._register(new Emitter());
-    this.onDidChangeContentHeight = this._onDidChangeContentHeight.event;
     this._lastDiffEditorViewModel = this._store.add(new MutableDisposable());
     this.currentScrollWidth = 0;
     this.currentHorizontalPadding = 0;
@@ -478,7 +488,7 @@ let CodeCompareBlockPart = class CodeCompareBlockPart2 extends Disposable {
       ...this.getEditorOptionsFromConfig()
     });
     this.resourceLabel = this._register(scopedInstantiationService.createInstance(ResourceLabel, editorHeader, { supportIcons: true }));
-    const editorScopedService = this.diffEditor.getModifiedEditor().contextKeyService.createScoped(editorHeader);
+    const editorScopedService = this._register(this.diffEditor.getModifiedEditor().contextKeyService.createScoped(editorHeader));
     const editorScopedInstantiationService = this._register(scopedInstantiationService.createChild(new ServiceCollection([IContextKeyService, editorScopedService])));
     this.toolbar = this._register(editorScopedInstantiationService.createInstance(MenuWorkbenchToolBar, editorHeader, menuId, {
       menuOptions: {
@@ -500,11 +510,6 @@ let CodeCompareBlockPart = class CodeCompareBlockPart2 extends Disposable {
     }));
     this._register(this.diffEditor.getModifiedEditor().onDidScrollChange((e) => {
       this.currentScrollWidth = e.scrollWidth;
-    }));
-    this._register(this.diffEditor.onDidContentSizeChange((e) => {
-      if (e.contentHeightChanged) {
-        this._onDidChangeContentHeight.fire();
-      }
     }));
     this._register(this.diffEditor.getModifiedEditor().onDidBlurEditorWidget(() => {
       this.element.classList.remove("focused");
@@ -575,11 +580,9 @@ let CodeCompareBlockPart = class CodeCompareBlockPart2 extends Disposable {
   }
   _configureForScreenReader() {
     const toolbarElt = this.toolbar.getElement();
+    toolbarElt.style.display = "block";
     if (this.accessibilityService.isScreenReaderOptimized()) {
-      toolbarElt.style.display = "block";
       toolbarElt.ariaLabel = localize("chat.codeBlock.toolbar", "Code block toolbar");
-    } else {
-      toolbarElt.style.display = "";
     }
   }
   getEditorOptionsFromConfig() {
@@ -593,12 +596,15 @@ let CodeCompareBlockPart = class CodeCompareBlockPart2 extends Disposable {
       lineHeight: this.options.configuration.resultEditor.lineHeight
     };
   }
-  layout(width) {
+  layout(width = this.lastLayoutWidth) {
+    if (width === void 0) {
+      return;
+    }
+    this.lastLayoutWidth = width;
     const editorBorder = 2;
     const toolbar = dom.getTotalHeight(this.editorHeader);
     const content = this.diffEditor.getModel() ? this.diffEditor.getContentHeight() : dom.getTotalHeight(this.messageElement);
     const dimension = new dom.Dimension(width - editorBorder - this.currentHorizontalPadding * 2, toolbar + content);
-    this.element.style.height = `${dimension.height}px`;
     this.element.style.width = `${dimension.width}px`;
     this.diffEditor.layout(dimension.with(void 0, content - editorBorder));
     this.updatePaddingForLayout();
@@ -621,7 +627,6 @@ let CodeCompareBlockPart = class CodeCompareBlockPart2 extends Disposable {
       fileKind: FileKind.FILE,
       fileDecorations: { colors: true, badges: false }
     });
-    this._onDidChangeContentHeight.fire();
   }
   reset() {
     this.clearWidgets();
@@ -679,12 +684,23 @@ let CodeCompareBlockPart = class CodeCompareBlockPart2 extends Disposable {
     } else {
       this.diffEditor.setModel(null);
       this._lastDiffEditorViewModel.value = void 0;
-      this._onDidChangeContentHeight.fire();
     }
     this.toolbar.context = {
       edit: data.edit,
       element: data.element,
-      diffEditor: this.diffEditor
+      diffEditor: this.diffEditor,
+      toggleDiffViewMode: /* @__PURE__ */ __name(() => {
+        const isCurrentlyInline = !!this.diffEditor.getModifiedEditor().contextKeyService.getContextKeyValue(EditorContextKeys.diffEditorInlineMode.key);
+        const renderSideBySide = isCurrentlyInline;
+        this.diffEditor.updateOptions({
+          renderSideBySide,
+          // Make it not-compact in side by side mode, otherwise we may not actually
+          // show it side-by-side if it's a simple diff https://github.com/microsoft/vscode/blob/0632563332c7c08656fb47c97bc4328d62ee1d80/src/vs/editor/browser/widget/diffEditor/diffEditorOptions.ts#L35-L39
+          compactMode: !renderSideBySide,
+          useInlineViewWhenSpaceIsLimited: false
+        });
+        this.layout();
+      }, "toggleDiffViewMode")
     };
   }
 };

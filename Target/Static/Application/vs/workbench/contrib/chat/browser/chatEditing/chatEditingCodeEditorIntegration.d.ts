@@ -7,8 +7,11 @@ import { ITextModel } from '../../../../../editor/common/model.js';
 import { IAccessibilitySignalService } from '../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
 import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { IModifiedFileEntry, IModifiedFileEntryChangeHunk, IModifiedFileEntryEditorIntegration } from '../../common/editing/chatEditingService.js';
+import { IChatEditingService, IModifiedFileEntry, IModifiedFileEntryChangeHunk, IModifiedFileEntryEditorIntegration } from '../../common/editing/chatEditingService.js';
 import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
+import { IChatEditingExplanationModelManager } from './chatEditingExplanationModelManager.js';
+import { IChatWidgetService } from '../chat.js';
+import { IViewsService } from '../../../../services/views/common/viewsService.js';
 export interface IDocumentDiff2 extends IDocumentDiff {
     originalModel: ITextModel;
     modifiedModel: ITextModel;
@@ -20,6 +23,9 @@ export declare class ChatEditingCodeEditorIntegration implements IModifiedFileEn
     private readonly _editor;
     private readonly _editorService;
     private readonly _accessibilitySignalsService;
+    private readonly _explanationModelManager;
+    private readonly _chatWidgetService;
+    private readonly _viewsService;
     private static readonly _diffLineDecorationData;
     private readonly _currentIndex;
     readonly currentIndex: IObservable<number>;
@@ -31,7 +37,7 @@ export declare class ChatEditingCodeEditorIntegration implements IModifiedFileEn
     private readonly _diffHunkWidgets;
     private _viewZones;
     private readonly _accessibleDiffViewVisible;
-    constructor(_entry: IModifiedFileEntry, _editor: ICodeEditor, documentDiffInfo: IObservable<IDocumentDiff2>, renderDiffImmediately: boolean, _editorService: IEditorService, _accessibilitySignalsService: IAccessibilitySignalService, contextKeyService: IContextKeyService, instantiationService: IInstantiationService);
+    constructor(_entry: IModifiedFileEntry, _editor: ICodeEditor, documentDiffInfo: IObservable<IDocumentDiff2>, renderDiffImmediately: boolean, _editorService: IEditorService, _accessibilitySignalsService: IAccessibilitySignalService, contextKeyService: IContextKeyService, instantiationService: IInstantiationService, _chatEditingService: IChatEditingService, _explanationModelManager: IChatEditingExplanationModelManager, _chatWidgetService: IChatWidgetService, _viewsService: IViewsService);
     dispose(): void;
     private _clear;
     private _clearDiffRendering;

@@ -22,67 +22,14 @@ import type { ViteDevServer } from "vite";
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
 import {
-	ApplicationStatic,
-	Browser,
-	Bundle,
-	Dependency,
 	External,
 	Host,
-	KeyboardLayouts,
 	Link,
 	On,
-	Platform,
 	readFile,
 	Static,
-	Tauri,
-	VSCodeOutput,
+	// @ts-expect-error
 } from "./Source/Function/Debug";
-
-// ADVANCED PERFORMANCE MONITORING: Microsoft-inspired build performance tracking
-import type { PluginOption } from "vite";
-
-// Performance monitoring plugin
-const performanceMonitorPlugin: PluginOption = {
-	name: "sky-performance-monitor",
-	configureServer(server) {
-		const startTime = performance.now();
-		let requestCount = 0;
-		const requestTimings: number[] = [];
-
-		server.middlewares.use((req, res, next) => {
-			const requestStart = performance.now();
-			requestCount++;
-
-			res.on("finish", () => {
-				const duration = performance.now() - requestStart;
-				requestTimings.push(duration);
-
-				// Log performance every 100 requests
-				if (requestCount % 100 === 0) {
-					const avgTime = requestTimings.reduce((a, b) => a + b, 0) / requestTimings.length;
-					const maxTime = Math.max(...requestTimings);
-					console.log(`[Sky Performance] Requests: ${requestCount}, Avg: ${avgTime.toFixed(2)}ms, Max: ${maxTime.toFixed(2)}ms`);
-					requestTimings.length = 0; // Reset for next batch
-				}
-			});
-
-			next();
-		});
-
-		server.httpServer?.on("close", () => {
-			const totalTime = performance.now() - startTime;
-			console.log(`[Sky Performance] Server ran for ${(totalTime / 1000).toFixed(2)}s, handled ${requestCount} requests`);
-		});
-	},
-	
-	buildStart() {
-		console.log("[Sky Performance] Build process starting...");
-	},
-	
-	buildEnd() {
-		console.log("[Sky Performance] Build process completed");
-	}
-};
 
 // -----------------------------------------------------------------------------
 // ASTRO CONFIGURATION
@@ -127,37 +74,7 @@ export default defineConfig({
 	},
 
 	vite: {
-		// Prevent Vite from clearing the extensive debug report we just logged
 		clearScreen: false,
-		
-		// ADVANCED PERFORMANCE OPTIMIZATION: Microsoft-inspired build optimizations
-		optimizeDeps: {
-			...(On
-				? {
-						exclude: Link,
-					}
-				: {
-						// Production optimizations
-						include: ["@codeeditorland/common", "@codeeditorland/output"],
-						force: true // Force pre-bundling for production
-					}),
-			},
-			esbuildOptions: {
-				// Advanced ESBuild optimizations
-				treeShaking: true,
-				target: "es2020",
-				platform: "browser",
-				minify: !On,
-				sourcemap: On,
-				legalComments: "none",
-				chunkNames: "[name]-[hash]",
-				assetNames: "[name]-[hash]",
-				...(!On ? {
-					minifyWhitespace: true,
-					minifyIdentifiers: true,
-					minifySyntax: true,
-				} : {})
-			},
 
 		build: {
 			rollupOptions: {
@@ -174,7 +91,6 @@ export default defineConfig({
 
 			terserOptions: On
 				? {
-						// Debug / Development Terser Options (Readable)
 						compress: false,
 
 						ecma: 2020,
@@ -242,7 +158,6 @@ export default defineConfig({
 						toplevel: true,
 					}
 				: {
-						// Release / Production Terser Options (Aggressive)
 						compress: {
 							passes: 3,
 
@@ -384,12 +299,13 @@ export default defineConfig({
 		},
 
 		plugins: [
-			performanceMonitorPlugin,
-			
+			// @ts-expect-error
 			(await import("vite-plugin-static-copy")).viteStaticCopy(Static),
 
+			// @ts-expect-error
 			(await import("vite-plugin-top-level-await")).default(),
 
+			// @ts-expect-error
 			((Module: string[]) => ({
 				name: "ExtendedWatcherIgnore",
 

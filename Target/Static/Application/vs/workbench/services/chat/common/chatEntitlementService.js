@@ -11,7 +11,7 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-var ChatEntitlementRequests_1, ChatEntitlementContext_1;
+var ChatEntitlementContext_1;
 import product from "../../../../platform/product/common/product.js";
 import { Barrier } from "../../../../base/common/async.js";
 import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
@@ -28,16 +28,16 @@ import { IProductService } from "../../../../platform/product/common/productServ
 import { asText, IRequestService } from "../../../../platform/request/common/request.js";
 import { IStorageService } from "../../../../platform/storage/common/storage.js";
 import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
-import { IAuthenticationExtensionsService, IAuthenticationService } from "../../authentication/common/authentication.js";
+import { IAuthenticationService } from "../../authentication/common/authentication.js";
 import { IOpenerService } from "../../../../platform/opener/common/opener.js";
 import { URI } from "../../../../base/common/uri.js";
 import Severity from "../../../../base/common/severity.js";
 import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
 import { isWeb } from "../../../../base/common/platform.js";
 import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
-import { distinct } from "../../../../base/common/arrays.js";
 import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
 import { observableFromEvent } from "../../../../base/common/observable.js";
+import { IDefaultAccountService } from "../../../../platform/defaultAccount/common/defaultAccount.js";
 var ChatEntitlementContextKeys;
 (function(ChatEntitlementContextKeys2) {
   ChatEntitlementContextKeys2.Setup = {
@@ -97,16 +97,25 @@ function isProUser(chatEntitlement) {
   return chatEntitlement === ChatEntitlement.Pro || chatEntitlement === ChatEntitlement.ProPlus || chatEntitlement === ChatEntitlement.Business || chatEntitlement === ChatEntitlement.Enterprise;
 }
 __name(isProUser, "isProUser");
-const defaultChat = {
-  extensionId: product.defaultChatAgent?.extensionId ?? "",
-  chatExtensionId: product.defaultChatAgent?.chatExtensionId ?? "",
+function getChatPlanName(chatEntitlement) {
+  switch (chatEntitlement) {
+    case ChatEntitlement.Pro:
+      return localize("plan.proName", "Copilot Pro");
+    case ChatEntitlement.ProPlus:
+      return localize("plan.proPlusName", "Copilot Pro+");
+    case ChatEntitlement.Business:
+      return localize("plan.businessName", "Copilot Business");
+    case ChatEntitlement.Enterprise:
+      return localize("plan.enterpriseName", "Copilot Enterprise");
+    default:
+      return localize("plan.freeName", "Copilot Free");
+  }
+}
+__name(getChatPlanName, "getChatPlanName");
+const defaultChatAgent = {
   upgradePlanUrl: product.defaultChatAgent?.upgradePlanUrl ?? "",
-  provider: product.defaultChatAgent?.provider ?? { default: { id: "" }, enterprise: { id: "" } },
   providerUriSetting: product.defaultChatAgent?.providerUriSetting ?? "",
-  providerScopes: product.defaultChatAgent?.providerScopes ?? [[]],
-  entitlementUrl: product.defaultChatAgent?.entitlementUrl ?? "",
   entitlementSignupLimitedUrl: product.defaultChatAgent?.entitlementSignupLimitedUrl ?? "",
-  completionsAdvancedSetting: product.defaultChatAgent?.completionsAdvancedSetting ?? "",
   chatQuotaExceededContext: product.defaultChatAgent?.chatQuotaExceededContext ?? "",
   completionsQuotaExceededContext: product.defaultChatAgent?.completionsQuotaExceededContext ?? ""
 };
@@ -149,8 +158,8 @@ let ChatEntitlementService = class ChatEntitlementService2 extends Disposable {
     this.onDidChangeQuotaRemaining = this._onDidChangeQuotaRemaining.event;
     this._quotas = {};
     this.ExtensionQuotaContextKeys = {
-      chatQuotaExceeded: defaultChat.chatQuotaExceededContext,
-      completionsQuotaExceeded: defaultChat.completionsQuotaExceededContext
+      chatQuotaExceeded: defaultChatAgent.chatQuotaExceededContext,
+      completionsQuotaExceeded: defaultChatAgent.completionsQuotaExceededContext
     };
     this._onDidChangeAnonymous = this._register(new Emitter());
     this.onDidChangeAnonymous = this._onDidChangeAnonymous.event;
@@ -303,7 +312,7 @@ let ChatEntitlementService = class ChatEntitlementService2 extends Disposable {
   }
   //#endregion
   async update(token) {
-    await this.requests?.value.forceResolveEntitlement(void 0, token);
+    await this.requests?.value.forceResolveEntitlement(token);
   }
 };
 ChatEntitlementService = __decorate([
@@ -314,52 +323,29 @@ ChatEntitlementService = __decorate([
   __param(4, IConfigurationService),
   __param(5, ITelemetryService)
 ], ChatEntitlementService);
-let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementRequests2 extends Disposable {
+let ChatEntitlementRequests = class ChatEntitlementRequests2 extends Disposable {
   static {
     __name(this, "ChatEntitlementRequests");
   }
-  static providerId(configurationService) {
-    if (configurationService.getValue(`${defaultChat.completionsAdvancedSetting}.authProvider`) === defaultChat.provider.enterprise.id) {
-      return defaultChat.provider.enterprise.id;
-    }
-    return defaultChat.provider.default.id;
-  }
-  constructor(context, chatQuotasAccessor, telemetryService, authenticationService, logService, requestService, dialogService, openerService, configurationService, authenticationExtensionsService, lifecycleService) {
+  constructor(context, chatQuotasAccessor, telemetryService, logService, requestService, dialogService, openerService, lifecycleService, defaultAccountService, authenticationService) {
     super();
     this.context = context;
     this.chatQuotasAccessor = chatQuotasAccessor;
     this.telemetryService = telemetryService;
-    this.authenticationService = authenticationService;
     this.logService = logService;
     this.requestService = requestService;
     this.dialogService = dialogService;
     this.openerService = openerService;
-    this.configurationService = configurationService;
-    this.authenticationExtensionsService = authenticationExtensionsService;
     this.lifecycleService = lifecycleService;
+    this.defaultAccountService = defaultAccountService;
+    this.authenticationService = authenticationService;
     this.pendingResolveCts = new CancellationTokenSource();
-    this.didResolveEntitlements = false;
     this.state = { entitlement: this.context.state.entitlement };
     this.registerListeners();
     this.resolve();
   }
   registerListeners() {
-    this._register(this.authenticationService.onDidChangeDeclaredProviders(() => this.resolve()));
-    this._register(this.authenticationService.onDidChangeSessions((e) => {
-      if (e.providerId === ChatEntitlementRequests_1.providerId(this.configurationService)) {
-        this.resolve();
-      }
-    }));
-    this._register(this.authenticationService.onDidRegisterAuthenticationProvider((e) => {
-      if (e.id === ChatEntitlementRequests_1.providerId(this.configurationService)) {
-        this.resolve();
-      }
-    }));
-    this._register(this.authenticationService.onDidUnregisterAuthenticationProvider((e) => {
-      if (e.id === ChatEntitlementRequests_1.providerId(this.configurationService)) {
-        this.resolve();
-      }
-    }));
+    this._register(this.defaultAccountService.onDidChangeDefaultAccount(() => this.resolve()));
     this._register(this.context.onDidChange(() => {
       if (!this.context.state.installed || this.context.state.disabled || this.context.state.entitlement === ChatEntitlement.Unknown) {
         this.state = { entitlement: this.state.entitlement, quotas: void 0 };
@@ -370,135 +356,67 @@ let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementR
   async resolve() {
     this.pendingResolveCts.dispose(true);
     const cts = this.pendingResolveCts = new CancellationTokenSource();
-    const session = await this.findMatchingProviderSession(cts.token);
+    const defaultAccount = await this.defaultAccountService.getDefaultAccount();
     if (cts.token.isCancellationRequested) {
       return;
     }
     let state = void 0;
-    if (session) {
+    if (defaultAccount) {
       if (this.state.entitlement === ChatEntitlement.Unknown) {
         state = { entitlement: ChatEntitlement.Unresolved };
       }
     } else {
-      this.didResolveEntitlements = false;
       state = { entitlement: ChatEntitlement.Unknown };
     }
     if (state) {
       this.update(state);
     }
-    if (session && !this.didResolveEntitlements) {
-      await this.resolveEntitlement(session, cts.token);
+    if (defaultAccount) {
+      await this.resolveEntitlement(defaultAccount, cts.token);
     }
   }
-  async findMatchingProviderSession(token) {
-    const sessions = await this.doGetSessions(ChatEntitlementRequests_1.providerId(this.configurationService));
-    if (token.isCancellationRequested) {
-      return void 0;
-    }
-    const matchingSessions = /* @__PURE__ */ new Set();
-    for (const session of sessions) {
-      for (const scopes of defaultChat.providerScopes) {
-        if (this.includesScopes(session.scopes, scopes)) {
-          matchingSessions.add(session);
-        }
-      }
-    }
-    return matchingSessions.size > 0 ? Array.from(matchingSessions) : void 0;
-  }
-  async doGetSessions(providerId) {
-    const preferredAccountName = this.authenticationExtensionsService.getAccountPreference(defaultChat.chatExtensionId, providerId) ?? this.authenticationExtensionsService.getAccountPreference(defaultChat.extensionId, providerId);
-    let preferredAccount;
-    for (const account of await this.authenticationService.getAccounts(providerId)) {
-      if (account.label === preferredAccountName) {
-        preferredAccount = account;
-        break;
-      }
-    }
-    try {
-      return await this.authenticationService.getSessions(providerId, void 0, { account: preferredAccount });
-    } catch (error) {
-    }
-    return [];
-  }
-  includesScopes(scopes, expectedScopes) {
-    return expectedScopes.every((scope) => scopes.includes(scope));
-  }
-  async resolveEntitlement(sessions, token) {
-    const entitlements = await this.doResolveEntitlement(sessions, token);
+  async resolveEntitlement(defaultAccount, token) {
+    const entitlements = await this.doResolveEntitlement(defaultAccount, token);
     if (typeof entitlements?.entitlement === "number" && !token.isCancellationRequested) {
-      this.didResolveEntitlements = true;
       this.update(entitlements);
     }
     return entitlements;
   }
-  async doResolveEntitlement(sessions, token) {
+  async doResolveEntitlement(defaultAccount, token) {
     if (token.isCancellationRequested) {
       return void 0;
     }
-    const response = await this.request(this.getEntitlementUrl(), "GET", void 0, sessions, token);
-    if (token.isCancellationRequested) {
-      return void 0;
-    }
-    if (!response) {
-      this.logService.trace("[chat entitlement]: no response");
-      return { entitlement: ChatEntitlement.Unresolved };
-    }
-    if (response.res.statusCode && response.res.statusCode !== 200) {
-      this.logService.trace(`[chat entitlement]: unexpected status code ${response.res.statusCode}`);
-      return response.res.statusCode === 401 || // oauth token being unavailable (expired/revoked)
-      response.res.statusCode === 404 ? {
-        entitlement: ChatEntitlement.Unknown
-        /* treat as signed out */
-      } : { entitlement: ChatEntitlement.Unresolved };
-    }
-    let responseText = null;
-    try {
-      responseText = await asText(response);
-    } catch (error) {
-    }
-    if (token.isCancellationRequested) {
-      return void 0;
-    }
-    if (!responseText) {
-      this.logService.trace("[chat entitlement]: response has no content");
-      return { entitlement: ChatEntitlement.Unresolved };
-    }
-    let entitlementsResponse;
-    try {
-      entitlementsResponse = JSON.parse(responseText);
-      this.logService.trace(`[chat entitlement]: parsed result is ${JSON.stringify(entitlementsResponse)}`);
-    } catch (err) {
-      this.logService.trace(`[chat entitlement]: error parsing response (${err})`);
-      return { entitlement: ChatEntitlement.Unresolved };
+    const entitlementsData = defaultAccount.entitlementsData;
+    if (!entitlementsData) {
+      this.logService.trace("[chat entitlement]: no entitlements data available on default account");
+      return { entitlement: entitlementsData === null ? ChatEntitlement.Unknown : ChatEntitlement.Unresolved };
     }
     let entitlement;
-    if (entitlementsResponse.access_type_sku === "free_limited_copilot") {
+    if (entitlementsData.access_type_sku === "free_limited_copilot") {
       entitlement = ChatEntitlement.Free;
-    } else if (entitlementsResponse.can_signup_for_limited) {
+    } else if (entitlementsData.can_signup_for_limited) {
       entitlement = ChatEntitlement.Available;
-    } else if (entitlementsResponse.copilot_plan === "individual") {
+    } else if (entitlementsData.copilot_plan === "individual") {
       entitlement = ChatEntitlement.Pro;
-    } else if (entitlementsResponse.copilot_plan === "individual_pro") {
+    } else if (entitlementsData.copilot_plan === "individual_pro") {
       entitlement = ChatEntitlement.ProPlus;
-    } else if (entitlementsResponse.copilot_plan === "business") {
+    } else if (entitlementsData.copilot_plan === "business") {
       entitlement = ChatEntitlement.Business;
-    } else if (entitlementsResponse.copilot_plan === "enterprise") {
+    } else if (entitlementsData.copilot_plan === "enterprise") {
       entitlement = ChatEntitlement.Enterprise;
-    } else if (entitlementsResponse.chat_enabled) {
-      entitlement = ChatEntitlement.Pro;
     } else {
       entitlement = ChatEntitlement.Unavailable;
     }
     const entitlements = {
       entitlement,
-      organisations: entitlementsResponse.organization_login_list,
-      quotas: this.toQuotas(entitlementsResponse),
-      sku: entitlementsResponse.access_type_sku
+      organisations: entitlementsData.organization_login_list,
+      quotas: this.toQuotas(entitlementsData),
+      sku: entitlementsData.access_type_sku
     };
     this.logService.trace(`[chat entitlement]: resolved to ${entitlements.entitlement}, quotas: ${JSON.stringify(entitlements.quotas)}`);
     this.telemetryService.publicLog2("chatInstallEntitlement", {
       entitlement: entitlements.entitlement,
-      tid: entitlementsResponse.analytics_tracking_id,
+      tid: entitlementsData.analytics_tracking_id,
       sku: entitlements.sku,
       quotaChat: entitlements.quotas?.chat?.remaining,
       quotaPremiumChat: entitlements.quotas?.premiumChat?.remaining,
@@ -507,45 +425,34 @@ let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementR
     });
     return entitlements;
   }
-  getEntitlementUrl() {
-    if (ChatEntitlementRequests_1.providerId(this.configurationService) === defaultChat.provider.enterprise.id) {
-      try {
-        const enterpriseUrl = new URL(this.configurationService.getValue(defaultChat.providerUriSetting));
-        return `${enterpriseUrl.protocol}//api.${enterpriseUrl.hostname}${enterpriseUrl.port ? ":" + enterpriseUrl.port : ""}/copilot_internal/user`;
-      } catch (error) {
-        this.logService.error(error);
-      }
-    }
-    return defaultChat.entitlementUrl;
-  }
-  toQuotas(response) {
+  toQuotas(entitlementsData) {
     const quotas = {
-      resetDate: response.quota_reset_date_utc ?? response.quota_reset_date ?? response.limited_user_reset_date,
-      resetDateHasTime: typeof response.quota_reset_date_utc === "string"
+      resetDate: entitlementsData.quota_reset_date_utc ?? entitlementsData.quota_reset_date ?? entitlementsData.limited_user_reset_date,
+      resetDateHasTime: typeof entitlementsData.quota_reset_date_utc === "string"
     };
-    if (response.monthly_quotas?.chat && typeof response.limited_user_quotas?.chat === "number") {
+    if (entitlementsData.monthly_quotas?.chat && typeof entitlementsData.limited_user_quotas?.chat === "number") {
       quotas.chat = {
-        total: response.monthly_quotas.chat,
-        remaining: response.limited_user_quotas.chat,
-        percentRemaining: Math.min(100, Math.max(0, response.limited_user_quotas.chat / response.monthly_quotas.chat * 100)),
+        total: entitlementsData.monthly_quotas.chat,
+        remaining: entitlementsData.limited_user_quotas.chat,
+        percentRemaining: Math.min(100, Math.max(0, entitlementsData.limited_user_quotas.chat / entitlementsData.monthly_quotas.chat * 100)),
         overageEnabled: false,
         overageCount: 0,
         unlimited: false
       };
     }
-    if (response.monthly_quotas?.completions && typeof response.limited_user_quotas?.completions === "number") {
+    if (entitlementsData.monthly_quotas?.completions && typeof entitlementsData.limited_user_quotas?.completions === "number") {
       quotas.completions = {
-        total: response.monthly_quotas.completions,
-        remaining: response.limited_user_quotas.completions,
-        percentRemaining: Math.min(100, Math.max(0, response.limited_user_quotas.completions / response.monthly_quotas.completions * 100)),
+        total: entitlementsData.monthly_quotas.completions,
+        remaining: entitlementsData.limited_user_quotas.completions,
+        percentRemaining: Math.min(100, Math.max(0, entitlementsData.limited_user_quotas.completions / entitlementsData.monthly_quotas.completions * 100)),
         overageEnabled: false,
         overageCount: 0,
         unlimited: false
       };
     }
-    if (response.quota_snapshots) {
+    if (entitlementsData.quota_snapshots) {
       for (const quotaType of ["chat", "completions", "premium_interactions"]) {
-        const rawQuotaSnapshot = response.quota_snapshots[quotaType];
+        const rawQuotaSnapshot = entitlementsData.quota_snapshots[quotaType];
         if (!rawQuotaSnapshot) {
           continue;
         }
@@ -609,24 +516,29 @@ let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementR
       this.chatQuotasAccessor.acceptQuotas(state.quotas);
     }
   }
-  async forceResolveEntitlement(sessions, token = CancellationToken.None) {
-    if (!sessions) {
-      sessions = await this.findMatchingProviderSession(token);
-    }
-    if (!sessions || sessions.length === 0) {
+  async forceResolveEntitlement(token = CancellationToken.None) {
+    const defaultAccount = await this.defaultAccountService.refresh();
+    if (!defaultAccount) {
       return void 0;
     }
-    return this.resolveEntitlement(sessions, token);
+    return this.resolveEntitlement(defaultAccount, token);
   }
-  async signUpFree(sessions) {
+  async signUpFree() {
+    const sessions = await this.getSessions();
+    if (sessions.length === 0) {
+      return void 0;
+    }
+    return this.doSignUpFree(sessions);
+  }
+  async doSignUpFree(sessions) {
     const body = {
       restricted_telemetry: this.telemetryService.telemetryLevel === 0 ? "disabled" : "enabled",
       public_code_suggestions: "enabled"
     };
-    const response = await this.request(defaultChat.entitlementSignupLimitedUrl, "POST", body, sessions, CancellationToken.None);
+    const response = await this.request(defaultChatAgent.entitlementSignupLimitedUrl, "POST", body, sessions, CancellationToken.None);
     if (!response) {
       const retry = await this.onUnknownSignUpError(localize("signUpNoResponseError", "No response received."), "[chat entitlement] sign-up: no response");
-      return retry ? this.signUpFree(sessions) : { errorCode: 1 };
+      return retry ? this.doSignUpFree(sessions) : { errorCode: 1 };
     }
     if (response.res.statusCode && response.res.statusCode !== 200) {
       if (response.res.statusCode === 422) {
@@ -643,7 +555,7 @@ let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementR
         }
       }
       const retry = await this.onUnknownSignUpError(localize("signUpUnexpectedStatusError", "Unexpected status code {0}.", response.res.statusCode), `[chat entitlement] sign-up: unexpected status code ${response.res.statusCode}`);
-      return retry ? this.signUpFree(sessions) : { errorCode: response.res.statusCode };
+      return retry ? this.doSignUpFree(sessions) : { errorCode: response.res.statusCode };
     }
     let responseText = null;
     try {
@@ -652,7 +564,7 @@ let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementR
     }
     if (!responseText) {
       const retry = await this.onUnknownSignUpError(localize("signUpNoResponseContentsError", "Response has no contents."), "[chat entitlement] sign-up: response has no content");
-      return retry ? this.signUpFree(sessions) : { errorCode: 2 };
+      return retry ? this.doSignUpFree(sessions) : { errorCode: 2 };
     }
     let parsedResult = void 0;
     try {
@@ -660,10 +572,21 @@ let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementR
       this.logService.trace(`[chat entitlement] sign-up: response is ${responseText}`);
     } catch (err) {
       const retry = await this.onUnknownSignUpError(localize("signUpInvalidResponseError", "Invalid response contents."), `[chat entitlement] sign-up: error parsing response (${err})`);
-      return retry ? this.signUpFree(sessions) : { errorCode: 3 };
+      return retry ? this.doSignUpFree(sessions) : { errorCode: 3 };
     }
     this.update({ entitlement: ChatEntitlement.Free });
     return Boolean(parsedResult?.subscribed);
+  }
+  async getSessions() {
+    const defaultAccount = await this.defaultAccountService.getDefaultAccount();
+    if (defaultAccount) {
+      const sessions = await this.authenticationService.getSessions(defaultAccount.authenticationProvider.id);
+      const accountSessions = sessions.filter((s) => s.id === defaultAccount.sessionId);
+      if (accountSessions.length) {
+        return accountSessions;
+      }
+    }
+    return [...await this.authenticationService.getSessions(this.defaultAccountService.getDefaultAccountAuthenticationProvider().id)];
   }
   async onUnknownSignUpError(detail, logMessage) {
     this.logService.error(logMessage);
@@ -693,39 +616,38 @@ let ChatEntitlementRequests = ChatEntitlementRequests_1 = class ChatEntitlementR
           },
           {
             label: localize("learnMore", "Learn More"),
-            run: /* @__PURE__ */ __name(() => this.openerService.open(URI.parse(defaultChat.upgradePlanUrl)), "run")
+            run: /* @__PURE__ */ __name(() => this.openerService.open(URI.parse(defaultChatAgent.upgradePlanUrl)), "run")
           }
         ]
       });
     }
   }
   async signIn(options) {
-    const providerId = ChatEntitlementRequests_1.providerId(this.configurationService);
-    const scopes = options?.additionalScopes ? distinct([...defaultChat.providerScopes[0], ...options.additionalScopes]) : defaultChat.providerScopes[0];
-    const session = await this.authenticationService.createSession(providerId, scopes, {
+    const defaultAccount = await this.defaultAccountService.signIn({
+      additionalScopes: options?.additionalScopes,
       extraAuthorizeParameters: { get_started_with: "copilot-vscode" },
       provider: options?.useSocialProvider
     });
-    this.authenticationExtensionsService.updateAccountPreference(defaultChat.extensionId, providerId, session.account);
-    this.authenticationExtensionsService.updateAccountPreference(defaultChat.chatExtensionId, providerId, session.account);
-    const entitlements = await this.forceResolveEntitlement([session]);
-    return { session, entitlements };
+    if (!defaultAccount) {
+      return {};
+    }
+    const entitlements = await this.doResolveEntitlement(defaultAccount, CancellationToken.None);
+    return { defaultAccount, entitlements };
   }
   dispose() {
     this.pendingResolveCts.dispose(true);
     super.dispose();
   }
 };
-ChatEntitlementRequests = ChatEntitlementRequests_1 = __decorate([
+ChatEntitlementRequests = __decorate([
   __param(2, ITelemetryService),
-  __param(3, IAuthenticationService),
-  __param(4, ILogService),
-  __param(5, IRequestService),
-  __param(6, IDialogService),
-  __param(7, IOpenerService),
-  __param(8, IConfigurationService),
-  __param(9, IAuthenticationExtensionsService),
-  __param(10, ILifecycleService)
+  __param(3, ILogService),
+  __param(4, IRequestService),
+  __param(5, IDialogService),
+  __param(6, IOpenerService),
+  __param(7, ILifecycleService),
+  __param(8, IDefaultAccountService),
+  __param(9, IAuthenticationService)
 ], ChatEntitlementRequests);
 let ChatEntitlementContext = class ChatEntitlementContext2 extends Disposable {
   static {
@@ -896,6 +818,7 @@ export {
   ChatEntitlementRequests,
   ChatEntitlementService,
   IChatEntitlementService,
+  getChatPlanName,
   isProUser
 };
 //# sourceMappingURL=chatEntitlementService.js.map

@@ -31,6 +31,8 @@ const DirtyWorkingCopiesContext = new RawContextKey("dirtyWorkingCopies", false,
 const RemoteNameContext = new RawContextKey("remoteName", "", localize("remoteName", "The name of the remote the window is connected to or an empty string if not connected to any remote"));
 const VirtualWorkspaceContext = new RawContextKey("virtualWorkspace", "", localize("virtualWorkspace", "The scheme of the current workspace is from a virtual file system or an empty string."));
 const TemporaryWorkspaceContext = new RawContextKey("temporaryWorkspace", false, localize("temporaryWorkspace", "The scheme of the current workspace is from a temporary file system."));
+const IsAgentSessionsWorkspaceContext = new RawContextKey("isAgentSessionsWorkspace", false, localize("isAgentSessionsWorkspace", "Whether the current workspace is the agent sessions workspace."));
+const WorkbenchModeContext = new RawContextKey("workbenchMode", "", localize("workbenchMode", "The current workbench mode."));
 const HasWebFileSystemAccess = new RawContextKey("hasWebFileSystemAccess", false, true);
 const EmbedderIdentifierContext = new RawContextKey("embedderIdentifier", void 0, localize("embedderIdentifier", "The identifier of the embedder according to the product service, if one is defined"));
 const InAutomationContext = new RawContextKey("inAutomation", false, localize("inAutomation", "Whether VS Code is running under automation/smoke test"));
@@ -303,6 +305,7 @@ export {
   HasWebFileSystemAccess,
   InAutomationContext,
   InEditorZenModeContext,
+  IsAgentSessionsWorkspaceContext,
   IsAuxiliaryWindowContext,
   IsAuxiliaryWindowFocusedContext,
   IsCompactTitleBarContext,
@@ -338,6 +341,7 @@ export {
   TitleBarVisibleContext,
   TwoEditorsSelectedInGroupContext,
   VirtualWorkspaceContext,
+  WorkbenchModeContext,
   WorkbenchStateContext,
   WorkspaceFolderCountContext,
   applyAvailableEditorIds,

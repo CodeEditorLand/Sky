@@ -4,7 +4,7 @@ import { assertNever } from "../../../../../../base/common/assert.js";
 import { BugIndicatingError } from "../../../../../../base/common/errors.js";
 import { observableFromEventOpts } from "../../../../../../base/common/observable.js";
 import { localize } from "../../../../../../nls.js";
-import { buttonBackground, buttonForeground, buttonSecondaryBackground, buttonSecondaryForeground, diffInserted, diffInsertedLine, diffRemoved, editorBackground } from "../../../../../../platform/theme/common/colorRegistry.js";
+import { buttonBackground, buttonForeground, diffInserted, diffInsertedLine, diffRemoved, editorBackground, editorHoverBackground, editorHoverBorder, editorHoverForeground } from "../../../../../../platform/theme/common/colorRegistry.js";
 import { asCssVariable, darken, registerColor, transparent } from "../../../../../../platform/theme/common/colorUtils.js";
 import { InlineCompletionEditorType } from "../../model/provideInlineCompletions.js";
 import { InlineEditTabAction } from "./inlineEditsViewInterface.js";
@@ -27,9 +27,9 @@ const inlineEditIndicatorPrimaryBackground = registerColor("inlineEdit.gutterInd
   hcDark: transparent(inlineEditIndicatorPrimaryBorder, 0.4),
   hcLight: transparent(inlineEditIndicatorPrimaryBorder, 0.5)
 }, localize("inlineEdit.gutterIndicator.primaryBackground", "Background color for the primary inline edit gutter indicator."));
-const inlineEditIndicatorSecondaryForeground = registerColor("inlineEdit.gutterIndicator.secondaryForeground", buttonSecondaryForeground, localize("inlineEdit.gutterIndicator.secondaryForeground", "Foreground color for the secondary inline edit gutter indicator."));
-const inlineEditIndicatorSecondaryBorder = registerColor("inlineEdit.gutterIndicator.secondaryBorder", buttonSecondaryBackground, localize("inlineEdit.gutterIndicator.secondaryBorder", "Border color for the secondary inline edit gutter indicator."));
-const inlineEditIndicatorSecondaryBackground = registerColor("inlineEdit.gutterIndicator.secondaryBackground", inlineEditIndicatorSecondaryBorder, localize("inlineEdit.gutterIndicator.secondaryBackground", "Background color for the secondary inline edit gutter indicator."));
+const inlineEditIndicatorSecondaryForeground = registerColor("inlineEdit.gutterIndicator.secondaryForeground", editorHoverForeground, localize("inlineEdit.gutterIndicator.secondaryForeground", "Foreground color for the secondary inline edit gutter indicator."));
+const inlineEditIndicatorSecondaryBorder = registerColor("inlineEdit.gutterIndicator.secondaryBorder", editorHoverBorder, localize("inlineEdit.gutterIndicator.secondaryBorder", "Border color for the secondary inline edit gutter indicator."));
+const inlineEditIndicatorSecondaryBackground = registerColor("inlineEdit.gutterIndicator.secondaryBackground", editorHoverBackground, localize("inlineEdit.gutterIndicator.secondaryBackground", "Background color for the secondary inline edit gutter indicator."));
 const inlineEditIndicatorSuccessfulForeground = registerColor("inlineEdit.gutterIndicator.successfulForeground", buttonForeground, localize("inlineEdit.gutterIndicator.successfulForeground", "Foreground color for the successful inline edit gutter indicator."));
 const inlineEditIndicatorSuccessfulBorder = registerColor("inlineEdit.gutterIndicator.successfulBorder", buttonBackground, localize("inlineEdit.gutterIndicator.successfulBorder", "Border color for the successful inline edit gutter indicator."));
 const inlineEditIndicatorSuccessfulBackground = registerColor("inlineEdit.gutterIndicator.successfulBackground", inlineEditIndicatorSuccessfulBorder, localize("inlineEdit.gutterIndicator.successfulBackground", "Background color for the successful inline edit gutter indicator."));

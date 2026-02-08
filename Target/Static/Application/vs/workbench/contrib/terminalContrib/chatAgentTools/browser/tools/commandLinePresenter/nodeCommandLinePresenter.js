@@ -6,7 +6,8 @@ class NodeCommandLinePresenter {
     __name(this, "NodeCommandLinePresenter");
   }
   present(options) {
-    const extractedNode = extractNodeCommand(options.commandLine, options.shell, options.os);
+    const commandLine = options.commandLine.forDisplay;
+    const extractedNode = extractNodeCommand(commandLine, options.shell, options.os);
     if (extractedNode) {
       return {
         commandLine: extractedNode,

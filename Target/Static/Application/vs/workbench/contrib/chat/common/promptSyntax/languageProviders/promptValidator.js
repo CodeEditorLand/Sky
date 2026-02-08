@@ -18,7 +18,7 @@ import { IModelService } from "../../../../../../editor/common/services/model.js
 import { localize } from "../../../../../../nls.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
 import { IMarkerService, MarkerSeverity } from "../../../../../../platform/markers/common/markers.js";
-import { IChatModeService } from "../../chatModes.js";
+import { ChatMode, IChatModeService } from "../../chatModes.js";
 import { ChatModeKind } from "../../constants.js";
 import { ILanguageModelChatMetadata, ILanguageModelsService } from "../../languageModels.js";
 import { ILanguageModelToolsService, SpecedToolAliases } from "../../tools/languageModelToolsService.js";
@@ -32,6 +32,7 @@ import { IPromptsService } from "../service/promptsService.js";
 import { ILabelService } from "../../../../../../platform/label/common/label.js";
 import { AGENTS_SOURCE_FOLDER, LEGACY_MODE_FILE_EXTENSION } from "../config/promptFileLocations.js";
 import { Lazy } from "../../../../../../base/common/lazy.js";
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
 const MARKERS_OWNER_ID = "prompts-diagnostics-provider";
 let PromptValidator = class PromptValidator2 {
   static {
@@ -47,7 +48,7 @@ let PromptValidator = class PromptValidator2 {
   }
   async validate(promptAST, promptType, report) {
     promptAST.header?.errors.forEach((error) => report(toMarker(error.message, error.range, MarkerSeverity.Error)));
-    this.validateHeader(promptAST, promptType, report);
+    await this.validateHeader(promptAST, promptType, report);
     await this.validateBody(promptAST, promptType, report);
     await this.validateFileName(promptAST, promptType, report);
     await this.validateSkillFolderName(promptAST, promptType, report);
@@ -113,7 +114,7 @@ let PromptValidator = class PromptValidator2 {
     if (body.variableReferences.length && !isGitHubTarget) {
       const headerTools = promptAST.header?.tools;
       const headerTarget = promptAST.header?.target;
-      const headerToolsMap = headerTools ? this.languageModelToolsService.toToolAndToolSetEnablementMap(headerTools, headerTarget) : void 0;
+      const headerToolsMap = headerTools ? this.languageModelToolsService.toToolAndToolSetEnablementMap(headerTools, headerTarget, void 0) : void 0;
       const available = new Set(this.languageModelToolsService.getFullReferenceNames());
       const deprecatedNames = this.languageModelToolsService.getDeprecatedFullReferenceNames();
       for (const variable of body.variableReferences) {
@@ -142,7 +143,7 @@ let PromptValidator = class PromptValidator2 {
     }
     await Promise.all(fileReferenceChecks);
   }
-  validateHeader(promptAST, promptType, report) {
+  async validateHeader(promptAST, promptType, report) {
     const header = promptAST.header;
     if (!header) {
       return;
@@ -167,10 +168,13 @@ let PromptValidator = class PromptValidator2 {
       case PromptsType.agent: {
         this.validateTarget(attributes, report);
         this.validateInfer(attributes, report);
+        this.validateUserInvokable(attributes, report);
+        this.validateDisableModelInvocation(attributes, report);
         this.validateTools(attributes, ChatModeKind.Agent, header.target, report);
         if (!isGitHubTarget) {
           this.validateModel(attributes, ChatModeKind.Agent, report);
           this.validateHandoffs(attributes, report);
+          await this.validateAgentsAttribute(attributes, header, report);
         }
         break;
       }
@@ -256,32 +260,53 @@ let PromptValidator = class PromptValidator2 {
     if (!attribute) {
       return;
     }
-    if (attribute.value.type !== "string") {
-      report(toMarker(localize("promptValidator.modelMustBeString", "The 'model' attribute must be a string."), attribute.value.range, MarkerSeverity.Error));
+    if (attribute.value.type !== "string" && attribute.value.type !== "array") {
+      report(toMarker(localize("promptValidator.modelMustBeStringOrArray", "The 'model' attribute must be a string or an array of strings."), attribute.value.range, MarkerSeverity.Error));
       return;
     }
-    const modelName = attribute.value.value.trim();
-    if (modelName.length === 0) {
-      report(toMarker(localize("promptValidator.modelMustBeNonEmpty", "The 'model' attribute must be a non-empty string."), attribute.value.range, MarkerSeverity.Error));
+    const modelNames = [];
+    if (attribute.value.type === "string") {
+      const modelName = attribute.value.value.trim();
+      if (modelName.length === 0) {
+        report(toMarker(localize("promptValidator.modelMustBeNonEmpty", "The 'model' attribute must be a non-empty string."), attribute.value.range, MarkerSeverity.Error));
+        return;
+      }
+      modelNames.push([modelName, attribute.value.range]);
+    } else if (attribute.value.type === "array") {
+      if (attribute.value.items.length === 0) {
+        report(toMarker(localize("promptValidator.modelArrayMustNotBeEmpty", "The 'model' array must not be empty."), attribute.value.range, MarkerSeverity.Error));
+        return;
+      }
+      for (const item of attribute.value.items) {
+        if (item.type !== "string") {
+          report(toMarker(localize("promptValidator.modelArrayMustContainStrings", "The 'model' array must contain only strings."), item.range, MarkerSeverity.Error));
+          return;
+        }
+        const modelName = item.value.trim();
+        if (modelName.length === 0) {
+          report(toMarker(localize("promptValidator.modelArrayItemMustBeNonEmpty", "Model names in the array must be non-empty strings."), item.range, MarkerSeverity.Error));
+          return;
+        }
+        modelNames.push([modelName, item.range]);
+      }
+    }
+    const languageModels = this.languageModelsService.getLanguageModelIds();
+    if (languageModels.length === 0) {
       return;
     }
-    const languageModes = this.languageModelsService.getLanguageModelIds();
-    if (languageModes.length === 0) {
-      return;
-    }
-    const modelMetadata = this.findModelByName(languageModes, modelName);
-    if (!modelMetadata) {
-      report(toMarker(localize("promptValidator.modelNotFound", "Unknown model '{0}'.", modelName), attribute.value.range, MarkerSeverity.Warning));
-    } else if (agentKind === ChatModeKind.Agent && !ILanguageModelChatMetadata.suitableForAgentMode(modelMetadata)) {
-      report(toMarker(localize("promptValidator.modelNotSuited", "Model '{0}' is not suited for agent mode.", modelName), attribute.value.range, MarkerSeverity.Warning));
+    for (const [modelName, range] of modelNames) {
+      const modelMetadata = this.findModelByName(modelName);
+      if (!modelMetadata) {
+        report(toMarker(localize("promptValidator.modelNotFound", "Unknown model '{0}'.", modelName), range, MarkerSeverity.Warning));
+      } else if (agentKind === ChatModeKind.Agent && !ILanguageModelChatMetadata.suitableForAgentMode(modelMetadata)) {
+        report(toMarker(localize("promptValidator.modelNotSuited", "Model '{0}' is not suited for agent mode.", modelName), range, MarkerSeverity.Warning));
+      }
     }
   }
-  findModelByName(languageModes, modelName) {
-    for (const model of languageModes) {
-      const metadata = this.languageModelsService.lookupLanguageModel(model);
-      if (metadata && metadata.isUserSelectable !== false && ILanguageModelChatMetadata.matchesQualifiedName(modelName, metadata)) {
-        return metadata;
-      }
+  findModelByName(modelName) {
+    const metadataAndId = this.languageModelsService.lookupLanguageModelByQualifiedName(modelName);
+    if (metadataAndId && metadataAndId.metadata.isUserSelectable !== false) {
+      return metadataAndId.metadata;
     }
     return void 0;
   }
@@ -400,8 +425,8 @@ let PromptValidator = class PromptValidator2 {
     if (!attribute) {
       return;
     }
-    if (attribute.value.type !== "array") {
-      report(toMarker(localize("promptValidator.excludeAgentMustBeArray", "The 'excludeAgent' attribute must be an array."), attribute.value.range, MarkerSeverity.Error));
+    if (attribute.value.type !== "array" && attribute.value.type !== "string") {
+      report(toMarker(localize("promptValidator.excludeAgentMustBeArray", "The 'excludeAgent' attribute must be an string or array."), attribute.value.range, MarkerSeverity.Error));
       return;
     }
   }
@@ -449,8 +474,13 @@ let PromptValidator = class PromptValidator2 {
               report(toMarker(localize("promptValidator.handoffShowContinueOnMustBeBoolean", "The 'showContinueOn' property in a handoff must be a boolean."), prop.value.range, MarkerSeverity.Error));
             }
             break;
+          case "model":
+            if (prop.value.type !== "string") {
+              report(toMarker(localize("promptValidator.handoffModelMustBeString", "The 'model' property in a handoff must be a string."), prop.value.range, MarkerSeverity.Error));
+            }
+            break;
           default:
-            report(toMarker(localize("promptValidator.unknownHandoffProperty", "Unknown property '{0}' in handoff object. Supported properties are 'label', 'agent', 'prompt' and optional 'send', 'showContinueOn'.", prop.key.value), prop.value.range, MarkerSeverity.Warning));
+            report(toMarker(localize("promptValidator.unknownHandoffProperty", "Unknown property '{0}' in handoff object. Supported properties are 'label', 'agent', 'prompt' and optional 'send', 'showContinueOn', 'model'.", prop.key.value), prop.value.range, MarkerSeverity.Warning));
         }
         required.delete(prop.key.value);
       }
@@ -464,10 +494,7 @@ let PromptValidator = class PromptValidator2 {
     if (!attribute) {
       return;
     }
-    if (attribute.value.type !== "boolean") {
-      report(toMarker(localize("promptValidator.inferMustBeBoolean", "The 'infer' attribute must be a boolean."), attribute.value.range, MarkerSeverity.Error));
-      return;
-    }
+    report(toMarker(localize("promptValidator.inferDeprecated", "The 'infer' attribute is deprecated in favour of 'user-invokable' and 'disable-model-invocation'."), attribute.value.range, MarkerSeverity.Error));
   }
   validateTarget(attributes, report) {
     const attribute = attributes.find((attr) => attr.key === PromptHeaderAttributes.target);
@@ -488,6 +515,56 @@ let PromptValidator = class PromptValidator2 {
       report(toMarker(localize("promptValidator.targetInvalidValue", "The 'target' attribute must be one of: {0}.", validTargets.join(", ")), attribute.value.range, MarkerSeverity.Error));
     }
   }
+  validateUserInvokable(attributes, report) {
+    const attribute = attributes.find((attr) => attr.key === PromptHeaderAttributes.userInvokable);
+    if (!attribute) {
+      return;
+    }
+    if (attribute.value.type !== "boolean") {
+      report(toMarker(localize("promptValidator.userInvokableMustBeBoolean", "The 'user-invokable' attribute must be a boolean."), attribute.value.range, MarkerSeverity.Error));
+      return;
+    }
+  }
+  validateDisableModelInvocation(attributes, report) {
+    const attribute = attributes.find((attr) => attr.key === PromptHeaderAttributes.disableModelInvocation);
+    if (!attribute) {
+      return;
+    }
+    if (attribute.value.type !== "boolean") {
+      report(toMarker(localize("promptValidator.disableModelInvocationMustBeBoolean", "The 'disable-model-invocation' attribute must be a boolean."), attribute.value.range, MarkerSeverity.Error));
+      return;
+    }
+  }
+  async validateAgentsAttribute(attributes, header, report) {
+    const attribute = attributes.find((attr) => attr.key === PromptHeaderAttributes.agents);
+    if (!attribute) {
+      return;
+    }
+    if (attribute.value.type !== "array") {
+      report(toMarker(localize("promptValidator.agentsMustBeArray", "The 'agents' attribute must be an array."), attribute.value.range, MarkerSeverity.Error));
+      return;
+    }
+    const agents = await this.promptsService.getCustomAgents(CancellationToken.None);
+    const availableAgentNames = new Set(agents.map((agent) => agent.name));
+    availableAgentNames.add(ChatMode.Agent.name.get());
+    const agentNames = [];
+    for (const item of attribute.value.items) {
+      if (item.type !== "string") {
+        report(toMarker(localize("promptValidator.eachAgentMustBeString", "Each agent name in the 'agents' attribute must be a string."), item.range, MarkerSeverity.Error));
+      } else if (item.value) {
+        agentNames.push(item.value);
+        if (item.value !== "*" && !availableAgentNames.has(item.value)) {
+          report(toMarker(localize("promptValidator.agentInAgentsNotFound", "Unknown agent '{0}'. Available agents: {1}.", item.value, Array.from(availableAgentNames).join(", ")), item.range, MarkerSeverity.Warning));
+        }
+      }
+    }
+    if (agentNames.length > 0) {
+      const tools = header.tools;
+      if (tools && !tools.includes(SpecedToolAliases.agent)) {
+        report(toMarker(localize("promptValidator.agentsRequiresAgentTool", "When 'agents' and 'tools' are specified, the 'agent' tool must be included in the 'tools' attribute."), attribute.value.range, MarkerSeverity.Warning));
+      }
+    }
+  }
 };
 PromptValidator = __decorate([
   __param(0, ILanguageModelsService),
@@ -500,15 +577,19 @@ PromptValidator = __decorate([
 const allAttributeNames = {
   [PromptsType.prompt]: [PromptHeaderAttributes.name, PromptHeaderAttributes.description, PromptHeaderAttributes.model, PromptHeaderAttributes.tools, PromptHeaderAttributes.mode, PromptHeaderAttributes.agent, PromptHeaderAttributes.argumentHint],
   [PromptsType.instructions]: [PromptHeaderAttributes.name, PromptHeaderAttributes.description, PromptHeaderAttributes.applyTo, PromptHeaderAttributes.excludeAgent],
-  [PromptsType.agent]: [PromptHeaderAttributes.name, PromptHeaderAttributes.description, PromptHeaderAttributes.model, PromptHeaderAttributes.tools, PromptHeaderAttributes.advancedOptions, PromptHeaderAttributes.handOffs, PromptHeaderAttributes.argumentHint, PromptHeaderAttributes.target, PromptHeaderAttributes.infer],
-  [PromptsType.skill]: [PromptHeaderAttributes.name, PromptHeaderAttributes.description, PromptHeaderAttributes.license, PromptHeaderAttributes.compatibility, PromptHeaderAttributes.metadata]
+  [PromptsType.agent]: [PromptHeaderAttributes.name, PromptHeaderAttributes.description, PromptHeaderAttributes.model, PromptHeaderAttributes.tools, PromptHeaderAttributes.advancedOptions, PromptHeaderAttributes.handOffs, PromptHeaderAttributes.argumentHint, PromptHeaderAttributes.target, PromptHeaderAttributes.infer, PromptHeaderAttributes.agents, PromptHeaderAttributes.userInvokable, PromptHeaderAttributes.disableModelInvocation],
+  [PromptsType.skill]: [PromptHeaderAttributes.name, PromptHeaderAttributes.description, PromptHeaderAttributes.license, PromptHeaderAttributes.compatibility, PromptHeaderAttributes.metadata],
+  [PromptsType.hook]: []
+  // hooks are JSON files, not markdown with YAML frontmatter
 };
 const githubCopilotAgentAttributeNames = [PromptHeaderAttributes.name, PromptHeaderAttributes.description, PromptHeaderAttributes.tools, PromptHeaderAttributes.target, GithubPromptHeaderAttributes.mcpServers, PromptHeaderAttributes.infer];
 const recommendedAttributeNames = {
   [PromptsType.prompt]: allAttributeNames[PromptsType.prompt].filter((name) => !isNonRecommendedAttribute(name)),
   [PromptsType.instructions]: allAttributeNames[PromptsType.instructions].filter((name) => !isNonRecommendedAttribute(name)),
   [PromptsType.agent]: allAttributeNames[PromptsType.agent].filter((name) => !isNonRecommendedAttribute(name)),
-  [PromptsType.skill]: allAttributeNames[PromptsType.skill].filter((name) => !isNonRecommendedAttribute(name))
+  [PromptsType.skill]: allAttributeNames[PromptsType.skill].filter((name) => !isNonRecommendedAttribute(name)),
+  [PromptsType.hook]: []
+  // hooks are JSON files, not markdown with YAML frontmatter
 };
 function getValidAttributeNames(promptType, includeNonRecommended, isGitHubTarget) {
   if (isGitHubTarget && promptType === PromptsType.agent) {
@@ -518,9 +599,76 @@ function getValidAttributeNames(promptType, includeNonRecommended, isGitHubTarge
 }
 __name(getValidAttributeNames, "getValidAttributeNames");
 function isNonRecommendedAttribute(attributeName) {
-  return attributeName === PromptHeaderAttributes.advancedOptions || attributeName === PromptHeaderAttributes.excludeAgent || attributeName === PromptHeaderAttributes.mode;
+  return attributeName === PromptHeaderAttributes.advancedOptions || attributeName === PromptHeaderAttributes.excludeAgent || attributeName === PromptHeaderAttributes.mode || attributeName === PromptHeaderAttributes.infer;
 }
 __name(isNonRecommendedAttribute, "isNonRecommendedAttribute");
+function getAttributeDescription(attributeName, promptType) {
+  switch (promptType) {
+    case PromptsType.instructions:
+      switch (attributeName) {
+        case PromptHeaderAttributes.name:
+          return localize("promptHeader.instructions.name", "The name of the instruction file as shown in the UI. If not set, the name is derived from the file name.");
+        case PromptHeaderAttributes.description:
+          return localize("promptHeader.instructions.description", "The description of the instruction file. It can be used to provide additional context or information about the instructions and is passed to the language model as part of the prompt.");
+        case PromptHeaderAttributes.applyTo:
+          return localize("promptHeader.instructions.applyToRange", "One or more glob pattern (separated by comma) that describe for which files the instructions apply to. Based on these patterns, the file is automatically included in the prompt, when the context contains a file that matches one or more of these patterns. Use `**` when you want this file to always be added.\nExample: `**/*.ts`, `**/*.js`, `client/**`");
+      }
+      break;
+    case PromptsType.skill:
+      switch (attributeName) {
+        case PromptHeaderAttributes.name:
+          return localize("promptHeader.skill.name", "The name of the skill.");
+        case PromptHeaderAttributes.description:
+          return localize("promptHeader.skill.description", "The description of the skill. The description is added to every request and will be used by the agent to decide when to load the skill.");
+      }
+      break;
+    case PromptsType.agent:
+      switch (attributeName) {
+        case PromptHeaderAttributes.name:
+          return localize("promptHeader.agent.name", "The name of the agent as shown in the UI.");
+        case PromptHeaderAttributes.description:
+          return localize("promptHeader.agent.description", "The description of the custom agent, what it does and when to use it.");
+        case PromptHeaderAttributes.argumentHint:
+          return localize("promptHeader.agent.argumentHint", "The argument-hint describes what inputs the custom agent expects or supports.");
+        case PromptHeaderAttributes.model:
+          return localize("promptHeader.agent.model", "Specify the model that runs this custom agent. Can also be a list of models. The first available model will be used.");
+        case PromptHeaderAttributes.tools:
+          return localize("promptHeader.agent.tools", "The set of tools that the custom agent has access to.");
+        case PromptHeaderAttributes.handOffs:
+          return localize("promptHeader.agent.handoffs", "Possible handoff actions when the agent has completed its task.");
+        case PromptHeaderAttributes.target:
+          return localize("promptHeader.agent.target", "The target to which the header attributes like tools apply to. Possible values are `github-copilot` and `vscode`.");
+        case PromptHeaderAttributes.infer:
+          return localize("promptHeader.agent.infer", "Controls visibility of the agent.");
+        case PromptHeaderAttributes.agents:
+          return localize("promptHeader.agent.agents", "One or more agents that this agent can use as subagents. Use '*' to specify all available agents.");
+        case PromptHeaderAttributes.userInvokable:
+          return localize("promptHeader.agent.userInvokable", "Whether the agent can be selected and invoked by users in the UI.");
+        case PromptHeaderAttributes.disableModelInvocation:
+          return localize("promptHeader.agent.disableModelInvocation", "If true, prevents the agent from being invoked as a subagent.");
+      }
+      break;
+    case PromptsType.prompt:
+      switch (attributeName) {
+        case PromptHeaderAttributes.name:
+          return localize("promptHeader.prompt.name", "The name of the prompt. This is also the name of the slash command that will run this prompt.");
+        case PromptHeaderAttributes.description:
+          return localize("promptHeader.prompt.description", "The description of the reusable prompt, what it does and when to use it.");
+        case PromptHeaderAttributes.argumentHint:
+          return localize("promptHeader.prompt.argumentHint", "The argument-hint describes what inputs the prompt expects or supports.");
+        case PromptHeaderAttributes.model:
+          return localize("promptHeader.prompt.model", "The model to use in this prompt. Can also be a list of models. The first available model will be used.");
+        case PromptHeaderAttributes.tools:
+          return localize("promptHeader.prompt.tools", "The tools to use in this prompt.");
+        case PromptHeaderAttributes.agent:
+        case PromptHeaderAttributes.mode:
+          return localize("promptHeader.prompt.agent.description", "The agent to use when running this prompt.");
+      }
+      break;
+  }
+  return void 0;
+}
+__name(getAttributeDescription, "getAttributeDescription");
 const knownGithubCopilotTools = [
   SpecedToolAliases.execute,
   SpecedToolAliases.read,
@@ -641,6 +789,7 @@ export {
   MARKERS_OWNER_ID,
   PromptValidator,
   PromptValidatorContribution,
+  getAttributeDescription,
   getValidAttributeNames,
   isGithubTarget,
   isNonRecommendedAttribute,

@@ -18,18 +18,26 @@ export declare class ExtHostChatContext extends Disposable implements ExtHostCha
     /** Track which items belong to which provider for cleanup */
     private _providerItems;
     constructor(extHostRpc: IExtHostRpcService, _commands: IExtHostCommands);
-    $provideChatContext(handle: number, token: CancellationToken): Promise<IChatContextItem[]>;
-    private _clearProviderItems;
-    private _addTrackedItem;
-    $provideChatContextForResource(handle: number, options: {
+    $provideWorkspaceChatContext(handle: number, token: CancellationToken): Promise<IChatContextItem[]>;
+    $provideExplicitChatContext(handle: number, token: CancellationToken): Promise<IChatContextItem[]>;
+    $resolveExplicitChatContext(handle: number, context: IChatContextItem, token: CancellationToken): Promise<IChatContextItem>;
+    $provideResourceChatContext(handle: number, options: {
         resource: UriComponents;
         withValue: boolean;
     }, token: CancellationToken): Promise<IChatContextItem | undefined>;
-    private _doResolve;
-    $resolveChatContext(handle: number, context: IChatContextItem, token: CancellationToken): Promise<IChatContextItem>;
+    $resolveResourceChatContext(handle: number, context: IChatContextItem, token: CancellationToken): Promise<IChatContextItem>;
     $executeChatContextItemCommand(itemHandle: number): Promise<void>;
+    registerChatWorkspaceContextProvider(id: string, provider: vscode.ChatWorkspaceContextProvider): vscode.Disposable;
+    registerChatExplicitContextProvider(id: string, provider: vscode.ChatExplicitContextProvider): vscode.Disposable;
+    registerChatResourceContextProvider(selector: vscode.DocumentSelector, id: string, provider: vscode.ChatResourceContextProvider): vscode.Disposable;
+    /**
+     * @deprecated Use registerChatWorkspaceContextProvider, registerChatExplicitContextProvider, or registerChatResourceContextProvider instead.
+     */
     registerChatContextProvider(selector: vscode.DocumentSelector | undefined, id: string, provider: vscode.ChatContextProvider): vscode.Disposable;
+    private _clearProviderItems;
+    private _addTrackedItem;
+    private _convertItems;
+    private _doResolve;
     private _listenForWorkspaceContextChanges;
-    private _getProvider;
     dispose(): void;
 }

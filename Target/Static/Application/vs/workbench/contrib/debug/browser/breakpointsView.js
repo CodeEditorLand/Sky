@@ -13,11 +13,11 @@ var __param = function(paramIndex, decorator) {
 };
 var BreakpointsFolderRenderer_1, BreakpointsRenderer_1, FunctionBreakpointsRenderer_1, DataBreakpointsRenderer_1, InstructionBreakpointsRenderer_1;
 import * as dom from "../../../../base/browser/dom.js";
-import { Gesture } from "../../../../base/browser/touch.js";
 import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
 import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
 import { IconLabel } from "../../../../base/browser/ui/iconLabel/iconLabel.js";
 import { InputBox } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import { Checkbox, TriStateCheckbox } from "../../../../base/browser/ui/toggle/toggle.js";
 import { Action } from "../../../../base/common/actions.js";
 import { RunOnceScheduler } from "../../../../base/common/async.js";
 import { Codicon } from "../../../../base/common/codicons.js";
@@ -43,7 +43,7 @@ import { WorkbenchCompressibleObjectTree } from "../../../../platform/list/brows
 import { INotificationService } from "../../../../platform/notification/common/notification.js";
 import { IOpenerService } from "../../../../platform/opener/common/opener.js";
 import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
-import { defaultInputBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { defaultCheckboxStyles, defaultInputBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
 import { IThemeService } from "../../../../platform/theme/common/themeService.js";
 import { ViewAction, ViewPane } from "../../../browser/parts/views/viewPane.js";
 import { IViewDescriptorService } from "../../../common/views.js";
@@ -57,10 +57,9 @@ import { equals } from "../../../../base/common/arrays.js";
 import { hasKey } from "../../../../base/common/types.js";
 const $ = dom.$;
 function createCheckbox(disposables) {
-  const checkbox = $("input");
-  checkbox.type = "checkbox";
-  checkbox.tabIndex = -1;
-  disposables.add(Gesture.ignoreTarget(checkbox));
+  const checkbox = new Checkbox("", false, defaultCheckboxStyles);
+  checkbox.domNode.tabIndex = -1;
+  disposables.add(checkbox);
   return checkbox;
 }
 __name(createCheckbox, "createCheckbox");
@@ -541,14 +540,17 @@ let BreakpointsFolderRenderer = class BreakpointsFolderRenderer2 {
     data.templateDisposables.add(toDisposable(() => {
       container.classList.remove("breakpoint", "breakpoint-folder");
     }));
-    data.checkbox = createCheckbox(data.templateDisposables);
-    data.templateDisposables.add(dom.addStandardDisposableListener(data.checkbox, "change", (e) => {
-      const enabled = data.checkbox.checked;
+    data.checkbox = new TriStateCheckbox("", false, defaultCheckboxStyles);
+    data.checkbox.domNode.tabIndex = -1;
+    data.templateDisposables.add(data.checkbox);
+    data.templateDisposables.add(data.checkbox.onChange(() => {
+      const checked = data.checkbox.checked;
+      const enabled = checked === "mixed" ? true : checked;
       for (const bp of data.context.breakpoints) {
         this.debugService.enableOrDisableBreakpoints(enabled, bp);
       }
     }));
-    dom.append(data.container, data.checkbox);
+    dom.append(data.container, data.checkbox.domNode);
     data.name = dom.append(data.container, $("span.name"));
     dom.append(data.container, $("span.file-path"));
     data.actionBar = new ActionBar(data.container);
@@ -563,10 +565,8 @@ let BreakpointsFolderRenderer = class BreakpointsFolderRenderer2 {
     const fullPath = this.labelService.getUriLabel(folderItem.uri, { relative: true });
     data.elementDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.container, fullPath));
     if (folderItem.indeterminate) {
-      data.checkbox.checked = false;
-      data.checkbox.indeterminate = true;
+      data.checkbox.checked = "mixed";
     } else {
-      data.checkbox.indeterminate = false;
       data.checkbox.checked = folderItem.enabled;
     }
     data.actionBar.clear();
@@ -586,10 +586,8 @@ let BreakpointsFolderRenderer = class BreakpointsFolderRenderer2 {
     const fullPath = this.labelService.getUriLabel(folderItem.uri, { relative: true });
     data.elementDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.container, fullPath));
     if (folderItem.indeterminate) {
-      data.checkbox.checked = false;
-      data.checkbox.indeterminate = true;
+      data.checkbox.checked = "mixed";
     } else {
-      data.checkbox.indeterminate = false;
       data.checkbox.checked = folderItem.enabled;
     }
     data.actionBar.clear();
@@ -650,11 +648,11 @@ let BreakpointsRenderer = class BreakpointsRenderer2 {
     }));
     data.icon = $(".icon");
     data.checkbox = createCheckbox(data.templateDisposables);
-    data.templateDisposables.add(dom.addStandardDisposableListener(data.checkbox, "change", (e) => {
+    data.templateDisposables.add(data.checkbox.onChange(() => {
       this.debugService.enableOrDisableBreakpoints(!data.context.enabled, data.context);
     }));
     dom.append(data.breakpoint, data.icon);
-    dom.append(data.breakpoint, data.checkbox);
+    dom.append(data.breakpoint, data.checkbox.domNode);
     data.name = dom.append(data.breakpoint, $("span.name"));
     data.filePath = dom.append(data.breakpoint, $("span.file-path"));
     data.actionBar = new ActionBar(data.breakpoint);
@@ -773,10 +771,10 @@ class ExceptionBreakpointsRenderer {
     data.templateDisposables.add(data.elementDisposables);
     data.breakpoint = dom.append(container, $(".breakpoint"));
     data.checkbox = createCheckbox(data.templateDisposables);
-    data.templateDisposables.add(dom.addStandardDisposableListener(data.checkbox, "change", (e) => {
+    data.templateDisposables.add(data.checkbox.onChange(() => {
       this.debugService.enableOrDisableBreakpoints(!data.context.enabled, data.context);
     }));
-    dom.append(data.breakpoint, data.checkbox);
+    dom.append(data.breakpoint, data.checkbox.domNode);
     data.name = dom.append(data.breakpoint, $("span.name"));
     data.condition = dom.append(data.breakpoint, $("span.condition"));
     data.breakpoint.classList.add("exception");
@@ -856,11 +854,11 @@ let FunctionBreakpointsRenderer = class FunctionBreakpointsRenderer2 {
     data.breakpoint = dom.append(container, $(".breakpoint"));
     data.icon = $(".icon");
     data.checkbox = createCheckbox(data.templateDisposables);
-    data.templateDisposables.add(dom.addStandardDisposableListener(data.checkbox, "change", (e) => {
+    data.templateDisposables.add(data.checkbox.onChange(() => {
       this.debugService.enableOrDisableBreakpoints(!data.context.enabled, data.context);
     }));
     dom.append(data.breakpoint, data.icon);
-    dom.append(data.breakpoint, data.checkbox);
+    dom.append(data.breakpoint, data.checkbox.domNode);
     data.name = dom.append(data.breakpoint, $("span.name"));
     data.condition = dom.append(data.breakpoint, $("span.condition"));
     data.actionBar = new ActionBar(data.breakpoint);
@@ -952,11 +950,11 @@ let DataBreakpointsRenderer = class DataBreakpointsRenderer2 {
     data.templateDisposables.add(data.elementDisposables);
     data.icon = $(".icon");
     data.checkbox = createCheckbox(data.templateDisposables);
-    data.templateDisposables.add(dom.addStandardDisposableListener(data.checkbox, "change", (e) => {
+    data.templateDisposables.add(data.checkbox.onChange(() => {
       this.debugService.enableOrDisableBreakpoints(!data.context.enabled, data.context);
     }));
     dom.append(data.breakpoint, data.icon);
-    dom.append(data.breakpoint, data.checkbox);
+    dom.append(data.breakpoint, data.checkbox.domNode);
     data.name = dom.append(data.breakpoint, $("span.name"));
     data.accessType = dom.append(data.breakpoint, $("span.access-type"));
     data.condition = dom.append(data.breakpoint, $("span.condition"));
@@ -1056,11 +1054,11 @@ let InstructionBreakpointsRenderer = class InstructionBreakpointsRenderer2 {
     data.breakpoint = dom.append(container, $(".breakpoint"));
     data.icon = $(".icon");
     data.checkbox = createCheckbox(data.templateDisposables);
-    data.templateDisposables.add(dom.addStandardDisposableListener(data.checkbox, "change", (e) => {
+    data.templateDisposables.add(data.checkbox.onChange(() => {
       this.debugService.enableOrDisableBreakpoints(!data.context.enabled, data.context);
     }));
     dom.append(data.breakpoint, data.icon);
-    dom.append(data.breakpoint, data.checkbox);
+    dom.append(data.breakpoint, data.checkbox.domNode);
     data.name = dom.append(data.breakpoint, $("span.name"));
     data.address = dom.append(data.breakpoint, $("span.file-path"));
     data.actionBar = new ActionBar(data.breakpoint);
@@ -1134,7 +1132,7 @@ class FunctionBreakpointInputRenderer {
     template.icon = $(".icon");
     template.checkbox = createCheckbox(toDispose);
     dom.append(breakpoint, template.icon);
-    dom.append(breakpoint, template.checkbox);
+    dom.append(breakpoint, template.checkbox.domNode);
     this.view.breakpointInputFocused.set(true);
     const inputBoxContainer = dom.append(breakpoint, $(".inputBoxContainer"));
     const inputBox = new InputBox(inputBoxContainer, this.contextViewService, { inputBoxStyles: defaultInputBoxStyles });
@@ -1199,7 +1197,7 @@ class FunctionBreakpointInputRenderer {
     data.icon.className = ThemeIcon.asClassName(icon);
     data.elementDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.icon, message ? message : ""));
     data.checkbox.checked = functionBreakpoint.enabled;
-    data.checkbox.disabled = true;
+    data.checkbox.disable();
     data.inputBox.value = functionBreakpoint.name || "";
     let placeholder = localize("functionBreakpointPlaceholder", "Function to break on");
     let ariaLabel = localize("functionBreakPointInputAriaLabel", "Type function breakpoint.");
@@ -1255,7 +1253,7 @@ class DataBreakpointInputRenderer {
     template.icon = $(".icon");
     template.checkbox = createCheckbox(toDispose);
     dom.append(breakpoint, template.icon);
-    dom.append(breakpoint, template.checkbox);
+    dom.append(breakpoint, template.checkbox.domNode);
     this.view.breakpointInputFocused.set(true);
     const inputBoxContainer = dom.append(breakpoint, $(".inputBoxContainer"));
     const inputBox = new InputBox(inputBoxContainer, this.contextViewService, { inputBoxStyles: defaultInputBoxStyles });
@@ -1313,7 +1311,7 @@ class DataBreakpointInputRenderer {
     data.icon.className = ThemeIcon.asClassName(icon);
     data.elementDisposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.icon, message ?? ""));
     data.checkbox.checked = dataBreakpoint.enabled;
-    data.checkbox.disabled = true;
+    data.checkbox.disable();
     data.inputBox.value = "";
     let placeholder = "";
     let ariaLabel = "";
@@ -1365,7 +1363,7 @@ class ExceptionBreakpointInputRenderer {
     const breakpoint = dom.append(container, $(".breakpoint"));
     breakpoint.classList.add("exception");
     const checkbox = createCheckbox(toDispose);
-    dom.append(breakpoint, checkbox);
+    dom.append(breakpoint, checkbox.domNode);
     this.view.breakpointInputFocused.set(true);
     const inputBoxContainer = dom.append(breakpoint, $(".inputBoxContainer"));
     const inputBox = new InputBox(inputBoxContainer, this.contextViewService, {
@@ -1420,7 +1418,7 @@ class ExceptionBreakpointInputRenderer {
     data.inputBox.setPlaceHolder(placeHolder);
     data.currentBreakpoint = exceptionBreakpoint;
     data.checkbox.checked = exceptionBreakpoint.enabled;
-    data.checkbox.disabled = true;
+    data.checkbox.disable();
     data.inputBox.value = exceptionBreakpoint.condition || "";
     setTimeout(() => {
       data.inputBox.focus();

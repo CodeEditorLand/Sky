@@ -2,6 +2,9 @@ declare const _allApiProposals: {
     activeComment: {
         proposal: string;
     };
+    agentSessionsWorkspace: {
+        proposal: string;
+    };
     aiRelatedInformation: {
         proposal: string;
     };
@@ -33,14 +36,16 @@ declare const _allApiProposals: {
     chatContextProvider: {
         proposal: string;
     };
-    chatEditing: {
+    chatHooks: {
         proposal: string;
+        version: number;
     };
     chatOutputRenderer: {
         proposal: string;
     };
     chatParticipantAdditions: {
         proposal: string;
+        version: number;
     };
     chatParticipantPrivate: {
         proposal: string;
@@ -95,6 +100,9 @@ declare const _allApiProposals: {
         proposal: string;
     };
     contribAccessibilityHelpContent: {
+        proposal: string;
+    };
+    contribChatEditorInlineGutterMenu: {
         proposal: string;
     };
     contribCommentEditorActionsMenu: {
@@ -215,6 +223,12 @@ declare const _allApiProposals: {
     embeddings: {
         proposal: string;
     };
+    envIsAppPortable: {
+        proposal: string;
+    };
+    extensionAffinity: {
+        proposal: string;
+    };
     extensionRuntime: {
         proposal: string;
     };
@@ -271,6 +285,10 @@ declare const _allApiProposals: {
     languageModelToolResultAudience: {
         proposal: string;
     };
+    languageModelToolSupportsModel: {
+        proposal: string;
+        version: number;
+    };
     languageStatusText: {
         proposal: string;
     };
@@ -278,6 +296,9 @@ declare const _allApiProposals: {
         proposal: string;
     };
     markdownAlertSyntax: {
+        proposal: string;
+    };
+    mcpServerDefinitions: {
         proposal: string;
     };
     mcpToolDefinitions: {

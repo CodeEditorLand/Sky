@@ -11,14 +11,17 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
+var ChatMcpAppModel_1;
 import * as dom from "../../../../../../../base/browser/dom.js";
 import { softAssertNever } from "../../../../../../../base/common/assert.js";
 import { disposableTimeout } from "../../../../../../../base/common/async.js";
 import { decodeBase64 } from "../../../../../../../base/common/buffer.js";
 import { CancellationTokenSource } from "../../../../../../../base/common/cancellation.js";
 import { Emitter } from "../../../../../../../base/common/event.js";
+import { hash } from "../../../../../../../base/common/hash.js";
+import { MarkdownString } from "../../../../../../../base/common/htmlContent.js";
 import { Disposable } from "../../../../../../../base/common/lifecycle.js";
-import { autorun, autorunSelfDisposable, derived, observableValue } from "../../../../../../../base/common/observable.js";
+import { autorun, autorunSelfDisposable, observableValue } from "../../../../../../../base/common/observable.js";
 import { basename } from "../../../../../../../base/common/resources.js";
 import { isFalsyOrWhitespace } from "../../../../../../../base/common/strings.js";
 import { hasKey, isDefined } from "../../../../../../../base/common/types.js";
@@ -39,6 +42,12 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
   static {
     __name(this, "ChatMcpAppModel");
   }
+  static {
+    ChatMcpAppModel_1 = this;
+  }
+  static {
+    this.heightCache = /* @__PURE__ */ new WeakMap();
+  }
   constructor(toolInvocation, renderData, _container, maxHeight, currentWidth, _instantiationService, _chatWidgetService, _webviewService, storageService, _logService, _productService, _openerService) {
     super();
     this.toolInvocation = toolInvocation;
@@ -53,7 +62,6 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
     this._disposeCts = this._register(new CancellationTokenSource());
     this._announcedCapabilities = false;
     this._latestCsp = void 0;
-    this._height = 300;
     this._loadState = observableValue(this, { status: "loading" });
     this.loadState = this._loadState;
     this._onDidChangeHeight = this._register(new Emitter());
@@ -61,6 +69,7 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
     this._originStore = new WebviewOriginStore(ORIGIN_STORE_KEY, storageService);
     this._webviewOrigin = this._originStore.getOrigin("mcpApp", renderData.serverDefinitionId);
     this._mcpToolCallUI = this._register(this._instantiationService.createInstance(McpToolCallUI, renderData));
+    this._height = ChatMcpAppModel_1.heightCache.get(this.toolInvocation) ?? 300;
     this._webview = this._register(this._webviewService.createWebviewElement({
       origin: this._webviewOrigin,
       title: localize("mcpAppTitle", "MCP App"),
@@ -101,28 +110,6 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
     }));
     this._register(this._webview.onMessage(async ({ message }) => {
       await this._handleWebviewMessage(message);
-    }));
-    const canScrollWithin = derived((reader) => {
-      const contentSize = this._webview.intrinsicContentSize.read(reader);
-      const maxHeightValue = maxHeight.read(reader);
-      if (!contentSize) {
-        return false;
-      }
-      return contentSize.height > maxHeightValue;
-    });
-    this._register(autorun((reader) => {
-      if (!canScrollWithin.read(reader)) {
-        const widget = this._chatWidgetService.getWidgetBySessionResource(this.renderData.sessionResource);
-        reader.store.add(this._webview.onDidWheel((e) => {
-          widget?.delegateScrollFromMouseWheelEvent({
-            ...e,
-            preventDefault: /* @__PURE__ */ __name(() => {
-            }, "preventDefault"),
-            stopPropagation: /* @__PURE__ */ __name(() => {
-            }, "stopPropagation")
-          });
-        }));
-      }
     }));
     this._loadContent();
   }
@@ -218,7 +205,7 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
 					if (type === 'message') {
 						const originalListener = listener;
 						const wrappedListener = (event) => {
-							if (event.source.origin === document.location.origin && event.source !== window) { event = setMessageSource(event, window.parent); }
+							if (event.origin === document.location.origin && event.source !== window) { event = setMessageSource(event, window.parent); }
 							originalListener(event);
 						};
 						wrappedFns.set(originalListener, wrappedListener);
@@ -235,6 +222,75 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
 				};
 
 				window.parent = wrap(window.parent);
+
+				// Scroll boundary detection: bubble wheel events to parent when at scroll boundaries
+				const shouldBubbleScroll = (event) => {
+					// First check element-level scrolling (for elements with overflow: auto/scroll)
+					for (let node = event.target; node; node = node.parentNode) {
+						if (!(node instanceof Element)) {
+							continue;
+						}
+
+						// Skip HTML and BODY - we check document-level scroll separately
+						if (node === document.documentElement || node === document.body) {
+							continue;
+						}
+
+						// Check if the element can actually scroll
+						const overflow = window.getComputedStyle(node).overflowY;
+						if (overflow === 'hidden' || overflow === 'visible') {
+							continue;
+						}
+
+						// Scroll up: if there's content above (scrollTop > 0), don't bubble
+						if (event.deltaY < 0 && node.scrollTop > 0) {
+							return false;
+						}
+
+						// Scroll down: if there's content below, don't bubble
+						if (event.deltaY > 0 && node.scrollTop + node.clientHeight < node.scrollHeight) {
+							// Account for rounding: scrollTop isn't rounded but scrollHeight/clientHeight are
+							if (node.scrollHeight - node.scrollTop - node.clientHeight < 2) {
+								continue;
+							}
+							return false;
+						}
+					}
+
+					// Check document-level scrolling (works even with overflow: visible on html/body)
+					const docEl = document.documentElement;
+					const scrollTop = window.scrollY || docEl.scrollTop || document.body.scrollTop || 0;
+					const scrollHeight = Math.max(docEl.scrollHeight, document.body.scrollHeight);
+					const clientHeight = docEl.clientHeight;
+					const scrollableDistance = scrollHeight - clientHeight;
+
+					if (scrollableDistance > 2) {
+						// Document is scrollable
+						if (event.deltaY < 0 && scrollTop > 0) {
+							return false;
+						}
+						if (event.deltaY > 0 && scrollTop < scrollableDistance - 2) {
+							return false;
+						}
+					}
+
+					return true;
+				};
+
+				window.addEventListener('wheel', (event) => {
+					if (event.defaultPrevented || !shouldBubbleScroll(event)) {
+						return;
+					}
+					api.postMessage({
+						method: 'ui/notifications/sandbox-wheel',
+						params: {
+							deltaMode: event.deltaMode,
+							deltaX: event.deltaX,
+							deltaY: event.deltaY,
+							deltaZ: event.deltaZ,
+						}
+					});
+				}, { passive: true });
 			})();<\/script>
 		`;
     return this._prependToHead(html, cspTag + postMessageRehoist);
@@ -279,15 +335,21 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
           result = await this._handleOpenLink(request.params);
           break;
         case "ui/request-display-mode":
+          result = { mode: "inline" };
           break;
-        // not supported
         case "ui/notifications/initialized":
           break;
         case "ui/message":
           result = await this._handleUiMessage(request.params);
           break;
+        case "ui/update-model-context":
+          result = await this._handleUpdateModelContext(request.params);
+          break;
         case "notifications/message":
           await this._mcpToolCallUI.log(request.params);
+          break;
+        case "ui/notifications/sandbox-wheel":
+          this._handleSandboxWheel(request.params);
           break;
         default: {
           softAssertNever(request);
@@ -310,7 +372,7 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
     }
   }
   /**
-   * Handles the ui/initialize request from the MCP App.
+   * Handles the ui/initialize request from the MCP App View.
    */
   async _handleInitialize(_params) {
     this._announcedCapabilities = true;
@@ -352,7 +414,14 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
         logging: {},
         sandbox: {
           csp: this._latestCsp,
-          permissions: { clipboardWrite: true }
+          permissions: { clipboardWrite: {} }
+        },
+        updateModelContext: {
+          audio: {},
+          image: {},
+          resourceLink: {},
+          resource: {},
+          structuredContent: {}
         }
       },
       hostContext: this.hostContext.get()
@@ -392,11 +461,90 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
     widget.focusInput();
     return { isError: false };
   }
+  async _handleUpdateModelContext(params) {
+    const widget = this._chatWidgetService.getWidgetBySessionResource(this.renderData.sessionResource);
+    if (!widget) {
+      return {};
+    }
+    const idPrefix = `mcpui-context-${hash(this.renderData.serverDefinitionId)}-`;
+    const toDelete = widget.attachmentModel.getAttachmentIDs();
+    const idsToDelete = Array.from(toDelete).filter((id) => id.startsWith(idPrefix));
+    const entries = [];
+    let entryIndex = 0;
+    if (params.content) {
+      for (const block of params.content) {
+        const id = `${idPrefix}${entryIndex++}`;
+        if (block.type === "image") {
+          entries.push({
+            kind: "image",
+            value: decodeBase64(block.data).buffer,
+            id,
+            name: "Image",
+            mimeType: block.mimeType
+          });
+        } else if (block.type === "resource_link") {
+          const uri = McpResourceURI.fromServer({ id: this.renderData.serverDefinitionId, label: "" }, block.uri);
+          entries.push({
+            kind: "file",
+            value: uri,
+            id,
+            name: basename(uri)
+          });
+        } else if (block.type === "text") {
+          const preview = block.text.replaceAll(/\s+/g, " ").trim();
+          const truncateTo = 20;
+          entries.push({
+            kind: "generic",
+            value: block.text,
+            id,
+            tooltip: new MarkdownString().appendCodeblock("plaintext", block.text),
+            name: preview.length > truncateTo ? preview.slice(0, truncateTo) + "\u2026" : preview
+          });
+        }
+      }
+    }
+    if (params.structuredContent && Object.keys(params.structuredContent).length > 0) {
+      const id = `${idPrefix}structured`;
+      const value = JSON.stringify(params.structuredContent, null, 2);
+      entries.push({
+        kind: "generic",
+        value,
+        tooltip: new MarkdownString().appendCodeblock("json", value),
+        id,
+        name: "UI Data"
+      });
+    }
+    widget.attachmentModel.updateContext(idsToDelete, entries);
+    return {};
+  }
   _handleSizeChanged(params) {
-    if (params.height !== void 0) {
+    if (params.height !== void 0 && params.height !== this._height) {
       this._height = params.height;
+      ChatMcpAppModel_1.heightCache.set(this.toolInvocation, params.height);
       this._onDidChangeHeight.fire();
     }
+  }
+  _handleSandboxWheel(params) {
+    let defaultPrevented = false;
+    const evt = {
+      wheelDeltaX: params.deltaX,
+      wheelDeltaY: -params.deltaY,
+      wheelDelta: Math.abs(params.deltaY),
+      deltaX: params.deltaX,
+      deltaY: -params.deltaY,
+      deltaZ: params.deltaZ,
+      deltaMode: params.deltaMode,
+      preventDefault: /* @__PURE__ */ __name(() => {
+        defaultPrevented = true;
+      }, "preventDefault"),
+      stopPropagation: /* @__PURE__ */ __name(() => {
+      }, "stopPropagation"),
+      get defaultPrevented() {
+        return defaultPrevented;
+      }
+    };
+    const widget = this._chatWidgetService.getWidgetBySessionResource(this.renderData.sessionResource);
+    widget?.delegateScrollFromMouseWheelEvent(evt);
   }
   async _handleOpenLink(params) {
     const ok = await this._openerService.open(params.url);
@@ -446,7 +594,7 @@ let ChatMcpAppModel = class ChatMcpAppModel2 extends Disposable {
     super.dispose();
   }
 };
-ChatMcpAppModel = __decorate([
+ChatMcpAppModel = ChatMcpAppModel_1 = __decorate([
   __param(5, IInstantiationService),
   __param(6, IChatWidgetService),
   __param(7, IWebviewService),

@@ -19,6 +19,7 @@ const chatRequestBubbleHoverBackground = registerColor("chat.requestBubbleHoverB
 const chatCheckpointSeparator = registerColor("chat.checkpointSeparator", { dark: "#585858", light: "#a9a9a9", hcDark: "#a9a9a9", hcLight: "#a5a5a5" }, localize("chatCheckpointSeparator", "Chat checkpoint separator color."));
 const chatLinesAddedForeground = registerColor("chat.linesAddedForeground", { dark: "#54B054", light: "#107C10", hcDark: "#54B054", hcLight: "#107C10" }, localize("chat.linesAddedForeground", "Foreground color of lines added in chat code block pill."), true);
 const chatLinesRemovedForeground = registerColor("chat.linesRemovedForeground", { dark: "#FC6A6A", light: "#BC2F32", hcDark: "#F48771", hcLight: "#B5200D" }, localize("chat.linesRemovedForeground", "Foreground color of lines removed in chat code block pill."), true);
+const chatThinkingShimmer = registerColor("chat.thinkingShimmer", { dark: "#ffffff", light: "#000000", hcDark: "#ffffff", hcLight: "#000000" }, localize("chat.thinkingShimmer", "Shimmer highlight for thinking/working labels."), true);
 export {
   chatAvatarBackground,
   chatAvatarForeground,
@@ -32,6 +33,7 @@ export {
   chatRequestBubbleHoverBackground,
   chatRequestCodeBorder,
   chatSlashCommandBackground,
-  chatSlashCommandForeground
+  chatSlashCommandForeground,
+  chatThinkingShimmer
 };
 //# sourceMappingURL=chatColors.js.map

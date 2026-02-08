@@ -26,6 +26,7 @@ import { IChatMarkdownAnchorService } from "./chatMarkdownAnchorService.js";
 import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
 import { ILanguageModelToolsService } from "../../../common/tools/languageModelToolsService.js";
+import { isEqual } from "../../../../../../base/common/resources.js";
 let ChatProgressContentPart = class ChatProgressContentPart2 extends Disposable {
   static {
     __name(this, "ChatProgressContentPart");
@@ -131,8 +132,9 @@ let ChatWorkingProgressContentPart = class ChatWorkingProgressContentPart2 exten
       content: new MarkdownString().appendText(localize("workingMessage", "Working..."))
     };
     super(progressMessage, chatContentMarkdownRenderer, context, void 0, void 0, void 0, void 0, instantiationService, chatMarkdownAnchorService, configurationService);
+    this.domNode.classList.add("working-progress");
     this._register(languageModelToolsService.onDidPrepareToolCallBecomeUnresponsive((e) => {
-      if (context.element.sessionId === e.sessionId) {
+      if (isEqual(context.element.sessionResource, e.sessionResource)) {
         this.updateMessage(new MarkdownString(localize("toolCallUnresponsive", "Waiting for tool '{0}' to respond...", e.toolData.displayName)));
       }
     }));

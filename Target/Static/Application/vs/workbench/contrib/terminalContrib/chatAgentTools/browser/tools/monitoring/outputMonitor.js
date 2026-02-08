@@ -147,6 +147,37 @@ let OutputMonitor = class OutputMonitor2 extends Disposable {
     if (detectsNonInteractiveHelpPattern(output)) {
       return { shouldContinuePollling: false, output };
     }
+    const isTask = this._execution.task !== void 0;
+    const isTaskInactive = this._execution.isActive ? !await this._execution.isActive() : true;
+    if (isTask && isTaskInactive && detectsVSCodeTaskFinishMessage(output)) {
+      return { shouldContinuePollling: false, output };
+    }
+    if ((!isTask || !isTaskInactive) && detectsGenericPressAnyKeyPattern(output)) {
+      const currentMarker = this._execution.instance.registerMarker();
+      if (currentMarker) {
+        this._lastPromptMarker = currentMarker;
+      }
+      this._cleanupIdleInputListener();
+      this._outputMonitorTelemetryCounters.inputToolFreeFormInputShownCount++;
+      const lastLine = output.trimEnd().split(/\r?\n/).pop() || "";
+      const receivedTerminalInput = await this._requestFreeFormTerminalInput(
+        token,
+        this._execution,
+        {
+          prompt: lastLine,
+          options: [],
+          detectedRequestForFreeFormInput: true
+        },
+        true
+        /* acceptAnyKey */
+      );
+      if (receivedTerminalInput) {
+        await timeout(200);
+        return { shouldContinuePollling: true };
+      } else {
+        return { shouldContinuePollling: false };
+      }
+    }
     if (this._userInputtedSinceIdleDetected) {
       this._cleanupIdleInputListener();
       return { shouldContinuePollling: true };
@@ -323,19 +354,13 @@ let OutputMonitor = class OutputMonitor2 extends Disposable {
 			6. Output: "Continue [y/N]"
 				Response: {"prompt": "Continue", "options": ["y", "N"], "freeFormInput": false}
 
-			7. Output: "Press any key to close the terminal."
-				Response: null
-
-			8. Output: "Terminal will be reused by tasks, press any key to close it."
-				Response: null
-
-			9. Output: "Password:"
+			7. Output: "Password:"
 				Response: {"prompt": "Password:", "freeFormInput": true, "options": []}
-			10. Output: "press ctrl-c to detach, ctrl-d to kill"
+			8. Output: "press ctrl-c to detach, ctrl-d to kill"
 				Response: null
-			11. Output: "Continue (y/n)? y"
+			9. Output: "Continue (y/n)? y"
 				Response: null (the prompt was already answered with 'y')
-			12. Output: "Do you want to proceed? (yes/no)
+			10. Output: "Do you want to proceed? (yes/no)
 yes
 Proceeding with operation..."
 				Response: null (the prompt was already answered and there is subsequent output)
@@ -345,6 +370,8 @@ Proceeding with operation..."
 				Response: {"prompt": "Enter your username:", "freeFormInput": true, "options": []}
 			2. Output: "Password:"
 				Response: {"prompt": "Password:", "freeFormInput": true, "options": []}
+			3. Output: "Press any key to continue..."
+				Response: {"prompt": "Press any key to continue...", "freeFormInput": true, "options": []}
 			Now, analyze this output:
 			${lastLines}
 			`;
@@ -428,7 +455,7 @@ Respond with only the option string.`;
     const description = confirmationPrompt.descriptions?.[index];
     return description ? { suggestedOption: { description, option: validOption }, sentToTerminal } : { suggestedOption: validOption, sentToTerminal };
   }
-  async _requestFreeFormTerminalInput(token, execution, confirmationPrompt) {
+  async _requestFreeFormTerminalInput(token, execution, confirmationPrompt, acceptAnyKey = false) {
     const focusTerminalSelection = /* @__PURE__ */ Symbol("focusTerminalSelection");
     const { promise: userPrompt, part } = this._createElicitationPart(token, execution.sessionId, new MarkdownString(localize("poll.terminal.inputRequest", "The terminal is awaiting input.")), new MarkdownString(localize("poll.terminal.requireInput", "{0}\nPlease provide the required input to the terminal.\n\n", confirmationPrompt.prompt)), "", localize("poll.terminal.enterInput", "Focus terminal"), void 0, () => {
       this._showInstance(execution.instance.instanceId);
@@ -450,7 +477,7 @@ Respond with only the option string.`;
         resolve(value);
       }, "settle");
       inputDataDisposable = this._register(execution.instance.onDidInputData((data) => {
-        if (!data || data === "\r" || data === "\n" || data === "\r\n") {
+        if (acceptAnyKey && data.length > 0 || !acceptAnyKey && (data === "\r" || data === "\n" || data === "\r\n")) {
           this._outputMonitorTelemetryCounters.inputToolFreeFormInputCount++;
           settle(true, OutputMonitorState.PollingForIdle);
         }
@@ -477,9 +504,6 @@ Respond with only the option string.`;
   }
   async _confirmRunInTerminal(token, suggestedOption, execution, confirmationPrompt) {
     const suggestedOptionValue = isString(suggestedOption) ? suggestedOption : suggestedOption.option;
-    if (suggestedOptionValue === "any key") {
-      return;
-    }
     const focusTerminalSelection = /* @__PURE__ */ Symbol("focusTerminalSelection");
     let inputDataDisposable = Disposable.None;
     let instanceDisposedDisposable = Disposable.None;
@@ -572,25 +596,31 @@ Respond with only the option string.`;
         acceptLabel,
         rejectLabel,
         async (value) => {
-          thePart.hide();
-          this._promptPart = void 0;
           try {
             const r = await (onAccept ? onAccept(value) : void 0);
             resolve(r);
+            if (typeof r === "symbol") {
+              return "pending";
+            }
           } catch {
             resolve(void 0);
           }
+          thePart.hide();
+          this._promptPart = void 0;
           return "accepted";
         },
         async () => {
-          thePart.hide();
-          this._promptPart = void 0;
           try {
             const r = await (onReject ? onReject() : void 0);
             resolve(r);
+            if (typeof r === "symbol") {
+              return "pending";
+            }
           } catch {
             resolve(void 0);
           }
+          thePart.hide();
+          this._promptPart = void 0;
           return "rejected";
         },
         void 0,
@@ -681,9 +711,31 @@ function detectsNonInteractiveHelpPattern(cursorLine) {
   ].some((e) => e.test(cursorLine));
 }
 __name(detectsNonInteractiveHelpPattern, "detectsNonInteractiveHelpPattern");
+const taskFinishMessages = [
+  // "Terminal will be reused by tasks, press any key to close it."
+  localize("closeTerminal", "Terminal will be reused by tasks, press any key to close it."),
+  localize("reuseTerminal", "Terminal will be reused by tasks, press any key to close it."),
+  // "Press any key to close the terminal." (with exit code placeholder removed for matching)
+  localize("exitCode.closeTerminal", "Press any key to close the terminal."),
+  localize("exitCode.reuseTerminal", "Press any key to close the terminal.")
+];
+function detectsVSCodeTaskFinishMessage(cursorLine) {
+  const normalized = cursorLine.replace(/\s/g, "").toLowerCase();
+  return taskFinishMessages.some((msg) => normalized.includes(msg.replace(/\s/g, "").toLowerCase()));
+}
+__name(detectsVSCodeTaskFinishMessage, "detectsVSCodeTaskFinishMessage");
+function detectsGenericPressAnyKeyPattern(cursorLine) {
+  if (detectsVSCodeTaskFinishMessage(cursorLine)) {
+    return false;
+  }
+  return /press a(?:ny)? key/i.test(cursorLine);
+}
+__name(detectsGenericPressAnyKeyPattern, "detectsGenericPressAnyKeyPattern");
 export {
   OutputMonitor,
+  detectsGenericPressAnyKeyPattern,
   detectsInputRequiredPattern,
-  detectsNonInteractiveHelpPattern
+  detectsNonInteractiveHelpPattern,
+  detectsVSCodeTaskFinishMessage
 };
 //# sourceMappingURL=outputMonitor.js.map

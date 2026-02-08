@@ -57,10 +57,13 @@ export interface IListContextMenuEvent<T> {
     readonly index: number | undefined;
     readonly anchor: HTMLElement | IMouseEvent;
 }
+export declare const NotSelectableGroupId = "notSelectable";
+export type NotSelectableGroupIdType = typeof NotSelectableGroupId;
 export interface IIdentityProvider<T> {
     getId(element: T): {
         toString(): string;
     };
+    getGroupId?(element: T): number | NotSelectableGroupIdType;
 }
 export interface IKeyboardNavigationLabelProvider<T> {
     /**

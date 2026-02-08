@@ -13,7 +13,7 @@ var __param = function(paramIndex, decorator) {
 };
 var BaseWindow_1;
 import { isSafari, setFullscreen } from "../../base/browser/browser.js";
-import { addDisposableListener, EventHelper, EventType, getActiveWindow, getWindow, getWindowById, getWindows, getWindowsCount, windowOpenNoOpener, windowOpenPopup, windowOpenWithSuccess } from "../../base/browser/dom.js";
+import { addDisposableListener, EventHelper, EventType, getWindow, getWindowById, getWindows, getWindowsCount, hasAppFocus, windowOpenNoOpener, windowOpenPopup, windowOpenWithSuccess } from "../../base/browser/dom.js";
 import { DomEmitter } from "../../base/browser/event.js";
 import { requestHidDevice, requestSerialPort, requestUsbDevice } from "../../base/browser/deviceAccess.js";
 import { timeout } from "../../base/common/async.js";
@@ -75,8 +75,7 @@ let BaseWindow = class BaseWindow2 extends Disposable {
     };
   }
   onElementFocus(targetWindow) {
-    const activeWindow = getActiveWindow();
-    if (activeWindow !== targetWindow && activeWindow.document.hasFocus()) {
+    if (!targetWindow.document.hasFocus() && hasAppFocus()) {
       targetWindow.focus();
       if (!this.environmentService.extensionTestsLocationURI && !targetWindow.document.hasFocus()) {
         this.hostService.focus(targetWindow);

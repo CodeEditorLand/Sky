@@ -1,7 +1,7 @@
 import { Disposable, DisposableStore, IDisposable } from '../../base/common/lifecycle.js';
 import { Event } from '../../base/common/event.js';
 import { IDimension } from '../../base/browser/dom.js';
-import { Position, Parts, IWorkbenchLayoutService, PanelAlignment, MULTI_WINDOW_PARTS, SINGLE_WINDOW_PARTS } from '../services/layout/browser/layoutService.js';
+import { Position, Parts, IWorkbenchLayoutService, PanelAlignment, MULTI_WINDOW_PARTS, SINGLE_WINDOW_PARTS, IPartVisibilityChangeEvent } from '../services/layout/browser/layoutService.js';
 import { ServicesAccessor } from '../../platform/instantiation/common/instantiation.js';
 import { Direction, IViewSize } from '../../base/browser/ui/grid/grid.js';
 import { Part } from './part.js';
@@ -25,7 +25,7 @@ export declare abstract class Layout extends Disposable implements IWorkbenchLay
     private readonly _onDidChangePanelPosition;
     readonly onDidChangePanelPosition: Event<string>;
     private readonly _onDidChangePartVisibility;
-    readonly onDidChangePartVisibility: Event<void>;
+    readonly onDidChangePartVisibility: Event<IPartVisibilityChangeEvent>;
     private readonly _onDidChangeNotificationsVisibility;
     readonly onDidChangeNotificationsVisibility: Event<boolean>;
     private readonly _onDidChangeAuxiliaryBarMaximized;

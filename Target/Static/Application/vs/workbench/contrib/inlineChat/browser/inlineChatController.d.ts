@@ -13,6 +13,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../platform/log/common/log.js';
 import { ISharedWebContentExtractorService } from '../../../../platform/webContentExtractor/common/webContentExtractor.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IChatAttachmentResolveService } from '../../chat/browser/attachments/chatAttachmentResolveService.js';
@@ -45,22 +46,35 @@ export declare class InlineChatController implements IEditorContribution {
     private readonly _editorService;
     private readonly _markerDecorationsService;
     private readonly _languageModelService;
+    private readonly _logService;
     static readonly ID = "editor.contrib.inlineChatController";
     static get(editor: ICodeEditor): InlineChatController | undefined;
-    private static _selectVendorDefaultLanguageModel;
+    /**
+     * Stores the user's explicitly chosen model (qualified name) from a previous inline chat request in the same session.
+     * When set, this takes priority over the inlineChat.defaultModel setting.
+     */
+    private static _userSelectedModel;
     private readonly _store;
     private readonly _isActiveController;
+    private readonly _renderMode;
     private readonly _zone;
+    private readonly _gutterIndicator;
     private readonly _currentSession;
     get widget(): EditorBasedInlineChatWidget;
     get isActive(): boolean;
-    constructor(_editor: ICodeEditor, _instaService: IInstantiationService, _notebookEditorService: INotebookEditorService, _inlineChatSessionService: IInlineChatSessionService, codeEditorService: ICodeEditorService, contextKeyService: IContextKeyService, _configurationService: IConfigurationService, _webContentExtractorService: ISharedWebContentExtractorService, _fileService: IFileService, _chatAttachmentResolveService: IChatAttachmentResolveService, _editorService: IEditorService, _markerDecorationsService: IMarkerDecorationsService, _languageModelService: ILanguageModelsService);
+    constructor(_editor: ICodeEditor, _instaService: IInstantiationService, _notebookEditorService: INotebookEditorService, _inlineChatSessionService: IInlineChatSessionService, codeEditorService: ICodeEditorService, contextKeyService: IContextKeyService, _configurationService: IConfigurationService, _webContentExtractorService: ISharedWebContentExtractorService, _fileService: IFileService, _chatAttachmentResolveService: IChatAttachmentResolveService, _editorService: IEditorService, _markerDecorationsService: IMarkerDecorationsService, _languageModelService: ILanguageModelsService, _logService: ILogService);
     dispose(): void;
     getWidgetPosition(): Position | undefined;
     focus(): void;
     run(arg?: InlineChatRunOptions): Promise<boolean>;
     acceptSession(): Promise<void>;
     rejectSession(): Promise<void>;
+    private _selectVendorDefaultModel;
+    /**
+     * Applies model defaults based on settings and tracks user model changes.
+     * Prioritization: user session choice > inlineChat.defaultModel setting > vendor default
+     */
+    private _applyModelDefaults;
     createImageAttachment(attachment: URI): Promise<IChatRequestVariableEntry | undefined>;
 }
 export declare function reviewEdits(accessor: ServicesAccessor, editor: ICodeEditor, stream: AsyncIterable<TextEdit[]>, token: CancellationToken, applyCodeBlockSuggestionId: EditSuggestionId | undefined): Promise<boolean>;

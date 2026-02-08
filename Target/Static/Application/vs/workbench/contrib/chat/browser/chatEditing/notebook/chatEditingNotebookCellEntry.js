@@ -64,9 +64,6 @@ let ChatEditingNotebookCellEntry = class ChatEditingNotebookCellEntry2 extends D
       }
     }));
   }
-  hasModificationAt(range) {
-    return this._textModelChangeService.hasHunkAt(range);
-  }
   clearCurrentEditLineDecoration() {
     if (this.modifiedModel.isDisposed()) {
       return;

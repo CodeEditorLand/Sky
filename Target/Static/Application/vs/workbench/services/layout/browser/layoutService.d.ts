@@ -28,6 +28,7 @@ export declare const enum ZenModeSettings {
 }
 export declare const enum LayoutSettings {
     ACTIVITY_BAR_LOCATION = "workbench.activityBar.location",
+    ACTIVITY_BAR_AUTO_HIDE = "workbench.activityBar.autoHide",
     EDITOR_TABS_MODE = "workbench.editor.showTabs",
     EDITOR_ACTIONS_LOCATION = "workbench.editor.editorActionsLocation",
     COMMAND_CENTER = "window.commandCenter",
@@ -68,6 +69,10 @@ export declare function partOpensMaximizedFromString(str: string): PartOpensMaxi
 export type MULTI_WINDOW_PARTS = Parts.EDITOR_PART | Parts.STATUSBAR_PART | Parts.TITLEBAR_PART;
 export type SINGLE_WINDOW_PARTS = Exclude<Parts, MULTI_WINDOW_PARTS>;
 export declare function isMultiWindowPart(part: Parts): part is MULTI_WINDOW_PARTS;
+export interface IPartVisibilityChangeEvent {
+    readonly partId: string;
+    readonly visible: boolean;
+}
 export interface IWorkbenchLayoutService extends ILayoutService {
     readonly _serviceBrand: undefined;
     /**
@@ -91,9 +96,9 @@ export interface IWorkbenchLayoutService extends ILayoutService {
      */
     readonly onDidChangePanelAlignment: Event<PanelAlignment>;
     /**
-     * Emit when part visibility changes
+     * Emit when part visibility changes.
      */
-    readonly onDidChangePartVisibility: Event<void>;
+    readonly onDidChangePartVisibility: Event<IPartVisibilityChangeEvent>;
     /**
      * Emit when notifications (toasts or center) visibility changes.
      */

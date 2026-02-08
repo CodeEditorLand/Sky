@@ -14,7 +14,9 @@ var __param = function(paramIndex, decorator) {
 var WindowTitle_1;
 import { localize } from "../../../../nls.js";
 import { dirname, basename } from "../../../../base/common/resources.js";
-import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IConfigurationService, isConfigured } from "../../../../platform/configuration/common/configuration.js";
+import { Extensions as ConfigurationExtensions } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
 import { IEditorService } from "../../../services/editor/common/editorService.js";
 import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
 import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
@@ -380,7 +382,15 @@ let WindowTitle = class WindowTitle2 extends Disposable {
       "window.titleSeparator"
       /* WindowSettingNames.titleSeparator */
     );
-    return title.value !== title.defaultValue || titleSeparator.value !== titleSeparator.defaultValue;
+    if (isConfigured(title) || isConfigured(titleSeparator)) {
+      return true;
+    }
+    const configurationRegistry = Registry.as(ConfigurationExtensions.Configuration);
+    const configurationProperties = configurationRegistry.getConfigurationProperties();
+    return title.defaultValue !== configurationProperties[
+      "window.title"
+      /* WindowSettingNames.title */
+    ]?.defaultDefaultValue;
   }
 };
 WindowTitle = WindowTitle_1 = __decorate([

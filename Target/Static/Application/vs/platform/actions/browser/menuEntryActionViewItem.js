@@ -328,6 +328,7 @@ let DropdownWithDefaultActionViewItem = class DropdownWithDefaultActionViewItem2
     this._storageService = _storageService;
     this._defaultActionDisposables = this._register(new DisposableStore());
     this._container = null;
+    this._primaryActionListener = this._register(new MutableDisposable());
     this._options = options;
     this._storageKey = `${submenuAction.item.submenu.id}_lastActionId`;
     let defaultAction;
@@ -352,12 +353,15 @@ let DropdownWithDefaultActionViewItem = class DropdownWithDefaultActionViewItem2
     };
     this._dropdown = this._register(new DropdownMenuActionViewItem(submenuAction, submenuAction.actions, this._contextMenuService, dropdownOptions));
     if (options?.togglePrimaryAction) {
-      this._register(this._dropdown.actionRunner.onDidRun((e) => {
-        if (e.action instanceof MenuItemAction) {
-          this.update(e.action);
-        }
-      }));
+      this.registerTogglePrimaryActionListener();
     }
+  }
+  registerTogglePrimaryActionListener() {
+    this._primaryActionListener.value = this._dropdown.actionRunner.onDidRun((e) => {
+      if (e.action instanceof MenuItemAction) {
+        this.update(e.action);
+      }
+    });
   }
   update(lastAction) {
     if (this._options?.togglePrimaryAction) {
@@ -399,6 +403,9 @@ let DropdownWithDefaultActionViewItem = class DropdownWithDefaultActionViewItem2
     super.actionRunner = actionRunner;
     this._defaultAction.actionRunner = actionRunner;
     this._dropdown.actionRunner = actionRunner;
+    if (this._primaryActionListener.value) {
+      this.registerTogglePrimaryActionListener();
+    }
   }
   get actionRunner() {
     return super.actionRunner;

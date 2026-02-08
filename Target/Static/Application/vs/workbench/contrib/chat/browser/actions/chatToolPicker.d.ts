@@ -1,6 +1,7 @@
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IToolData, ToolSet } from '../../common/tools/languageModelToolsService.js';
+import { ILanguageModelChatMetadata } from '../../common/languageModels.js';
+import { IToolData, IToolSet } from '../../common/tools/languageModelToolsService.js';
 /**
  * New QuickTree implementation of the tools picker.
  * Uses IQuickTree to provide a true hierarchical tree structure with:
@@ -13,7 +14,9 @@ import { IToolData, ToolSet } from '../../common/tools/languageModelToolsService
  * @param placeHolder - Placeholder text shown in the picker
  * @param description - Optional description text shown in the picker
  * @param toolsEntries - Optional initial selection state for tools and toolsets
+ * @param modelId - Optional model ID to filter tools by supported models
+ * @param onUpdate - Optional callback fired when the selection changes
  * @param token - Optional cancellation token to close the picker when cancelled
  * @returns Promise resolving to the final selection map, or undefined if cancelled
  */
-export declare function showToolsPicker(accessor: ServicesAccessor, placeHolder: string, description?: string, getToolsEntries?: () => ReadonlyMap<ToolSet | IToolData, boolean>, token?: CancellationToken): Promise<ReadonlyMap<ToolSet | IToolData, boolean> | undefined>;
+export declare function showToolsPicker(accessor: ServicesAccessor, placeHolder: string, source: string, description?: string, getToolsEntries?: () => ReadonlyMap<IToolSet | IToolData, boolean>, model?: ILanguageModelChatMetadata | undefined, token?: CancellationToken): Promise<ReadonlyMap<IToolSet | IToolData, boolean> | undefined>;

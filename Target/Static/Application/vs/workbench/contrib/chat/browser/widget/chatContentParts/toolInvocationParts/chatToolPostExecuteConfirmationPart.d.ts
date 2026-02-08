@@ -1,6 +1,4 @@
 import { Separator } from '../../../../../../../base/common/actions.js';
-import { ILanguageService } from '../../../../../../../editor/common/languages/language.js';
-import { IModelService } from '../../../../../../../editor/common/services/model.js';
 import { IContextKeyService } from '../../../../../../../platform/contextkey/common/contextkey.js';
 import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
 import { IKeybindingService } from '../../../../../../../platform/keybinding/common/keybinding.js';
@@ -11,12 +9,10 @@ import { IChatCodeBlockInfo, IChatWidgetService } from '../../../chat.js';
 import { IChatContentPartRenderContext } from '../chatContentParts.js';
 import { AbstractToolConfirmationSubPart } from './abstractToolConfirmationSubPart.js';
 export declare class ChatToolPostExecuteConfirmationPart extends AbstractToolConfirmationSubPart {
-    private readonly modelService;
-    private readonly languageService;
     private readonly confirmationService;
     private _codeblocks;
     get codeblocks(): IChatCodeBlockInfo[];
-    constructor(toolInvocation: IChatToolInvocation, context: IChatContentPartRenderContext, instantiationService: IInstantiationService, keybindingService: IKeybindingService, modelService: IModelService, languageService: ILanguageService, contextKeyService: IContextKeyService, chatWidgetService: IChatWidgetService, languageModelToolsService: ILanguageModelToolsService, confirmationService: ILanguageModelToolsConfirmationService);
+    constructor(toolInvocation: IChatToolInvocation, context: IChatContentPartRenderContext, instantiationService: IInstantiationService, keybindingService: IKeybindingService, contextKeyService: IContextKeyService, chatWidgetService: IChatWidgetService, languageModelToolsService: ILanguageModelToolsService, confirmationService: ILanguageModelToolsConfirmationService);
     protected createContentElement(): HTMLElement;
     protected getTitle(): string;
     protected additionalPrimaryActions(): (Separator | import("../chatConfirmationWidget.ts").IChatConfirmationButton<() => void>)[];

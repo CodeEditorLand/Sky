@@ -28,6 +28,7 @@
     .chat-view-title-actions-toolbar {
       margin-left: auto;
       padding-left: 4px;
+      flex-shrink: 0;
     }
   }
   .chat-view-title-container.visible {

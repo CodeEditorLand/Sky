@@ -9,8 +9,6 @@ export declare class ChatPullRequestContentPart extends Disposable implements IC
     private readonly pullRequestContent;
     private readonly openerService;
     readonly domNode: HTMLElement;
-    private _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     constructor(pullRequestContent: IChatPullRequestContent, openerService: IOpenerService);
     hasSameContent(other: IChatRendererContent, followingContent: IChatRendererContent[], element: ChatTreeItem): boolean;
     addDisposable(disposable: IDisposable): void;

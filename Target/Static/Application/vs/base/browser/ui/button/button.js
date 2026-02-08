@@ -25,7 +25,8 @@ const unthemedButtonStyles = {
   buttonBorder: void 0,
   buttonSecondaryBackground: void 0,
   buttonSecondaryForeground: void 0,
-  buttonSecondaryHoverBackground: void 0
+  buttonSecondaryHoverBackground: void 0,
+  buttonSecondaryBorder: void 0
 };
 const buttonSanitizerConfig = Object.freeze({
   allowedTags: {
@@ -59,8 +60,12 @@ class Button extends Disposable {
     this._element.classList.toggle("small", !!options.small);
     const background = options.secondary ? options.buttonSecondaryBackground : options.buttonBackground;
     const foreground = options.secondary ? options.buttonSecondaryForeground : options.buttonForeground;
+    const border = options.secondary ? options.buttonSecondaryBorder : options.buttonBorder;
     this._element.style.color = foreground || "";
     this._element.style.backgroundColor = background || "";
+    if (border) {
+      this._element.style.border = `1px solid ${border}`;
+    }
     if (options.supportShortLabel) {
       this._labelShortElement = document.createElement("div");
       this._labelShortElement.classList.add("monaco-button-label-short");
@@ -156,15 +161,19 @@ class Button extends Disposable {
   updateStyles(hover) {
     let background;
     let foreground;
+    let border;
     if (this.options.secondary) {
       background = hover ? this.options.buttonSecondaryHoverBackground : this.options.buttonSecondaryBackground;
       foreground = this.options.buttonSecondaryForeground;
+      border = this.options.buttonSecondaryBorder;
     } else {
       background = hover ? this.options.buttonHoverBackground : this.options.buttonBackground;
       foreground = this.options.buttonForeground;
+      border = this.options.buttonBorder;
     }
     this._element.style.backgroundColor = background || "";
     this._element.style.color = foreground || "";
+    this._element.style.border = border ? `1px solid ${border}` : "";
   }
   get element() {
     return this._element;
@@ -251,10 +260,10 @@ class Button extends Disposable {
   set checked(value) {
     if (value) {
       this._element.classList.add("checked");
-      this._element.setAttribute("aria-checked", "true");
+      this._element.setAttribute("aria-pressed", "true");
     } else {
       this._element.classList.remove("checked");
-      this._element.setAttribute("aria-checked", "false");
+      this._element.setAttribute("aria-pressed", "false");
     }
   }
   get checked() {

@@ -17,9 +17,11 @@ import { $, addDisposableListener, append, clearNode, getWindow, scheduleAtNextA
 import { renderIcon } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
 import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
 import { Toggle } from "../../../../base/browser/ui/toggle/toggle.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../base/common/codicons.js";
 import { DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
 import { Emitter } from "../../../../base/common/event.js";
+import { basename } from "../../../../base/common/resources.js";
 import { localize } from "../../../../nls.js";
 import { ICommandService } from "../../../../platform/commands/common/commands.js";
 import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
@@ -30,22 +32,39 @@ import { IProductService } from "../../../../platform/product/common/productServ
 import { IStorageService } from "../../../../platform/storage/common/storage.js";
 import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
 import { editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
-import { defaultToggleStyles, getListStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { getListStyles, getToggleStyles } from "../../../../platform/theme/browser/defaultStyles.js";
 import { IThemeService } from "../../../../platform/theme/common/themeService.js";
 import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
 import { SIDE_BAR_FOREGROUND } from "../../../common/theme.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
 import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
-import { ChatAgentLocation, ChatModeKind } from "../../chat/common/constants.js";
+import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../chat/common/constants.js";
 import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
 import { ChatWidget } from "../../chat/browser/widget/chatWidget.js";
 import { IAgentSessionsService } from "../../chat/browser/agentSessions/agentSessionsService.js";
 import { AgentSessionProviders } from "../../chat/browser/agentSessions/agentSessions.js";
 import { AgentSessionsWelcomeInput } from "./agentSessionsWelcomeInput.js";
 import { IChatService } from "../../chat/common/chatService/chatService.js";
+import { ChatViewId, IChatWidgetService } from "../../chat/browser/chat.js";
+import { ChatSessionPosition, getResourceForNewChatSession } from "../../chat/browser/chatSessions/chatSessions.contribution.js";
+import { IChatEntitlementService } from "../../../services/chat/common/chatEntitlementService.js";
 import { AgentSessionsControl } from "../../chat/browser/agentSessions/agentSessionsControl.js";
+import { AgentSessionsFilter } from "../../chat/browser/agentSessions/agentSessionsFilter.js";
 import { IWalkthroughsService } from "../../welcomeGettingStarted/browser/gettingStartedService.js";
+import { GettingStartedInput } from "../../welcomeGettingStarted/browser/gettingStartedInput.js";
+import { IMarkdownRendererService } from "../../../../platform/markdown/browser/markdownRenderer.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkspacesService, isRecentFolder, isRecentWorkspace } from "../../../../platform/workspaces/common/workspaces.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
 const configurationKey = "workbench.startupEditor";
 const MAX_SESSIONS = 6;
+const MAX_REPO_PICKS = 10;
+const MAX_WALKTHROUGHS = 10;
 let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPane {
   static {
     __name(this, "AgentSessionsWelcomePage");
@@ -56,20 +75,38 @@ let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPan
   static {
     this.ID = "agentSessionsWelcomePage";
   }
-  constructor(group, telemetryService, themeService, storageService, instantiationService, contextKeyService, layoutService, commandService, agentSessionsService, configurationService, productService, walkthroughsService, chatService) {
+  static {
+    this.COMMAND_ID = "workbench.action.openAgentSessionsWelcome";
+  }
+  constructor(group, telemetryService, themeService, storageService, instantiationService, contextKeyService, layoutService, commandService, editorService, agentSessionsService, configurationService, productService, walkthroughsService, chatService, chatEntitlementService, markdownRendererService, workspaceContextService, workspacesService, hostService, workspaceTrustManagementService, viewDescriptorService, chatWidgetService, logService) {
     super(AgentSessionsWelcomePage_1.ID, group, telemetryService, themeService, storageService);
+    this.storageService = storageService;
     this.instantiationService = instantiationService;
     this.layoutService = layoutService;
     this.commandService = commandService;
+    this.editorService = editorService;
     this.agentSessionsService = agentSessionsService;
     this.configurationService = configurationService;
     this.productService = productService;
     this.walkthroughsService = walkthroughsService;
     this.chatService = chatService;
+    this.chatEntitlementService = chatEntitlementService;
+    this.markdownRendererService = markdownRendererService;
+    this.workspaceContextService = workspaceContextService;
+    this.workspacesService = workspacesService;
+    this.hostService = hostService;
+    this.workspaceTrustManagementService = workspaceTrustManagementService;
+    this.viewDescriptorService = viewDescriptorService;
+    this.chatWidgetService = chatWidgetService;
+    this.logService = logService;
     this.sessionsControlDisposables = this._register(new DisposableStore());
     this.contentDisposables = this._register(new DisposableStore());
     this.walkthroughs = [];
     this._selectedSessionProvider = AgentSessionProviders.Local;
+    this._recentTrustedWorkspaces = [];
+    this._isEmptyWorkspace = false;
+    this._workspaceKind = "empty";
+    this._openedAt = 0;
     this.container = $(".agentSessionsWelcome", {
       role: "document",
       tabindex: 0,
@@ -77,6 +114,13 @@ let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPan
     });
     this.contextService = this._register(contextKeyService.createScoped(this.container));
     ChatContextKeys.inAgentSessionsWelcome.bindTo(this.contextService).set(true);
+    this._register(this.chatEntitlementService.onDidChangeSentiment(() => {
+      const input = this.input || this._storedInput;
+      if (this.chatEntitlementService.sentiment.hidden && input) {
+        this._closedBy = "chatHidden";
+        this.group.closeEditor(input);
+      }
+    }));
   }
   createEditor(parent) {
     parent.appendChild(this.container);
@@ -89,48 +133,73 @@ let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPan
     this.container.appendChild(this.scrollableElement.getDomNode());
   }
   async setInput(input, options, context, token) {
+    this._storedInput = input;
+    this._openedAt = Date.now();
     await super.setInput(input, options, context, token);
+    this._workspaceKind = input.workspaceKind ?? "empty";
     await this.buildContent();
+  }
+  clearInput() {
+    if (this._openedAt > 0) {
+      const visibleDurationMs = Date.now() - this._openedAt;
+      this.telemetryService.publicLog2("agentSessionsWelcome.closed", {
+        visibleDurationMs,
+        closedBy: this._closedBy ?? "disposed"
+      });
+      this._openedAt = 0;
+      this._closedBy = void 0;
+    }
+    super.clearInput();
   }
   async buildContent() {
     this.contentDisposables.clear();
     this.sessionsControlDisposables.clear();
     this.sessionsControl = void 0;
     clearNode(this.contentContainer);
+    this._isEmptyWorkspace = this.workspaceContextService.getWorkbenchState() === 1;
+    if (this._isEmptyWorkspace) {
+      const recentlyOpened = await this.getRecentlyOpenedWorkspaces(true);
+      this._recentTrustedWorkspaces = recentlyOpened.slice(0, MAX_REPO_PICKS);
+    }
     this.walkthroughs = this.walkthroughsService.getWalkthroughs();
     const header = append(this.contentContainer, $(".agentSessionsWelcome-header"));
     append(header, $("h1.product-name", {}, this.productService.nameLong));
     const startEntries = append(header, $(".agentSessionsWelcome-startEntries"));
-    this.buildStartEntries(startEntries);
+    await this.buildStartEntries(startEntries);
     const chatSection = append(this.contentContainer, $(".agentSessionsWelcome-chatSection"));
     this.buildChatWidget(chatSection);
-    const sessions = this.agentSessionsService.model.sessions;
     const sessionsSection = append(this.contentContainer, $(".agentSessionsWelcome-sessionsSection"));
-    if (sessions.length > 0) {
-      this.buildSessionsGrid(sessionsSection, sessions);
-    } else {
-      const walkthroughsSection = append(this.contentContainer, $(".agentSessionsWelcome-walkthroughsSection"));
-      this.buildWalkthroughs(walkthroughsSection);
-    }
+    this.buildSessionsOrPrompts(sessionsSection);
     const footer = append(this.contentContainer, $(".agentSessionsWelcome-footer"));
     this.buildFooter(footer);
+    let originalSessions = this.agentSessionsService.model.sessions.length > 0;
     this.contentDisposables.add(this.agentSessionsService.model.onDidChangeSessions(() => {
-      clearNode(sessionsSection);
-      this.buildSessionsOrPrompts(sessionsSection);
+      const hasSessions = this.agentSessionsService.model.sessions.length > 0;
+      if (hasSessions !== originalSessions) {
+        originalSessions = hasSessions;
+        clearNode(sessionsSection);
+        this.buildSessionsOrPrompts(sessionsSection);
+      }
+      this.layoutSessionsControl();
     }));
     this.scrollableElement?.scanDomNode();
   }
-  buildStartEntries(container) {
+  async buildStartEntries(container) {
+    const workspaces = await this.getRecentlyOpenedWorkspaces(false);
+    const openEntry = workspaces.length > 0 ? { icon: Codicon.folderOpened, label: localize("openRecent", "Open Recent..."), command: "workbench.action.openRecent" } : { icon: Codicon.folderOpened, label: localize("openFolder", "Open Folder..."), command: "workbench.action.files.openFolder" };
     const entries = [
-      { icon: Codicon.folderOpened, label: localize("openRecent", "Open Recent..."), command: "workbench.action.openRecent" },
-      { icon: Codicon.newFile, label: localize("newFile", "New file..."), command: "workbench.action.files.newUntitledFile" },
+      openEntry,
+      { icon: Codicon.newFile, label: localize("newFile", "New file..."), command: "welcome.showNewFileEntries" },
       { icon: Codicon.repoClone, label: localize("cloneRepo", "Clone Git Repository..."), command: "git.clone" }
     ];
     for (const entry of entries) {
       const button = append(container, $("button.agentSessionsWelcome-startEntry"));
       button.appendChild(renderIcon(entry.icon));
       button.appendChild(document.createTextNode(entry.label));
-      button.onclick = () => this.commandService.executeCommand(entry.command);
+      button.onclick = () => {
+        this.telemetryService.publicLog2("gettingStarted.ActionExecuted", { welcomeKind: "agentSessionsWelcomePage", action: "executeCommand", actionId: entry.command });
+        this.commandService.executeCommand(entry.command);
+      };
     }
   }
   buildChatWidget(container) {
@@ -140,14 +209,52 @@ let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPan
     const scopedContextKeyService = this.contentDisposables.add(this.contextService.createScoped(chatWidgetContainer));
     const scopedInstantiationService = this.contentDisposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, scopedContextKeyService])));
     const onDidChangeActiveSessionProvider = this.contentDisposables.add(new Emitter());
+    const recreateSessionForProvider = /* @__PURE__ */ __name(async (provider) => {
+      if (this.chatWidget && this.chatModelRef) {
+        this.chatWidget.setModel(void 0);
+        this.chatModelRef.dispose();
+        const newResource = getResourceForNewChatSession({
+          type: provider,
+          position: ChatSessionPosition.Sidebar,
+          displayName: ""
+        });
+        const ref = await this.chatService.loadSessionForResource(newResource, ChatAgentLocation.Chat, CancellationToken.None);
+        this.chatModelRef = ref ?? this.chatService.startSession(ChatAgentLocation.Chat);
+        this.contentDisposables.add(this.chatModelRef);
+        if (this.chatModelRef.object) {
+          this.chatWidget.setModel(this.chatModelRef.object);
+        }
+      }
+    }, "recreateSessionForProvider");
     const sessionTypePickerDelegate = {
       getActiveSessionProvider: /* @__PURE__ */ __name(() => this._selectedSessionProvider, "getActiveSessionProvider"),
       setActiveSessionProvider: /* @__PURE__ */ __name((provider) => {
         this._selectedSessionProvider = provider;
         onDidChangeActiveSessionProvider.fire(provider);
+        try {
+          recreateSessionForProvider(provider);
+        } catch {
+        }
       }, "setActiveSessionProvider"),
       onDidChangeActiveSessionProvider: onDidChangeActiveSessionProvider.event
     };
+    const onDidChangeSelectedWorkspace = this.contentDisposables.add(new Emitter());
+    const onDidChangeWorkspaces = this.contentDisposables.add(new Emitter());
+    const workspacePickerDelegate = this._isEmptyWorkspace ? {
+      getWorkspaces: /* @__PURE__ */ __name(() => this._recentTrustedWorkspaces.map((w) => ({
+        uri: this.getWorkspaceUri(w),
+        label: this.getWorkspaceLabel(w),
+        isFolder: isRecentFolder(w)
+      })), "getWorkspaces"),
+      getSelectedWorkspace: /* @__PURE__ */ __name(() => this._selectedWorkspace, "getSelectedWorkspace"),
+      setSelectedWorkspace: /* @__PURE__ */ __name((workspace) => {
+        this._selectedWorkspace = workspace;
+        onDidChangeSelectedWorkspace.fire(workspace);
+      }, "setSelectedWorkspace"),
+      onDidChangeSelectedWorkspace: onDidChangeSelectedWorkspace.event,
+      onDidChangeWorkspaces: onDidChangeWorkspaces.event,
+      openFolderCommand: "workbench.action.files.openFolder"
+    } : void 0;
     this.chatWidget = this.contentDisposables.add(scopedInstantiationService.createInstance(
       ChatWidget,
       ChatAgentLocation.Chat,
@@ -168,7 +275,9 @@ let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPan
         enableImplicitContext: true,
         enableWorkingSet: "explicit",
         supportsChangingModes: true,
-        sessionTypePickerDelegate
+        sessionTypePickerDelegate,
+        workspacePickerDelegate,
+        submitHandler: this._isEmptyWorkspace ? (query, mode) => this.handleWorkspaceSubmission(query, mode) : void 0
       },
       {
         listForeground: SIDE_BAR_FOREGROUND,
@@ -191,98 +300,294 @@ let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPan
     this.contentDisposables.add(addDisposableListener(chatWidgetContainer, "mousedown", () => {
       this.chatWidget?.focusInput();
     }));
+    this.contentDisposables.add(this.chatService.onDidSubmitRequest(({ chatSessionResource }) => {
+      if (this.chatModelRef?.object?.sessionResource.toString() === chatSessionResource.toString()) {
+        const mode = this.chatWidget?.input.currentModeObs.get().name.get() || "unknown";
+        this.telemetryService.publicLog2("agentSessionsWelcome.chatSubmitted", {
+          mode,
+          provider: this._selectedSessionProvider,
+          workspaceKind: this._workspaceKind,
+          selectedRecentWorkspace: this._selectedWorkspace !== void 0
+        });
+        this._closedBy = "chatSubmission";
+        this.openSessionInChat(chatSessionResource);
+      }
+    }));
+    this.applyPrefillData();
+  }
+  getWorkspaceLabel(workspace) {
+    if (isRecentFolder(workspace)) {
+      return workspace.label || basename(workspace.folderUri);
+    } else if (isRecentWorkspace(workspace)) {
+      return workspace.label || basename(workspace.workspace.configPath);
+    }
+    return "";
+  }
+  getWorkspaceUri(workspace) {
+    if (isRecentFolder(workspace)) {
+      return workspace.folderUri;
+    } else if (isRecentWorkspace(workspace)) {
+      return workspace.workspace.configPath;
+    }
+    throw new Error("Invalid workspace type");
+  }
+  async handleWorkspaceSubmission(query, mode) {
+    if (!this._selectedWorkspace) {
+      return false;
+    }
+    if (!query.trim()) {
+      return false;
+    }
+    const prefillData = {
+      query,
+      mode,
+      timestamp: Date.now()
+    };
+    this.storageService.store(
+      "chat.welcomeViewPrefill",
+      JSON.stringify(prefillData),
+      -1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    const workspace = this._recentTrustedWorkspaces.find((w) => this.getWorkspaceUri(w).toString() === this._selectedWorkspace?.uri.toString());
+    if (workspace) {
+      try {
+        if (isRecentFolder(workspace)) {
+          await this.hostService.openWindow([{ folderUri: workspace.folderUri }]);
+        } else if (isRecentWorkspace(workspace)) {
+          await this.hostService.openWindow([{ workspaceUri: workspace.workspace.configPath }]);
+        }
+        return true;
+      } catch (e) {
+      }
+    }
+    this.storageService.remove(
+      "chat.welcomeViewPrefill",
+      -1
+      /* StorageScope.APPLICATION */
+    );
+    return false;
+  }
+  /**
+   * Reads and applies prefill data from storage (used when transferring chat input from another workspace).
+   * This is called after the chat widget is created to populate it with any pending prefill data.
+   */
+  applyPrefillData() {
+    const prefillData = this.storageService.get(
+      "chat.welcomeViewPrefill",
+      -1
+      /* StorageScope.APPLICATION */
+    );
+    if (prefillData) {
+      this.storageService.remove(
+        "chat.welcomeViewPrefill",
+        -1
+        /* StorageScope.APPLICATION */
+      );
+      try {
+        const { query, mode, timestamp } = JSON.parse(prefillData);
+        if (timestamp && Date.now() - timestamp > 60 * 1e3) {
+          return;
+        }
+        if (query && this.chatWidget) {
+          this.chatWidget.setInput(query);
+        }
+        if (mode !== void 0 && this.chatWidget) {
+          this.chatWidget.input.setChatMode(mode, false);
+        }
+        this.chatWidget?.focusInput();
+      } catch {
+      }
+    }
   }
   buildSessionsOrPrompts(container) {
     this.sessionsControlDisposables.clear();
     this.sessionsControl = void 0;
-    const sessions = this.agentSessionsService.model.sessions;
+    this.sessionsLoadingContainer = void 0;
+    const sessions = this.agentSessionsService.model.sessions.filter((s) => !s.isArchived());
     if (sessions.length > 0) {
       this.buildSessionsGrid(container, sessions);
+    } else {
+      this.buildWalkthroughs(container);
+    }
+  }
+  buildLoadingSkeleton(container) {
+    const loadingContainer = append(container, $(".agentSessionsWelcome-sessionsLoading", {
+      "role": "status",
+      "aria-busy": "true",
+      "aria-label": localize("loadingSessions", "Loading sessions...")
+    }));
+    for (let i = 0; i < MAX_SESSIONS; i++) {
+      const skeleton = append(loadingContainer, $(".agentSessionsWelcome-sessionSkeleton", { "aria-hidden": "true" }));
+      append(skeleton, $(".agentSessionsWelcome-sessionSkeleton-icon"));
+      const content = append(skeleton, $(".agentSessionsWelcome-sessionSkeleton-content"));
+      append(content, $(".agentSessionsWelcome-sessionSkeleton-title"));
+      append(content, $(".agentSessionsWelcome-sessionSkeleton-description"));
+    }
+    return loadingContainer;
+  }
+  hideLoadingSkeleton() {
+    if (this.sessionsLoadingContainer) {
+      this.sessionsLoadingContainer.style.display = "none";
+    }
+    if (this.sessionsControlContainer) {
+      this.sessionsControlContainer.style.display = "";
+      this.layoutSessionsControl();
     }
   }
   buildSessionsGrid(container, _sessions) {
+    this.sessionsLoadingContainer = this.buildLoadingSkeleton(container);
     this.sessionsControlContainer = append(container, $(".agentSessionsWelcome-sessionsGrid"));
-    const onDidChangeEmitter = this.sessionsControlDisposables.add(new Emitter());
-    const filter = {
-      onDidChange: onDidChangeEmitter.event,
-      limitResults: /* @__PURE__ */ __name(() => MAX_SESSIONS, "limitResults"),
-      groupResults: /* @__PURE__ */ __name(() => false, "groupResults"),
-      exclude: /* @__PURE__ */ __name((session) => session.isArchived(), "exclude"),
-      getExcludes: /* @__PURE__ */ __name(() => ({
-        providers: [],
-        states: [],
-        archived: true,
-        read: false
-      }), "getExcludes")
-    };
+    this.sessionsControlContainer.style.display = "none";
     const options = {
       overrideStyles: getListStyles({
         listBackground: editorBackground
       }),
-      filter,
+      filter: this.sessionsControlDisposables.add(this.instantiationService.createInstance(AgentSessionsFilter, {
+        limitResults: /* @__PURE__ */ __name(() => MAX_SESSIONS, "limitResults")
+      })),
       getHoverPosition: /* @__PURE__ */ __name(() => 2, "getHoverPosition"),
       trackActiveEditorSession: /* @__PURE__ */ __name(() => false, "trackActiveEditorSession"),
-      source: "welcomeView"
+      source: "welcomeView",
+      notifySessionOpened: /* @__PURE__ */ __name(() => {
+        const isProjectionEnabled = this.configurationService.getValue(ChatConfiguration.AgentSessionProjectionEnabled);
+        if (!isProjectionEnabled) {
+          this._closedBy = "sessionClicked";
+          this.revealMaximizedChat();
+        }
+      }, "notifySessionOpened")
     };
     this.sessionsControl = this.sessionsControlDisposables.add(this.instantiationService.createInstance(AgentSessionsControl, this.sessionsControlContainer, options));
+    this.sessionsControlDisposables.add(this.agentSessionsService.model.onDidResolve(() => {
+      this.hideLoadingSkeleton();
+    }));
+    if (this.agentSessionsService.model.resolved) {
+      this.hideLoadingSkeleton();
+    }
     this.sessionsControlDisposables.add(scheduleAtNextAnimationFrame(getWindow(this.sessionsControlContainer), () => {
       this.layoutSessionsControl();
     }));
     const openButton = append(container, $("button.agentSessionsWelcome-openSessionsButton"));
-    openButton.textContent = localize("openAgentSessions", "Open Agent Sessions");
+    openButton.textContent = localize("viewAllSessions", "View All Sessions");
     openButton.onclick = () => {
-      this.commandService.executeCommand("workbench.action.chat.open");
-      if (!this.layoutService.isAuxiliaryBarMaximized()) {
-        this.layoutService.toggleMaximizedAuxiliaryBar();
-      }
+      this._closedBy = "viewAllSessions";
+      this.revealMaximizedChat();
     };
   }
   buildWalkthroughs(container) {
-    const activeWalkthroughs = this.walkthroughs.filter((w) => !w.when || this.contextService.contextMatchesRules(w.when)).slice(0, 3);
+    const activeWalkthroughs = this.walkthroughs.filter((w) => !w.when || this.contextService.contextMatchesRules(w.when)).slice(0, MAX_WALKTHROUGHS);
     if (activeWalkthroughs.length === 0) {
       return;
     }
-    for (const walkthrough of activeWalkthroughs) {
-      const card = append(container, $(".agentSessionsWelcome-walkthroughCard"));
-      card.onclick = () => {
-        this.commandService.executeCommand("workbench.action.openWalkthrough", walkthrough.id);
-      };
-      const iconContainer = append(card, $(".agentSessionsWelcome-walkthroughCard-icon"));
+    let currentIndex = 0;
+    const card = append(container, $(".agentSessionsWelcome-walkthroughCard"));
+    const iconContainer = append(card, $(".agentSessionsWelcome-walkthroughCard-icon"));
+    const content = append(card, $(".agentSessionsWelcome-walkthroughCard-content"));
+    const title = append(content, $(".agentSessionsWelcome-walkthroughCard-title"));
+    const desc = append(content, $(".agentSessionsWelcome-walkthroughCard-description"));
+    const navContainer = append(card, $(".agentSessionsWelcome-walkthroughCard-nav"));
+    const prevButton = append(navContainer, $("button.nav-button"));
+    prevButton.appendChild(renderIcon(Codicon.chevronLeft));
+    prevButton.title = localize("previousWalkthrough", "Previous");
+    const nextButton = append(navContainer, $("button.nav-button"));
+    nextButton.appendChild(renderIcon(Codicon.chevronRight));
+    nextButton.title = localize("nextWalkthrough", "Next");
+    const updateContent = /* @__PURE__ */ __name(() => {
+      const walkthrough = activeWalkthroughs[currentIndex];
+      clearNode(iconContainer);
       if (walkthrough.icon.type === "icon") {
         iconContainer.appendChild(renderIcon(walkthrough.icon.icon));
       }
-      const content = append(card, $(".agentSessionsWelcome-walkthroughCard-content"));
-      const title = append(content, $(".agentSessionsWelcome-walkthroughCard-title"));
       title.textContent = walkthrough.title;
-      if (walkthrough.description) {
-        const desc = append(content, $(".agentSessionsWelcome-walkthroughCard-description"));
-        desc.textContent = walkthrough.description;
+      desc.textContent = walkthrough.description || "";
+      prevButton.disabled = currentIndex === 0;
+      nextButton.disabled = currentIndex === activeWalkthroughs.length - 1;
+    }, "updateContent");
+    updateContent();
+    card.onclick = () => {
+      const walkthrough = activeWalkthroughs[currentIndex];
+      this.telemetryService.publicLog2("gettingStarted.ActionExecuted", { welcomeKind: "agentSessionsWelcomePage", action: "openWalkthrough", actionId: walkthrough.id });
+      const options = {
+        selectedCategory: walkthrough.id,
+        returnToCommand: AgentSessionsWelcomePage_1.COMMAND_ID
+      };
+      this.editorService.openEditor({
+        resource: GettingStartedInput.RESOURCE,
+        options
+      });
+    };
+    prevButton.onclick = (e) => {
+      e.stopPropagation();
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateContent();
       }
-      const navContainer = append(card, $(".agentSessionsWelcome-walkthroughCard-nav"));
-      const prevButton = append(navContainer, $("button.nav-button"));
-      prevButton.appendChild(renderIcon(Codicon.chevronLeft));
-      prevButton.onclick = (e) => {
-        e.stopPropagation();
-      };
-      const nextButton = append(navContainer, $("button.nav-button"));
-      nextButton.appendChild(renderIcon(Codicon.chevronRight));
-      nextButton.onclick = (e) => {
-        e.stopPropagation();
-      };
+    };
+    nextButton.onclick = (e) => {
+      e.stopPropagation();
+      if (currentIndex < activeWalkthroughs.length - 1) {
+        currentIndex++;
+        updateContent();
+      }
+    };
+  }
+  static {
+    this.PRIVACY_NOTICE_DISMISSED_KEY = "agentSessionsWelcome.privacyNoticeDismissed";
+  }
+  buildPrivacyNotice(container) {
+    if (!this.chatEntitlementService.anonymous) {
+      return;
     }
+    if (this.storageService.getBoolean(AgentSessionsWelcomePage_1.PRIVACY_NOTICE_DISMISSED_KEY, -1, false)) {
+      return;
+    }
+    const providers = this.productService.defaultChatAgent?.provider;
+    if (!providers || !providers.default || !this.productService.defaultChatAgent?.termsStatementUrl || !this.productService.defaultChatAgent?.privacyStatementUrl) {
+      return;
+    }
+    const tosCard = append(container, $(".agentSessionsWelcome-walkthroughCard.agentSessionsWelcome-tosCard"));
+    const dismissNotice = /* @__PURE__ */ __name(() => {
+      this.storageService.store(
+        AgentSessionsWelcomePage_1.PRIVACY_NOTICE_DISMISSED_KEY,
+        true,
+        -1,
+        0
+        /* StorageTarget.USER */
+      );
+      tosCard.remove();
+    }, "dismissNotice");
+    this.contentDisposables.add(this.chatService.onDidSubmitRequest(() => dismissNotice()));
+    const iconContainer = append(tosCard, $(".agentSessionsWelcome-walkthroughCard-icon"));
+    iconContainer.appendChild(renderIcon(Codicon.chatSparkle));
+    const content = append(tosCard, $(".agentSessionsWelcome-walkthroughCard-content"));
+    const title = append(content, $(".agentSessionsWelcome-walkthroughCard-title"));
+    title.textContent = localize("tosTitle", "Your GitHub Copilot trial is active");
+    const desc = append(content, $(".agentSessionsWelcome-walkthroughCard-description"));
+    const descriptionMarkdown = new MarkdownString(localize({ key: "tosDescription", comment: ['{Locked="]({1})"}', '{Locked="]({2})"}'] }, "By continuing, you agree to {0}'s [Terms]({1}) and [Privacy Statement]({2}).", providers.default.name, this.productService.defaultChatAgent.termsStatementUrl, this.productService.defaultChatAgent.privacyStatementUrl), { isTrusted: true });
+    const renderedMarkdown = this.markdownRendererService.render(descriptionMarkdown);
+    desc.appendChild(renderedMarkdown.element);
+    const dismissButton = append(tosCard, $("button.agentSessionsWelcome-tosCard-dismiss"));
+    dismissButton.appendChild(renderIcon(Codicon.close));
+    dismissButton.title = localize("dismissPrivacyNotice", "Dismiss");
+    dismissButton.onclick = (e) => {
+      e.stopPropagation();
+      dismissNotice();
+    };
   }
   buildFooter(container) {
-    const learningLink = append(container, $("button.agentSessionsWelcome-footerLink"));
-    learningLink.appendChild(renderIcon(Codicon.mortarBoard));
-    learningLink.appendChild(document.createTextNode(localize("exploreHelp", "Explore Learning & Help Resources")));
-    learningLink.onclick = () => this.commandService.executeCommand("workbench.action.openWalkthrough");
+    this.buildPrivacyNotice(container);
     const showOnStartupContainer = append(container, $(".agentSessionsWelcome-showOnStartup"));
     const showOnStartupCheckbox = this.contentDisposables.add(new Toggle({
       icon: Codicon.check,
       actionClassName: "agentSessionsWelcome-checkbox",
       isChecked: this.configurationService.getValue(configurationKey) === "agentSessionsWelcomePage",
       title: localize("checkboxTitle", "When checked, this page will be shown on startup."),
-      ...defaultToggleStyles
+      ...getToggleStyles({
+        inputActiveOptionBackground: "var(--vscode-descriptionForeground)",
+        inputActiveOptionForeground: "var(--vscode-editor-background)",
+        inputActiveOptionBorder: "var(--vscode-descriptionForeground)"
+      })
     }));
     showOnStartupCheckbox.domNode.id = "showOnStartup";
     const showOnStartupLabel = $("label.caption", { for: "showOnStartup" }, localize("showOnStartup", "Show welcome page on startup"));
@@ -326,11 +631,57 @@ let AgentSessionsWelcomePage = class AgentSessionsWelcomePage2 extends EditorPan
     const sessionsHeight = visibleSessions * 52;
     this.sessionsControl.layout(sessionsHeight, sessionsWidth);
     const marginOffset = Math.floor(visibleSessions / 2) * 52;
-    this.sessionsControl.setGridMarginOffset(marginOffset);
+    this.sessionsControl.element.style.marginBottom = `-${marginOffset}px`;
   }
   focus() {
     super.focus();
     this.chatWidget?.focusInput();
+  }
+  async revealMaximizedChat() {
+    try {
+      await this.closeEditorAndMaximizeAuxiliaryBar();
+    } catch (error) {
+      this.logService.error("Failed to open maximized chat: {0}", toErrorMessage(error));
+    }
+  }
+  async openSessionInChat(sessionResource) {
+    try {
+      await this.closeEditorAndMaximizeAuxiliaryBar(sessionResource);
+    } catch (error) {
+      this.logService.error("Failed to open agent session: {0}", toErrorMessage(error));
+    }
+  }
+  async closeEditorAndMaximizeAuxiliaryBar(sessionResource) {
+    const editorToClose = this.input || this._storedInput;
+    if (editorToClose && this.group.contains(editorToClose)) {
+      await new Promise((resolve) => {
+        const disposable = this.group.onDidActiveEditorChange((e) => {
+          disposable.dispose();
+          resolve();
+        });
+        this.group.closeEditor(editorToClose);
+      });
+    }
+    if (sessionResource) {
+      await this.chatWidgetService.openSession(sessionResource);
+    } else {
+      await this.commandService.executeCommand("workbench.action.chat.open");
+    }
+    const chatViewLocation = this.viewDescriptorService.getViewLocationById(ChatViewId);
+    if (chatViewLocation === 2) {
+      this.layoutService.setAuxiliaryBarMaximized(true);
+    }
+  }
+  async getRecentlyOpenedWorkspaces(onlyTrusted = false) {
+    const workspaces = await this.workspacesService.getRecentlyOpened();
+    const trustInfoPromises = workspaces.workspaces.map(async (ws) => {
+      const uri = isRecentWorkspace(ws) ? ws.workspace.configPath : ws.folderUri;
+      const trustInfo = await this.workspaceTrustManagementService.getUriTrustInfo(uri);
+      return { workspace: ws, trusted: trustInfo.trusted };
+    });
+    const trustInfoResults = await Promise.all(trustInfoPromises);
+    const filteredWorkspaces = trustInfoResults.filter((result) => onlyTrusted ? result.trusted : true).map((result) => result.workspace);
+    return filteredWorkspaces;
   }
 };
 AgentSessionsWelcomePage = AgentSessionsWelcomePage_1 = __decorate([
@@ -341,11 +692,21 @@ AgentSessionsWelcomePage = AgentSessionsWelcomePage_1 = __decorate([
   __param(5, IContextKeyService),
   __param(6, IWorkbenchLayoutService),
   __param(7, ICommandService),
-  __param(8, IAgentSessionsService),
-  __param(9, IConfigurationService),
-  __param(10, IProductService),
-  __param(11, IWalkthroughsService),
-  __param(12, IChatService)
+  __param(8, IEditorService),
+  __param(9, IAgentSessionsService),
+  __param(10, IConfigurationService),
+  __param(11, IProductService),
+  __param(12, IWalkthroughsService),
+  __param(13, IChatService),
+  __param(14, IChatEntitlementService),
+  __param(15, IMarkdownRendererService),
+  __param(16, IWorkspaceContextService),
+  __param(17, IWorkspacesService),
+  __param(18, IHostService),
+  __param(19, IWorkspaceTrustManagementService),
+  __param(20, IViewDescriptorService),
+  __param(21, IChatWidgetService),
+  __param(22, ILogService)
 ], AgentSessionsWelcomePage);
 class AgentSessionsWelcomeInputSerializer {
   static {

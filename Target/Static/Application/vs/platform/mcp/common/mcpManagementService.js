@@ -40,7 +40,9 @@ let AbstractCommonMcpManagementService = class AbstractCommonMcpManagementServic
   }
   getMcpServerConfigurationFromManifest(manifest, packageType) {
     if (packageType === "remote" && manifest.remotes?.length) {
-      const { inputs: inputs2, variables } = this.processKeyValueInputs(manifest.remotes[0].headers ?? []);
+      const url = manifest.remotes[0].url;
+      const headers = manifest.remotes[0].headers ?? [];
+      const { inputs: inputs2, variables } = this.processKeyValueInputs(url.startsWith("https://api.githubcopilot.com/mcp") ? headers.filter((h) => h.name.toLowerCase() !== "authorization") : headers);
       return {
         mcpServerConfiguration: {
           config: {
@@ -86,17 +88,28 @@ let AbstractCommonMcpManagementService = class AbstractCommonMcpManagementServic
     }
     switch (serverPackage.registryType) {
       case "npm":
+        if (serverPackage.registryBaseUrl) {
+          args.push("--registry", serverPackage.registryBaseUrl);
+        }
         args.push(serverPackage.version ? `${serverPackage.identifier}@${serverPackage.version}` : serverPackage.identifier);
         break;
       case "pypi":
-        args.push(serverPackage.version ? `${serverPackage.identifier}==${serverPackage.version}` : serverPackage.identifier);
+        if (serverPackage.registryBaseUrl) {
+          args.push("--index-url", serverPackage.registryBaseUrl);
+        }
+        args.push(serverPackage.version ? `${serverPackage.identifier}@${serverPackage.version}` : serverPackage.identifier);
         break;
-      case "oci":
-        args.push(serverPackage.version ? `${serverPackage.identifier}:${serverPackage.version}` : serverPackage.identifier);
+      case "oci": {
+        const dockerIdentifier = serverPackage.registryBaseUrl ? `${serverPackage.registryBaseUrl}/${serverPackage.identifier}` : serverPackage.identifier;
+        args.push(serverPackage.version ? `${dockerIdentifier}:${serverPackage.version}` : dockerIdentifier);
         break;
+      }
       case "nuget":
         args.push(serverPackage.version ? `${serverPackage.identifier}@${serverPackage.version}` : serverPackage.identifier);
         args.push("--yes");
+        if (serverPackage.registryBaseUrl) {
+          args.push("--source", serverPackage.registryBaseUrl);
+        }
         if (serverPackage.packageArguments?.length) {
           args.push("--");
         }

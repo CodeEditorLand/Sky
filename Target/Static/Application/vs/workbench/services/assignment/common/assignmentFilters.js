@@ -131,7 +131,8 @@ let CopilotAssignmentFilterProvider = CopilotAssignmentFilterProvider_1 = class 
     const newSku = this._chatEntitlementService.sku;
     const newIsGitHubInternal = this._chatEntitlementService.organisations?.includes("github");
     const newIsMicrosoftInternal = this._chatEntitlementService.organisations?.includes("microsoft") || this._chatEntitlementService.organisations?.includes("ms-copilot") || this._chatEntitlementService.organisations?.includes("MicrosoftCopilot");
-    const newInternalOrg = newIsGitHubInternal ? "github" : newIsMicrosoftInternal ? "microsoft" : void 0;
+    const newIsVSCodeInternal = this._chatEntitlementService.organisations?.includes("Visual-Studio-Code");
+    const newInternalOrg = newIsVSCodeInternal ? "vscode" : newIsGitHubInternal ? "github" : newIsMicrosoftInternal ? "microsoft" : void 0;
     if (this.copilotSku === newSku && this.copilotInternalOrg === newInternalOrg) {
       return;
     }

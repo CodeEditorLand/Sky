@@ -2,10 +2,12 @@ import { FastDomNode } from '../../../base/browser/fastDomNode.js';
 import { RenderingContext, RestrictedRenderingContext } from './renderingContext.js';
 import { ViewContext } from '../../common/viewModel/viewContext.js';
 import { ViewEventHandler } from '../../common/viewEventHandler.js';
+import { ViewportData } from '../../common/viewLayout/viewLinesViewportData.js';
 export declare abstract class ViewPart extends ViewEventHandler {
     _context: ViewContext;
     constructor(context: ViewContext);
     dispose(): void;
+    onBeforeRender(viewportData: ViewportData): void;
     abstract prepareRender(ctx: RenderingContext): void;
     abstract render(ctx: RestrictedRenderingContext): void;
 }

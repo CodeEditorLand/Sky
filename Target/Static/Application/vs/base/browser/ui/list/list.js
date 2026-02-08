@@ -1,5 +1,6 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+const NotSelectableGroupId = "notSelectable";
 var ListDragOverEffectType;
 (function(ListDragOverEffectType2) {
   ListDragOverEffectType2[ListDragOverEffectType2["Copy"] = 0] = "Copy";
@@ -48,6 +49,7 @@ export {
   ListDragOverEffectPosition,
   ListDragOverEffectType,
   ListDragOverReactions,
-  ListError
+  ListError,
+  NotSelectableGroupId
 };
 //# sourceMappingURL=list.js.map

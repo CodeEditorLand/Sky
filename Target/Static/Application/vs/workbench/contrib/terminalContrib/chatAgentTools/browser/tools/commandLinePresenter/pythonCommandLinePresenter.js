@@ -6,7 +6,8 @@ class PythonCommandLinePresenter {
     __name(this, "PythonCommandLinePresenter");
   }
   present(options) {
-    const extractedPython = extractPythonCommand(options.commandLine, options.shell, options.os);
+    const commandLine = options.commandLine.forDisplay;
+    const extractedPython = extractPythonCommand(commandLine, options.shell, options.os);
     if (extractedPython) {
       return {
         commandLine: extractedPython,

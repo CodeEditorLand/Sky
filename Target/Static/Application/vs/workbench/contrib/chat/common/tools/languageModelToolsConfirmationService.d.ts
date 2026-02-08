@@ -1,4 +1,5 @@
 import { IDisposable } from '../../../../../base/common/lifecycle.js';
+import { URI } from '../../../../../base/common/uri.js';
 import { IQuickInputButton, IQuickTreeItem } from '../../../../../platform/quickinput/common/quickInput.js';
 import { ConfirmedReason } from '../chatService/chatService.js';
 import { IToolData, ToolDataSource } from './languageModelToolsService.js';
@@ -16,6 +17,7 @@ export interface ILanguageModelToolConfirmationRef {
     toolId: string;
     source: ToolDataSource;
     parameters: unknown;
+    chatSessionResource?: URI;
 }
 export interface ILanguageModelToolConfirmationActionProducer {
     getPreConfirmAction(ref: ILanguageModelToolConfirmationRef): ConfirmedReason | undefined;

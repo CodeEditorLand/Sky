@@ -12,6 +12,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { RawContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IHostService } from '../../../services/host/browser/host.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
+import { IDefaultAccountService } from '../../../../platform/defaultAccount/common/defaultAccount.js';
 export declare const CONTEXT_UPDATE_STATE: RawContextKey<string>;
 export declare const MAJOR_MINOR_UPDATE_AVAILABLE: RawContextKey<boolean>;
 export declare const RELEASE_NOTES_URL: RawContextKey<string>;
@@ -35,6 +36,7 @@ export declare class UpdateContribution extends Disposable implements IWorkbench
     private readonly hostService;
     private state;
     private readonly badgeDisposable;
+    private overwriteNotificationHandle;
     private updateStateContextKey;
     private majorMinorUpdateAvailableContextKey;
     constructor(storageService: IStorageService, instantiationService: IInstantiationService, notificationService: INotificationService, dialogService: IDialogService, updateService: IUpdateService, activityService: IActivityService, contextKeyService: IContextKeyService, productService: IProductService, openerService: IOpenerService, configurationService: IConfigurationService, hostService: IHostService);
@@ -44,6 +46,7 @@ export declare class UpdateContribution extends Disposable implements IWorkbench
     private onUpdateAvailable;
     private onUpdateDownloaded;
     private onUpdateReady;
+    private onUpdateOverwriting;
     private shouldShowNotification;
     private registerGlobalActivityActions;
 }
@@ -52,4 +55,10 @@ export declare class SwitchProductQualityContribution extends Disposable impleme
     private readonly environmentService;
     constructor(productService: IProductService, environmentService: IBrowserWorkbenchEnvironmentService);
     private registerGlobalActivityActions;
+}
+export declare class DefaultAccountUpdateContribution extends Disposable implements IWorkbenchContribution {
+    private readonly updateService;
+    private readonly defaultAccountService;
+    constructor(updateService: IUpdateService, defaultAccountService: IDefaultAccountService);
+    private checkDefaultAccount;
 }

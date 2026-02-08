@@ -34,6 +34,7 @@ import { localize } from "../../../../../nls.js";
 import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { EditorActivation } from "../../../../../platform/editor/common/editor.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { ILogService } from "../../../../../platform/log/common/log.js";
 import { DiffEditorInput } from "../../../../common/editor/diffEditorInput.js";
@@ -45,12 +46,16 @@ import { INotebookService } from "../../../notebook/common/notebookService.js";
 import { chatEditingSessionIsReady, getMultiDiffSourceUri } from "../../common/editing/chatEditingService.js";
 import { ChatAgentLocation } from "../../common/constants.js";
 import { ChatEditingCheckpointTimelineImpl } from "./chatEditingCheckpointTimelineImpl.js";
+import { ChatEditingDeletedFileEntry } from "./chatEditingDeletedFileEntry.js";
 import { ChatEditingModifiedDocumentEntry } from "./chatEditingModifiedDocumentEntry.js";
 import { AbstractChatEditingModifiedFileEntry } from "./chatEditingModifiedFileEntry.js";
 import { ChatEditingModifiedNotebookEntry } from "./chatEditingModifiedNotebookEntry.js";
 import { FileOperationType } from "./chatEditingOperations.js";
+import { IChatEditingExplanationModelManager } from "./chatEditingExplanationModelManager.js";
 import { ChatEditingSessionStorage } from "./chatEditingSessionStorage.js";
 import { ChatEditingTextModelContentProvider } from "./chatEditingTextModelContentProviders.js";
+import { getChatSessionType } from "../../common/model/chatUri.js";
+import { AgentSessionProviders } from "../agentSessions/agentSessions.js";
 var NotExistBehavior;
 (function(NotExistBehavior2) {
   NotExistBehavior2[NotExistBehavior2["Create"] = 0] = "Create";
@@ -127,7 +132,7 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
     this._assertNotDisposed();
     return this._onDidDispose.event;
   }
-  constructor(chatSessionResource, isGlobalEditingSession, _lookupExternalEntry, transferFrom, _instantiationService, _modelService, _languageService, _textModelService, _bulkEditService, _editorGroupsService, _editorService, _notebookService, _accessibilitySignalService, _logService, configurationService) {
+  constructor(chatSessionResource, isGlobalEditingSession, _lookupExternalEntry, transferFrom, _instantiationService, _modelService, _languageService, _textModelService, _bulkEditService, _editorGroupsService, _editorService, _notebookService, _accessibilitySignalService, _logService, configurationService, _fileService, _explanationModelManager) {
     super();
     this.chatSessionResource = chatSessionResource;
     this.isGlobalEditingSession = isGlobalEditingSession;
@@ -143,6 +148,8 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
     this._accessibilitySignalService = _accessibilitySignalService;
     this._logService = _logService;
     this.configurationService = configurationService;
+    this._fileService = _fileService;
+    this._explanationModelManager = _explanationModelManager;
     this._state = observableValue(
       this,
       0
@@ -383,6 +390,7 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
   }
   dispose() {
     this._assertNotDisposed();
+    this.clearExplanations();
     dispose(this._entriesObs.get());
     super.dispose();
     this._state.set(3, void 0);
@@ -443,6 +451,54 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
         });
       }, "complete")
     };
+  }
+  startDeletion(resource, responseModel, undoStopId) {
+    this._assertNotDisposed();
+    this._streamingEditLocks.queue(resource.toString(), async () => {
+      if (this.isDisposed) {
+        return;
+      }
+      await chatEditingSessionIsReady(this);
+      let fileContent;
+      try {
+        const content = await this._fileService.readFile(resource);
+        fileContent = content.value.toString();
+      } catch (e) {
+        this._logService.warn(`Cannot delete file ${resource.toString()}: file does not exist`);
+        return;
+      }
+      const existingEntry = this._getEntry(resource);
+      if (existingEntry) {
+        existingEntry.dispose();
+        const entries2 = this._entriesObs.get().filter((e) => e !== existingEntry);
+        this._entriesObs.set(entries2, void 0);
+      }
+      if (!this._initialFileContents.has(resource)) {
+        this._initialFileContents.set(resource, fileContent);
+      }
+      await this._bulkEditService.apply({
+        edits: [{ oldResource: resource, options: { ignoreIfNotExists: true } }]
+      });
+      this._timeline.recordFileOperation({
+        type: FileOperationType.Delete,
+        uri: resource,
+        requestId: responseModel.requestId,
+        epoch: this._timeline.incrementEpoch(),
+        finalContent: fileContent
+      });
+      const telemetryInfo = this._getTelemetryInfoForModel(responseModel);
+      const languageSelection = this._languageService.createByFilepathOrFirstLine(resource);
+      const entry = this._instantiationService.createInstance(ChatEditingDeletedFileEntry, resource, fileContent, { collapse: /* @__PURE__ */ __name((tx) => this._collapse(resource, tx), "collapse") }, telemetryInfo, languageSelection.languageId);
+      const entries = [...this._entriesObs.get(), entry];
+      this._entriesObs.set(entries, void 0);
+    });
+  }
+  applyWorkspaceEdit(edit, responseModel, undoStopId) {
+    for (const fileEdit of edit.edits) {
+      if (fileEdit.oldResource && !fileEdit.newResource) {
+        this.startDeletion(fileEdit.oldResource, responseModel, undoStopId);
+      }
+    }
   }
   async startExternalEdits(responseModel, operationId, resources, undoStopId) {
     const snapshots = new ResourceMap();
@@ -535,6 +591,9 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
           isExternalEdit: true
         });
         await entry.acceptStreamingEditsEnd();
+        if (getChatSessionType(this.chatSessionResource) === AgentSessionProviders.Background) {
+          await entry.accept();
+        }
         entry.stopExternalEdit();
       }
     } finally {
@@ -551,6 +610,35 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
   }
   async redoInteraction() {
     await this._timeline.redoToNextCheckpoint();
+  }
+  async triggerExplanationGeneration() {
+    this.clearExplanations();
+    const entries = this._entriesObs.get();
+    const diffInfos = [];
+    for (const entry of entries) {
+      if (entry instanceof ChatEditingModifiedDocumentEntry) {
+        const diff = await entry.getDiffInfo();
+        diffInfos.push({
+          changes: diff.changes,
+          identical: diff.identical,
+          originalModel: entry.originalModel,
+          modifiedModel: entry.modifiedModel
+        });
+      }
+    }
+    if (diffInfos.length > 0) {
+      this._explanationHandle = this._explanationModelManager.generateExplanations(diffInfos, this.chatSessionResource, CancellationToken.None);
+      await this._explanationHandle.completed;
+    }
+  }
+  clearExplanations() {
+    if (this._explanationHandle) {
+      this._explanationHandle.dispose();
+      this._explanationHandle = void 0;
+    }
+  }
+  hasExplanations() {
+    return this._explanationHandle !== void 0;
   }
   _recordEditOperations(entry, resource, edits, responseModel) {
     const isNotebookEdits = edits.length > 0 && hasKey(edits[0], { cells: true });
@@ -590,6 +678,8 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
       return entry.getCurrentSnapshot();
     } else if (entry instanceof ChatEditingModifiedDocumentEntry) {
       return entry.getCurrentContents();
+    } else if (entry instanceof ChatEditingDeletedFileEntry) {
+      return "";
     } else {
       throw new Error(`unknown entry type for ${entry.modifiedURI}`);
     }
@@ -622,10 +712,26 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
     }
     const entriesArr = [];
     for (const snapshotEntry of entries.values()) {
-      const entry = await this._getOrCreateModifiedFileEntry(snapshotEntry.resource, 1, snapshotEntry.telemetryInfo);
+      let entry;
+      if (snapshotEntry.isDeleted) {
+        entry = this._instantiationService.createInstance(
+          ChatEditingDeletedFileEntry,
+          snapshotEntry.resource,
+          snapshotEntry.original,
+          // original content before deletion
+          { collapse: /* @__PURE__ */ __name((tx) => this._collapse(snapshotEntry.resource, tx), "collapse") },
+          snapshotEntry.telemetryInfo,
+          snapshotEntry.languageId
+        );
+        await entry.restoreFromSnapshot(snapshotEntry, false);
+      } else {
+        entry = await this._getOrCreateModifiedFileEntry(snapshotEntry.resource, 1, snapshotEntry.telemetryInfo);
+        if (entry) {
+          const restoreToDisk = snapshotEntry.state === 0;
+          await entry.restoreFromSnapshot(snapshotEntry, restoreToDisk);
+        }
+      }
       if (entry) {
-        const restoreToDisk = snapshotEntry.state === 0;
-        await entry.restoreFromSnapshot(snapshotEntry, restoreToDisk);
         entriesArr.push(entry);
       }
     }
@@ -691,10 +797,20 @@ let ChatEditingSession = ChatEditingSession_1 = class ChatEditingSession2 extend
     resource = CellUri.parse(resource)?.notebook ?? resource;
     const existingEntry = this._entriesObs.get().find((e) => isEqual(e.modifiedURI, resource));
     if (existingEntry) {
-      if (telemetryInfo.requestId !== existingEntry.telemetryInfo.requestId) {
-        existingEntry.updateTelemetryInfo(telemetryInfo);
+      if (existingEntry instanceof ChatEditingDeletedFileEntry) {
+        const initialContentFromDeleted = existingEntry.state.get() === 0 ? existingEntry.initialContent : void 0;
+        existingEntry.dispose();
+        const entries = this._entriesObs.get().filter((e) => e !== existingEntry);
+        this._entriesObs.set(entries, void 0);
+        if (initialContentFromDeleted !== void 0) {
+          _initialContent = initialContentFromDeleted;
+        }
+      } else {
+        if (telemetryInfo.requestId !== existingEntry.telemetryInfo.requestId) {
+          existingEntry.updateTelemetryInfo(telemetryInfo);
+        }
+        return existingEntry;
       }
-      return existingEntry;
     }
     let entry;
     const existingExternalEntry = this._lookupExternalEntry(resource);
@@ -794,7 +910,9 @@ ChatEditingSession = ChatEditingSession_1 = __decorate([
   __param(11, INotebookService),
   __param(12, IAccessibilitySignalService),
   __param(13, ILogService),
-  __param(14, IConfigurationService)
+  __param(14, IConfigurationService),
+  __param(15, IFileService),
+  __param(16, IChatEditingExplanationModelManager)
 ], ChatEditingSession);
 export {
   ChatEditingSession

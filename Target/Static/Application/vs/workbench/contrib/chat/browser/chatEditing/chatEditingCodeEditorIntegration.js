@@ -38,11 +38,16 @@ import { IInstantiationService } from "../../../../../platform/instantiation/com
 import { isDiffEditorInput } from "../../../../common/editor.js";
 import { IEditorService } from "../../../../services/editor/common/editorService.js";
 import { minimapGutterAddedBackground, minimapGutterDeletedBackground, minimapGutterModifiedBackground, overviewRulerAddedForeground, overviewRulerDeletedForeground, overviewRulerModifiedForeground } from "../../../scm/common/quickDiff.js";
+import { IChatEditingService } from "../../common/editing/chatEditingService.js";
 import { isTextDiffEditorForEntry } from "./chatEditing.js";
 import { ActionViewItem } from "../../../../../base/browser/ui/actionbar/actionViewItems.js";
 import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
 import { ctxCursorInChangeRange } from "./chatEditingEditorContextKeys.js";
 import { LinkedList } from "../../../../../base/common/linkedList.js";
+import { ChatEditingExplanationWidgetManager } from "./chatEditingExplanationWidget.js";
+import { IChatEditingExplanationModelManager } from "./chatEditingExplanationModelManager.js";
+import { IChatWidgetService } from "../chat.js";
+import { IViewsService } from "../../../../services/views/common/viewsService.js";
 class ObjectPool {
   static {
     __name(this, "ObjectPool");
@@ -73,11 +78,14 @@ let ChatEditingCodeEditorIntegration = class ChatEditingCodeEditorIntegration2 {
   static {
     this._diffLineDecorationData = ModelDecorationOptions.register({ description: "diff-line-decoration" });
   }
-  constructor(_entry, _editor, documentDiffInfo, renderDiffImmediately, _editorService, _accessibilitySignalsService, contextKeyService, instantiationService) {
+  constructor(_entry, _editor, documentDiffInfo, renderDiffImmediately, _editorService, _accessibilitySignalsService, contextKeyService, instantiationService, _chatEditingService, _explanationModelManager, _chatWidgetService, _viewsService) {
     this._entry = _entry;
     this._editor = _editor;
     this._editorService = _editorService;
     this._accessibilitySignalsService = _accessibilitySignalsService;
+    this._explanationModelManager = _explanationModelManager;
+    this._chatWidgetService = _chatWidgetService;
+    this._viewsService = _viewsService;
     this._currentIndex = observableValue(this, -1);
     this.currentIndex = this._currentIndex;
     this._store = new DisposableStore();
@@ -90,6 +98,7 @@ let ChatEditingCodeEditorIntegration = class ChatEditingCodeEditorIntegration2 {
     const codeEditorObs = observableCodeEditor(_editor);
     this._diffLineDecorations = this._editor.createDecorationsCollection();
     this._diffVisualDecorations = this._editor.createDecorationsCollection();
+    this._store.add(new ChatEditingExplanationWidgetManager(this._editor, this._chatWidgetService, this._viewsService, this._explanationModelManager, this._entry.modifiedURI));
     const enabledObs = derived((r) => {
       if (!isEqual(codeEditorObs.model.read(r)?.uri, documentDiffInfo.read(r).modifiedModel.uri)) {
         return false;
@@ -599,7 +608,11 @@ ChatEditingCodeEditorIntegration = ChatEditingCodeEditorIntegration_1 = __decora
   __param(4, IEditorService),
   __param(5, IAccessibilitySignalService),
   __param(6, IContextKeyService),
-  __param(7, IInstantiationService)
+  __param(7, IInstantiationService),
+  __param(8, IChatEditingService),
+  __param(9, IChatEditingExplanationModelManager),
+  __param(10, IChatWidgetService),
+  __param(11, IViewsService)
 ], ChatEditingCodeEditorIntegration);
 let DiffHunkWidget = class DiffHunkWidget2 {
   static {

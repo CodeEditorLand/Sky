@@ -19,6 +19,6 @@ export declare class TokenizationFontDecorationProvider extends Disposable imple
     private _fontAnnotatedString;
     constructor(textModel: ITextModel, tokenizationTextModelPart: TokenizationTextModelPart);
     handleDidChangeContent(change: IModelContentChangedEvent): void;
-    getDecorationsInRange(range: Range, ownerId?: number, filterOutValidation?: boolean, onlyMinimapDecorations?: boolean): IModelDecoration[];
+    getDecorationsInRange(range: Range, ownerId?: number, filterOutValidation?: boolean, filterFontDecorations?: boolean, onlyMinimapDecorations?: boolean): IModelDecoration[];
     getAllDecorations(ownerId?: number, filterOutValidation?: boolean): IModelDecoration[];
 }

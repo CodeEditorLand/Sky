@@ -40,7 +40,7 @@ let MainThreadChatOutputRenderer = class MainThreadChatOutputRenderer2 extends D
         this._mainThreadWebview.addWebview(webviewHandle, webview, {
           serializeBuffersForPostMessage: true
         });
-        this._proxy.$renderChatOutput(viewType, mime, VSBuffer.wrap(data), webviewHandle, token);
+        return this._proxy.$renderChatOutput(viewType, mime, VSBuffer.wrap(data), webviewHandle, token);
       }, "renderOutputPart")
     }, {
       extension: { id: extensionId, location: URI.revive(extensionLocation) }

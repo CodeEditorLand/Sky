@@ -54,7 +54,8 @@ var LayoutClasses;
   LayoutClasses2["WINDOW_BORDER"] = "border";
 })(LayoutClasses || (LayoutClasses = {}));
 const COMMAND_CENTER_SETTINGS = [
-  "chat.commandCenter.enabled",
+  "chat.agentsControl.enabled",
+  "chat.unifiedAgentsBar.enabled",
   "workbench.navigationControl.enabled",
   "workbench.experimental.share.enabled"
 ];
@@ -211,16 +212,30 @@ class Layout extends Disposable {
   }
   registerLayoutListeners() {
     const showEditorIfHidden = /* @__PURE__ */ __name(() => {
-      if (!this.isVisible("workbench.parts.editor", mainWindow)) {
-        if (this.isAuxiliaryBarMaximized()) {
-          this.toggleMaximizedAuxiliaryBar();
-        } else {
-          this.toggleMaximizedPanel();
-        }
+      if (this.isVisible("workbench.parts.editor", mainWindow) || // already visible
+      this.mainPartEditorService.visibleEditors.length === 0) {
+        return;
+      }
+      if (this.isAuxiliaryBarMaximized()) {
+        this.toggleMaximizedAuxiliaryBar();
+      } else {
+        this.toggleMaximizedPanel();
       }
     }, "showEditorIfHidden");
+    const maybeMaximizeAuxiliaryBar = /* @__PURE__ */ __name(() => {
+      if (this.mainPartEditorService.visibleEditors.length === 0 && this.configurationService.getValue(WorkbenchLayoutSettings.AUXILIARYBAR_FORCE_MAXIMIZED) === true) {
+        this.setAuxiliaryBarMaximized(true);
+        return true;
+      }
+      return false;
+    }, "maybeMaximizeAuxiliaryBar");
     this.editorGroupService.whenRestored.then(() => {
-      this._register(this.mainPartEditorService.onDidVisibleEditorsChange(showEditorIfHidden));
+      this._register(this.mainPartEditorService.onDidVisibleEditorsChange(() => {
+        const handled = maybeMaximizeAuxiliaryBar();
+        if (!handled) {
+          showEditorIfHidden();
+        }
+      }));
       this._register(this.editorGroupService.mainPart.onDidActivateGroup(showEditorIfHidden));
       this._register(this.mainPartEditorService.onDidActiveEditorChange(() => this.centerMainEditorLayout(this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED))));
     });
@@ -230,9 +245,8 @@ class Layout extends Disposable {
         LegacyWorkbenchLayoutSettings.SIDEBAR_POSITION,
         LegacyWorkbenchLayoutSettings.STATUSBAR_VISIBLE
       ].some((setting) => e.affectsConfiguration(setting))) {
-        const shareEnabled = e.affectsConfiguration("workbench.experimental.share.enabled") && this.configurationService.getValue("workbench.experimental.share.enabled");
-        const navigationControlEnabled = e.affectsConfiguration("workbench.navigationControl.enabled") && this.configurationService.getValue("workbench.navigationControl.enabled");
-        if (shareEnabled || navigationControlEnabled) {
+        const enabledCommandCenterAction = COMMAND_CENTER_SETTINGS.some((setting) => e.affectsConfiguration(setting) && this.configurationService.getValue(setting) === true);
+        if (enabledCommandCenterAction) {
           if (this.configurationService.getValue(
             "window.commandCenter"
             /* LayoutSettings.COMMAND_CENTER */
@@ -287,6 +301,14 @@ class Layout extends Disposable {
           }
         }
         this.doUpdateLayoutConfiguration();
+      }
+      if (e.affectsConfiguration(WorkbenchLayoutSettings.AUXILIARYBAR_FORCE_MAXIMIZED)) {
+        const forceMaximized = this.configurationService.getValue(WorkbenchLayoutSettings.AUXILIARYBAR_FORCE_MAXIMIZED);
+        if (forceMaximized === true && this.mainPartEditorService.visibleEditors.length === 0) {
+          this.setAuxiliaryBarMaximized(true);
+        } else if (forceMaximized === false && this.isAuxiliaryBarMaximized()) {
+          this.setAuxiliaryBarMaximized(false);
+        }
       }
     }));
     this._register(onDidChangeFullscreen((windowId) => this.onFullscreenChanged(windowId)));
@@ -572,6 +594,9 @@ class Layout extends Disposable {
   }
   shouldRestoreEditors(contextService, initialEditorsState) {
     if (isTemporaryWorkspace(contextService.getWorkspace())) {
+      return false;
+    }
+    if (this.configurationService.getValue(WorkbenchLayoutSettings.EDITOR_RESTORE_EDITORS) === false) {
       return false;
     }
     const forceRestoreEditors = this.configurationService.getValue("window.restoreWindows") === "preserve";
@@ -1313,7 +1338,7 @@ class Layout extends Disposable {
             this.setEditorHidden(!visible);
           }
         }
-        this._onDidChangePartVisibility.fire();
+        this._onDidChangePartVisibility.fire({ partId: part.getId(), visible });
         this.handleContainerDidLayout(this.mainContainer, this._mainContainerDimension);
       }));
     }
@@ -1655,6 +1680,7 @@ class Layout extends Disposable {
     if (alignment !== "center" && this.isPanelMaximized()) {
       this.toggleMaximizedPanel();
     }
+    this.setAuxiliaryBarMaximized(false);
     this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_ALIGNMENT, alignment);
     this.adjustPartPositions(this.getSideBarPosition(), alignment, this.getPanelPosition());
     this._onDidChangePanelAlignment.fire(alignment);
@@ -2416,11 +2442,13 @@ const LayoutStateKeys = {
 var WorkbenchLayoutSettings;
 (function(WorkbenchLayoutSettings2) {
   WorkbenchLayoutSettings2["AUXILIARYBAR_DEFAULT_VISIBILITY"] = "workbench.secondarySideBar.defaultVisibility";
+  WorkbenchLayoutSettings2["AUXILIARYBAR_FORCE_MAXIMIZED"] = "workbench.secondarySideBar.forceMaximized";
   WorkbenchLayoutSettings2["ACTIVITY_BAR_VISIBLE"] = "workbench.activityBar.visible";
   WorkbenchLayoutSettings2["PANEL_POSITION"] = "workbench.panel.defaultLocation";
   WorkbenchLayoutSettings2["PANEL_OPENS_MAXIMIZED"] = "workbench.panel.opensMaximized";
   WorkbenchLayoutSettings2["ZEN_MODE_CONFIG"] = "zenMode";
   WorkbenchLayoutSettings2["EDITOR_CENTERED_LAYOUT_AUTO_RESIZE"] = "workbench.editor.centeredLayoutAutoResize";
+  WorkbenchLayoutSettings2["EDITOR_RESTORE_EDITORS"] = "workbench.editor.restoreEditors";
 })(WorkbenchLayoutSettings || (WorkbenchLayoutSettings = {}));
 var LegacyWorkbenchLayoutSettings;
 (function(LegacyWorkbenchLayoutSettings2) {
@@ -2509,14 +2537,18 @@ class LayoutStateModel extends Disposable {
     this.stateCache.set(LayoutStateKeys.ACTIVITYBAR_HIDDEN.name, this.isActivityBarHidden());
     this.stateCache.set(LayoutStateKeys.STATUSBAR_HIDDEN.name, !this.configurationService.getValue(LegacyWorkbenchLayoutSettings.STATUSBAR_VISIBLE));
     this.stateCache.set(LayoutStateKeys.SIDEBAR_POSITON.name, positionFromString(this.configurationService.getValue(LegacyWorkbenchLayoutSettings.SIDEBAR_POSITION) ?? "left"));
+    const auxiliaryBarForceMaximized = this.configurationService.getValue(WorkbenchLayoutSettings.AUXILIARYBAR_FORCE_MAXIMIZED);
     const workbenchState = this.contextService.getWorkbenchState();
     const mainContainerDimension = configuration.mainContainerDimension;
     LayoutStateKeys.SIDEBAR_SIZE.defaultValue = Math.min(300, mainContainerDimension.width / 4);
-    LayoutStateKeys.SIDEBAR_HIDDEN.defaultValue = workbenchState === 1;
-    LayoutStateKeys.AUXILIARYBAR_SIZE.defaultValue = Math.min(300, mainContainerDimension.width / 4);
+    LayoutStateKeys.SIDEBAR_HIDDEN.defaultValue = workbenchState === 1 || auxiliaryBarForceMaximized === true;
+    LayoutStateKeys.AUXILIARYBAR_SIZE.defaultValue = auxiliaryBarForceMaximized ? Math.max(300, mainContainerDimension.width / 2) : Math.min(300, mainContainerDimension.width / 4);
     LayoutStateKeys.AUXILIARYBAR_HIDDEN.defaultValue = (() => {
       if (isWeb && !this.environmentService.remoteAuthority) {
         return true;
+      }
+      if (auxiliaryBarForceMaximized === true) {
+        return false;
       }
       const configuration2 = this.configurationService.inspect(WorkbenchLayoutSettings.AUXILIARYBAR_DEFAULT_VISIBILITY);
       if (configuration2.defaultValue !== "hidden" && !isConfigured(configuration2) && this.stateCache.get(LayoutStateKeys.AUXILIARYBAR_EMPTY.name)) {
@@ -2569,7 +2601,10 @@ class LayoutStateModel extends Disposable {
       /* StorageScope.WORKSPACE */
     ]) {
       const defaultAuxiliaryBarVisibility = this.configurationService.getValue(WorkbenchLayoutSettings.AUXILIARYBAR_DEFAULT_VISIBILITY);
-      if (defaultAuxiliaryBarVisibility === "maximized" || defaultAuxiliaryBarVisibility === "maximizedInWorkspace" && this.contextService.getWorkbenchState() !== 1) {
+      const startupEditor = this.configurationService.getValue("workbench.startupEditor");
+      if (startupEditor === "agentSessionsWelcomePage") {
+        this.applyAuxiliaryBarHiddenOverride(true);
+      } else if (defaultAuxiliaryBarVisibility === "maximized" || defaultAuxiliaryBarVisibility === "maximizedInWorkspace" && this.contextService.getWorkbenchState() !== 1) {
         this.applyAuxiliaryBarMaximizedOverride();
       }
     }
@@ -2597,6 +2632,9 @@ class LayoutStateModel extends Disposable {
     this.setRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN, false);
     this.setRuntimeValue(LayoutStateKeys.AUXILIARYBAR_LAST_NON_MAXIMIZED_SIZE, this.getInitializationValue(LayoutStateKeys.AUXILIARYBAR_SIZE));
     this.setRuntimeValue(LayoutStateKeys.AUXILIARYBAR_WAS_LAST_MAXIMIZED, true);
+  }
+  applyAuxiliaryBarHiddenOverride(value) {
+    this.setRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN, value);
   }
   save(workspace, global) {
     let key;

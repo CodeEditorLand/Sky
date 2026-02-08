@@ -1,5 +1,6 @@
 import { IAnchor } from '../../../../base/browser/ui/contextview/contextview.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
+import { IObservable } from '../../../../base/common/observable.js';
 import { IActionWidgetService } from '../../../../platform/actionWidget/browser/actionWidget.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
@@ -13,6 +14,7 @@ import { IEditorContribution } from '../../../common/editorCommon.js';
 import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
 import { CodeActionAutoApply, CodeActionFilter, CodeActionItem, CodeActionSet, CodeActionTrigger, CodeActionTriggerSource } from '../common/types.js';
 import { ApplyCodeActionReason } from './codeAction.js';
+import { LightBulbInfo } from './lightBulbWidget.js';
 interface IActionShowOptions {
     readonly includeDisabledActions?: boolean;
     readonly fromLightbulb?: boolean;
@@ -32,6 +34,7 @@ export declare class CodeActionController extends Disposable implements IEditorC
     private _showDisabled;
     private readonly _resolver;
     private _disposed;
+    readonly lightBulbState: IObservable<LightBulbInfo | undefined>;
     constructor(editor: ICodeEditor, markerService: IMarkerService, contextKeyService: IContextKeyService, instantiationService: IInstantiationService, languageFeaturesService: ILanguageFeaturesService, progressService: IEditorProgressService, _commandService: ICommandService, _configurationService: IConfigurationService, _actionWidgetService: IActionWidgetService, _instantiationService: IInstantiationService, _progressService: IEditorProgressService);
     dispose(): void;
     private showCodeActionsFromLightbulb;

@@ -65,6 +65,11 @@ class McpServerRequestHandler extends Disposable {
                   sampling: opts.createMessageRequestHandler ? { createMessage: {} } : void 0,
                   elicitation: opts.elicitationRequestHandler ? { create: {} } : void 0
                 }
+              },
+              extensions: {
+                "io.modelcontextprotocol/ui": {
+                  mimeTypes: ["text/html;profile=mcp-app"]
+                }
               }
             },
             clientInfo: {
@@ -224,20 +229,24 @@ class McpServerRequestHandler extends Disposable {
    * Handle successful responses
    */
   handleResult(response) {
-    const request = this._pendingRequests.get(response.id);
-    if (request) {
-      this._pendingRequests.delete(response.id);
-      request.promise.complete(response.result);
+    if (response.id !== void 0) {
+      const request = this._pendingRequests.get(response.id);
+      if (request) {
+        this._pendingRequests.delete(response.id);
+        request.promise.complete(response.result);
+      }
     }
   }
   /**
    * Handle error responses
    */
   handleError(response) {
-    const request = this._pendingRequests.get(response.id);
-    if (request) {
-      this._pendingRequests.delete(response.id);
-      request.promise.error(new MpcResponseError(response.error.message, response.error.code, response.error.data));
+    if (response.id !== void 0) {
+      const request = this._pendingRequests.get(response.id);
+      if (request) {
+        this._pendingRequests.delete(response.id);
+        request.promise.error(new MpcResponseError(response.error.message, response.error.code, response.error.data));
+      }
     }
   }
   /**

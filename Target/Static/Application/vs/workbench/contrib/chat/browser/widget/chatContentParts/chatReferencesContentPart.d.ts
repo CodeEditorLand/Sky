@@ -1,7 +1,7 @@
 import { IListOptions } from '../../../../../../base/browser/ui/list/listWidget.js';
 import { Event } from '../../../../../../base/common/event.js';
 import { IMarkdownString } from '../../../../../../base/common/htmlContent.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
+import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
 import { IMenuService, MenuId } from '../../../../../../platform/actions/common/actions.js';
 import { IContextMenuService } from '../../../../../../platform/contextview/browser/contextView.js';
 import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
@@ -44,6 +44,9 @@ export declare class ChatUsedReferencesListContentPart extends ChatCollapsibleLi
     protected isExpanded(): boolean;
     protected setExpanded(value: boolean): void;
 }
+interface ICollapsibleListWrapper extends IDisposable {
+    list: WorkbenchList<IChatCollapsibleListItem>;
+}
 export declare class CollapsibleListPool extends Disposable {
     private _onDidChangeVisibility;
     private readonly menuId;
@@ -52,8 +55,10 @@ export declare class CollapsibleListPool extends Disposable {
     private readonly themeService;
     private readonly labelService;
     private _pool;
-    get inUse(): ReadonlySet<WorkbenchList<IChatCollapsibleListItem>>;
+    get inUse(): ReadonlySet<ICollapsibleListWrapper>;
     constructor(_onDidChangeVisibility: Event<boolean>, menuId: MenuId | undefined, listOptions: IListOptions<IChatCollapsibleListItem> | undefined, instantiationService: IInstantiationService, themeService: IThemeService, labelService: ILabelService);
     private listFactory;
     get(): IDisposableReference<WorkbenchList<IChatCollapsibleListItem>>;
+    clear(): void;
 }
+export {};

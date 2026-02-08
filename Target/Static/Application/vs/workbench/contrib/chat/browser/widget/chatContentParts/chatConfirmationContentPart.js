@@ -11,11 +11,10 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { localize } from "../../../../../../nls.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
-import { IChatService } from "../../../common/chatService/chatService.js";
+import { ChatSendResult, IChatService } from "../../../common/chatService/chatService.js";
 import { isResponseVM } from "../../../common/model/chatViewModel.js";
 import { IChatWidgetService } from "../../chat.js";
 import { SimpleChatConfirmationWidget } from "./chatConfirmationWidget.js";
@@ -27,8 +26,6 @@ let ChatConfirmationContentPart = class ChatConfirmationContentPart2 extends Dis
     super();
     this.instantiationService = instantiationService;
     this.chatService = chatService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     const element = context.element;
     const buttons = confirmation.buttons ? confirmation.buttons.map((button) => ({
       label: button,
@@ -40,7 +37,6 @@ let ChatConfirmationContentPart = class ChatConfirmationContentPart2 extends Dis
     ];
     const confirmationWidget = this._register(this.instantiationService.createInstance(SimpleChatConfirmationWidget, context, { title: confirmation.title, buttons, message: confirmation.message }));
     confirmationWidget.setShowButtons(!confirmation.isUsed);
-    this._register(confirmationWidget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
     this._register(confirmationWidget.onDidClick(async (e) => {
       if (isResponseVM(element)) {
         const prompt = `${e.label}: "${confirmation.title}"`;
@@ -53,10 +49,10 @@ let ChatConfirmationContentPart = class ChatConfirmationContentPart2 extends Dis
         options.modeInfo = widget?.input.currentModeInfo;
         options.location = widget?.location;
         Object.assign(options, widget?.getModeRequestOptions());
-        if (await this.chatService.sendRequest(element.sessionResource, prompt, options)) {
+        const result = await this.chatService.sendRequest(element.sessionResource, prompt, options);
+        if (ChatSendResult.isSent(result)) {
           confirmation.isUsed = true;
           confirmationWidget.setShowButtons(false);
-          this._onDidChangeHeight.fire();
         }
       }
     }));

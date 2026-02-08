@@ -19,16 +19,18 @@ import { IActionWidgetService } from "../../actionWidget/browser/actionWidget.js
 import { ActionWidgetDropdown } from "../../actionWidget/browser/actionWidgetDropdown.js";
 import { IContextKeyService } from "../../contextkey/common/contextkey.js";
 import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
 let ActionWidgetDropdownActionViewItem = class ActionWidgetDropdownActionViewItem2 extends BaseActionViewItem {
   static {
     __name(this, "ActionWidgetDropdownActionViewItem");
   }
-  constructor(action, actionWidgetOptions, _actionWidgetService, _keybindingService, _contextKeyService) {
+  constructor(action, actionWidgetOptions, _actionWidgetService, _keybindingService, _contextKeyService, _telemetryService) {
     super(void 0, action);
     this.actionWidgetOptions = actionWidgetOptions;
     this._actionWidgetService = _actionWidgetService;
     this._keybindingService = _keybindingService;
     this._contextKeyService = _contextKeyService;
+    this._telemetryService = _telemetryService;
     this.actionItem = null;
   }
   render(container) {
@@ -37,7 +39,7 @@ let ActionWidgetDropdownActionViewItem = class ActionWidgetDropdownActionViewIte
       this.element = append(el, $("a.action-label"));
       return this.renderLabel(this.element);
     }, "labelRenderer");
-    this.actionWidgetDropdown = this._register(new ActionWidgetDropdown(container, { ...this.actionWidgetOptions, labelRenderer }, this._actionWidgetService, this._keybindingService));
+    this.actionWidgetDropdown = this._register(new ActionWidgetDropdown(container, { ...this.actionWidgetOptions, labelRenderer }, this._actionWidgetService, this._keybindingService, this._telemetryService));
     this._register(this.actionWidgetDropdown.onDidChangeVisibility((visible) => {
       this.element?.setAttribute("aria-expanded", `${visible}`);
     }));
@@ -79,7 +81,8 @@ let ActionWidgetDropdownActionViewItem = class ActionWidgetDropdownActionViewIte
 ActionWidgetDropdownActionViewItem = __decorate([
   __param(2, IActionWidgetService),
   __param(3, IKeybindingService),
-  __param(4, IContextKeyService)
+  __param(4, IContextKeyService),
+  __param(5, ITelemetryService)
 ], ActionWidgetDropdownActionViewItem);
 export {
   ActionWidgetDropdownActionViewItem

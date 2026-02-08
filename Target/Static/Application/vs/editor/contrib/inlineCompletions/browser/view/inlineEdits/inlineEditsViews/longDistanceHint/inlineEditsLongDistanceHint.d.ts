@@ -13,6 +13,9 @@ import { IThemeService } from '../../../../../../../../platform/theme/common/the
 import { IKeybindingService } from '../../../../../../../../platform/keybinding/common/keybinding.js';
 import { InlineSuggestionGutterMenuData, SimpleInlineSuggestModel } from '../../components/gutterIndicatorView.js';
 import { InlineCompletionEditorType } from '../../../../model/provideInlineCompletions.js';
+import { IModelService } from '../../../../../../../common/services/model.js';
+import { ILanguageService } from '../../../../../../../common/languages/language.js';
+import { TextModelValueReference } from '../../../../model/textModelValueReference.js';
 export declare class InlineEditsLongDistanceHint extends Disposable implements IInlineEditsView {
     private readonly _editor;
     private readonly _viewState;
@@ -21,11 +24,13 @@ export declare class InlineEditsLongDistanceHint extends Disposable implements I
     private readonly _instantiationService;
     private readonly _themeService;
     private readonly _keybindingService;
+    private readonly _modelService;
+    private readonly _languageService;
     private readonly _editorObs;
     readonly onDidClick: Event<any>;
     private _viewWithElement;
     private readonly _previewEditor;
-    constructor(_editor: ICodeEditor, _viewState: IObservable<ILongDistanceViewState | undefined>, _previewTextModel: ITextModel, _tabAction: IObservable<InlineEditTabAction>, _instantiationService: IInstantiationService, _themeService: IThemeService, _keybindingService: IKeybindingService);
+    constructor(_editor: ICodeEditor, _viewState: IObservable<ILongDistanceViewState | undefined>, _previewTextModel: ITextModel, _tabAction: IObservable<InlineEditTabAction>, _instantiationService: IInstantiationService, _themeService: IThemeService, _keybindingService: IKeybindingService, _modelService: IModelService, _languageService: ILanguageService);
     private readonly _styles;
     get isHovered(): IObservable<boolean>;
     private readonly _hintTextPosition;
@@ -48,6 +53,7 @@ export interface ILongDistanceViewState {
     diff: DetailedLineRangeMapping[];
     nextCursorPosition: Position | null;
     editorType: InlineCompletionEditorType;
+    target: TextModelValueReference;
     model: SimpleInlineSuggestModel;
     inlineSuggestInfo: InlineSuggestionGutterMenuData;
 }

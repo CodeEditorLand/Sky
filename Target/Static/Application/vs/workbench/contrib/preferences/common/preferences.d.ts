@@ -103,7 +103,6 @@ export declare enum WorkbenchSettingsEditorSettings {
 export type ExtensionToggleData = {
     settingsEditorRecommendedExtensions: IStringDictionary<IExtensionRecommendations>;
     recommendedExtensionsGalleryInfo: IStringDictionary<IGalleryExtension>;
-    commonlyUsed: string[];
 };
 export declare function getExperimentalExtensionToggleData(chatEntitlementService: IChatEntitlementService, extensionGalleryService: IExtensionGalleryService, productService: IProductService): Promise<ExtensionToggleData | undefined>;
 /**

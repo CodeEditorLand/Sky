@@ -6,7 +6,8 @@ import { Registry } from "../../../../platform/registry/common/platform.js";
 import { Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
 import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
 import { MenuId, registerAction2, Action2 } from "../../../../platform/actions/common/actions.js";
-import { ProductContribution, UpdateContribution, CONTEXT_UPDATE_STATE, SwitchProductQualityContribution, RELEASE_NOTES_URL, showReleaseNotesInEditor, DOWNLOAD_URL } from "./update.js";
+import { ProductContribution, UpdateContribution, CONTEXT_UPDATE_STATE, SwitchProductQualityContribution, RELEASE_NOTES_URL, showReleaseNotesInEditor, DOWNLOAD_URL, DefaultAccountUpdateContribution } from "./update.js";
+import { UpdateStatusBarEntryContribution } from "./updateStatusBarEntry.js";
 import product from "../../../../platform/product/common/product.js";
 import { IUpdateService } from "../../../../platform/update/common/update.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
@@ -35,9 +36,19 @@ workbench.registerWorkbenchContribution(
   3
   /* LifecyclePhase.Restored */
 );
-class ShowCurrentReleaseNotesAction extends Action2 {
+workbench.registerWorkbenchContribution(
+  DefaultAccountUpdateContribution,
+  4
+  /* LifecyclePhase.Eventually */
+);
+workbench.registerWorkbenchContribution(
+  UpdateStatusBarEntryContribution,
+  3
+  /* LifecyclePhase.Restored */
+);
+class ShowReleaseNotesAction extends Action2 {
   static {
-    __name(this, "ShowCurrentReleaseNotesAction");
+    __name(this, "ShowReleaseNotesAction");
   }
   constructor() {
     super({
@@ -57,12 +68,13 @@ class ShowCurrentReleaseNotesAction extends Action2 {
       }]
     });
   }
-  async run(accessor) {
+  async run(accessor, version) {
     const instantiationService = accessor.get(IInstantiationService);
     const productService = accessor.get(IProductService);
     const openerService = accessor.get(IOpenerService);
+    const targetVersion = version ?? productService.version;
     try {
-      await showReleaseNotesInEditor(instantiationService, productService.version, false);
+      await showReleaseNotesInEditor(instantiationService, targetVersion, false);
     } catch (err) {
       if (productService.releaseNotesUrl) {
         await openerService.open(URI.parse(productService.releaseNotesUrl));
@@ -97,7 +109,7 @@ class ShowCurrentReleaseNotesFromCurrentFileAction extends Action2 {
     }
   }
 }
-registerAction2(ShowCurrentReleaseNotesAction);
+registerAction2(ShowReleaseNotesAction);
 registerAction2(ShowCurrentReleaseNotesFromCurrentFileAction);
 class CheckForUpdateAction extends Action2 {
   static {
@@ -249,7 +261,7 @@ if (isWindows) {
 }
 export {
   CheckForUpdateAction,
-  ShowCurrentReleaseNotesAction,
-  ShowCurrentReleaseNotesFromCurrentFileAction
+  ShowCurrentReleaseNotesFromCurrentFileAction,
+  ShowReleaseNotesAction
 };
 //# sourceMappingURL=update.contribution.js.map

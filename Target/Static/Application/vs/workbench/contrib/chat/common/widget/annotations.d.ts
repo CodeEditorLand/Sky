@@ -11,8 +11,10 @@ export interface IMarkdownVulnerability {
 export declare function extractCodeblockUrisFromText(text: string): {
     uri: URI;
     isEdit?: boolean;
+    subAgentInvocationId?: string;
     textWithoutResult: string;
 } | undefined;
+export declare function extractSubAgentInvocationIdFromText(text: string): string | undefined;
 export declare function hasCodeblockUriTag(text: string): boolean;
 export declare function extractVulnerabilitiesFromText(text: string): {
     newText: string;

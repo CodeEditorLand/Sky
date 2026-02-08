@@ -32,7 +32,7 @@ let ChatAttachmentsContentPart = class ChatAttachmentsContentPart2 extends Dispo
     this.attachedContextDisposables = this._register(new DisposableStore());
     this._onDidChangeVisibility = this._register(new Emitter());
     this._showingAll = false;
-    this.variables = options.variables;
+    this._variables = options.variables;
     this.contentReferences = options.contentReferences ?? [];
     this.limit = options.limit;
     this.domNode = options.domNode ?? dom.$(".chat-attached-context");
@@ -42,11 +42,20 @@ let ChatAttachmentsContentPart = class ChatAttachmentsContentPart2 extends Dispo
       this.domNode = void 0;
     }
   }
+  /**
+   * Update the variables and re-render the attachments in place.
+   */
+  updateVariables(variables) {
+    this._variables = variables;
+    if (this.domNode) {
+      this.initAttachedContext(this.domNode);
+    }
+  }
   initAttachedContext(container) {
     dom.clearNode(container);
     this.attachedContextDisposables.clear();
     const visibleAttachments = this.getVisibleAttachments();
-    const hasMoreAttachments = this.limit && this.variables.length > this.limit && !this._showingAll;
+    const hasMoreAttachments = this.limit && this._variables.length > this.limit && !this._showingAll;
     for (const attachment of visibleAttachments) {
       this.renderAttachment(attachment, container);
     }
@@ -56,12 +65,12 @@ let ChatAttachmentsContentPart = class ChatAttachmentsContentPart2 extends Dispo
   }
   getVisibleAttachments() {
     if (!this.limit || this._showingAll) {
-      return this.variables;
+      return this._variables;
     }
-    return this.variables.slice(0, this.limit);
+    return this._variables.slice(0, this.limit);
   }
   renderShowMoreButton(container) {
-    const remainingCount = this.variables.length - (this.limit ?? 0);
+    const remainingCount = this._variables.length - (this.limit ?? 0);
     const showMoreButton = dom.$("div.chat-attached-context-attachment.chat-attachments-show-more-button");
     showMoreButton.setAttribute("role", "button");
     showMoreButton.setAttribute("tabindex", "0");

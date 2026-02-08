@@ -11,11 +11,13 @@ import { IProductService } from '../../../../platform/product/common/productServ
 import { IRequestService } from '../../../../platform/request/common/request.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { AuthenticationSession, IAuthenticationExtensionsService, IAuthenticationService } from '../../authentication/common/authentication.js';
+import { IAuthenticationService } from '../../authentication/common/authentication.js';
 import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IWorkbenchEnvironmentService } from '../../environment/common/environmentService.js';
 import { ILifecycleService } from '../../lifecycle/common/lifecycle.js';
 import { IObservable } from '../../../../base/common/observable.js';
+import { IDefaultAccountService } from '../../../../platform/defaultAccount/common/defaultAccount.js';
+import { IDefaultAccount } from '../../../../base/common/defaultAccount.js';
 export declare namespace ChatEntitlementContextKeys {
     const Setup: {
         hidden: RawContextKey<boolean>;
@@ -123,6 +125,12 @@ export interface IChatEntitlementService {
  * @returns Whether or not they are a paid user
  */
 export declare function isProUser(chatEntitlement: ChatEntitlement): boolean;
+/**
+ * Gets the full plan name for the given chat entitlement
+ * @param chatEntitlement The chat entitlement to get the plan name for
+ * @returns The localized full plan name (e.g., "Copilot Pro", "Copilot Free")
+ */
+export declare function getChatPlanName(chatEntitlement: ChatEntitlement): string;
 interface IChatQuotasAccessor {
     clearQuotas(): void;
     acceptQuotas(quotas: IQuotas): void;
@@ -190,42 +198,37 @@ export declare class ChatEntitlementRequests extends Disposable {
     private readonly context;
     private readonly chatQuotasAccessor;
     private readonly telemetryService;
-    private readonly authenticationService;
     private readonly logService;
     private readonly requestService;
     private readonly dialogService;
     private readonly openerService;
-    private readonly configurationService;
-    private readonly authenticationExtensionsService;
     private readonly lifecycleService;
-    static providerId(configurationService: IConfigurationService): string;
+    private readonly defaultAccountService;
+    private readonly authenticationService;
     private state;
     private pendingResolveCts;
-    private didResolveEntitlements;
-    constructor(context: ChatEntitlementContext, chatQuotasAccessor: IChatQuotasAccessor, telemetryService: ITelemetryService, authenticationService: IAuthenticationService, logService: ILogService, requestService: IRequestService, dialogService: IDialogService, openerService: IOpenerService, configurationService: IConfigurationService, authenticationExtensionsService: IAuthenticationExtensionsService, lifecycleService: ILifecycleService);
+    constructor(context: ChatEntitlementContext, chatQuotasAccessor: IChatQuotasAccessor, telemetryService: ITelemetryService, logService: ILogService, requestService: IRequestService, dialogService: IDialogService, openerService: IOpenerService, lifecycleService: ILifecycleService, defaultAccountService: IDefaultAccountService, authenticationService: IAuthenticationService);
     private registerListeners;
     private resolve;
-    private findMatchingProviderSession;
-    private doGetSessions;
-    private includesScopes;
     private resolveEntitlement;
     private doResolveEntitlement;
-    private getEntitlementUrl;
     private toQuotas;
     private request;
     private update;
-    forceResolveEntitlement(sessions: AuthenticationSession[] | undefined, token?: Readonly<CancellationToken>): Promise<IEntitlements | undefined>;
-    signUpFree(sessions: AuthenticationSession[]): Promise<true | false | {
+    forceResolveEntitlement(token?: Readonly<CancellationToken>): Promise<IEntitlements | undefined>;
+    signUpFree(): Promise<true | false | {
         errorCode: number;
-    }>;
+    } | undefined>;
+    private doSignUpFree;
+    private getSessions;
     private onUnknownSignUpError;
     private onUnprocessableSignUpError;
     signIn(options?: {
         useSocialProvider?: string;
         additionalScopes?: readonly string[];
     }): Promise<{
-        session: AuthenticationSession;
-        entitlements: IEntitlements | undefined;
+        defaultAccount?: IDefaultAccount;
+        entitlements?: IEntitlements;
     }>;
     dispose(): void;
 }

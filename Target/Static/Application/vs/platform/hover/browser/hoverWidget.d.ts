@@ -1,4 +1,5 @@
 import './hover.css';
+import { IDisposable } from '../../../base/common/lifecycle.js';
 import { Event } from '../../../base/common/event.js';
 import { IKeybindingService } from '../../keybinding/common/keybinding.js';
 import { IConfigurationService } from '../../configuration/common/configuration.js';
@@ -46,6 +47,13 @@ export declare class HoverWidget extends Widget implements IHoverWidget {
      */
     get isLocked(): boolean;
     set isLocked(value: boolean);
+    /**
+     * Adds an element to be tracked by this hover's mouse tracker. Mouse events on
+     * this element will be considered as being "inside" the hover, preventing it
+     * from closing. This is used for nested hovers where the child hover's container
+     * should be treated as part of the parent hover.
+     */
+    addMouseTrackingElement(element: HTMLElement): IDisposable;
     constructor(options: IHoverOptions, _keybindingService: IKeybindingService, _configurationService: IConfigurationService, _markdownRenderer: IMarkdownRendererService, _accessibilityService: IAccessibilityService);
     private addFocusTrap;
     private findLastFocusableChild;

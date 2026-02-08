@@ -64,7 +64,7 @@ let GutterIndicatorMenuContent = class GutterIndicatorMenuContent2 {
     const title = header(this._data.displayName);
     const gotoAndAccept = option(createOptionArgs({
       id: "gotoAndAccept",
-      title: `${localize("goto", "Go To")} / ${localize("accept", "Accept")}`,
+      title: localize("gotoAndAccept", "Go To / Accept"),
       icon: Codicon.check,
       commandId: inlineSuggestCommitId
     }));

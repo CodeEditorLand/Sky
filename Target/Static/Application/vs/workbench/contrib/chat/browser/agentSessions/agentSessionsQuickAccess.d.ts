@@ -9,6 +9,7 @@ export declare class AgentSessionsQuickAccessProvider extends PickerQuickAccessP
     private readonly instantiationService;
     private readonly commandService;
     private readonly sorter;
+    private readonly filter;
     constructor(agentSessionsService: IAgentSessionsService, instantiationService: IInstantiationService, commandService: ICommandService);
     protected _getPicks(filter: string): Promise<(IQuickPickSeparator | IPickerQuickAccessItem)[]>;
     private toPickItem;

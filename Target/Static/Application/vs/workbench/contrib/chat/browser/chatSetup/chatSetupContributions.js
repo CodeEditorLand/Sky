@@ -11,7 +11,6 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-var ChatTeardownContribution_1;
 import { Event } from "../../../../../base/common/event.js";
 import { Lazy } from "../../../../../base/common/lazy.js";
 import { Disposable, DisposableStore, markAsSingleton, MutableDisposable } from "../../../../../base/common/lifecycle.js";
@@ -47,7 +46,7 @@ import { IPreferencesService } from "../../../../services/preferences/common/pre
 import { IExtensionsWorkbenchService } from "../../../extensions/common/extensions.js";
 import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { IChatModeService } from "../../common/chatModes.js";
-import { ChatAgentLocation, ChatModeKind } from "../../common/constants.js";
+import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../common/constants.js";
 import { CHAT_CATEGORY, CHAT_SETUP_ACTION_ID, CHAT_SETUP_SUPPORT_ANONYMOUS_ACTION_ID } from "../actions/chatActions.js";
 import { ChatViewContainerId, IChatWidgetService } from "../chat.js";
 import { chatViewsWelcomeRegistry } from "../viewsWelcome/chatViewsWelcome.js";
@@ -111,9 +110,9 @@ let ChatSetupContribution = class ChatSetupContribution2 extends Disposable {
                 }
               }));
             }
-            disposables.add(SetupAgent.registerDefaultAgents(this.instantiationService, ChatAgentLocation.Terminal, void 0, context, controller).disposable);
-            disposables.add(SetupAgent.registerDefaultAgents(this.instantiationService, ChatAgentLocation.Notebook, void 0, context, controller).disposable);
-            disposables.add(SetupAgent.registerDefaultAgents(this.instantiationService, ChatAgentLocation.EditorInline, void 0, context, controller).disposable);
+            disposables.add(SetupAgent.registerDefaultAgents(this.instantiationService, ChatAgentLocation.Terminal, ChatModeKind.Ask, context, controller).disposable);
+            disposables.add(SetupAgent.registerDefaultAgents(this.instantiationService, ChatAgentLocation.Notebook, ChatModeKind.Ask, context, controller).disposable);
+            disposables.add(SetupAgent.registerDefaultAgents(this.instantiationService, ChatAgentLocation.EditorInline, ChatModeKind.Ask, context, controller).disposable);
           }
           if ((!context.state.installed || context.state.entitlement === ChatEntitlement.Unknown || context.state.entitlement === ChatEntitlement.Unresolved) && !vscodeAgentDisposables.value) {
             const disposables = vscodeAgentDisposables.value = new DisposableStore();
@@ -173,7 +172,7 @@ let ChatSetupContribution = class ChatSetupContribution2 extends Disposable {
         const lifecycleService = accessor.get(ILifecycleService);
         const configurationService = accessor.get(IConfigurationService);
         await context.update({ hidden: false });
-        configurationService.updateValue(ChatTeardownContribution.CHAT_DISABLED_CONFIGURATION_KEY, false);
+        configurationService.updateValue(ChatConfiguration.AIDisabled, false);
         if (mode) {
           const chatWidget = await widgetService.revealWidget();
           chatWidget?.input.setChatMode(mode);
@@ -306,7 +305,7 @@ let ChatSetupContribution = class ChatSetupContribution2 extends Disposable {
       async onWindowFocus(focus, commandService) {
         if (focus) {
           windowFocusListener.clear();
-          const entitlements = await requests.forceResolveEntitlement(void 0);
+          const entitlements = await requests.forceResolveEntitlement();
           if (entitlements?.entitlement && isProUser(entitlements?.entitlement)) {
             refreshTokens(commandService);
           }
@@ -521,13 +520,7 @@ let ChatTeardownContribution = class ChatTeardownContribution2 extends Disposabl
     __name(this, "ChatTeardownContribution");
   }
   static {
-    ChatTeardownContribution_1 = this;
-  }
-  static {
     this.ID = "workbench.contrib.chatTeardown";
-  }
-  static {
-    this.CHAT_DISABLED_CONFIGURATION_KEY = "chat.disableAIFeatures";
   }
   constructor(chatEntitlementService, configurationService, extensionsWorkbenchService, extensionEnablementService, viewDescriptorService, layoutService) {
     super();
@@ -545,7 +538,7 @@ let ChatTeardownContribution = class ChatTeardownContribution2 extends Disposabl
     this.handleChatDisabled(false);
   }
   handleChatDisabled(fromEvent) {
-    const chatDisabled = this.configurationService.inspect(ChatTeardownContribution_1.CHAT_DISABLED_CONFIGURATION_KEY);
+    const chatDisabled = this.configurationService.inspect(ChatConfiguration.AIDisabled);
     if (chatDisabled.value === true) {
       this.maybeEnableOrDisableExtension(
         typeof chatDisabled.workspaceValue === "boolean" ? 11 : 10
@@ -563,7 +556,7 @@ let ChatTeardownContribution = class ChatTeardownContribution2 extends Disposabl
   }
   async registerListeners() {
     this._register(this.configurationService.onDidChangeConfiguration((e) => {
-      if (!e.affectsConfiguration(ChatTeardownContribution_1.CHAT_DISABLED_CONFIGURATION_KEY)) {
+      if (!e.affectsConfiguration(ChatConfiguration.AIDisabled)) {
         return;
       }
       this.handleChatDisabled(true);
@@ -575,7 +568,7 @@ let ChatTeardownContribution = class ChatTeardownContribution2 extends Disposabl
       }
       const defaultChatExtension = this.extensionsWorkbenchService.local.find((value) => ExtensionIdentifier.equals(value.identifier.id, defaultChat.chatExtensionId));
       if (defaultChatExtension?.local && this.extensionEnablementService.isEnabled(defaultChatExtension.local)) {
-        this.configurationService.updateValue(ChatTeardownContribution_1.CHAT_DISABLED_CONFIGURATION_KEY, false);
+        this.configurationService.updateValue(ChatConfiguration.AIDisabled, false);
       }
     }));
   }
@@ -629,13 +622,13 @@ let ChatTeardownContribution = class ChatTeardownContribution2 extends Disposabl
       }
       async run(accessor) {
         const preferencesService = accessor.get(IPreferencesService);
-        preferencesService.openSettings({ jsonEditor: false, query: `@id:${ChatTeardownContribution_1.CHAT_DISABLED_CONFIGURATION_KEY}` });
+        preferencesService.openSettings({ jsonEditor: false, query: `@id:${ChatConfiguration.AIDisabled}` });
       }
     }
     registerAction2(ChatSetupHideAction);
   }
 };
-ChatTeardownContribution = ChatTeardownContribution_1 = __decorate([
+ChatTeardownContribution = __decorate([
   __param(0, IChatEntitlementService),
   __param(1, IConfigurationService),
   __param(2, IExtensionsWorkbenchService),

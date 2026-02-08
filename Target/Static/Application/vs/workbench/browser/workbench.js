@@ -60,6 +60,9 @@ class Workbench extends Layout {
     this.registerErrorHandler(logService);
   }
   registerErrorHandler(logService) {
+    if (!isFirefox) {
+      Error.stackTraceLimit = 100;
+    }
     mainWindow.addEventListener("unhandledrejection", (event) => {
       onUnexpectedError(event.reason);
       event.preventDefault();

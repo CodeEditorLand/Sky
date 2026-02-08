@@ -48,6 +48,19 @@ let ChatTodoListStorage = class ChatTodoListStorage2 {
   setTodoList(sessionResource, todoList) {
     this.setSessionData(sessionResource, todoList);
   }
+  migrateTodoList(oldSessionResource, newSessionResource) {
+    const todos = this.getSessionData(oldSessionResource);
+    if (todos.length > 0) {
+      this.setSessionData(newSessionResource, todos);
+      const storage = this.memento.getMemento(
+        1,
+        1
+        /* StorageTarget.MACHINE */
+      );
+      delete storage[this.toKey(oldSessionResource)];
+      this.memento.saveMemento();
+    }
+  }
   toKey(sessionResource) {
     return chatSessionResourceToId(sessionResource);
   }
@@ -71,6 +84,10 @@ let ChatTodoListService = class ChatTodoListService2 extends Disposable {
   setTodos(sessionResource, todos) {
     this.todoListStorage.setTodoList(sessionResource, todos);
     this._onDidUpdateTodos.fire(sessionResource);
+  }
+  migrateTodos(oldSessionResource, newSessionResource) {
+    this.todoListStorage.migrateTodoList(oldSessionResource, newSessionResource);
+    this._onDidUpdateTodos.fire(newSessionResource);
   }
 };
 ChatTodoListService = __decorate([

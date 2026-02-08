@@ -19,7 +19,7 @@ import { ThemeIcon } from "../../../../../../base/common/themables.js";
 import { localize } from "../../../../../../nls.js";
 import { IContextMenuService } from "../../../../../../platform/contextview/browser/contextView.js";
 import { IChatSessionsService } from "../../../common/chatSessionsService.js";
-import { AgentSessionProviders, getAgentSessionProviderIcon, getAgentSessionProviderName } from "../../agentSessions/agentSessions.js";
+import { getAgentCanContinueIn, getAgentSessionProvider, getAgentSessionProviderIcon, getAgentSessionProviderName } from "../../agentSessions/agentSessions.js";
 let ChatSuggestNextWidget = class ChatSuggestNextWidget2 extends Disposable {
   static {
     __name(this, "ChatSuggestNextWidget");
@@ -78,6 +78,11 @@ let ChatSuggestNextWidget = class ChatSuggestNextWidget2 extends Disposable {
   }
   createPromptButton(handoff) {
     const disposables = new DisposableStore();
+    const handoffLabel = handoff.label;
+    const getCurrentHandoff = /* @__PURE__ */ __name(() => {
+      const currentHandoffs = this._currentMode?.handOffs?.get();
+      return currentHandoffs?.find((h) => h.label === handoffLabel) ?? handoff;
+    }, "getCurrentHandoff");
     const button = dom.$(".chat-welcome-view-suggested-prompt");
     button.setAttribute("tabindex", "0");
     button.setAttribute("role", "button");
@@ -86,7 +91,13 @@ let ChatSuggestNextWidget = class ChatSuggestNextWidget2 extends Disposable {
     titleElement.textContent = handoff.label;
     const showContinueOn = handoff.showContinueOn ?? true;
     const contributions = this.chatSessionsService.getAllChatSessionContributions();
-    const availableContributions = contributions.filter((c) => c.canDelegate);
+    const availableContributions = contributions.filter((c) => {
+      if (!c.canDelegate) {
+        return false;
+      }
+      const provider = getAgentSessionProvider(c.type);
+      return provider !== void 0 && getAgentCanContinueIn(provider);
+    });
     if (showContinueOn && availableContributions.length > 0) {
       button.classList.add("chat-suggest-next-has-dropdown");
       const dropdownContainer = dom.append(button, dom.$(".chat-suggest-next-dropdown"));
@@ -102,11 +113,14 @@ let ChatSuggestNextWidget = class ChatSuggestNextWidget2 extends Disposable {
         e.preventDefault();
         e.stopPropagation();
         const actions = availableContributions.map((contrib) => {
-          const provider = contrib.type === AgentSessionProviders.Background ? AgentSessionProviders.Background : AgentSessionProviders.Cloud;
+          const provider = getAgentSessionProvider(contrib.type);
           const icon = getAgentSessionProviderIcon(provider);
           const name = getAgentSessionProviderName(provider);
           return new Action(contrib.type, localize("continueIn", "Continue in {0}", name), ThemeIcon.isThemeIcon(icon) ? ThemeIcon.asClassName(icon) : void 0, true, () => {
-            this._onDidSelectPrompt.fire({ handoff, agentId: contrib.name });
+            const currentHandoff = getCurrentHandoff();
+            if (currentHandoff) {
+              this._onDidSelectPrompt.fire({ handoff: currentHandoff, agentId: contrib.name });
+            }
           });
         });
         this.contextMenuService.showContextMenu({
@@ -127,17 +141,26 @@ let ChatSuggestNextWidget = class ChatSuggestNextWidget2 extends Disposable {
         if (dom.isHTMLElement(e.target) && e.target.closest(".chat-suggest-next-dropdown")) {
           return;
         }
-        this._onDidSelectPrompt.fire({ handoff });
+        const currentHandoff = getCurrentHandoff();
+        if (currentHandoff) {
+          this._onDidSelectPrompt.fire({ handoff: currentHandoff });
+        }
       }));
     } else {
       disposables.add(dom.addDisposableListener(button, "click", () => {
-        this._onDidSelectPrompt.fire({ handoff });
+        const currentHandoff = getCurrentHandoff();
+        if (currentHandoff) {
+          this._onDidSelectPrompt.fire({ handoff: currentHandoff });
+        }
       }));
     }
     disposables.add(dom.addDisposableListener(button, "keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        this._onDidSelectPrompt.fire({ handoff });
+        const currentHandoff = getCurrentHandoff();
+        if (currentHandoff) {
+          this._onDidSelectPrompt.fire({ handoff: currentHandoff });
+        }
       }
     }));
     this.buttonDisposables.set(button, disposables);

@@ -121,6 +121,7 @@ let ReviewZoneWidget = class ReviewZoneWidget2 extends ZoneWidget {
     this.dialogService = dialogService;
     this._onDidClose = new Emitter();
     this._onDidCreateThread = new Emitter();
+    this._onDidChangeExpandedState = new Emitter();
     this._globalToDispose = new DisposableStore();
     this._commentThreadDisposables = [];
     this._contextKeyService = contextKeyService.createScoped(this.domNode);
@@ -149,6 +150,9 @@ let ReviewZoneWidget = class ReviewZoneWidget2 extends ZoneWidget {
   }
   get onDidCreateThread() {
     return this._onDidCreateThread.event;
+  }
+  get onDidChangeExpandedState() {
+    return this._onDidChangeExpandedState.event;
   }
   getPosition() {
     if (this.position) {
@@ -439,10 +443,14 @@ let ReviewZoneWidget = class ReviewZoneWidget2 extends ZoneWidget {
       const distance = glyphPosition.position.lineNumber - range.endLineNumber;
       range = new Range(range.startLineNumber + distance, range.startColumn, range.endLineNumber + distance, range.endColumn);
     }
+    const wasExpanded = this._isExpanded;
     this._isExpanded = true;
     super.show(range ?? new Range(0, 0, 0, 0), heightInLines);
     this._commentThread.collapsibleState = languages.CommentThreadCollapsibleState.Expanded;
     this._refresh(this._commentThreadWidget.getDimensions());
+    if (!wasExpanded) {
+      this._onDidChangeExpandedState.fire(true);
+    }
   }
   async collapseAndFocusRange() {
     if (await this.collapse(true) && Range.isIRange(this.commentThread.range) && isCodeEditor(this.editor)) {
@@ -458,6 +466,7 @@ let ReviewZoneWidget = class ReviewZoneWidget2 extends ZoneWidget {
       if (!this._commentThread.comments || !this._commentThread.comments.length) {
         this.deleteCommentThread();
       }
+      this._onDidChangeExpandedState.fire(false);
     }
     super.hide();
   }

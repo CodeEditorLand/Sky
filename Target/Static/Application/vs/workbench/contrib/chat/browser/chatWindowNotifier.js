@@ -13,14 +13,16 @@ var __param = function(paramIndex, decorator) {
 };
 import * as dom from "../../../../base/browser/dom.js";
 import { mainWindow } from "../../../../base/browser/window.js";
-import { Event } from "../../../../base/common/event.js";
-import { Disposable, DisposableResourceMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Disposable, DisposableResourceMap, toDisposable } from "../../../../base/common/lifecycle.js";
 import { autorunDelta, autorunIterableDelta } from "../../../../base/common/observable.js";
 import { localize } from "../../../../nls.js";
 import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
 import { IHostService } from "../../../services/host/browser/host.js";
 import { IChatService } from "../common/chatService/chatService.js";
 import { IChatWidgetService } from "./chat.js";
+import { AcceptToolConfirmationActionId } from "./actions/chatToolActions.js";
 let ChatWindowNotifier = class ChatWindowNotifier2 extends Disposable {
   static {
     __name(this, "ChatWindowNotifier");
@@ -28,12 +30,13 @@ let ChatWindowNotifier = class ChatWindowNotifier2 extends Disposable {
   static {
     this.ID = "workbench.contrib.chatWindowNotifier";
   }
-  constructor(_chatService, _chatWidgetService, _hostService, _configurationService) {
+  constructor(_chatService, _chatWidgetService, _hostService, _configurationService, _commandService) {
     super();
     this._chatService = _chatService;
     this._chatWidgetService = _chatWidgetService;
     this._hostService = _hostService;
     this._configurationService = _configurationService;
+    this._commandService = _commandService;
     this._activeNotifications = this._register(new DisposableResourceMap());
     const modelTrackers = this._register(new DisposableResourceMap());
     this._register(autorunIterableDelta((reader) => this._chatService.chatModels.read(reader), ({ addedValues, removedValues }) => {
@@ -71,28 +74,31 @@ let ChatWindowNotifier = class ChatWindowNotifier2 extends Disposable {
       /* FocusMode.Notify */
     });
     const notificationTitle = info.title ? localize("chatTitle", "Chat: {0}", info.title) : localize("chat.untitledChat", "Untitled Chat");
-    const notification = await dom.triggerNotification(notificationTitle, {
-      detail: info.detail ?? localize("notificationDetail", "Approval needed to continue.")
-    });
-    if (notification) {
-      const disposables = new DisposableStore();
-      this._activeNotifications.set(sessionResource, disposables);
-      disposables.add(notification);
-      disposables.add(Event.once(notification.onClick)(async () => {
+    const cts = new CancellationTokenSource();
+    this._activeNotifications.set(sessionResource, toDisposable(() => cts.dispose(true)));
+    try {
+      const result = await this._hostService.showToast({
+        title: this._sanitizeOSToastText(notificationTitle),
+        body: info.detail ? this._sanitizeOSToastText(info.detail) : localize("notificationDetail", "Approval needed to continue."),
+        actions: [localize("allowAction", "Allow")]
+      }, cts.token);
+      if (result.clicked || typeof result.actionIndex === "number") {
         await this._hostService.focus(targetWindow, {
           mode: 2
           /* FocusMode.Force */
         });
         const widget2 = await this._chatWidgetService.openSession(sessionResource);
         widget2?.focusInput();
-        this._clearNotification(sessionResource);
-      }));
-      disposables.add(this._hostService.onDidChangeFocus((focus) => {
-        if (focus) {
-          this._clearNotification(sessionResource);
+        if (result.actionIndex === 0) {
+          await this._commandService.executeCommand(AcceptToolConfirmationActionId, { sessionResource });
         }
-      }));
+      }
+    } finally {
+      this._clearNotification(sessionResource);
     }
+  }
+  _sanitizeOSToastText(text) {
+    return text.replace(/`/g, "'");
   }
   _clearNotification(sessionResource) {
     this._activeNotifications.deleteAndDispose(sessionResource);
@@ -102,7 +108,8 @@ ChatWindowNotifier = __decorate([
   __param(0, IChatService),
   __param(1, IChatWidgetService),
   __param(2, IHostService),
-  __param(3, IConfigurationService)
+  __param(3, IConfigurationService),
+  __param(4, ICommandService)
 ], ChatWindowNotifier);
 export {
   ChatWindowNotifier

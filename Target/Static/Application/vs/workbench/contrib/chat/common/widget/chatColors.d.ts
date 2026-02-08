@@ -11,3 +11,4 @@ export declare const chatRequestBubbleHoverBackground: string;
 export declare const chatCheckpointSeparator: string;
 export declare const chatLinesAddedForeground: string;
 export declare const chatLinesRemovedForeground: string;
+export declare const chatThinkingShimmer: string;

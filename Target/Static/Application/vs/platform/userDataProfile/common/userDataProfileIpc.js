@@ -1,9 +1,9 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { Emitter, Event } from "../../../base/common/event.js";
-import { Disposable } from "../../../base/common/lifecycle.js";
 import { reviveProfile } from "./userDataProfile.js";
 import { transformIncomingURIs, transformOutgoingURIs } from "../../../base/common/uriIpc.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
 class RemoteUserDataProfilesServiceChannel {
   static {
     __name(this, "RemoteUserDataProfilesServiceChannel");

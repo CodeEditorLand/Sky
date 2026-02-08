@@ -15,7 +15,7 @@ import { URI } from "../../../../base/common/uri.js";
 import { Event, Emitter } from "../../../../base/common/event.js";
 import { ResourceMap } from "../../../../base/common/map.js";
 import { equals } from "../../../../base/common/objects.js";
-import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Disposable, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
 import { Queue, Barrier, Promises, Delayer, Throttler } from "../../../../base/common/async.js";
 import { Extensions as JSONExtensions } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
 import { IWorkspaceContextService, Workspace as BaseWorkspace, toWorkspaceFolder, isWorkspaceFolder, isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier } from "../../../../platform/workspace/common/workspace.js";
@@ -72,6 +72,7 @@ class WorkspaceService extends Disposable {
   }
   constructor({ remoteAuthority, configurationCache }, environmentService, userDataProfileService, userDataProfilesService, fileService, remoteAgentService, uriIdentityService, logService, policyService) {
     super();
+    this.environmentService = environmentService;
     this.userDataProfileService = userDataProfileService;
     this.userDataProfilesService = userDataProfilesService;
     this.fileService = fileService;
@@ -81,6 +82,7 @@ class WorkspaceService extends Disposable {
     this.initialized = false;
     this.applicationConfiguration = null;
     this.remoteUserConfiguration = null;
+    this.cachedFolderConfigs = this._register(new DisposableMap(new ResourceMap()));
     this._onDidChangeConfiguration = this._register(new Emitter());
     this.onDidChangeConfiguration = this._onDidChangeConfiguration.event;
     this._onWillChangeWorkspaceFolders = this._register(new Emitter());
@@ -98,14 +100,13 @@ class WorkspaceService extends Disposable {
     this.configurationRegistry = Registry.as(Extensions.Configuration);
     this.initRemoteUserConfigurationBarrier = new Barrier();
     this.completeWorkspaceBarrier = new Barrier();
-    this.defaultConfiguration = this._register(new DefaultConfiguration(configurationCache, environmentService, logService));
+    this.defaultConfiguration = this._register(new DefaultConfiguration(userDataProfileService.currentProfile.id, configurationCache, environmentService, logService));
     this.policyConfiguration = policyService instanceof NullPolicyService ? new NullPolicyConfiguration() : this._register(new PolicyConfiguration(this.defaultConfiguration, policyService, logService));
     this.configurationCache = configurationCache;
     this._configuration = new Configuration(this.defaultConfiguration.configurationModel, this.policyConfiguration.configurationModel, ConfigurationModel.createEmptyModel(logService), ConfigurationModel.createEmptyModel(logService), ConfigurationModel.createEmptyModel(logService), ConfigurationModel.createEmptyModel(logService), new ResourceMap(), ConfigurationModel.createEmptyModel(logService), new ResourceMap(), this.workspace, logService);
     this.applicationConfigurationDisposables = this._register(new DisposableStore());
     this.createApplicationConfiguration();
     this.localUserConfiguration = this._register(new UserConfiguration(userDataProfileService.currentProfile.settingsResource, userDataProfileService.currentProfile.tasksResource, userDataProfileService.currentProfile.mcpResource, { scopes: getLocalUserConfigurationScopes(userDataProfileService.currentProfile, !!remoteAuthority) }, fileService, uriIdentityService, logService));
-    this.cachedFolderConfigs = new ResourceMap();
     this._register(this.localUserConfiguration.onDidChangeConfiguration((userConfiguration) => this.onLocalUserConfigurationChanged(userConfiguration)));
     if (remoteAuthority) {
       const remoteUserConfiguration = this.remoteUserConfiguration = this._register(new RemoteUserConfiguration(remoteAuthority, configurationCache, fileService, uriIdentityService, remoteAgentService, logService));
@@ -413,7 +414,8 @@ class WorkspaceService extends Disposable {
     const workspaceConfigPath = workspaceIdentifier.configPath;
     const workspaceFolders = toWorkspaceFolders(this.workspaceConfiguration.getFolders(), workspaceConfigPath, this.uriIdentityService.extUri);
     const workspaceId = workspaceIdentifier.id;
-    const workspace = new Workspace(workspaceId, workspaceFolders, this.workspaceConfiguration.isTransient(), workspaceConfigPath, (uri) => this.uriIdentityService.extUri.ignorePathCasing(uri));
+    const isAgentSessionsWorkspace = this.uriIdentityService.extUri.isEqual(workspaceConfigPath, this.environmentService.agentSessionsWorkspace);
+    const workspace = new Workspace(workspaceId, workspaceFolders, this.workspaceConfiguration.isTransient(), workspaceConfigPath, (uri) => this.uriIdentityService.extUri.ignorePathCasing(uri), isAgentSessionsWorkspace);
     workspace.initialized = this.workspaceConfiguration.initialized;
     return workspace;
   }
@@ -554,7 +556,7 @@ class WorkspaceService extends Disposable {
     return this.onWorkspaceFolderConfigurationChanged(folder);
   }
   async loadConfiguration(applicationConfigurationModel, userConfigurationModel, remoteUserConfigurationModel, trigger) {
-    this.cachedFolderConfigs = new ResourceMap();
+    this.cachedFolderConfigs.clearAndDisposeAll();
     const folders = this.workspace.folders;
     const folderConfigurations = await this.loadFolderConfigurations(folders);
     const workspaceConfiguration = this.getWorkspaceConfigurationModel(folderConfigurations);
@@ -825,9 +827,7 @@ class WorkspaceService extends Disposable {
     const changes = [];
     for (const key of this.cachedFolderConfigs.keys()) {
       if (!this.workspace.folders.filter((folder) => folder.uri.toString() === key.toString())[0]) {
-        const folderConfiguration = this.cachedFolderConfigs.get(key);
-        folderConfiguration.dispose();
-        this.cachedFolderConfigs.delete(key);
+        this.cachedFolderConfigs.deleteAndDispose(key);
         changes.push(this._configuration.compareAndDeleteFolderConfiguration(key));
       }
     }
@@ -845,8 +845,8 @@ class WorkspaceService extends Disposable {
       let folderConfiguration = this.cachedFolderConfigs.get(folder.uri);
       if (!folderConfiguration) {
         folderConfiguration = new FolderConfiguration(!this.initialized, folder, FOLDER_CONFIG_FOLDER_NAME, this.getWorkbenchState(), this.isWorkspaceTrusted, this.fileService, this.uriIdentityService, this.logService, this.configurationCache);
-        this._register(folderConfiguration.onDidChange(() => this.onWorkspaceFolderConfigurationChanged(folder)));
-        this.cachedFolderConfigs.set(folder.uri, this._register(folderConfiguration));
+        folderConfiguration.addRelated(folderConfiguration.onDidChange(() => this.onWorkspaceFolderConfigurationChanged(folder)));
+        this.cachedFolderConfigs.set(folder.uri, folderConfiguration);
       }
       return folderConfiguration.loadConfiguration();
     })]);

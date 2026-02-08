@@ -1268,6 +1268,34 @@ class ExpandAllRepositoriesAction extends ViewAction {
 }
 registerAction2(CollapseAllRepositoriesAction);
 registerAction2(ExpandAllRepositoriesAction);
+class CollapseAllAction extends ViewAction {
+  static {
+    __name(this, "CollapseAllAction");
+  }
+  constructor() {
+    super({
+      id: `workbench.scm.action.collapseAll`,
+      title: localize("scmCollapseAll", "Collapse All"),
+      viewId: VIEW_PANE_ID,
+      f1: false,
+      icon: Codicon.collapseAll,
+      menu: {
+        id: MenuId.SCMResourceGroupContext,
+        group: "9_collapse",
+        when: ContextKeys.SCMViewMode.isEqualTo(
+          "tree"
+          /* ViewMode.Tree */
+        )
+      }
+    });
+  }
+  async runInView(_accessor, view, context) {
+    if (context) {
+      view.collapseAllResources(context);
+    }
+  }
+}
+registerAction2(CollapseAllAction);
 var SCMInputWidgetCommandId;
 (function(SCMInputWidgetCommandId2) {
   SCMInputWidgetCommandId2["CancelAction"] = "scm.input.cancelAction";
@@ -2478,6 +2506,13 @@ let SCMViewPane = class SCMViewPane2 extends ViewPane {
     for (const repository of this.scmViewService.visibleRepositories) {
       if (this.tree.isCollapsible(repository)) {
         this.tree.expand(repository);
+      }
+    }
+  }
+  collapseAllResources(group) {
+    for (const { element } of this.tree.getNode(group).children) {
+      if (!isSCMViewService(element)) {
+        this.tree.collapse(element, true);
       }
     }
   }

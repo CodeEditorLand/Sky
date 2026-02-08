@@ -91,9 +91,6 @@ let BaseSimpleChatConfirmationWidget = class BaseSimpleChatConfirmationWidget2 e
   get onDidClick() {
     return this._onDidClick.event;
   }
-  get onDidChangeHeight() {
-    return this._onDidChangeHeight.event;
-  }
   get domNode() {
     return this._domNode;
   }
@@ -106,7 +103,6 @@ let BaseSimpleChatConfirmationWidget = class BaseSimpleChatConfirmationWidget2 e
     this.instantiationService = instantiationService;
     this._markdownRendererService = _markdownRendererService;
     this._onDidClick = this._register(new Emitter());
-    this._onDidChangeHeight = this._register(new Emitter());
     const { title, subtitle, message, buttons } = options;
     const elements = dom.h(".chat-confirmation-widget-container@container", [
       dom.h(".chat-confirmation-widget@root", [
@@ -122,8 +118,7 @@ let BaseSimpleChatConfirmationWidget = class BaseSimpleChatConfirmationWidget2 e
     ]);
     configureAccessibilityContainer(elements.container, title, message);
     this._domNode = elements.root;
-    const titlePart = this._register(instantiationService.createInstance(ChatQueryTitlePart, elements.title, title, subtitle));
-    this._register(titlePart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+    this._register(instantiationService.createInstance(ChatQueryTitlePart, elements.title, title, subtitle));
     this.messageElement = elements.message;
     buttons.forEach((buttonData) => {
       const buttonOptions = { ...defaultButtonStyles, small: true, secondary: buttonData.isSecondary, title: buttonData.tooltip, disabled: buttonData.disabled };
@@ -159,14 +154,13 @@ let BaseSimpleChatConfirmationWidget = class BaseSimpleChatConfirmationWidget2 e
         ["chatConfirmationPartSource", options.toolbarData.partSource]
       ]);
       const nestedInsta = this._register(instantiationService.createChild(new ServiceCollection([IContextKeyService, overlay])));
-      const toolbar = this._register(nestedInsta.createInstance(MenuWorkbenchToolBar, elements.toolbar, MenuId.ChatConfirmationMenu, {
+      this._register(nestedInsta.createInstance(MenuWorkbenchToolBar, elements.toolbar, MenuId.ChatConfirmationMenu, {
         // buttonConfigProvider: () => ({ showLabel: false, showIcon: true }),
         menuOptions: {
           arg: options.toolbarData.arg,
           shouldForwardArgs: true
         }
       }));
-      this._register(toolbar.onDidChangeMenuItems(() => this._onDidChangeHeight.fire()));
     }
   }
   renderMessage(element) {
@@ -189,7 +183,7 @@ let SimpleChatConfirmationWidget = class SimpleChatConfirmationWidget2 extends B
   }
   updateMessage(message) {
     this._renderedMessage?.remove();
-    const renderedMessage = this._register(this._markdownRendererService.render(typeof message === "string" ? new MarkdownString(message) : message, { asyncRenderCallback: /* @__PURE__ */ __name(() => this._onDidChangeHeight.fire(), "asyncRenderCallback") }));
+    const renderedMessage = this._register(this._markdownRendererService.render(typeof message === "string" ? new MarkdownString(message) : message));
     this.renderMessage(renderedMessage.element);
     this._renderedMessage = renderedMessage.element;
   }
@@ -206,9 +200,6 @@ let BaseChatConfirmationWidget = class BaseChatConfirmationWidget2 extends Dispo
   }
   get onDidClick() {
     return this._onDidClick.event;
-  }
-  get onDidChangeHeight() {
-    return this._onDidChangeHeight.event;
   }
   get domNode() {
     return this._domNode;
@@ -230,7 +221,6 @@ let BaseChatConfirmationWidget = class BaseChatConfirmationWidget2 extends Dispo
     this.contextMenuService = contextMenuService;
     this.chatMarkdownAnchorService = chatMarkdownAnchorService;
     this._onDidClick = this._register(new Emitter());
-    this._onDidChangeHeight = this._register(new Emitter());
     this.markdownContentPart = this._register(new MutableDisposable());
     const { title, subtitle, message, buttons, icon } = options;
     const elements = dom.h(".chat-confirmation-widget-container@container", [
@@ -250,8 +240,7 @@ let BaseChatConfirmationWidget = class BaseChatConfirmationWidget2 extends Dispo
     configureAccessibilityContainer(elements.container, title, message);
     this._domNode = elements.root;
     this._buttonsDomNode = elements.buttons;
-    const titlePart = this._register(instantiationService.createInstance(ChatQueryTitlePart, elements.title, new MarkdownString(icon ? `$(${icon.id}) ${typeof title === "string" ? title : title.value}` : typeof title === "string" ? title : title.value), subtitle));
-    this._register(titlePart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+    this._register(instantiationService.createInstance(ChatQueryTitlePart, elements.title, new MarkdownString(icon ? `$(${icon.id}) ${typeof title === "string" ? title : title.value}` : typeof title === "string" ? title : title.value), subtitle));
     this.messageElement = elements.message;
     this.updateButtons(buttons);
     if (options?.toolbarData) {
@@ -313,7 +302,6 @@ let BaseChatConfirmationWidget = class BaseChatConfirmationWidget2 extends Dispo
         horizontalPadding: 6
       }));
       renderFileWidgets(part.domNode, this.instantiationService, this.chatMarkdownAnchorService, this._store);
-      this._register(part.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
       this.markdownContentPart.value = part;
       element = part.domNode;
     }
@@ -340,7 +328,7 @@ let ChatConfirmationWidget = class ChatConfirmationWidget2 extends BaseChatConfi
   }
   updateMessage(message) {
     this._renderedMessage?.remove();
-    const renderedMessage = this._register(this.markdownRendererService.render(typeof message === "string" ? new MarkdownString(message) : message, { asyncRenderCallback: /* @__PURE__ */ __name(() => this._onDidChangeHeight.fire(), "asyncRenderCallback") }));
+    const renderedMessage = this._register(this.markdownRendererService.render(typeof message === "string" ? new MarkdownString(message) : message));
     this.renderMessage(renderedMessage.element);
     this._renderedMessage = renderedMessage.element;
   }

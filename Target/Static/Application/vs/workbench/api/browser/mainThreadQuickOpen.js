@@ -134,7 +134,8 @@ let MainThreadQuickOpen = class MainThreadQuickOpen2 {
           this._proxy.$onDidChangeSelection(sessionId, items.map((item) => item.handle));
         }));
         store.add(quickPick2.onDidTriggerItemButton((e) => {
-          this._proxy.$onDidTriggerItemButton(sessionId, e.item.handle, e.button.handle);
+          const transferButton = e.button;
+          this._proxy.$onDidTriggerItemButton(sessionId, e.item.handle, transferButton.handle, transferButton.toggle?.checked);
         }));
       }
       session = {

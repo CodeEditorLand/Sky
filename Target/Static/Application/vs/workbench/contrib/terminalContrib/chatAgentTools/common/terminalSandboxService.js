@@ -12,10 +12,12 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
 import { FileAccess } from "../../../../../base/common/network.js";
-import { dirname, join } from "../../../../../base/common/path.js";
-import { isNative, OS } from "../../../../../base/common/platform.js";
-import { joinPath } from "../../../../../base/common/resources.js";
+import { dirname, posix, win32 } from "../../../../../base/common/path.js";
+import { OS } from "../../../../../base/common/platform.js";
+import { URI } from "../../../../../base/common/uri.js";
 import { generateUuid } from "../../../../../base/common/uuid.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
@@ -24,25 +26,51 @@ import { createDecorator } from "../../../../../platform/instantiation/common/in
 import { ILogService } from "../../../../../platform/log/common/log.js";
 import { IRemoteAgentService } from "../../../../services/remote/common/remoteAgentService.js";
 const ITerminalSandboxService = createDecorator("terminalSandboxService");
-let TerminalSandboxService = class TerminalSandboxService2 {
+let TerminalSandboxService = class TerminalSandboxService2 extends Disposable {
   static {
     __name(this, "TerminalSandboxService");
   }
   constructor(_configurationService, _fileService, _environmentService, _logService, _remoteAgentService) {
+    super();
     this._configurationService = _configurationService;
     this._fileService = _fileService;
     this._environmentService = _environmentService;
     this._logService = _logService;
     this._remoteAgentService = _remoteAgentService;
+    this._srtPathResolved = false;
     this._needsForceUpdateConfigFile = true;
+    this._remoteEnvDetails = null;
     this._os = OS;
-    const appRoot = dirname(FileAccess.asFileUri("").fsPath);
-    this._srtPath = join(appRoot, "node_modules", ".bin", "srt");
+    this._pathJoin = (...segments) => {
+      const path = this._os === 1 ? win32 : posix;
+      return path.join(...segments);
+    };
+    this._appRoot = dirname(FileAccess.asFileUri("").path);
+    const nativeEnv = this._environmentService;
+    this._execPath = nativeEnv.execPath;
     this._sandboxSettingsId = generateUuid();
-    this._initTempDir();
-    this._remoteAgentService.getEnvironment().then((remoteEnv) => this._os = remoteEnv?.os ?? OS);
+    this._remoteEnvDetailsPromise = this._remoteAgentService.getEnvironment();
+    this._register(Event.runAndSubscribe(this._configurationService.onDidChangeConfiguration, (e) => {
+      if (e?.affectsConfiguration(
+        "chat.tools.terminal.sandbox.enabled"
+        /* TerminalChatAgentToolsSettingId.TerminalSandboxEnabled */
+      ) || e?.affectsConfiguration(
+        "chat.tools.terminal.sandbox.network"
+        /* TerminalChatAgentToolsSettingId.TerminalSandboxNetwork */
+      ) || e?.affectsConfiguration(
+        "chat.tools.terminal.sandbox.linuxFileSystem"
+        /* TerminalChatAgentToolsSettingId.TerminalSandboxLinuxFileSystem */
+      ) || e?.affectsConfiguration(
+        "chat.tools.terminal.sandbox.macFileSystem"
+        /* TerminalChatAgentToolsSettingId.TerminalSandboxMacFileSystem */
+      )) {
+        this.setNeedsForceUpdateConfigFile();
+      }
+    }));
   }
-  isEnabled() {
+  async isEnabled() {
+    this._remoteEnvDetails = await this._remoteEnvDetailsPromise;
+    this._os = this._remoteEnvDetails ? this._remoteEnvDetails.os : OS;
     if (this._os === 1) {
       return false;
     }
@@ -55,7 +83,17 @@ let TerminalSandboxService = class TerminalSandboxService2 {
     if (!this._sandboxConfigPath || !this._tempDir) {
       throw new Error("Sandbox config path or temp dir not initialized");
     }
-    return `"${this._srtPath}" TMPDIR=${this._tempDir.fsPath} --settings "${this._sandboxConfigPath}" "${command}"`;
+    if (!this._execPath) {
+      throw new Error("Executable path not set to run sandbox commands");
+    }
+    if (!this._srtPath) {
+      throw new Error("Sandbox runtime path not resolved");
+    }
+    const wrappedCommand = `"${this._execPath}" "${this._srtPath}" TMPDIR=${this._tempDir.path} --settings "${this._sandboxConfigPath}" -c "${command}"`;
+    if (this._remoteEnvDetails) {
+      return `${wrappedCommand}`;
+    }
+    return `ELECTRON_RUN_AS_NODE=1 ${wrappedCommand}`;
   }
   getTempDir() {
     return this._tempDir;
@@ -64,15 +102,30 @@ let TerminalSandboxService = class TerminalSandboxService2 {
     this._needsForceUpdateConfigFile = true;
   }
   async getSandboxConfigPath(forceRefresh = false) {
+    await this._resolveSrtPath();
     if (!this._sandboxConfigPath || forceRefresh || this._needsForceUpdateConfigFile) {
       this._sandboxConfigPath = await this._createSandboxConfig();
       this._needsForceUpdateConfigFile = false;
     }
     return this._sandboxConfigPath;
   }
+  async _resolveSrtPath() {
+    if (this._srtPathResolved) {
+      return;
+    }
+    this._srtPathResolved = true;
+    const remoteEnv = this._remoteEnvDetails || await this._remoteEnvDetailsPromise;
+    if (!remoteEnv) {
+      this._srtPath = this._pathJoin(this._appRoot, "node_modules", "@anthropic-ai", "sandbox-runtime", "dist", "cli.js");
+      return;
+    }
+    this._appRoot = remoteEnv.appRoot.path;
+    this._execPath = this._pathJoin(this._appRoot, "node");
+    this._srtPath = this._pathJoin(this._appRoot, "node_modules", "@anthropic-ai", "sandbox-runtime", "dist", "cli.js");
+  }
   async _createSandboxConfig() {
-    if (this.isEnabled() && !this._tempDir) {
-      this._initTempDir();
+    if (await this.isEnabled() && !this._tempDir) {
+      await this._initTempDir();
     }
     if (this._tempDir) {
       const networkSetting = this._configurationService.getValue(
@@ -87,7 +140,7 @@ let TerminalSandboxService = class TerminalSandboxService2 {
         "chat.tools.terminal.sandbox.macFileSystem"
         /* TerminalChatAgentToolsSettingId.TerminalSandboxMacFileSystem */
       ) ?? {} : {};
-      const configFileUri = joinPath(this._tempDir, `vscode-sandbox-settings-${this._sandboxSettingsId}.json`);
+      const configFileUri = URI.joinPath(this._tempDir, `vscode-sandbox-settings-${this._sandboxSettingsId}.json`);
       const sandboxSettings = {
         network: {
           allowedDomains: networkSetting.allowedDomains ?? [],
@@ -99,20 +152,24 @@ let TerminalSandboxService = class TerminalSandboxService2 {
           denyWrite: this._os === 2 ? macFileSystemSetting.denyWrite : linuxFileSystemSetting.denyWrite
         }
       };
-      this._sandboxConfigPath = configFileUri.fsPath;
+      this._sandboxConfigPath = configFileUri.path;
       await this._fileService.createFile(configFileUri, VSBuffer.fromString(JSON.stringify(sandboxSettings, null, "	")), { overwrite: true });
       return this._sandboxConfigPath;
     }
     return void 0;
   }
-  _initTempDir() {
-    if (this.isEnabled() && isNative) {
+  async _initTempDir() {
+    if (await this.isEnabled()) {
       this._needsForceUpdateConfigFile = true;
-      const environmentService = this._environmentService;
-      this._tempDir = environmentService.tmpDir;
+      const remoteEnv = this._remoteEnvDetails || await this._remoteEnvDetailsPromise;
+      if (remoteEnv) {
+        this._tempDir = remoteEnv.tmpDir;
+      } else {
+        const environmentService = this._environmentService;
+        this._tempDir = environmentService.tmpDir;
+      }
       if (!this._tempDir) {
         this._logService.warn("TerminalSandboxService: Cannot create sandbox settings file because no tmpDir is available in this environment");
-        return;
       }
     }
   }

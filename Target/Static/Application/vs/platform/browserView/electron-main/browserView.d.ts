@@ -2,7 +2,7 @@ import { WebContentsView } from 'electron';
 import { Disposable } from '../../../base/common/lifecycle.js';
 import { Event } from '../../../base/common/event.js';
 import { VSBuffer } from '../../../base/common/buffer.js';
-import { IBrowserViewBounds, IBrowserViewDevToolsStateEvent, IBrowserViewFocusEvent, IBrowserViewKeyDownEvent, IBrowserViewState, IBrowserViewNavigationEvent, IBrowserViewLoadingEvent, IBrowserViewTitleChangeEvent, IBrowserViewFaviconChangeEvent, IBrowserViewNewPageRequest, BrowserViewStorageScope, IBrowserViewCaptureScreenshotOptions } from '../common/browserView.js';
+import { IBrowserViewBounds, IBrowserViewDevToolsStateEvent, IBrowserViewFocusEvent, IBrowserViewKeyDownEvent, IBrowserViewState, IBrowserViewNavigationEvent, IBrowserViewLoadingEvent, IBrowserViewTitleChangeEvent, IBrowserViewFaviconChangeEvent, IBrowserViewNewPageRequest, BrowserViewStorageScope, IBrowserViewCaptureScreenshotOptions, IBrowserViewFindInPageOptions, IBrowserViewFindInPageResult, IBrowserViewVisibilityEvent } from '../common/browserView.js';
 import { IWindowsMainService } from '../../windows/electron-main/windows.js';
 import { IAuxiliaryWindowsMainService } from '../../auxiliaryWindow/electron-main/auxiliaryWindows.js';
 /**
@@ -10,6 +10,8 @@ import { IAuxiliaryWindowsMainService } from '../../auxiliaryWindow/electron-mai
  * This class encapsulates all operations and events for a single browser view.
  */
 export declare class BrowserView extends Disposable {
+    readonly id: string;
+    private readonly viewSession;
     private readonly storageScope;
     private readonly windowsMainService;
     private readonly auxiliaryWindowsMainService;
@@ -18,6 +20,7 @@ export declare class BrowserView extends Disposable {
     private _lastScreenshot;
     private _lastFavicon;
     private _lastError;
+    private _lastUserGestureTimestamp;
     private _window;
     private _isSendingKeyEvent;
     private readonly _onDidNavigate;
@@ -26,6 +29,8 @@ export declare class BrowserView extends Disposable {
     readonly onDidChangeLoadingState: Event<IBrowserViewLoadingEvent>;
     private readonly _onDidChangeFocus;
     readonly onDidChangeFocus: Event<IBrowserViewFocusEvent>;
+    private readonly _onDidChangeVisibility;
+    readonly onDidChangeVisibility: Event<IBrowserViewVisibilityEvent>;
     private readonly _onDidChangeDevToolsState;
     readonly onDidChangeDevToolsState: Event<IBrowserViewDevToolsStateEvent>;
     private readonly _onDidKeyCommand;
@@ -36,10 +41,13 @@ export declare class BrowserView extends Disposable {
     readonly onDidChangeFavicon: Event<IBrowserViewFaviconChangeEvent>;
     private readonly _onDidRequestNewPage;
     readonly onDidRequestNewPage: Event<IBrowserViewNewPageRequest>;
+    private readonly _onDidFindInPage;
+    readonly onDidFindInPage: Event<IBrowserViewFindInPageResult>;
     private readonly _onDidClose;
     readonly onDidClose: Event<void>;
-    constructor(viewSession: Electron.Session, storageScope: BrowserViewStorageScope, windowsMainService: IWindowsMainService, auxiliaryWindowsMainService: IAuxiliaryWindowsMainService);
+    constructor(id: string, viewSession: Electron.Session, storageScope: BrowserViewStorageScope, createChildView: (options?: Electron.WebContentsViewConstructorOptions) => BrowserView, options: Electron.WebContentsViewConstructorOptions | undefined, windowsMainService: IWindowsMainService, auxiliaryWindowsMainService: IAuxiliaryWindowsMainService);
     private setupEventListeners;
+    private consumePopupPermission;
     get webContents(): Electron.WebContents;
     /**
      * Get the current state of this browser view
@@ -101,6 +109,23 @@ export declare class BrowserView extends Disposable {
      * Focus this view
      */
     focus(): Promise<void>;
+    /**
+     * Find text in the page
+     */
+    findInPage(text: string, options?: IBrowserViewFindInPageOptions): Promise<void>;
+    /**
+     * Stop finding in page
+     */
+    stopFindInPage(keepSelection?: boolean): Promise<void>;
+    /**
+     * Get the currently selected text in the browser view.
+     * Returns immediately with empty string if the page is still loading.
+     */
+    getSelectedText(): Promise<string>;
+    /**
+     * Clear all storage data for this browser view's session
+     */
+    clearStorage(): Promise<void>;
     /**
      * Get the underlying WebContentsView
      */

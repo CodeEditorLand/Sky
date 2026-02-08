@@ -319,7 +319,10 @@ function asObjectTreeOptions(options) {
     identityProvider: options.identityProvider && {
       getId(el) {
         return options.identityProvider.getId(el.element);
-      }
+      },
+      getGroupId: options.identityProvider.getGroupId ? (el) => {
+        return options.identityProvider.getGroupId(el.element);
+      } : void 0
     },
     dnd: options.dnd && new AsyncDataTreeNodeListDragAndDrop(options.dnd),
     multipleSelectionController: options.multipleSelectionController && {

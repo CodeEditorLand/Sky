@@ -198,7 +198,7 @@ const terminalChatAgentToolsConfiguration = {
       // - `-m`, `-M`: Prevent branch renaming
       // - `--force`: Generally dangerous
       "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+branch\\b/": true,
-      "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+branch\\b.*-(d|D|m|M|-delete|-force)\\b/": false,
+      "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+branch\\b.*\\s-(d|D|m|M|-delete|-force)\\b/": false,
       // docker - readonly sub-commands
       "/^docker\\s+(ps|images|info|version|inspect|logs|top|stats|port|diff|search|events)\\b/": true,
       "/^docker\\s+(container|image|network|volume|context|system)\\s+(ls|ps|inspect|history|show|df|info)\\b/": true,
@@ -210,6 +210,7 @@ const terminalChatAgentToolsConfiguration = {
       "Get-Date": true,
       "Get-Random": true,
       "Get-Location": true,
+      "Set-Location": true,
       "Write-Host": true,
       "Write-Output": true,
       "Out-String": true,
@@ -256,23 +257,23 @@ const terminalChatAgentToolsConfiguration = {
       // column
       // - `-c`: We block excessive columns that could lead to memory exhaustion.
       column: true,
-      "/^column\\b.*-c\\s+[0-9]{4,}/": false,
+      "/^column\\b.*\\s-c\\s+[0-9]{4,}/": false,
       // date
       // -s|--set: Sets the system clock
       date: true,
-      "/^date\\b.*(-s|--set)\\b/": false,
+      "/^date\\b.*\\s(-s|--set)\\b/": false,
       // find
       // - `-delete`: Deletes files or directories.
       // - `-exec`/`-execdir`: Execute on results.
       // - `-fprint`/`fprintf`/`fls`: Writes files.
       // - `-ok`/`-okdir`: Like exec but with a confirmation.
       find: true,
-      "/^find\\b.*-(delete|exec|execdir|fprint|fprintf|fls|ok|okdir)\\b/": false,
+      "/^find\\b.*\\s-(delete|exec|execdir|fprint|fprintf|fls|ok|okdir)\\b/": false,
       // rg (ripgrep)
       // - `--pre`: Executes arbitrary command as preprocessor for every file searched.
       // - `--hostname-bin`: Executes arbitrary command to get hostname.
       rg: true,
-      "/^rg\\b.*(--pre|--hostname-bin)\\b/": false,
+      "/^rg\\b.*\\s(--pre|--hostname-bin)\\b/": false,
       // sed
       // - `-e`/`--expression`: Add the commands in script to the set of commands to be run
       //   while processing the input.
@@ -287,7 +288,7 @@ const terminalChatAgentToolsConfiguration = {
       // - In-place editing (`-i`, `-I`, `--in-place`) is detected and blocked via file write
       //   detection if necessary
       sed: true,
-      "/^sed\\b.*(-[a-zA-Z]*(e|f)[a-zA-Z]*|--expression|--file)\\b/": false,
+      "/^sed\\b.*\\s(-[a-zA-Z]*(e|f)[a-zA-Z]*|--expression|--file)\\b/": false,
       "/^sed\\b.*s\\/.*\\/.*\\/[ew]/": false,
       "/^sed\\b.*;W/": false,
       // sort
@@ -296,15 +297,16 @@ const terminalChatAgentToolsConfiguration = {
       // - `-S`: Memory exhaustion is possible (`sort -S 100G file`), we allow possible denial
       //   of service.
       sort: true,
-      "/^sort\\b.*-(o|S)\\b/": false,
+      "/^sort\\b.*\\s-(o|S)\\b/": false,
       // tree
       // - `-o`: Output redirection can write files (`tree -o /etc/something file`) which are
       //   blocked currently
       tree: true,
-      "/^tree\\b.*-o\\b/": false,
+      "/^tree\\b.*\\s-o\\b/": false,
       // xxd
       // - Only allow flags and a single input file as it's difficult to parse the outfile
       //   positional argument safely.
+      "/^xxd$/": true,
       "/^xxd\\b(\\s+-\\S+)*\\s+[^-\\s]\\S*$/": true,
       // #endregion
       // #region Dangerous commands
@@ -527,7 +529,7 @@ const terminalChatAgentToolsConfiguration = {
     "chat.tools.terminal.sandbox.linuxFileSystem"
     /* TerminalChatAgentToolsSettingId.TerminalSandboxLinuxFileSystem */
   ]: {
-    markdownDescription: localize("terminalSandbox.linuxFileSystemSetting", "Note: this setting is applicable only when {0} is enabled. Controls file system access in the terminal sandbox on Linux.Paths does not support glob patterns, only literal paths (ex: ./src/, ~/.ssh, .env).", `\`#${"chat.tools.terminal.sandbox.enabled"}#\``),
+    markdownDescription: localize("terminalSandbox.linuxFileSystemSetting", "Note: this setting is applicable only when {0} is enabled. Controls file system access in the terminal sandbox on Linux. Paths do not support glob patterns, only literal paths (ex: ./src/, ~/.ssh, .env). **bubblewrap**, **socat** and **ripgrep** should be installed for this setting to work.", `\`#${"chat.tools.terminal.sandbox.enabled"}#\``),
     type: "object",
     properties: {
       denyRead: {
@@ -561,7 +563,7 @@ const terminalChatAgentToolsConfiguration = {
     "chat.tools.terminal.sandbox.macFileSystem"
     /* TerminalChatAgentToolsSettingId.TerminalSandboxMacFileSystem */
   ]: {
-    markdownDescription: localize("terminalSandbox.macFileSystemSetting", "Note: this setting is applicable only when {0} is enabled. Controls file system access in the terminal sandbox on macOS.Paths also support git-style glob patterns(ex: *.ts, ./src, ./src/**/*.ts, file?.txt).", `\`#${"chat.tools.terminal.sandbox.enabled"}#\``),
+    markdownDescription: localize("terminalSandbox.macFileSystemSetting", "Note: this setting is applicable only when {0} is enabled. Controls file system access in the terminal sandbox on macOS.Paths also support git-style glob patterns(ex: *.ts, ./src, ./src/**/*.ts, file?.txt). **ripgrep** should be installed for this setting to work.", `\`#${"chat.tools.terminal.sandbox.enabled"}#\``),
     type: "object",
     properties: {
       denyRead: {
@@ -611,7 +613,7 @@ const terminalChatAgentToolsConfiguration = {
   ]: {
     restricted: true,
     type: "boolean",
-    default: false,
+    default: true,
     tags: ["experimental"],
     experiment: {
       mode: "auto"

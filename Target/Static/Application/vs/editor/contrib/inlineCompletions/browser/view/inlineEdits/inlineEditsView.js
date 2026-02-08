@@ -62,6 +62,9 @@ let InlineEditsView = InlineEditsView_1 = class InlineEditsView2 extends Disposa
       if (!state) {
         return void 0;
       }
+      if (state.target.uri.toString() !== this._editorObs.model.read(reader)?.uri.toString()) {
+        return void 0;
+      }
       if (state.state?.kind === "custom") {
         const range = state.state.displayLocation?.range;
         if (!range) {
@@ -131,7 +134,8 @@ let InlineEditsView = InlineEditsView_1 = class InlineEditsView2 extends Disposa
         newTextLineCount: inlineEdit.modifiedLineRange.length,
         editorType: model.editorType,
         longDistanceHint,
-        nextCursorPosition
+        nextCursorPosition,
+        target: inlineEdit.inlineCompletion.originalTextRef
       };
     });
     this.inlineEditsIsHovered = derived(this, (reader) => {
@@ -179,7 +183,8 @@ let InlineEditsView = InlineEditsView_1 = class InlineEditsView2 extends Disposa
         editorType: s.editorType,
         model: this._simpleModel.read(reader2),
         inlineSuggestInfo: this._inlineSuggestInfo.read(reader2),
-        nextCursorPosition: s.nextCursorPosition
+        nextCursorPosition: s.nextCursorPosition,
+        target: s.target
       } : void 0), this._previewTextModel, this._tabAction));
     }).recomputeInitiallyAndOnChange(this._store);
     this._inlineDiffViewState = derived(this, (reader) => {
@@ -278,6 +283,12 @@ let InlineEditsView = InlineEditsView_1 = class InlineEditsView2 extends Disposa
     if (model.inlineEdit.action === void 0) {
       return void 0;
     }
+    if (model.inlineEdit.originalText.uri.toString() !== this._editorObs.model.read(reader)?.uri.toString()) {
+      return {
+        isVisible: true,
+        lineNumber: model.inlineEdit.cursorPosition.lineNumber
+      };
+    }
     if (this._currentInlineEditCache?.inlineSuggestionIdentity !== model.inlineEdit.inlineCompletion.identity) {
       this._currentInlineEditCache = {
         inlineSuggestionIdentity: model.inlineEdit.inlineCompletion.identity,
@@ -294,7 +305,7 @@ let InlineEditsView = InlineEditsView_1 = class InlineEditsView2 extends Disposa
   }
   _determineView(model, reader, diff, newText) {
     const inlineEdit = model.inlineEdit;
-    const canUseCache = this._previousView?.id === this._getCacheId(model);
+    const canUseCache = this._previousView?.id === this._getCacheId(model) && this._previousView?.uri.toString() === this._editorObs.model.get().uri.toString();
     const reconsiderViewEditorWidthChange = this._previousView?.editorWidth !== this._editorObs.layoutInfoWidth.read(reader) && (this._previousView?.view === InlineCompletionViewKind.SideBySide || this._previousView?.view === InlineCompletionViewKind.LineReplacement);
     if (canUseCache && !reconsiderViewEditorWidthChange) {
       return this._previousView.view;
@@ -303,8 +314,9 @@ let InlineEditsView = InlineEditsView_1 = class InlineEditsView2 extends Disposa
     if (action?.kind === "edit" && action.alternativeAction) {
       return InlineCompletionViewKind.WordReplacements;
     }
-    const uri = action?.kind === "edit" ? action.uri : void 0;
-    if (uri !== void 0) {
+    const targetUri = model.inlineEdit.inlineCompletion.originalTextRef.uri;
+    const currentUri = this._editorObs.model.read(reader)?.uri;
+    if (currentUri && targetUri.toString() !== currentUri.toString()) {
       return InlineCompletionViewKind.Custom;
     }
     if (model.displayLocation && !model.inlineEdit.inlineCompletion.identity.jumpedTo.read(reader)) {
@@ -375,13 +387,13 @@ let InlineEditsView = InlineEditsView_1 = class InlineEditsView2 extends Disposa
           break;
       }
     }
-    this._previousView = { id: this._getCacheId(model), view, editorWidth: this._editor.getLayoutInfo().width, timestamp: Date.now() };
+    this._previousView = { id: this._getCacheId(model), view, editorWidth: this._editor.getLayoutInfo().width, timestamp: Date.now(), uri: this._editorObs.model.get().uri };
     const inner = diff.flatMap((d) => d.innerChanges ?? []);
     const textModel = this._editor.getModel();
     const stringChanges = inner.map((m) => ({
       originalRange: m.originalRange,
       modifiedRange: m.modifiedRange,
-      original: textModel.getValueInRange(m.originalRange),
+      original: inlineEdit.originalText.getValueOfRange(m.originalRange),
       modified: newText.getValueOfRange(m.modifiedRange)
     }));
     const viewData = getViewData(inlineEdit, stringChanges, textModel);

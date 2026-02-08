@@ -154,7 +154,8 @@ let InlineSuggestionsView = class InlineSuggestionsView2 extends Disposable {
       useSyntaxHighlighting: this._editorObs.getOption(
         71
         /* EditorOption.inlineSuggest */
-      ).map((v) => v.syntaxHighlightingEnabled)
+      ).map((v) => v.syntaxHighlightingEnabled),
+      highlightShortSuggestions: true
     });
   }
   shouldShowHoverAtViewZone(viewZoneId) {

@@ -18,12 +18,12 @@ import { StringSHA1 } from "../../../../../base/common/hash.js";
 import { DisposableStore, thenRegisterOrDispose } from "../../../../../base/common/lifecycle.js";
 import { ResourceMap, ResourceSet } from "../../../../../base/common/map.js";
 import { Schemas } from "../../../../../base/common/network.js";
-import { observableValue, autorun, transaction, ObservablePromise } from "../../../../../base/common/observable.js";
+import { autorun, ObservablePromise, observableValue, transaction } from "../../../../../base/common/observable.js";
 import { isEqual } from "../../../../../base/common/resources.js";
 import { assertType } from "../../../../../base/common/types.js";
 import { generateUuid } from "../../../../../base/common/uuid.js";
-import { LineRange } from "../../../../../editor/common/core/ranges/lineRange.js";
 import { Range } from "../../../../../editor/common/core/range.js";
+import { LineRange } from "../../../../../editor/common/core/ranges/lineRange.js";
 import { nullDocumentDiff } from "../../../../../editor/common/diff/documentDiffProvider.js";
 import { DetailedLineRangeMapping, RangeMapping } from "../../../../../editor/common/diff/rangeMapping.js";
 import { TextEdit } from "../../../../../editor/common/languages.js";
@@ -35,6 +35,7 @@ import { IFileService } from "../../../../../platform/files/common/files.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { IUndoRedoService } from "../../../../../platform/undoRedo/common/undoRedo.js";
 import { IFilesConfigurationService } from "../../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { IAiEditTelemetryService } from "../../../editTelemetry/browser/telemetry/aiEditTelemetry/aiEditTelemetryService.js";
 import { NotebookTextDiffEditor } from "../../../notebook/browser/diff/notebookDiffEditor.js";
 import { getNotebookEditorFromEditorPane } from "../../../notebook/browser/notebookBrowser.js";
 import { NotebookCellsChangeType, NotebookSetting } from "../../../notebook/common/notebookCommon.js";
@@ -52,7 +53,6 @@ import { ChatEditingNotebookDiffEditorIntegration, ChatEditingNotebookEditorInte
 import { ChatEditingNotebookFileSystemProvider } from "./notebook/chatEditingNotebookFileSystemProvider.js";
 import { adjustCellDiffAndOriginalModelBasedOnCellAddDelete, adjustCellDiffAndOriginalModelBasedOnCellMovements, adjustCellDiffForKeepingAnInsertedCell, adjustCellDiffForRevertingADeletedCell, adjustCellDiffForRevertingAnInsertedCell, calculateNotebookRewriteRatio, getCorrespondingOriginalCellIndex, isTransientIPyNbExtensionEvent } from "./notebook/helpers.js";
 import { countChanges, sortCellChanges } from "./notebook/notebookCellChanges.js";
-import { IAiEditTelemetryService } from "../../../editTelemetry/browser/telemetry/aiEditTelemetry/aiEditTelemetryService.js";
 const SnapshotLanguageId = "VSCodeChatNotebookSnapshotLanguage";
 let ChatEditingModifiedNotebookEntry = class ChatEditingModifiedNotebookEntry2 extends AbstractChatEditingModifiedFileEntry {
   static {
@@ -157,9 +157,6 @@ let ChatEditingModifiedNotebookEntry = class ChatEditingModifiedNotebookEntry2 e
     this.initialContent = initialContent;
     this.initializeModelsFromDiff();
     this._register(this.modifiedModel.onDidChangeContent(this.mirrorNotebookEdits, this));
-  }
-  hasModificationAt(location) {
-    return this.cellEntryMap.get(location.uri)?.hasModificationAt(location.range) ?? false;
   }
   initializeModelsFromDiffImpl(cellsDiffInfo) {
     this.cellEntryMap.forEach((entry) => entry.dispose());

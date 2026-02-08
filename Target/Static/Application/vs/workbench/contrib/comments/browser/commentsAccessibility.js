@@ -12,7 +12,7 @@ var CommentAccessibilityHelpNLS;
   CommentAccessibilityHelpNLS2.intro = nls.localize("intro", "The editor contains commentable range(s). Some useful commands include:");
   CommentAccessibilityHelpNLS2.tabFocus = nls.localize("introWidget", "This widget contains a text area, for composition of new comments, and actions, that can be tabbed to once tab moves focus mode has been enabled with the command Toggle Tab Key Moves Focus{0}.", `<keybinding:${ToggleTabFocusModeAction.ID}>`);
   CommentAccessibilityHelpNLS2.commentCommands = nls.localize("commentCommands", "Some useful comment commands include:");
-  CommentAccessibilityHelpNLS2.escape = nls.localize("escape", "- Dismiss Comment (Escape)");
+  CommentAccessibilityHelpNLS2.escape = nls.localize("escape", "- Dismiss Comment{0}.", `<keybinding:${"workbench.action.hideComment"}>`);
   CommentAccessibilityHelpNLS2.nextRange = nls.localize("next", "- Go to Next Commenting Range{0}.", `<keybinding:${"editor.action.nextCommentingRange"}>`);
   CommentAccessibilityHelpNLS2.previousRange = nls.localize("previous", "- Go to Previous Commenting Range{0}.", `<keybinding:${"editor.action.previousCommentingRange"}>`);
   CommentAccessibilityHelpNLS2.nextCommentThread = nls.localize("nextCommentThreadKb", "- Go to Next Comment Thread{0}.", `<keybinding:${"editor.action.nextCommentThreadAction"}>`);

@@ -51,6 +51,7 @@ export declare class BrowserWorkbenchEnvironmentService implements IBrowserWorkb
     get sync(): 'on' | 'off' | undefined;
     get keyboardLayoutResource(): URI;
     get untitledWorkspacesHome(): URI;
+    get builtinWorkbenchModesHome(): URI;
     get serviceMachineIdResource(): URI;
     get extHostLogsPath(): URI;
     private extensionHostDebugEnvironment;

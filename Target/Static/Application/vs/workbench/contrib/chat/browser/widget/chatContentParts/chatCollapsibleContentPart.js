@@ -14,7 +14,6 @@ var __param = function(paramIndex, decorator) {
 import { $ } from "../../../../../../base/browser/dom.js";
 import { ButtonWithIcon } from "../../../../../../base/browser/ui/button/button.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
 import { autorun, observableValue } from "../../../../../../base/common/observable.js";
 import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
@@ -35,10 +34,9 @@ let ChatCollapsibleContentPart = class ChatCollapsibleContentPart2 extends Dispo
     this.hoverMessage = hoverMessage;
     this.hoverService = hoverService;
     this._renderedTitleWithWidgets = this._register(new MutableDisposable());
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this._isExpanded = observableValue(this, false);
     this._overrideIcon = observableValue(this, void 0);
+    this._contentInitialized = false;
     this.element = context.element;
     this.hasFollowingContent = context.contentIndex + 1 < context.content.length;
   }
@@ -72,20 +70,22 @@ let ChatCollapsibleContentPart = class ChatCollapsibleContentPart2 extends Dispo
       const value = this._isExpanded.get();
       this._isExpanded.set(!value, void 0);
     }));
+    this._isExpanded.set(this.isExpanded(), void 0);
     this._register(autorun((r) => {
       const expanded = this._isExpanded.read(r);
       collapseButton.icon = this._overrideIcon.read(r) ?? (expanded ? Codicon.chevronDown : Codicon.chevronRight);
       this._domNode?.classList.toggle("chat-used-context-collapsed", !expanded);
       this.updateAriaLabel(collapseButton.element, typeof referencesLabel === "string" ? referencesLabel : referencesLabel.value, expanded);
-      if (this._domNode?.isConnected) {
-        queueMicrotask(() => {
-          this._onDidChangeHeight.fire();
-        });
+      if ((expanded || this.shouldInitEarly()) && !this._contentInitialized) {
+        this._contentInitialized = true;
+        this._contentElement = this.initContent();
+        this._domNode?.appendChild(this._contentElement);
       }
     }));
-    const content = this.initContent();
-    this._domNode.appendChild(content);
     return this._domNode;
+  }
+  shouldInitEarly() {
+    return false;
   }
   updateAriaLabel(element, label, expanded) {
     element.ariaLabel = label;

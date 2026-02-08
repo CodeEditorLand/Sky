@@ -11,7 +11,6 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
 import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
@@ -35,8 +34,6 @@ let ChatInputPartWidgetController = class ChatInputPartWidgetController2 extends
     this.container = container;
     this.contextKeyService = contextKeyService;
     this.instantiationService = instantiationService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this.renderedWidgets = /* @__PURE__ */ new Map();
     this.update();
     this._register(this.contextKeyService.onDidChangeContext((e) => {
@@ -75,12 +72,10 @@ let ChatInputPartWidgetController = class ChatInputPartWidgetController2 extends
         const disposables = new DisposableStore();
         const widget = this.instantiationService.createInstance(descriptor.ctor);
         disposables.add(widget);
-        disposables.add(widget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
         this.renderedWidgets.set(descriptor.id, { descriptor, widget, disposables });
         this.container.appendChild(widget.domNode);
       }
     }
-    this._onDidChangeHeight.fire();
   }
   get height() {
     let total = 0;

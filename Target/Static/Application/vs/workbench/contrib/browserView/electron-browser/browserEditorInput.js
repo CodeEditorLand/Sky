@@ -15,15 +15,19 @@ var BrowserEditorInput_1;
 import { Codicon } from "../../../../base/common/codicons.js";
 import { truncate } from "../../../../base/common/strings.js";
 import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
 import { BrowserViewUri } from "../../../../platform/browserView/common/browserViewUri.js";
 import { EditorInput } from "../../../common/editor/editorInput.js";
 import { IThemeService } from "../../../../platform/theme/common/themeService.js";
 import { TAB_ACTIVE_FOREGROUND } from "../../../common/theme.js";
 import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
 import { IBrowserViewWorkbenchService } from "../common/browserView.js";
 import { hasKey } from "../../../../base/common/types.js";
 import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
 import { BrowserEditor } from "./browserEditor.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { logBrowserOpen } from "./browserViewTelemetry.js";
 const LOADING_SPINNER_SVG = /* @__PURE__ */ __name((color) => `
 	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
 		<path d="M8 1a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z" fill="${color}" opacity="0.3"/>
@@ -46,11 +50,13 @@ let BrowserEditorInput = class BrowserEditorInput2 extends EditorInput {
   static {
     this.DEFAULT_LABEL = localize("browser.editorLabel", "Browser");
   }
-  constructor(options, themeService, browserViewWorkbenchService, lifecycleService) {
+  constructor(options, themeService, browserViewWorkbenchService, lifecycleService, instantiationService, telemetryService) {
     super();
     this.themeService = themeService;
     this.browserViewWorkbenchService = browserViewWorkbenchService;
     this.lifecycleService = lifecycleService;
+    this.instantiationService = instantiationService;
+    this.telemetryService = telemetryService;
     this._id = options.id;
     this._initialData = options;
     this._register(this.lifecycleService.onWillShutdown((e) => {
@@ -161,6 +167,20 @@ let BrowserEditorInput = class BrowserEditorInput2 extends EditorInput {
     }
     return false;
   }
+  /**
+   * Creates a copy of this browser editor input with a new unique ID, creating an independent browser view with no linked state.
+   * This is used during Copy into New Window.
+   */
+  copy() {
+    logBrowserOpen(this.telemetryService, "copyToNewWindow");
+    const currentUrl = this._model?.url ?? this._initialData.url;
+    return this.instantiationService.createInstance(BrowserEditorInput_1, {
+      id: generateUuid(),
+      url: currentUrl,
+      title: this._model?.title ?? this._initialData.title,
+      favicon: this._model?.favicon ?? this._initialData.favicon
+    });
+  }
   toUntyped() {
     return {
       resource: this.resource,
@@ -189,7 +209,9 @@ let BrowserEditorInput = class BrowserEditorInput2 extends EditorInput {
 BrowserEditorInput = BrowserEditorInput_1 = __decorate([
   __param(1, IThemeService),
   __param(2, IBrowserViewWorkbenchService),
-  __param(3, ILifecycleService)
+  __param(3, ILifecycleService),
+  __param(4, IInstantiationService),
+  __param(5, ITelemetryService)
 ], BrowserEditorInput);
 class BrowserEditorSerializer {
   static {

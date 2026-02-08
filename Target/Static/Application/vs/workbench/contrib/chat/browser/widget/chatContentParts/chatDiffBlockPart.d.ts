@@ -31,8 +31,6 @@ export declare class MarkdownDiffBlockPart extends Disposable {
     private readonly modelService;
     private readonly textModelService;
     private readonly languageService;
-    private readonly _onDidChangeContentHeight;
-    readonly onDidChangeContentHeight: import("../../../../../../base/common/event.js").Event<void>;
     readonly element: HTMLElement;
     private readonly comparePart;
     private readonly modelRef;

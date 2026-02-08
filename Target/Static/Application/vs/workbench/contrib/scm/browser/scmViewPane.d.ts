@@ -157,6 +157,7 @@ export declare class SCMViewPane extends ViewPane {
     private updateRepositoryCollapseAllContextKeys;
     collapseAllRepositories(): void;
     expandAllRepositories(): void;
+    collapseAllResources(group: ISCMResourceGroup): void;
     focusPreviousInput(): void;
     focusNextInput(): void;
     private focusInput;

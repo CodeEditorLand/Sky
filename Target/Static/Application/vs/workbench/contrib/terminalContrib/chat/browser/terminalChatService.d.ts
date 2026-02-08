@@ -21,6 +21,8 @@ export declare class TerminalChatService extends Disposable implements ITerminal
     private readonly _chatSessionResourceByTerminalInstance;
     private readonly _terminalInstanceListenersByToolSessionId;
     private readonly _chatSessionListenersByTerminalInstance;
+    private readonly _onDidContinueInBackground;
+    readonly onDidContinueInBackground: Event<string>;
     private readonly _onDidRegisterTerminalInstanceForToolSession;
     readonly onDidRegisterTerminalInstanceWithToolSession: Event<ITerminalInstance>;
     private readonly _activeProgressParts;
@@ -74,4 +76,5 @@ export declare class TerminalChatService extends Disposable implements ITerminal
         approve: boolean;
         matchCommandLine?: boolean;
     }>>;
+    continueInBackground(terminalToolSessionId: string): void;
 }

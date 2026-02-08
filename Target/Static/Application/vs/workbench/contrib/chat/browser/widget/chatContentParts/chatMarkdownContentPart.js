@@ -20,7 +20,6 @@ import { DomScrollableElement } from "../../../../../../base/browser/ui/scrollba
 import { coalesce } from "../../../../../../base/common/arrays.js";
 import { findLast } from "../../../../../../base/common/arraysFind.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Lazy } from "../../../../../../base/common/lazy.js";
 import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
 import { autorun, autorunSelfDisposable, derived } from "../../../../../../base/common/observable.js";
@@ -82,8 +81,6 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
     this.aiEditTelemetryService = aiEditTelemetryService;
     this.codeblocksPartId = String(++ChatMarkdownContentPart_1.ID_POOL);
     this.allRefs = [];
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this._codeblocks = [];
     this.mathLayoutParticipants = /* @__PURE__ */ new Set();
     const element = context.element;
@@ -149,14 +146,12 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
                 dispose: /* @__PURE__ */ __name(() => diffPart.dispose(), "dispose")
               };
               this.allRefs.push(ref);
-              this._register(diffPart.onDidChangeContentHeight(() => this._onDidChangeHeight.fire()));
               orderedDisposablesList.push(ref);
               return diffPart.element;
             }
           }
           if (languageId === "vscode-extensions") {
             const chatExtensions = this._register(instantiationService.createInstance(ChatExtensionsContentPart, { kind: "extensions", extensions: text.split(",") }));
-            this._register(chatExtensions.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
             return chatExtensions.domNode;
           }
           const globalIndex = globalCodeBlockIndexStart++;
@@ -195,7 +190,6 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
           if (element.isCompleteAddedRequest || !codeblockEntry?.codemapperUri || !codeblockEntry.isEdit) {
             const ref = this.renderCodeBlock(codeBlockInfo, text, isCodeBlockComplete, currentWidth);
             this.allRefs.push(ref);
-            this._register(ref.object.onDidChangeContentHeight(() => this._onDidChangeHeight.fire()));
             const ownerMarkdownPartId = this.codeblocksPartId;
             const info = new class {
               constructor() {
@@ -225,7 +219,6 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
             if (isResponseVM(codeBlockInfo.element)) {
               this.codeBlockModelCollection.update(codeBlockInfo.element.sessionResource, codeBlockInfo.element, codeBlockInfo.codeBlockIndex, { text, languageId: codeBlockInfo.languageId, isComplete: isCodeBlockComplete }).then((e) => {
                 this._codeblocks[codeBlockInfo.codeBlockPartIndex].codemapperUri = e.codemapperUri;
-                this._onDidChangeHeight.fire();
               });
             }
             this.allRefs.push(ref);
@@ -254,7 +247,6 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
             return ref.object.element;
           }
         }, "codeBlockRendererSync"),
-        asyncRenderCallback: /* @__PURE__ */ __name(() => this._onDidChangeHeight.fire(), "asyncRenderCallback"),
         markedOptions: markedOpts,
         markedExtensions,
         ...markdownRenderOptions
@@ -305,9 +297,6 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
         console.error("Failed to load MarkedKatexSupport extension:", e);
       }).finally(() => {
         doRenderMarkdown();
-        if (!this._store.isDisposed) {
-          this._onDidChangeHeight.fire();
-        }
       });
     } else {
       doRenderMarkdown();
@@ -327,15 +316,10 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
   renderCodeBlock(data, text, isComplete, currentWidth) {
     const ref = this.editorPool.get();
     const editorInfo = ref.object;
-    if (isResponseVM(data.element)) {
-      this.codeBlockModelCollection.update(data.element.sessionResource, data.element, data.codeBlockIndex, { text, languageId: data.languageId, isComplete }).then((e) => {
-        this._codeblocks[data.codeBlockPartIndex].codemapperUri = e.codemapperUri;
-        this._onDidChangeHeight.fire();
-      });
-    }
-    editorInfo.render(data, currentWidth).then(() => {
-      this._onDidChangeHeight.fire();
+    this.codeBlockModelCollection.update(data.element.sessionResource, data.element, data.codeBlockIndex, { text, languageId: data.languageId, isComplete }).then((e) => {
+      this._codeblocks[data.codeBlockPartIndex].codemapperUri = e.codemapperUri;
     });
+    editorInfo.render(data, currentWidth);
     return ref;
   }
   hasSameContent(other) {
@@ -365,6 +349,13 @@ let ChatMarkdownContentPart = class ChatMarkdownContentPart2 extends Disposable 
       }
     });
     this.mathLayoutParticipants.forEach((layout) => layout());
+  }
+  onDidRemount() {
+    for (const ref of this.allRefs) {
+      if (ref.object instanceof CodeBlockPart) {
+        ref.object.onDidRemount();
+      }
+    }
   }
   addDisposable(disposable) {
     this._register(disposable);

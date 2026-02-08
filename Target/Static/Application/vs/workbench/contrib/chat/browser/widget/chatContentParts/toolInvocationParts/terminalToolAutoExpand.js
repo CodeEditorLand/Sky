@@ -28,7 +28,11 @@ class TerminalToolAutoExpand extends Disposable {
       if (this._options.shouldAutoExpand() && !this._noDataTimeout) {
         this._noDataTimeout = disposableTimeout(() => {
           this._noDataTimeout = void 0;
-          if (!this._receivedData && this._options.shouldAutoExpand() && this._options.hasRealOutput()) {
+          const shouldExpand = this._options.shouldAutoExpand();
+          const hasOutput = this._options.hasRealOutput();
+          if (shouldExpand && hasOutput) {
+            this._dataEventTimeout?.dispose();
+            this._dataEventTimeout = void 0;
             this._onDidRequestExpand.fire();
           }
         }, 500, store);
@@ -39,12 +43,14 @@ class TerminalToolAutoExpand extends Disposable {
         return;
       }
       this._receivedData = true;
-      this._noDataTimeout?.dispose();
-      this._noDataTimeout = void 0;
       if (this._options.shouldAutoExpand() && !this._dataEventTimeout) {
         this._dataEventTimeout = disposableTimeout(() => {
           this._dataEventTimeout = void 0;
-          if (!this._commandFinished && this._options.shouldAutoExpand() && this._options.hasRealOutput()) {
+          const shouldExpand = this._options.shouldAutoExpand();
+          const hasOutput = this._options.hasRealOutput();
+          if (!this._commandFinished && shouldExpand && hasOutput) {
+            this._noDataTimeout?.dispose();
+            this._noDataTimeout = void 0;
             this._onDidRequestExpand.fire();
           }
         }, 50, store);

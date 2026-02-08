@@ -137,9 +137,6 @@ let ChatEditingModifiedDocumentEntry = class ChatEditingModifiedDocumentEntry2 e
   getCurrentContents() {
     return this.modifiedModel.getValue();
   }
-  hasModificationAt(location) {
-    return location.uri.toString() === this.modifiedModel.uri.toString() && this._textModelChangeService.hasHunkAt(location.range);
-  }
   async restoreFromSnapshot(snapshot, restoreToDisk = true) {
     this._stateObs.set(snapshot.state, void 0);
     await this._textModelChangeService.resetDocumentValues(snapshot.original, restoreToDisk ? snapshot.current : void 0);

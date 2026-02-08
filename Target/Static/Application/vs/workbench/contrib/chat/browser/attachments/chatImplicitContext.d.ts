@@ -31,6 +31,26 @@ export declare class ChatImplicitContextContribution extends Disposable implemen
     private findActiveNotebookEditor;
     private updateImplicitContext;
 }
+interface ImplicitContextWithSelection {
+    value: Location | URI | StringChatContextValue | undefined;
+    isSelection: boolean;
+}
+export declare class ChatImplicitContexts extends Disposable {
+    private _onDidChangeValue;
+    readonly onDidChangeValue: Event<void>;
+    private _values;
+    private readonly _valuesDisposables;
+    setValues(values: ImplicitContextWithSelection[]): void;
+    get values(): ChatImplicitContext[];
+    get hasEnabled(): boolean;
+    setEnabled(enabled: boolean): void;
+    get hasValue(): boolean;
+    get hasNonUri(): boolean;
+    getLocations(): Location[];
+    getUris(): URI[];
+    get hasNonStringContext(): boolean;
+    enabledBaseEntries(includeAllLocations: boolean): IChatRequestVariableEntry[];
+}
 export declare class ChatImplicitContext extends Disposable implements IChatRequestImplicitVariableEntry {
     get id(): "vscode.implicit.selection" | "vscode.implicit.file" | "vscode.implicit.string" | "vscode.implicit.viewport" | "vscode.implicit";
     get name(): string;
@@ -49,6 +69,7 @@ export declare class ChatImplicitContext extends Disposable implements IChatRequ
     private _uri;
     get uri(): URI | undefined;
     get icon(): ThemeIcon | undefined;
-    setValue(value: Location | URI | StringChatContextValue | undefined, isSelection: boolean, languageId?: string): void;
+    setValue(value: Location | URI | StringChatContextValue | undefined, isSelection: boolean): void;
     toBaseEntries(): IChatRequestVariableEntry[];
 }
+export {};

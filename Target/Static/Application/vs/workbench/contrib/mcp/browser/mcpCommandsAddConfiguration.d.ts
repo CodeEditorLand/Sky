@@ -8,11 +8,13 @@ import { IOpenerService } from '../../../../platform/opener/common/opener.js';
 import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IWorkspaceContextService, IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
+import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IEditorService } from '../../../services/editor/common/editorService.js';
 import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
 import { IWorkbenchMcpManagementService } from '../../../services/mcp/common/mcpWorkbenchManagementService.js';
 import { IMcpRegistry } from '../common/mcpRegistryTypes.js';
 import { IMcpService } from '../common/mcpTypes.js';
+import { ILogService } from '../../../../platform/log/common/log.js';
 export declare const enum AddConfigurationType {
     Stdio = 0,
     HTTP = 1,
@@ -79,4 +81,14 @@ export declare class McpAddConfigurationCommand {
     run(): Promise<void>;
     pickForUrlHandler(resource: URI, showIsPrimary?: boolean): Promise<void>;
     private getPackageType;
+}
+export declare class McpInstallFromManifestCommand {
+    private readonly _fileDialogService;
+    private readonly _fileService;
+    private readonly _quickInputService;
+    private readonly _notificationService;
+    private readonly _mcpManagementService;
+    private readonly _logService;
+    constructor(_fileDialogService: IFileDialogService, _fileService: IFileService, _quickInputService: IQuickInputService, _notificationService: INotificationService, _mcpManagementService: IWorkbenchMcpManagementService, _logService: ILogService);
+    run(): Promise<void>;
 }

@@ -13,7 +13,6 @@ var __param = function(paramIndex, decorator) {
 };
 var ChatInputOutputMarkdownProgressPart_1;
 import { ProgressBar } from "../../../../../../../base/browser/ui/progressbar/progressbar.js";
-import { decodeBase64 } from "../../../../../../../base/common/buffer.js";
 import { Lazy } from "../../../../../../../base/common/lazy.js";
 import { toDisposable } from "../../../../../../../base/common/lifecycle.js";
 import { getExtensionForMimeType } from "../../../../../../../base/common/mime.js";
@@ -21,7 +20,9 @@ import { autorun } from "../../../../../../../base/common/observable.js";
 import { basename } from "../../../../../../../base/common/resources.js";
 import { ILanguageService } from "../../../../../../../editor/common/languages/language.js";
 import { IModelService } from "../../../../../../../editor/common/services/model.js";
+import { IConfigurationService } from "../../../../../../../platform/configuration/common/configuration.js";
 import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { ChatConfiguration } from "../../../../common/constants.js";
 import { ChatResponseResource } from "../../../../common/model/chatModel.js";
 import { IChatToolInvocation } from "../../../../common/chatService/chatService.js";
 import { ChatCollapsibleInputOutputContentPart } from "../chatToolInputOutputContentPart.js";
@@ -38,66 +39,60 @@ let ChatInputOutputMarkdownProgressPart = class ChatInputOutputMarkdownProgressP
     this._expandedByDefault = /* @__PURE__ */ new WeakMap();
   }
   get codeblocks() {
-    return this._codeblocks;
+    return this.collapsibleListPart.codeblocks;
   }
-  constructor(toolInvocation, context, codeBlockStartIndex, message, subtitle, input, output, isError, instantiationService, modelService, languageService) {
+  constructor(toolInvocation, context, codeBlockStartIndex, message, subtitle, input, output, isError, instantiationService, modelService, languageService, configurationService) {
     super(toolInvocation);
-    this._codeblocks = [];
     let codeBlockIndex = codeBlockStartIndex;
-    const toCodePart = /* @__PURE__ */ __name((data) => {
-      const model = this._register(modelService.createModel(data, languageService.createById("json"), void 0, true));
-      return {
-        kind: "code",
-        textModel: model,
-        languageId: model.getLanguageId(),
-        options: {
-          hideToolbar: true,
-          reserveWidth: 19,
-          maxHeightInLines: 13,
-          verticalPadding: 5,
-          editorOptions: {
-            wordWrap: "on"
-          }
-        },
-        codeBlockInfo: {
-          codeBlockIndex: codeBlockIndex++,
-          codemapperUri: void 0,
-          elementId: context.element.id,
-          focus: /* @__PURE__ */ __name(() => {
-          }, "focus"),
-          ownerMarkdownPartId: this.codeblocksPartId,
-          uri: model.uri,
-          chatSessionResource: context.element.sessionResource,
-          uriPromise: Promise.resolve(model.uri)
+    const createCodePart = /* @__PURE__ */ __name((data) => ({
+      kind: "code",
+      data,
+      languageId: "json",
+      codeBlockIndex: codeBlockIndex++,
+      ownerMarkdownPartId: this.codeblocksPartId,
+      options: {
+        hideToolbar: true,
+        reserveWidth: 19,
+        maxHeightInLines: 13,
+        verticalPadding: 5,
+        editorOptions: {
+          wordWrap: "on"
         }
-      };
-    }, "toCodePart");
+      }
+    }), "createCodePart");
     let processedOutput = output;
     if (typeof output === "string") {
       processedOutput = [{ type: "embed", value: output, isText: true }];
     }
-    const collapsibleListPart = this._register(instantiationService.createInstance(ChatCollapsibleInputOutputContentPart, message, subtitle, this.getAutoApproveMessageContent(), context, toCodePart(input), processedOutput && processedOutput.length > 0 ? {
-      parts: processedOutput.map((o, i) => {
-        const permalinkBasename = o.type === "ref" || o.uri ? basename(o.uri) : o.mimeType && getExtensionForMimeType(o.mimeType) ? `file${getExtensionForMimeType(o.mimeType)}` : "file" + (o.isText ? ".txt" : ".bin");
-        if (o.type === "ref") {
-          return { kind: "data", uri: o.uri, mimeType: o.mimeType };
-        } else if (o.isText && !o.asResource) {
-          return toCodePart(o.value);
-        } else {
-          let decoded;
-          try {
+    const collapsibleListPart = this.collapsibleListPart = this._register(instantiationService.createInstance(
+      ChatCollapsibleInputOutputContentPart,
+      message,
+      subtitle,
+      this.getAutoApproveMessageContent(),
+      context,
+      createCodePart(input),
+      processedOutput && processedOutput.length > 0 ? {
+        parts: processedOutput.map((o, i) => {
+          const permalinkBasename = o.type === "ref" || o.uri ? basename(o.uri) : o.mimeType && getExtensionForMimeType(o.mimeType) ? `file${getExtensionForMimeType(o.mimeType)}` : "file" + (o.isText ? ".txt" : ".bin");
+          if (o.type === "ref") {
+            return { kind: "data", uri: o.uri, mimeType: o.mimeType };
+          } else if (o.isText && !o.asResource) {
+            return createCodePart(o.value);
+          } else {
+            const permalinkUri = ChatResponseResource.createUri(context.element.sessionResource, toolInvocation.toolCallId, i, permalinkBasename);
             if (!o.isText) {
-              decoded = decodeBase64(o.value).buffer;
+              return { kind: "data", base64Value: o.value, mimeType: o.mimeType, uri: permalinkUri, audience: o.audience };
+            } else {
+              return { kind: "data", value: new TextEncoder().encode(o.value), mimeType: o.mimeType, uri: permalinkUri, audience: o.audience };
             }
-          } catch {
           }
-          const permalinkUri = ChatResponseResource.createUri(context.element.sessionResource, toolInvocation.toolCallId, i, permalinkBasename);
-          return { kind: "data", value: decoded || new TextEncoder().encode(o.value), mimeType: o.mimeType, uri: permalinkUri, audience: o.audience };
-        }
-      })
-    } : void 0, isError, ChatInputOutputMarkdownProgressPart_1._expandedByDefault.get(toolInvocation) ?? false));
-    this._codeblocks.push(...collapsibleListPart.codeblocks);
-    this._register(collapsibleListPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+        })
+      } : void 0,
+      isError,
+      // Expand by default when there's an error (if setting enabled),
+      // otherwise use the stored expanded state (defaulting to false)
+      isError && configurationService.getValue(ChatConfiguration.AutoExpandToolFailures) || (ChatInputOutputMarkdownProgressPart_1._expandedByDefault.get(toolInvocation) ?? false)
+    ));
     this._register(toDisposable(() => ChatInputOutputMarkdownProgressPart_1._expandedByDefault.set(toolInvocation, collapsibleListPart.expanded)));
     const progressObservable = toolInvocation.kind === "toolInvocation" ? toolInvocation.state.map((s, r) => s.type === 2 ? s.progress.read(r) : void 0) : void 0;
     const progressBar = new Lazy(() => this._register(new ProgressBar(collapsibleListPart.domNode)));
@@ -121,7 +116,8 @@ let ChatInputOutputMarkdownProgressPart = class ChatInputOutputMarkdownProgressP
 ChatInputOutputMarkdownProgressPart = ChatInputOutputMarkdownProgressPart_1 = __decorate([
   __param(8, IInstantiationService),
   __param(9, IModelService),
-  __param(10, ILanguageService)
+  __param(10, ILanguageService),
+  __param(11, IConfigurationService)
 ], ChatInputOutputMarkdownProgressPart);
 export {
   ChatInputOutputMarkdownProgressPart

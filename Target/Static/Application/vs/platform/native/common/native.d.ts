@@ -8,6 +8,18 @@ import { IV8Profile } from '../../profiling/common/profiling.js';
 import { AuthInfo, Credentials } from '../../request/common/request.js';
 import { IPartsSplash } from '../../theme/common/themeService.js';
 import { IColorScheme, IOpenedAuxiliaryWindow, IOpenedMainWindow, IOpenEmptyWindowOptions, IOpenWindowOptions, IPoint, IRectangle, IWindowOpenable } from '../../window/common/window.js';
+export interface IToastOptions {
+    readonly id: string;
+    readonly title: string;
+    readonly body?: string;
+    readonly actions?: readonly string[];
+    readonly silent?: boolean;
+}
+export interface IToastResult {
+    readonly supported: boolean;
+    readonly clicked: boolean;
+    readonly actionIndex?: number;
+}
 export interface ICPUProperties {
     model: string;
     speed: number;
@@ -192,6 +204,9 @@ export interface ICommonNativeHostService {
     isPortFree(port: number): Promise<boolean>;
     findFreePort(startPort: number, giveUpAfter: number, timeout: number, stride?: number): Promise<number>;
     windowsGetStringRegKey(hive: 'HKEY_CURRENT_USER' | 'HKEY_LOCAL_MACHINE' | 'HKEY_CLASSES_ROOT' | 'HKEY_USERS' | 'HKEY_CURRENT_CONFIG', path: string, name: string): Promise<string | undefined>;
+    showToast(options: IToastOptions): Promise<IToastResult>;
+    clearToast(id: string): Promise<void>;
+    clearToasts(): Promise<void>;
     /**
      * Creates a zip file at the specified path containing the provided files.
      *

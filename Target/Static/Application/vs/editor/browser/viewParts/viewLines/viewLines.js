@@ -364,6 +364,13 @@ class ViewLines extends ViewPart {
     this._updateLineWidthsSlowIfDomDidLayout(context);
     return result;
   }
+  resetLineWidthCaches() {
+    const rendStartLineNumber = this._visibleLines.getStartLineNumber();
+    const rendEndLineNumber = this._visibleLines.getEndLineNumber();
+    for (let lineNumber = rendStartLineNumber; lineNumber <= rendEndLineNumber; lineNumber++) {
+      this._visibleLines.getVisibleLine(lineNumber).resetCachedWidth();
+    }
+  }
   linesVisibleRangesForRange(_range, includeNewLines) {
     const originalEndLineNumber = _range.endLineNumber;
     const range = Range.intersectRanges(_range, this._lastRenderedData.getCurrentVisibleRange());

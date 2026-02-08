@@ -2,20 +2,22 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { isWeb, isWindows } from "../../../../base/common/platform.js";
 import { localize } from "../../../../nls.js";
-const defaultCommonlyUsedSettings = [
+const COMMONLY_USED_SETTINGS = [
   "editor.fontSize",
   "editor.formatOnSave",
   "files.autoSave",
+  "GitHub.copilot-chat.manageExtension",
   "editor.defaultFormatter",
   "editor.fontFamily",
   "editor.wordWrap",
+  "chat.agent.maxRequests",
   "files.exclude",
   "workbench.colorTheme",
   "editor.tabSize",
   "editor.mouseWheelZoom",
   "editor.formatOnPaste"
 ];
-function getCommonlyUsedData(settingGroups, commonlyUsed = defaultCommonlyUsedSettings) {
+function getCommonlyUsedData(settingGroups) {
   const allSettings = /* @__PURE__ */ new Map();
   for (const group of settingGroups) {
     for (const section of group.sections) {
@@ -25,7 +27,7 @@ function getCommonlyUsedData(settingGroups, commonlyUsed = defaultCommonlyUsedSe
     }
   }
   const settings = [];
-  for (const id of commonlyUsed) {
+  for (const id of COMMONLY_USED_SETTINGS) {
     const setting = allSettings.get(id);
     if (setting) {
       settings.push(setting);

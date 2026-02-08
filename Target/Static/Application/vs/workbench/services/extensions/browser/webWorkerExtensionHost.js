@@ -279,6 +279,7 @@ let WebWorkerExtensionHost = class WebWorkerExtensionHost2 extends Disposable {
         appUriScheme: this._productService.urlProtocol,
         appLanguage: platform.language,
         isExtensionTelemetryLoggingOnly: isLoggingOnly(this._productService, this._environmentService),
+        isPortable: false,
         extensionDevelopmentLocationURI: this._environmentService.extensionDevelopmentLocationURI,
         extensionTestsLocationURI: this._environmentService.extensionTestsLocationURI,
         globalStorageHome: this._userDataProfilesService.defaultProfile.globalStorageHome,
@@ -289,7 +290,8 @@ let WebWorkerExtensionHost = class WebWorkerExtensionHost2 extends Disposable {
         configuration: workspace.configuration || void 0,
         id: workspace.id,
         name: this._labelService.getWorkspaceLabel(workspace),
-        transient: workspace.transient
+        transient: workspace.transient,
+        isAgentSessionsWorkspace: workspace.isAgentSessionsWorkspace
       },
       consoleForward: {
         includeStack: false,

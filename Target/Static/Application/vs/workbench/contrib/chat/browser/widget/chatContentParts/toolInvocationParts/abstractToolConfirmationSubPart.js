@@ -89,7 +89,6 @@ let AbstractToolConfirmationSubPart = class AbstractToolConfirmationSubPart2 ext
       button.data();
       this.chatWidgetService.getWidgetBySessionResource(this.context.element.sessionResource)?.focusInput();
     }));
-    this._register(confirmWidget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
     this._register(toDisposable(() => hasToolConfirmation.reset()));
     this.domNode = confirmWidget.domNode;
   }

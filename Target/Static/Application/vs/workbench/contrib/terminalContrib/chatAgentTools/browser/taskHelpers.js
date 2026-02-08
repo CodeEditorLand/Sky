@@ -167,7 +167,10 @@ async function collectTerminalResults(terminals, task, instantiationService, inv
       }
     }
     const outputMonitor = disposableStore.add(instantiationService.createInstance(OutputMonitor, execution, taskProblemPollFn, invocationContext, token, task._label));
-    await Event.toPromise(outputMonitor.onDidFinishCommand);
+    await Promise.race([
+      Event.toPromise(outputMonitor.onDidFinishCommand),
+      Event.toPromise(token.onCancellationRequested)
+    ]);
     const pollingResult = outputMonitor.pollingResult;
     return {
       name: instance.shellLaunchConfig.name ?? instance.title ?? "unknown",

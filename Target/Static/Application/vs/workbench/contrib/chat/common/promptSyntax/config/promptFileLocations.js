@@ -8,17 +8,22 @@ const INSTRUCTION_FILE_EXTENSION = ".instructions.md";
 const LEGACY_MODE_FILE_EXTENSION = ".chatmode.md";
 const AGENT_FILE_EXTENSION = ".agent.md";
 const SKILL_FILENAME = "SKILL.md";
+const HOOKS_FILENAME = "hooks.json";
 const COPILOT_CUSTOM_INSTRUCTIONS_FILENAME = "copilot-instructions.md";
 const PROMPT_DEFAULT_SOURCE_FOLDER = ".github/prompts";
 const INSTRUCTIONS_DEFAULT_SOURCE_FOLDER = ".github/instructions";
 const LEGACY_MODE_DEFAULT_SOURCE_FOLDER = ".github/chatmodes";
 const AGENTS_SOURCE_FOLDER = ".github/agents";
+const HOOKS_SOURCE_FOLDER = ".github/hooks";
 var PromptFileSource;
 (function(PromptFileSource2) {
   PromptFileSource2["GitHubWorkspace"] = "github-workspace";
   PromptFileSource2["CopilotPersonal"] = "copilot-personal";
   PromptFileSource2["ClaudePersonal"] = "claude-personal";
   PromptFileSource2["ClaudeWorkspace"] = "claude-workspace";
+  PromptFileSource2["ClaudeWorkspaceLocal"] = "claude-workspace-local";
+  PromptFileSource2["AgentsWorkspace"] = "agents-workspace";
+  PromptFileSource2["AgentsPersonal"] = "agents-personal";
   PromptFileSource2["ConfigWorkspace"] = "config-workspace";
   PromptFileSource2["ConfigPersonal"] = "config-personal";
   PromptFileSource2["ExtensionContribution"] = "extension-contribution";
@@ -26,8 +31,10 @@ var PromptFileSource;
 })(PromptFileSource || (PromptFileSource = {}));
 const DEFAULT_SKILL_SOURCE_FOLDERS = [
   { path: ".github/skills", source: PromptFileSource.GitHubWorkspace, storage: PromptsStorage.local },
+  { path: ".agents/skills", source: PromptFileSource.AgentsWorkspace, storage: PromptsStorage.local },
   { path: ".claude/skills", source: PromptFileSource.ClaudeWorkspace, storage: PromptsStorage.local },
   { path: "~/.copilot/skills", source: PromptFileSource.CopilotPersonal, storage: PromptsStorage.user },
+  { path: "~/.agents/skills", source: PromptFileSource.AgentsPersonal, storage: PromptsStorage.user },
   { path: "~/.claude/skills", source: PromptFileSource.ClaudePersonal, storage: PromptsStorage.user }
 ];
 const DEFAULT_INSTRUCTIONS_SOURCE_FOLDERS = [
@@ -38,6 +45,12 @@ const DEFAULT_PROMPT_SOURCE_FOLDERS = [
 ];
 const DEFAULT_AGENT_SOURCE_FOLDERS = [
   { path: AGENTS_SOURCE_FOLDER, source: PromptFileSource.GitHubWorkspace, storage: PromptsStorage.local }
+];
+const DEFAULT_HOOK_FILE_PATHS = [
+  { path: ".github/hooks/hooks.json", source: PromptFileSource.GitHubWorkspace, storage: PromptsStorage.local },
+  { path: ".claude/settings.local.json", source: PromptFileSource.ClaudeWorkspaceLocal, storage: PromptsStorage.local },
+  { path: ".claude/settings.json", source: PromptFileSource.ClaudeWorkspace, storage: PromptsStorage.local },
+  { path: "~/.claude/settings.json", source: PromptFileSource.ClaudePersonal, storage: PromptsStorage.user }
 ];
 function isInAgentsFolder(fileUri) {
   const dir = dirname(fileUri.path);
@@ -58,8 +71,17 @@ function getPromptFileType(fileUri) {
   if (filename.toLowerCase() === SKILL_FILENAME.toLowerCase()) {
     return PromptsType.skill;
   }
-  if (filename.endsWith(".md") && isInAgentsFolder(fileUri)) {
+  if (filename.endsWith(".md") && filename !== "README.md" && isInAgentsFolder(fileUri)) {
     return PromptsType.agent;
+  }
+  if (filename.toLowerCase() === HOOKS_FILENAME.toLowerCase()) {
+    return PromptsType.hook;
+  }
+  if (filename.toLowerCase() === "settings.local.json" || filename.toLowerCase() === "settings.json") {
+    const dir = dirname(fileUri.path);
+    if (dir.endsWith("/.claude") || dir === ".claude") {
+      return PromptsType.hook;
+    }
   }
   return void 0;
 }
@@ -78,6 +100,8 @@ function getPromptFileExtension(type) {
       return AGENT_FILE_EXTENSION;
     case PromptsType.skill:
       return SKILL_FILENAME;
+    case PromptsType.hook:
+      return HOOKS_FILENAME;
     default:
       throw new Error("Unknown prompt type");
   }
@@ -93,6 +117,8 @@ function getPromptFileDefaultLocations(type) {
       return DEFAULT_AGENT_SOURCE_FOLDERS;
     case PromptsType.skill:
       return DEFAULT_SKILL_SOURCE_FOLDERS;
+    case PromptsType.hook:
+      return DEFAULT_HOOK_FILE_PATHS;
     default:
       throw new Error("Unknown prompt type");
   }
@@ -117,7 +143,7 @@ function getCleanPromptName(fileUri) {
   if (fileName.toLowerCase() === SKILL_FILENAME.toLowerCase()) {
     return basename(fileUri.path, ".md");
   }
-  if (fileName.endsWith(".md") && isInAgentsFolder(fileUri)) {
+  if (fileName.endsWith(".md") && fileName !== "README.md" && isInAgentsFolder(fileUri)) {
     return basename(fileUri.path, ".md");
   }
   return basename(fileUri.path);
@@ -128,9 +154,12 @@ export {
   AGENT_FILE_EXTENSION,
   COPILOT_CUSTOM_INSTRUCTIONS_FILENAME,
   DEFAULT_AGENT_SOURCE_FOLDERS,
+  DEFAULT_HOOK_FILE_PATHS,
   DEFAULT_INSTRUCTIONS_SOURCE_FOLDERS,
   DEFAULT_PROMPT_SOURCE_FOLDERS,
   DEFAULT_SKILL_SOURCE_FOLDERS,
+  HOOKS_FILENAME,
+  HOOKS_SOURCE_FOLDER,
   INSTRUCTIONS_DEFAULT_SOURCE_FOLDER,
   INSTRUCTION_FILE_EXTENSION,
   LEGACY_MODE_DEFAULT_SOURCE_FOLDER,

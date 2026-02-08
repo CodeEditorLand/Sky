@@ -9,8 +9,6 @@ import { IChatContentPart } from './chatContentParts.js';
 export declare class ChatQuotaExceededPart extends Disposable implements IChatContentPart {
     private readonly content;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     constructor(element: IChatResponseViewModel, content: IChatErrorDetailsPart, renderer: IMarkdownRenderer, chatWidgetService: IChatWidgetService, commandService: ICommandService, telemetryService: ITelemetryService, chatEntitlementService: IChatEntitlementService);
     hasSameContent(other: IChatRendererContent): boolean;
     addDisposable(disposable: IDisposable): void;

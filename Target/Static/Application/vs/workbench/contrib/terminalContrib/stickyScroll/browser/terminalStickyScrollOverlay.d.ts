@@ -32,6 +32,7 @@ export declare class TerminalStickyScrollOverlay extends Disposable {
     private _state;
     private _isRefreshQueued;
     private _rawMaxLineCount;
+    private _ignoredCommands;
     private _pendingShowOperation;
     constructor(_instance: ITerminalInstance, _xterm: IXtermTerminal & {
         raw: RawXtermTerminal;
@@ -53,5 +54,5 @@ export declare class TerminalStickyScrollOverlay extends Disposable {
     private _refreshGpuAcceleration;
     private _shouldLoadWebgl;
     private _getTheme;
-    private _isClearCommand;
+    private _isIgnoredCommand;
 }

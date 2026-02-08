@@ -20,8 +20,6 @@ export declare class ChatCheckpointFileChangesSummaryContentPart extends Disposa
     readonly domNode: HTMLElement;
     readonly ELEMENT_HEIGHT = 22;
     readonly MAX_ITEMS_SHOWN = 6;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     private readonly diffsBetweenRequests;
     private fileChangesDiffsObservable;
     private list;

@@ -32,6 +32,9 @@ export declare namespace PromptHeaderAttributes {
     const license = "license";
     const compatibility = "compatibility";
     const metadata = "metadata";
+    const agents = "agents";
+    const userInvokable = "user-invokable";
+    const disableModelInvocation = "disable-model-invocation";
 }
 export declare namespace GithubPromptHeaderAttributes {
     const mcpServers = "mcp-servers";
@@ -52,17 +55,22 @@ export declare class PromptHeader {
     getAttribute(key: string): IHeaderAttribute | undefined;
     get errors(): ParseError[];
     private getStringAttribute;
-    private getBooleanAttribute;
     get name(): string | undefined;
     get description(): string | undefined;
     get agent(): string | undefined;
-    get model(): string | undefined;
+    get model(): readonly string[] | undefined;
     get applyTo(): string | undefined;
     get argumentHint(): string | undefined;
     get target(): string | undefined;
     get infer(): boolean | undefined;
     get tools(): string[] | undefined;
     get handOffs(): IHandOff[] | undefined;
+    private getStringArrayAttribute;
+    private getStringOrStringArrayAttribute;
+    get agents(): string[] | undefined;
+    get userInvokable(): boolean | undefined;
+    get disableModelInvocation(): boolean | undefined;
+    private getBooleanAttribute;
 }
 export interface IHandOff {
     readonly agent: string;
@@ -70,6 +78,7 @@ export interface IHandOff {
     readonly prompt: string;
     readonly send?: boolean;
     readonly showContinueOn?: boolean;
+    readonly model?: string;
 }
 export interface IHeaderAttribute {
     readonly range: Range;

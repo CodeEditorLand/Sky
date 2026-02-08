@@ -14,6 +14,7 @@ var __param = function(paramIndex, decorator) {
 import { DeferredPromise, raceCancellationError, Sequencer, timeout } from "../../../base/common/async.js";
 import { CancellationToken, CancellationTokenSource } from "../../../base/common/cancellation.js";
 import { CancellationError } from "../../../base/common/errors.js";
+import { Emitter } from "../../../base/common/event.js";
 import { Disposable, DisposableMap, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
 import { AUTH_SCOPE_SEPARATOR, fetchAuthorizationServerMetadata, fetchResourceMetadata, getDefaultMetadataForUrl, parseWWWAuthenticateHeader, scopesMatch } from "../../../base/common/oauth.js";
 import { SSEParser } from "../../../base/common/sseParser.js";
@@ -63,7 +64,19 @@ let ExtHostMcpService = class ExtHostMcpService2 extends Disposable {
     this._initialProviderPromises = /* @__PURE__ */ new Set();
     this._sseEventSources = this._register(new DisposableMap());
     this._unresolvedMcpServers = /* @__PURE__ */ new Map();
+    this._onDidChangeMcpServerDefinitions = this._register(new Emitter());
+    this.onDidChangeMcpServerDefinitions = this._onDidChangeMcpServerDefinitions.event;
+    this._mcpServerDefinitions = [];
     this._proxy = extHostRpc.getProxy(MainContext.MainThreadMcp);
+  }
+  /** Returns all MCP server definitions known to the editor. */
+  get mcpServerDefinitions() {
+    return this._mcpServerDefinitions;
+  }
+  /** Called by main thread to notify that MCP server definitions have changed. */
+  $onDidChangeMcpServerDefinitions(servers) {
+    this._mcpServerDefinitions = servers.map((dto) => Convert.McpServerDefinition.to(dto));
+    this._onDidChangeMcpServerDefinitions.fire();
   }
   $startMcp(id, opts) {
     this._startMcp(id, McpServerLaunch.fromSerialized(opts.launch), opts.defaultCwd && URI.revive(opts.defaultCwd), opts.errorOnUserInteraction);

@@ -2,7 +2,7 @@ import { IReference } from '../../../../../base/common/lifecycle.js';
 import { ITransaction } from '../../../../../base/common/observable.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { IDocumentDiff } from '../../../../../editor/common/diff/documentDiffProvider.js';
-import { Location, TextEdit } from '../../../../../editor/common/languages.js';
+import { TextEdit } from '../../../../../editor/common/languages.js';
 import { ILanguageService } from '../../../../../editor/common/languages/language.js';
 import { ITextModel } from '../../../../../editor/common/model.js';
 import { IEditorWorkerService } from '../../../../../editor/common/services/editorWorker.js';
@@ -18,9 +18,9 @@ import { IFilesConfigurationService } from '../../../../services/filesConfigurat
 import { ITextFileService } from '../../../../services/textfile/common/textfiles.js';
 import { IAiEditTelemetryService } from '../../../editTelemetry/browser/telemetry/aiEditTelemetry/aiEditTelemetryService.js';
 import { ICellEditOperation } from '../../../notebook/common/notebookCommon.js';
+import { IChatService } from '../../common/chatService/chatService.js';
 import { ChatEditKind, IModifiedEntryTelemetryInfo, IModifiedFileEntry, IModifiedFileEntryEditorIntegration, ISnapshotEntry } from '../../common/editing/chatEditingService.js';
 import { IChatResponseModel } from '../../common/model/chatModel.js';
-import { IChatService } from '../../common/chatService/chatService.js';
 import { AbstractChatEditingModifiedFileEntry } from './chatEditingModifiedFileEntry.js';
 interface IMultiDiffEntryDelegate {
     collapse: (transaction: ITransaction | undefined) => void;
@@ -30,8 +30,8 @@ export declare class ChatEditingModifiedDocumentEntry extends AbstractChatEditin
     private readonly _textFileService;
     private readonly _editorWorkerService;
     readonly initialContent: string;
-    private readonly originalModel;
-    private readonly modifiedModel;
+    readonly originalModel: ITextModel;
+    readonly modifiedModel: ITextModel;
     private readonly _docFileEditorModel;
     get changesCount(): import("../../../../../base/common/observable.js").IObservable<number>;
     get diffInfo(): import("../../../../../base/common/observable.js").IObservable<{
@@ -53,7 +53,6 @@ export declare class ChatEditingModifiedDocumentEntry extends AbstractChatEditin
     equalsSnapshot(snapshot: ISnapshotEntry | undefined): boolean;
     createSnapshot(chatSessionResource: URI, requestId: string | undefined, undoStop: string | undefined): ISnapshotEntry;
     getCurrentContents(): string;
-    hasModificationAt(location: Location): boolean;
     restoreFromSnapshot(snapshot: ISnapshotEntry, restoreToDisk?: boolean): Promise<void>;
     resetToInitialContent(): Promise<void>;
     protected _areOriginalAndModifiedIdentical(): Promise<boolean>;

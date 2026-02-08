@@ -12,21 +12,29 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import { getActiveWindow } from "../../../../../../base/browser/dom.js";
+import { autorun } from "../../../../../../base/common/observable.js";
 import { ActionWidgetDropdownActionViewItem } from "../../../../../../platform/actions/browser/actionWidgetDropdownActionViewItem.js";
 import { IActionWidgetService } from "../../../../../../platform/actionWidget/browser/actionWidget.js";
 import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
 import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
 let ChatInputPickerActionViewItem = class ChatInputPickerActionViewItem2 extends ActionWidgetDropdownActionViewItem {
   static {
     __name(this, "ChatInputPickerActionViewItem");
   }
-  constructor(action, actionWidgetOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService) {
+  constructor(action, actionWidgetOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService) {
     const optionsWithAnchor = {
       ...actionWidgetOptions,
       getAnchor: /* @__PURE__ */ __name(() => this.getAnchorElement(), "getAnchor")
     };
-    super(action, optionsWithAnchor, actionWidgetService, keybindingService, contextKeyService);
+    super(action, optionsWithAnchor, actionWidgetService, keybindingService, contextKeyService, telemetryService);
     this.pickerOptions = pickerOptions;
+    this._register(autorun((reader) => {
+      this.pickerOptions.onlyShowIconsForDefaultActions.read(reader);
+      if (this.element) {
+        this.renderLabel(this.element);
+      }
+    }));
   }
   /**
    * Returns the anchor element for the dropdown.
@@ -46,7 +54,8 @@ let ChatInputPickerActionViewItem = class ChatInputPickerActionViewItem2 extends
 ChatInputPickerActionViewItem = __decorate([
   __param(3, IActionWidgetService),
   __param(4, IKeybindingService),
-  __param(5, IContextKeyService)
+  __param(5, IContextKeyService),
+  __param(6, ITelemetryService)
 ], ChatInputPickerActionViewItem);
 export {
   ChatInputPickerActionViewItem

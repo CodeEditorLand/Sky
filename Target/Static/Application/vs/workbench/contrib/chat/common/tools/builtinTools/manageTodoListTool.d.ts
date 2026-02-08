@@ -4,18 +4,14 @@ import { IToolData, IToolImpl, IToolInvocation, IToolResult, IToolInvocationPrep
 import { ILogService } from '../../../../../../platform/log/common/log.js';
 import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
 import { IChatTodoListService } from '../chatTodoListService.js';
-export declare const TodoListToolWriteOnlySettingId = "chat.todoListTool.writeOnly";
-export declare const TodoListToolDescriptionFieldSettingId = "chat.todoListTool.descriptionField";
 export declare const ManageTodoListToolToolId = "manage_todo_list";
-export declare function createManageTodoListToolData(writeOnly: boolean, includeDescription?: boolean): IToolData;
+export declare function createManageTodoListToolData(): IToolData;
 export declare const ManageTodoListToolData: IToolData;
 export declare class ManageTodoListTool extends Disposable implements IToolImpl {
-    private readonly writeOnly;
-    private readonly includeDescription;
     private readonly chatTodoListService;
     private readonly logService;
     private readonly telemetryService;
-    constructor(writeOnly: boolean, includeDescription: boolean, chatTodoListService: IChatTodoListService, logService: ILogService, telemetryService: ITelemetryService);
+    constructor(chatTodoListService: IChatTodoListService, logService: ILogService, telemetryService: ITelemetryService);
     invoke(invocation: IToolInvocation, _countTokens: any, _progress: any, _token: CancellationToken): Promise<IToolResult>;
     prepareToolInvocation(context: IToolInvocationPreparationContext, _token: CancellationToken): Promise<IPreparedToolInvocation | undefined>;
     private generatePastTenseMessage;

@@ -5,7 +5,6 @@ import { IDefaultAccountService } from '../../../../platform/defaultAccount/comm
 export declare class AccountPolicyService extends AbstractPolicyService implements IPolicyService {
     private readonly logService;
     private readonly defaultAccountService;
-    private account;
     constructor(logService: ILogService, defaultAccountService: IDefaultAccountService);
     protected _updatePolicyDefinitions(policyDefinitions: IStringDictionary<PolicyDefinition>): Promise<void>;
 }

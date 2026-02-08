@@ -75,6 +75,7 @@ export interface IProductConfiguration {
     readonly win32AppUserModelId?: string;
     readonly win32MutexName?: string;
     readonly win32RegValueName?: string;
+    readonly win32VersionedUpdate?: boolean;
     readonly applicationName: string;
     readonly embedderIdentifier?: string;
     readonly urlProtocol: string;
@@ -199,9 +200,9 @@ export interface IProductConfiguration {
         readonly hasPrereleaseVersion?: boolean;
         readonly excludeVersionRange?: string;
     }>;
+    readonly extensionsForceVersionByQuality?: readonly string[];
     readonly msftInternalDomains?: string[];
     readonly linkProtectionTrustedDomains?: readonly string[];
-    readonly defaultAccount?: IDefaultAccountConfig;
     readonly authClientIdMetadataUrl?: string;
     readonly 'configurationSync.store'?: ConfigurationSyncStore;
     readonly 'editSessions.store'?: Omit<ConfigurationSyncStore, 'insidersUrl' | 'stableUrl'>;
@@ -216,19 +217,6 @@ export interface IProductConfiguration {
     readonly emergencyAlertUrl?: string;
     readonly remoteDefaultExtensionsIfInstalledLocally?: string[];
     readonly extensionConfigurationPolicy?: IStringDictionary<IPolicy>;
-}
-export interface IDefaultAccountConfig {
-    readonly preferredExtensions: string[];
-    readonly authenticationProvider: {
-        readonly id: string;
-        readonly enterpriseProviderId: string;
-        readonly enterpriseProviderConfig: string;
-        readonly enterpriseProviderUriSetting: string;
-        readonly scopes: string[][];
-    };
-    readonly tokenEntitlementUrl: string;
-    readonly chatEntitlementUrl: string;
-    readonly mcpRegistryDataUrl: string;
 }
 export interface ITunnelApplicationConfig {
     authenticationProviders: IStringDictionary<{
@@ -363,6 +351,8 @@ export interface IDefaultChatAgent {
     readonly providerScopes: string[][];
     readonly entitlementUrl: string;
     readonly entitlementSignupLimitedUrl: string;
+    readonly tokenEntitlementUrl: string;
+    readonly mcpRegistryDataUrl: string;
     readonly chatQuotaExceededContext: string;
     readonly completionsQuotaExceededContext: string;
     readonly walkthroughCommand: string;

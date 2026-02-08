@@ -11,13 +11,13 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-import { coalesce, compareBy, delta } from "../../../../../base/common/arrays.js";
+import { compareBy, delta } from "../../../../../base/common/arrays.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
 import { groupBy } from "../../../../../base/common/collections.js";
 import { ErrorNoTelemetry } from "../../../../../base/common/errors.js";
 import { Emitter, Event } from "../../../../../base/common/event.js";
 import { Iterable } from "../../../../../base/common/iterator.js";
-import { Disposable, DisposableStore, dispose, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { Disposable, DisposableStore, dispose } from "../../../../../base/common/lifecycle.js";
 import { LinkedList } from "../../../../../base/common/linkedList.js";
 import { ResourceMap } from "../../../../../base/common/map.js";
 import { Schemas } from "../../../../../base/common/network.js";
@@ -68,7 +68,6 @@ let ChatEditingService = class ChatEditingService2 extends Disposable {
       const result = Array.from(this._sessionsObs.read(r));
       return result;
     });
-    this._chatRelatedFilesProviders = /* @__PURE__ */ new Map();
     this._register(decorationsService.registerDecorationsProvider(_instantiationService.createInstance(ChatDecorationsProvider, this.editingSessionsObs)));
     this._register(multiDiffSourceResolverService.registerResolver(_instantiationService.createInstance(ChatEditingMultiDiffSourceResolver, this.editingSessionsObs)));
     this._register(textModelService.registerTextModelContentProvider(ChatEditingTextModelContentProvider.scheme, _instantiationService.createInstance(ChatEditingTextModelContentProvider, this)));
@@ -169,6 +168,11 @@ let ChatEditingService = class ChatEditingService2 extends Disposable {
     return observerDisposables;
   }
   observerEditsInResponse(requestId, responseModel, session, observerDisposables) {
+    let K;
+    (function(K2) {
+      K2[K2["Stream"] = 0] = "Stream";
+      K2[K2["Workspace"] = 1] = "Workspace";
+    })(K || (K = {}));
     const editsSeen = [];
     let editorDidChange = false;
     const editorListener = Event.once(this._editorService.onDidActiveEditorChange)(() => {
@@ -191,7 +195,9 @@ let ChatEditingService = class ChatEditingService2 extends Disposable {
     }, "ensureEditorOpen");
     const onResponseComplete = /* @__PURE__ */ __name(() => {
       for (const remaining of editsSeen) {
-        remaining?.streaming.complete();
+        if (remaining?.kind === 0) {
+          remaining.stream.complete();
+        }
       }
       editsSeen.length = 0;
       editorOpenPromises.clear();
@@ -208,6 +214,16 @@ let ChatEditingService = class ChatEditingService2 extends Disposable {
           undoStop = part.id;
           continue;
         }
+        if (part.kind === "workspaceEdit") {
+          if (!editsSeen[i]) {
+            editsSeen[i] = {
+              kind: 1
+              /* K.Workspace */
+            };
+            session.applyWorkspaceEdit(part, responseModel, undoStop ?? responseModel.requestId);
+          }
+          continue;
+        }
         if (part.kind !== "textEditGroup" && part.kind !== "notebookEditGroup") {
           continue;
         }
@@ -219,8 +235,11 @@ let ChatEditingService = class ChatEditingService2 extends Disposable {
         }
         let entry = editsSeen[i];
         if (!entry) {
-          entry = { seen: 0, streaming: session.startStreamingEdits(CellUri.parse(part.uri)?.notebook ?? part.uri, responseModel, undoStop) };
+          entry = { kind: 0, seen: 0, stream: session.startStreamingEdits(CellUri.parse(part.uri)?.notebook ?? part.uri, responseModel, undoStop) };
           editsSeen[i] = entry;
+        }
+        if (entry.kind !== 0) {
+          continue;
         }
         const isFirst = entry.seen === 0;
         const newEdits = part.edits.slice(entry.seen);
@@ -230,20 +249,20 @@ let ChatEditingService = class ChatEditingService2 extends Disposable {
             const edit = newEdits[i2];
             const done = part.done ? i2 === newEdits.length - 1 : false;
             if (isTextEditOperationArray(edit)) {
-              entry.streaming.pushText(edit, done);
+              entry.stream.pushText(edit, done);
             } else if (isCellTextEditOperationArray(edit)) {
               for (const edits of Object.values(groupBy(edit, (e) => e.uri.toString()))) {
                 if (edits) {
-                  entry.streaming.pushNotebookCellText(edits[0].uri, edits.map((e) => e.edit), done);
+                  entry.stream.pushNotebookCellText(edits[0].uri, edits.map((e) => e.edit), done);
                 }
               }
             } else {
-              entry.streaming.pushNotebook(edit, done);
+              entry.stream.pushNotebook(edit, done);
             }
           }
         }
         if (part.done) {
-          entry.streaming.complete();
+          entry.stream.complete();
         }
       }
     }, "handleResponseParts");
@@ -265,30 +284,6 @@ let ChatEditingService = class ChatEditingService2 extends Disposable {
         }
       }));
     }
-  }
-  hasRelatedFilesProviders() {
-    return this._chatRelatedFilesProviders.size > 0;
-  }
-  registerRelatedFilesProvider(handle, provider) {
-    this._chatRelatedFilesProviders.set(handle, provider);
-    return toDisposable(() => {
-      this._chatRelatedFilesProviders.delete(handle);
-    });
-  }
-  async getRelatedFiles(chatSessionResource, prompt, files, token) {
-    const providers = Array.from(this._chatRelatedFilesProviders.values());
-    const result = await Promise.all(providers.map(async (provider) => {
-      try {
-        const relatedFiles = await provider.provideRelatedFiles({ prompt, files }, token);
-        if (relatedFiles?.length) {
-          return { group: provider.description, files: relatedFiles };
-        }
-        return void 0;
-      } catch (e) {
-        return void 0;
-      }
-    }));
-    return coalesce(result);
   }
 };
 ChatEditingService = __decorate([

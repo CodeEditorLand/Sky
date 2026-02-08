@@ -31,7 +31,9 @@ export declare class AuxiliaryBarPart extends AbstractPaneCompositePart {
     get preferredWidth(): number | undefined;
     readonly priority = LayoutPriority.Low;
     private configuration;
+    private readonly visibleViewContainersTracker;
     constructor(notificationService: INotificationService, storageService: IStorageService, contextMenuService: IContextMenuService, layoutService: IWorkbenchLayoutService, keybindingService: IKeybindingService, hoverService: IHoverService, instantiationService: IInstantiationService, themeService: IThemeService, viewDescriptorService: IViewDescriptorService, contextKeyService: IContextKeyService, extensionService: IExtensionService, commandService: ICommandService, menuService: IMenuService, configurationService: IConfigurationService);
+    private onDidChangeAutoHideViewContainers;
     private resolveConfiguration;
     private onDidChangeActivityBarLocation;
     updateStyles(): void;

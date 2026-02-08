@@ -404,6 +404,7 @@ let CustomMenubarControl = class CustomMenubarControl2 extends MenubarControl {
           run: /* @__PURE__ */ __name(() => this.updateService.downloadUpdate(), "run")
         });
       case "downloading":
+      case "overwriting":
         return toAction({ id: "update.downloading", label: localize("DownloadingUpdate", "Downloading Update..."), enabled: false, run: /* @__PURE__ */ __name(() => {
         }, "run") });
       case "downloaded":

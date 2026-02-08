@@ -2,11 +2,11 @@ import { LineReplacement } from '../../../../../common/core/edits/lineEdit.js';
 import { TextEdit } from '../../../../../common/core/edits/textEdit.js';
 import { Position } from '../../../../../common/core/position.js';
 import { LineRange } from '../../../../../common/core/ranges/lineRange.js';
-import { AbstractText } from '../../../../../common/core/text/abstractText.js';
 import { InlineCompletionCommand } from '../../../../../common/languages.js';
 import { InlineSuggestionAction, InlineSuggestionItem } from '../../model/inlineSuggestionItem.js';
+import { TextModelValueReference } from '../../model/textModelValueReference.js';
 export declare class InlineEditWithChanges {
-    readonly originalText: AbstractText;
+    readonly originalText: TextModelValueReference;
     readonly action: InlineSuggestionAction | undefined;
     readonly edit: TextEdit | undefined;
     readonly cursorPosition: Position;
@@ -17,5 +17,5 @@ export declare class InlineEditWithChanges {
     get originalLineRange(): LineRange;
     get modifiedLineRange(): LineRange;
     get displayRange(): LineRange;
-    constructor(originalText: AbstractText, action: InlineSuggestionAction | undefined, edit: TextEdit | undefined, cursorPosition: Position, multiCursorPositions: readonly Position[], commands: readonly InlineCompletionCommand[], inlineCompletion: InlineSuggestionItem);
+    constructor(originalText: TextModelValueReference, action: InlineSuggestionAction | undefined, edit: TextEdit | undefined, cursorPosition: Position, multiCursorPositions: readonly Position[], commands: readonly InlineCompletionCommand[], inlineCompletion: InlineSuggestionItem);
 }

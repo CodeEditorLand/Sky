@@ -38,7 +38,6 @@ import { IContextKeyService } from "../../../../platform/contextkey/common/conte
 import { IHostService } from "../../../services/host/browser/host.js";
 import { WindowTitle } from "./windowTitle.js";
 import { CommandCenterControl } from "./commandCenterControl.js";
-import { CommandCenterControlRegistry } from "./commandCenterControlRegistry.js";
 import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
 import { WorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
 import { ACCOUNTS_ACTIVITY_ID, GLOBAL_ACTIVITY_ID } from "../../../common/activity.js";
@@ -212,12 +211,6 @@ let BrowserTitlebarPart = class BrowserTitlebarPart2 extends Part {
     this._register(this.hostService.onDidChangeActiveWindow((windowId) => windowId === targetWindowId ? this.onFocus() : this.onBlur()));
     this._register(this.configurationService.onDidChangeConfiguration((e) => this.onConfigurationChanged(e)));
     this._register(this.editorGroupsContainer.onDidChangeEditorPartOptions((e) => this.onEditorPartConfigurationChange(e)));
-    this._register(this.contextKeyService.onDidChangeContext((e) => {
-      const registeredContextKeys = new Set(CommandCenterControlRegistry.getRegistrations().map((r) => r.contextKey));
-      if (registeredContextKeys.size > 0 && e.affectsSome(registeredContextKeys)) {
-        this.createTitle();
-      }
-    }));
   }
   onBlur() {
     this.isInactive = true;
@@ -403,21 +396,9 @@ let BrowserTitlebarPart = class BrowserTitlebarPart2 extends Part {
         reset(this.title);
       }
     } else {
-      let customControlShown = false;
-      for (const registration of CommandCenterControlRegistry.getRegistrations()) {
-        if (this.contextKeyService.getContextKeyValue(registration.contextKey)) {
-          const control = registration.create(this.instantiationService);
-          reset(this.title, control.element);
-          this.titleDisposables.add(control);
-          customControlShown = true;
-          break;
-        }
-      }
-      if (!customControlShown) {
-        const commandCenter = this.instantiationService.createInstance(CommandCenterControl, this.windowTitle, this.hoverDelegate);
-        reset(this.title, commandCenter.element);
-        this.titleDisposables.add(commandCenter);
-      }
+      const commandCenter = this.instantiationService.createInstance(CommandCenterControl, this.windowTitle, this.hoverDelegate);
+      reset(this.title, commandCenter.element);
+      this.titleDisposables.add(commandCenter);
     }
   }
   actionViewItemProvider(action, options) {

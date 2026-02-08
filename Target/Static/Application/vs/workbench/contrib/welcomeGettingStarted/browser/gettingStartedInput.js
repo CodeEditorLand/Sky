@@ -47,6 +47,7 @@ class GettingStartedInput extends EditorInput {
     this._showTelemetryNotice = !!options.showTelemetryNotice;
     this._showWelcome = options.showWelcome ?? true;
     this._walkthroughPageTitle = options.walkthroughPageTitle;
+    this._returnToCommand = options.returnToCommand;
   }
   getName() {
     return this.walkthroughPageTitle ? localize("walkthroughPageTitle", "Walkthrough: {0}", this.walkthroughPageTitle) : localize("getStarted", "Welcome");
@@ -81,6 +82,12 @@ class GettingStartedInput extends EditorInput {
   }
   set walkthroughPageTitle(value) {
     this._walkthroughPageTitle = value;
+  }
+  get returnToCommand() {
+    return this._returnToCommand;
+  }
+  set returnToCommand(value) {
+    this._returnToCommand = value;
   }
 }
 export {

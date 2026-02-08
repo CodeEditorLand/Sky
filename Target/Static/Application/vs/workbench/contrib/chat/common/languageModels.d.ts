@@ -7,7 +7,6 @@ import { IDisposable } from '../../../../base/common/lifecycle.js';
 import Severity from '../../../../base/common/severity.js';
 import { ThemeIcon } from '../../../../base/common/themables.js';
 import { URI } from '../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
@@ -136,6 +135,7 @@ export interface ILanguageModelChatMetadata {
     readonly version: string;
     readonly tooltip?: string;
     readonly detail?: string;
+    readonly multiplier?: string;
     readonly family: string;
     readonly maxInputTokens: number;
     readonly maxOutputTokens: number;
@@ -172,14 +172,14 @@ export interface ILanguageModelChatProvider {
     readonly onDidChange: Event<void>;
     provideLanguageModelChatInfo(options: ILanguageModelChatInfoOptions, token: CancellationToken): Promise<ILanguageModelChatMetadataAndIdentifier[]>;
     sendChatRequest(modelId: string, messages: IChatMessage[], from: ExtensionIdentifier, options: {
-        [name: string]: any;
+        [name: string]: unknown;
     }, token: CancellationToken): Promise<ILanguageModelChatResponse>;
     provideTokenCount(modelId: string, message: string | IChatMessage, token: CancellationToken): Promise<number>;
 }
 export interface ILanguageModelChat {
     metadata: ILanguageModelChatMetadata;
     sendChatRequest(messages: IChatMessage[], from: ExtensionIdentifier, options: {
-        [name: string]: any;
+        [name: string]: unknown;
     }, token: CancellationToken): Promise<ILanguageModelChatResponse>;
     provideTokenCount(message: string | IChatMessage, token: CancellationToken): Promise<number>;
 }
@@ -213,18 +213,24 @@ export interface ILanguageModelsGroup {
 }
 export interface ILanguageModelsService {
     readonly _serviceBrand: undefined;
+    readonly onDidChangeLanguageModelVendors: Event<readonly string[]>;
     readonly onDidChangeLanguageModels: Event<string>;
     updateModelPickerPreference(modelIdentifier: string, showInModelPicker: boolean): void;
     getLanguageModelIds(): string[];
-    getVendors(): IUserFriendlyLanguageModel[];
+    getVendors(): ILanguageModelProviderDescriptor[];
     lookupLanguageModel(modelId: string): ILanguageModelChatMetadata | undefined;
-    fetchLanguageModelGroups(vendor: string): Promise<ILanguageModelsGroup[]>;
+    /**
+     * Find a model by its qualified name. The qualified name is what is used in prompt and agent files and is in the format "Model Name (Vendor)".
+     */
+    lookupLanguageModelByQualifiedName(qualifiedName: string): ILanguageModelChatMetadataAndIdentifier | undefined;
+    getLanguageModelGroups(vendor: string): ILanguageModelsGroup[];
     /**
      * Given a selector, returns a list of model identifiers
      * @param selector The selector to lookup for language models. If the selector is empty, all language models are returned.
      */
     selectLanguageModels(selector: ILanguageModelChatSelector): Promise<string[]>;
     registerLanguageModelProvider(vendor: string, provider: ILanguageModelChatProvider): IDisposable;
+    deltaLanguageModelChatProviderDescriptors(added: IUserFriendlyLanguageModel[], removed: IUserFriendlyLanguageModel[]): void;
     sendChatRequest(modelId: string, from: ExtensionIdentifier, messages: IChatMessage[], options: {
         [name: string]: any;
     }, token: CancellationToken): Promise<ILanguageModelChatResponse>;
@@ -290,6 +296,9 @@ declare const languageModelChatProviderType: {
     };
 };
 export type IUserFriendlyLanguageModel = TypeFromJsonSchema<typeof languageModelChatProviderType>;
+export interface ILanguageModelProviderDescriptor extends IUserFriendlyLanguageModel {
+    readonly isDefault: boolean;
+}
 export declare const languageModelChatProviderExtensionPoint: import("../../../services/extensions/common/extensionsRegistry.js").IExtensionPoint<{
     readonly vendor: string;
     readonly displayName: string;
@@ -308,7 +317,6 @@ export declare class LanguageModelsService implements ILanguageModelsService {
     private readonly _logService;
     private readonly _storageService;
     private readonly _contextKeyService;
-    private readonly _configurationService;
     private readonly _languageModelsConfigurationService;
     private readonly _quickInputService;
     private readonly _secretStorageService;
@@ -318,6 +326,8 @@ export declare class LanguageModelsService implements ILanguageModelsService {
     private readonly _store;
     private readonly _providers;
     private readonly _vendors;
+    private readonly _onDidChangeLanguageModelVendors;
+    readonly onDidChangeLanguageModelVendors: Event<string[]>;
     private readonly _modelsGroups;
     private readonly _modelCache;
     private readonly _resolveLMSequencer;
@@ -325,15 +335,20 @@ export declare class LanguageModelsService implements ILanguageModelsService {
     private readonly _hasUserSelectableModels;
     private readonly _onLanguageModelChange;
     readonly onDidChangeLanguageModels: Event<string>;
-    constructor(_extensionService: IExtensionService, _logService: ILogService, _storageService: IStorageService, _contextKeyService: IContextKeyService, _configurationService: IConfigurationService, _languageModelsConfigurationService: ILanguageModelsConfigurationService, _quickInputService: IQuickInputService, _secretStorageService: ISecretStorageService);
+    constructor(_extensionService: IExtensionService, _logService: ILogService, _storageService: IStorageService, _contextKeyService: IContextKeyService, _languageModelsConfigurationService: ILanguageModelsConfigurationService, _quickInputService: IQuickInputService, _secretStorageService: ISecretStorageService);
+    deltaLanguageModelChatProviderDescriptors(added: IUserFriendlyLanguageModel[], removed: IUserFriendlyLanguageModel[]): void;
+    private _onDidChangeLanguageModelGroups;
+    private _readModelPickerPreferences;
+    private _onDidChangeModelPickerPreferences;
     private _hasStoredModelForVendor;
     private _saveModelPickerPreferences;
     updateModelPickerPreference(modelIdentifier: string, showInModelPicker: boolean): void;
-    getVendors(): IUserFriendlyLanguageModel[];
+    getVendors(): ILanguageModelProviderDescriptor[];
     getLanguageModelIds(): string[];
     lookupLanguageModel(modelIdentifier: string): ILanguageModelChatMetadata | undefined;
+    lookupLanguageModelByQualifiedName(referenceName: string): ILanguageModelChatMetadataAndIdentifier | undefined;
     private _resolveAllLanguageModels;
-    fetchLanguageModelGroups(vendor: string): Promise<ILanguageModelsGroup[]>;
+    getLanguageModelGroups(vendor: string): ILanguageModelsGroup[];
     selectLanguageModels(selector: ILanguageModelChatSelector): Promise<string[]>;
     registerLanguageModelProvider(vendor: string, provider: ILanguageModelChatProvider): IDisposable;
     sendChatRequest(modelId: string, from: ExtensionIdentifier, messages: IChatMessage[], options: {
@@ -343,10 +358,12 @@ export declare class LanguageModelsService implements ILanguageModelsService {
     configureLanguageModelsProviderGroup(vendorId: string, providerGroupName?: string): Promise<void>;
     addLanguageModelsProviderGroup(name: string, vendorId: string, configuration: IStringDictionary<unknown> | undefined): Promise<void>;
     removeLanguageModelsProviderGroup(vendorId: string, providerGroupName: string): Promise<void>;
-    private canConfigure;
+    private requireConfiguring;
+    private getSnippetForFirstUnconfiguredProperty;
     private promptForName;
     private promptForConfiguration;
     private promptForValue;
+    private canPromptForProperty;
     private promptForArray;
     private promptForInput;
     private encodeSecretKey;

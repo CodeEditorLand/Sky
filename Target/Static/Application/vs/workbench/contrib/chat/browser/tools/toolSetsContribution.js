@@ -138,7 +138,7 @@ let UserToolSetsContributions = class UserToolSetsContributions2 extends Disposa
         /* LifecyclePhase.Restored */
       )
     ]).then(() => this._initToolSets());
-    const toolsObs = observableFromEvent(this, _languageModelToolsService.onDidChangeTools, () => Array.from(_languageModelToolsService.getTools()));
+    const toolsObs = observableFromEvent(this, _languageModelToolsService.onDidChangeTools, () => Array.from(_languageModelToolsService.getAllToolsIncludingDisabled()));
     const store = this._store.add(new DisposableStore());
     this._store.add(autorun((r) => {
       const tools = toolsObs.read(r);

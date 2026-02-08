@@ -76,6 +76,10 @@ function getIEditor(thing) {
   return null;
 }
 __name(getIEditor, "getIEditor");
+function isIOverlayWidgetPositionCoordinates(thing) {
+  return !!thing && typeof thing === "object" && typeof thing.top === "number" && typeof thing.left === "number";
+}
+__name(isIOverlayWidgetPositionCoordinates, "isIOverlayWidgetPositionCoordinates");
 export {
   ContentWidgetPositionPreference,
   DiffEditorState,
@@ -85,6 +89,7 @@ export {
   getIEditor,
   isCodeEditor,
   isCompositeEditor,
-  isDiffEditor
+  isDiffEditor,
+  isIOverlayWidgetPositionCoordinates
 };
 //# sourceMappingURL=editorBrowser.js.map

@@ -83,6 +83,7 @@ export declare class InlineSuggestData {
     private readonly _requestInfo;
     private readonly _providerRequestInfo;
     private readonly _correlationId;
+    static createForTest(action: IInlineSuggestDataAction | undefined, targetUri: URI): InlineSuggestData;
     private _didShow;
     private _timeUntilShown;
     private _timeUntilActuallyShown;

@@ -8,8 +8,6 @@ export declare class ChatConfirmationContentPart extends Disposable implements I
     private readonly instantiationService;
     private readonly chatService;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     constructor(confirmation: IChatConfirmation, context: IChatContentPartRenderContext, instantiationService: IInstantiationService, chatService: IChatService, chatWidgetService: IChatWidgetService);
     hasSameContent(other: IChatProgressRenderableResponseContent): boolean;
     addDisposable(disposable: IDisposable): void;

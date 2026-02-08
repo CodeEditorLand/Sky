@@ -1,7 +1,6 @@
 import * as DOM from '../../../../base/browser/dom.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { ITextResourceConfigurationService } from '../../../../editor/common/services/textResourceConfiguration.js';
-import { IMenuService } from '../../../../platform/actions/common/actions.js';
 import { InstantiationService } from '../../../../platform/instantiation/common/instantiationService.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
@@ -22,14 +21,12 @@ import { MultiDiffEditorItem } from './multiDiffSourceResolverService.js';
 import { IEditorProgressService } from '../../../../platform/progress/common/progress.js';
 export declare class MultiDiffEditor extends AbstractEditorWithViewState<IMultiDiffEditorViewState> {
     private editorProgressService;
-    private readonly menuService;
     static readonly ID = "multiDiffEditor";
     private _multiDiffEditorWidget;
     private _viewModel;
-    private _sessionResourceContextKey;
     private _contentOverlay;
     get viewModel(): MultiDiffEditorViewModel | undefined;
-    constructor(group: IEditorGroup, instantiationService: InstantiationService, telemetryService: ITelemetryService, themeService: IThemeService, storageService: IStorageService, editorService: IEditorService, editorGroupService: IEditorGroupsService, textResourceConfigurationService: ITextResourceConfigurationService, editorProgressService: IEditorProgressService, menuService: IMenuService);
+    constructor(group: IEditorGroup, instantiationService: InstantiationService, telemetryService: ITelemetryService, themeService: IThemeService, storageService: IStorageService, editorService: IEditorService, editorGroupService: IEditorGroupsService, textResourceConfigurationService: ITextResourceConfigurationService, editorProgressService: IEditorProgressService);
     protected createEditor(parent: HTMLElement): void;
     setInput(input: MultiDiffEditorInput, options: IMultiDiffEditorOptions | undefined, context: IEditorOpenContext, token: CancellationToken): Promise<void>;
     setOptions(options: IMultiDiffEditorOptions | undefined): void;

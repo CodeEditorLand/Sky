@@ -191,7 +191,7 @@ export const Bust = (Base: string): string =>
 
 	<!-- Bootstrap Configuration -->
 	<script is:inline type="module" slot="Head" define:vars={{ On }}>
-		// Set debug mode based on environment
+		// @ts-expect-error
 		globalThis.__BOOTSTRAP_DEBUG__ = On;
 	</script>
 
@@ -205,6 +205,8 @@ export const Bust = (Base: string): string =>
 					import "@codeeditorland/worker/Target/Worker/Register.js";
 				</script>
 
+				<>
+					
 				<script
 					is:inline
 					type="module"
@@ -212,6 +214,7 @@ export const Bust = (Base: string): string =>
 						`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
 					)}
 				/>
+				</>
 
 				{Wind ? (
 					<WindWorkbench Bust={Bust} />
@@ -243,13 +246,15 @@ export const Bust = (Base: string): string =>
 					defer
 				/>
 
-				<script
-					is:inline
-					type="module"
-					src={Bust(
-						`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
-					)}
-				/>
+				<>
+					<script
+						is:inline
+						type="module"
+						src={Bust(
+							`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
+						)}
+					/>
+				</>
 
 				{Wind ? (
 					<WindWorkbench Bust={Bust} />

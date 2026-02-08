@@ -20,8 +20,6 @@ class BaseChatToolInvocationSubPart extends Disposable {
     this.toolInvocation = toolInvocation;
     this._onNeedsRerender = this._register(new Emitter());
     this.onNeedsRerender = this._onNeedsRerender.event;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this._codeBlocksPartId = "tool-" + BaseChatToolInvocationSubPart.idPool++;
   }
   getIcon() {

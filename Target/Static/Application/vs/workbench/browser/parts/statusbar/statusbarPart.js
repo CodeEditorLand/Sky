@@ -430,6 +430,7 @@ let StatusbarPart = class StatusbarPart2 extends Part {
     const foregroundColor = this.getColor(styleOverride?.foreground ?? (this.contextService.getWorkbenchState() !== 1 ? STATUS_BAR_FOREGROUND : STATUS_BAR_NO_FOLDER_FOREGROUND)) || "";
     container.style.color = foregroundColor;
     const itemBorderColor = this.getColor(STATUS_BAR_ITEM_FOCUS_BORDER);
+    this.updateCompactEntries();
     const borderColor = this.getColor(styleOverride?.border ?? (this.contextService.getWorkbenchState() !== 1 ? STATUS_BAR_BORDER : STATUS_BAR_NO_FOLDER_BORDER)) || this.getColor(contrastBorder);
     if (borderColor) {
       container.classList.add("status-border-top");

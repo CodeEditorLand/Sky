@@ -53,7 +53,7 @@ let BrowserUpdateService = class BrowserUpdateService2 extends Disposable {
       this.state = State.CheckingForUpdates(explicit);
       const update = await updateProvider.checkForUpdate();
       if (update) {
-        this.state = State.Ready({ version: update.version, productVersion: update.version });
+        this.state = State.Ready({ version: update.version, productVersion: update.version }, explicit, false);
       } else {
         this.state = State.Idle(
           1
@@ -73,6 +73,8 @@ let BrowserUpdateService = class BrowserUpdateService2 extends Disposable {
     this.hostService.reload();
   }
   async _applySpecificUpdate(packagePath) {
+  }
+  async disableProgressiveReleases() {
   }
 };
 BrowserUpdateService = __decorate([

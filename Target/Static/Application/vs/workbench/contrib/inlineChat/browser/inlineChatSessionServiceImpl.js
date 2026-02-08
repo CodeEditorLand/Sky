@@ -13,7 +13,7 @@ var __param = function(paramIndex, decorator) {
 };
 var InlineChatEscapeToolContribution_1;
 import { Emitter } from "../../../../base/common/event.js";
-import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { Disposable, dispose, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
 import { ResourceMap } from "../../../../base/common/map.js";
 import { autorun, observableFromEvent } from "../../../../base/common/observable.js";
 import { isEqual } from "../../../../base/common/resources.js";
@@ -52,7 +52,7 @@ let InlineChatSessionServiceImpl = class InlineChatSessionServiceImpl2 {
   static {
     __name(this, "InlineChatSessionServiceImpl");
   }
-  constructor(_chatService) {
+  constructor(_chatService, chatAgentService) {
     this._chatService = _chatService;
     this._store = new DisposableStore();
     this._sessions = new ResourceMap();
@@ -60,6 +60,14 @@ let InlineChatSessionServiceImpl = class InlineChatSessionServiceImpl2 {
     this.onWillStartSession = this._onWillStartSession.event;
     this._onDidChangeSessions = this._store.add(new Emitter());
     this.onDidChangeSessions = this._onDidChangeSessions.event;
+    const agentObs = observableFromEvent(this, chatAgentService.onDidChangeAgents, () => chatAgentService.getDefaultAgent(ChatAgentLocation.EditorInline));
+    this._store.add(autorun((r) => {
+      const agent = agentObs.read(r);
+      if (!agent) {
+        dispose(this._sessions.values());
+        this._sessions.clear();
+      }
+    }));
   }
   dispose() {
     this._store.dispose();
@@ -150,7 +158,8 @@ let InlineChatSessionServiceImpl = class InlineChatSessionServiceImpl2 {
   }
 };
 InlineChatSessionServiceImpl = __decorate([
-  __param(0, IChatService)
+  __param(0, IChatService),
+  __param(1, IChatAgentService)
 ], InlineChatSessionServiceImpl);
 let InlineChatEnabler = class InlineChatEnabler2 {
   static {

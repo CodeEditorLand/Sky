@@ -59,6 +59,7 @@ class McpTaskManager extends Disposable {
       status: "working",
       createdAt,
       ttl,
+      lastUpdatedAt: (/* @__PURE__ */ new Date()).toISOString(),
       pollInterval: 1e3
       // Suggest 1 second polling interval
     };
@@ -123,6 +124,7 @@ class McpTaskManager extends Disposable {
       return;
     }
     entry.task.status = status;
+    entry.task.lastUpdatedAt = (/* @__PURE__ */ new Date()).toISOString();
     if (statusMessage !== void 0) {
       entry.task.statusMessage = statusMessage;
     }

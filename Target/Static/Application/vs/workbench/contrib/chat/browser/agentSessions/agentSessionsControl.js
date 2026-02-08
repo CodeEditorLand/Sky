@@ -25,6 +25,7 @@ import { ICommandService } from "../../../../../platform/commands/common/command
 import { ACTION_ID_NEW_CHAT } from "../actions/chatActions.js";
 import { Event } from "../../../../../base/common/event.js";
 import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { Throttler } from "../../../../../base/common/async.js";
 import { Separator } from "../../../../../base/common/actions.js";
 import { RenderIndentGuides, TreeFindMode } from "../../../../../base/browser/ui/tree/abstractTree.js";
 import { IAgentSessionsService } from "./agentSessionsService.js";
@@ -32,14 +33,12 @@ import { ITelemetryService } from "../../../../../platform/telemetry/common/tele
 import { openSession } from "./agentSessionsOpener.js";
 import { IEditorService } from "../../../../services/editor/common/editorService.js";
 import { ChatEditorInput } from "../widgetHosts/editor/chatEditorInput.js";
-var AgentSessionsControlSource;
-(function(AgentSessionsControlSource2) {
-  AgentSessionsControlSource2["ChatViewPane"] = "chatViewPane";
-  AgentSessionsControlSource2["WelcomeView"] = "welcomeView";
-})(AgentSessionsControlSource || (AgentSessionsControlSource = {}));
 let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
   static {
     __name(this, "AgentSessionsControl");
+  }
+  get element() {
+    return this.sessionsContainer;
   }
   constructor(container, options, contextMenuService, contextKeyService, instantiationService, chatSessionsService, commandService, menuService, agentSessionsService, telemetryService, editorService) {
     super();
@@ -54,10 +53,13 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
     this.agentSessionsService = agentSessionsService;
     this.telemetryService = telemetryService;
     this.editorService = editorService;
+    this.sessionsListFindIsOpen = false;
+    this.updateSessionsListThrottler = this._register(new Throttler());
     this.visible = true;
     this.focusedAgentSessionArchivedContextKey = ChatContextKeys.isArchivedAgentSession.bindTo(this.contextKeyService);
     this.focusedAgentSessionReadContextKey = ChatContextKeys.isReadAgentSession.bindTo(this.contextKeyService);
     this.focusedAgentSessionTypeContextKey = ChatContextKeys.agentSessionType.bindTo(this.contextKeyService);
+    this.hasMultipleAgentSessionsSelectedContextKey = ChatContextKeys.hasMultipleAgentSessionsSelected.bindTo(this.contextKeyService);
     this.createList(this.container);
     this.registerListeners();
   }
@@ -84,36 +86,46 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
   }
   createList(container) {
     this.sessionsContainer = append(container, $(".agent-sessions-viewer"));
+    const collapseByDefault = /* @__PURE__ */ __name((element) => {
+      if (isAgentSessionSection(element)) {
+        if (element.section === "more" && !this.options.filter.getExcludes().read) {
+          return true;
+        }
+        if (element.section === "archived" && this.options.filter.getExcludes().archived) {
+          return true;
+        }
+      }
+      return false;
+    }, "collapseByDefault");
     const sorter = new AgentSessionsSorter(this.options);
     const list = this.sessionsList = this._register(this.instantiationService.createInstance(WorkbenchCompressibleAsyncDataTree, "AgentSessionsView", this.sessionsContainer, new AgentSessionsListDelegate(), new AgentSessionsCompressionDelegate(), [
-      this.instantiationService.createInstance(AgentSessionRenderer, this.options),
+      this._register(this.instantiationService.createInstance(AgentSessionRenderer, this.options)),
       this.instantiationService.createInstance(AgentSessionSectionRenderer)
     ], new AgentSessionsDataSource(this.options.filter, sorter), {
       accessibilityProvider: new AgentSessionsAccessibilityProvider(),
       dnd: this.instantiationService.createInstance(AgentSessionsDragAndDrop),
       identityProvider: new AgentSessionsIdentityProvider(),
       horizontalScrolling: false,
-      multipleSelectionSupport: false,
+      multipleSelectionSupport: true,
       findWidgetEnabled: true,
       defaultFindMode: TreeFindMode.Filter,
       keyboardNavigationLabelProvider: new AgentSessionsKeyboardNavigationLabelProvider(),
       overrideStyles: this.options.overrideStyles,
-      expandOnlyOnTwistieClick: /* @__PURE__ */ __name((element) => !(isAgentSessionSection(element) && element.section === "archived" && this.options.filter.getExcludes().archived), "expandOnlyOnTwistieClick"),
       twistieAdditionalCssClass: /* @__PURE__ */ __name(() => "force-no-twistie", "twistieAdditionalCssClass"),
-      collapseByDefault: /* @__PURE__ */ __name((element) => isAgentSessionSection(element) && element.section === "archived" && this.options.filter.getExcludes().archived, "collapseByDefault"),
+      collapseByDefault: /* @__PURE__ */ __name((element) => collapseByDefault(element), "collapseByDefault"),
       renderIndentGuides: RenderIndentGuides.None
     }));
     ChatContextKeys.agentSessionsViewerFocused.bindTo(list.contextKeyService);
     const model = this.agentSessionsService.model;
     this._register(this.options.filter.onDidChange(async () => {
       if (this.visible) {
-        this.updateArchivedSectionCollapseState();
-        list.updateChildren();
+        this.updateSectionCollapseStates();
+        this.update();
       }
     }));
     this._register(model.onDidChangeSessions(() => {
       if (this.visible) {
-        list.updateChildren();
+        this.update();
       }
     }));
     list.setInput(model);
@@ -124,7 +136,7 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
         this.commandService.executeCommand(ACTION_ID_NEW_CHAT);
       }
     }));
-    this._register(Event.any(list.onDidChangeFocus, model.onDidChangeSessions)(() => {
+    this._register(Event.any(list.onDidChangeFocus, list.onDidChangeSelection, model.onDidChangeSessions)(() => {
       const focused = list.getFocus().at(0);
       if (focused && isAgentSession(focused)) {
         this.focusedAgentSessionArchivedContextKey.set(focused.isArchived());
@@ -135,6 +147,12 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
         this.focusedAgentSessionReadContextKey.reset();
         this.focusedAgentSessionTypeContextKey.reset();
       }
+      const selection = list.getSelection().filter(isAgentSession);
+      this.hasMultipleAgentSessionsSelectedContextKey.set(selection.length > 1);
+    }));
+    this._register(list.onDidChangeFindOpenState((open) => {
+      this.sessionsListFindIsOpen = open;
+      this.updateSectionCollapseStates();
     }));
   }
   async openAgentSession(e) {
@@ -146,11 +164,11 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
       providerType: element.providerType,
       source: this.options.source
     });
-    await this.instantiationService.invokeFunction(openSession, element, {
-      ...e,
-      expanded: this.options.source === "welcomeView"
-      /* AgentSessionsControlSource.WelcomeView */
-    });
+    const options = this.options.overrideSessionOpenOptions?.(e) ?? e;
+    const widget = await this.instantiationService.invokeFunction(openSession, element, options);
+    if (widget) {
+      this.options.notifySessionOpened?.(element.resource, widget);
+    }
   }
   async showContextMenu({ element, anchor, browserEvent }) {
     if (!element) {
@@ -181,44 +199,57 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
     contextOverlay.push([ChatContextKeys.isReadAgentSession.key, session.isRead()]);
     contextOverlay.push([ChatContextKeys.agentSessionType.key, session.providerType]);
     const menu = this.menuService.createMenu(MenuId.AgentSessionsContext, this.contextKeyService.createOverlay(contextOverlay));
-    const marshalledSession = {
+    const selection = this.sessionsList?.getSelection().filter(isAgentSession) ?? [];
+    const marshalledContext = {
       session,
+      sessions: selection.length > 1 && selection.includes(session) ? selection : [session],
       $mid: 25
       /* MarshalledId.AgentSessionContext */
     };
     this.contextMenuService.showContextMenu({
-      getActions: /* @__PURE__ */ __name(() => Separator.join(...menu.getActions({ arg: marshalledSession, shouldForwardArgs: true }).map(([, actions]) => actions)), "getActions"),
+      getActions: /* @__PURE__ */ __name(() => Separator.join(...menu.getActions({ arg: marshalledContext, shouldForwardArgs: true }).map(([, actions]) => actions)), "getActions"),
       getAnchor: /* @__PURE__ */ __name(() => anchor, "getAnchor"),
-      getActionsContext: /* @__PURE__ */ __name(() => marshalledSession, "getActionsContext")
+      getActionsContext: /* @__PURE__ */ __name(() => marshalledContext, "getActionsContext")
     });
     menu.dispose();
   }
   openFind() {
     this.sessionsList?.openFind();
   }
-  updateArchivedSectionCollapseState() {
+  updateSectionCollapseStates() {
     if (!this.sessionsList) {
       return;
     }
     const model = this.agentSessionsService.model;
     for (const child of this.sessionsList.getNode(model).children) {
-      if (!isAgentSessionSection(child.element) || child.element.section !== "archived") {
+      if (!isAgentSessionSection(child.element)) {
         continue;
       }
-      const shouldCollapseArchived = this.options.filter.getExcludes().archived;
-      if (shouldCollapseArchived && !child.collapsed) {
-        this.sessionsList.collapse(child.element);
-      } else if (!shouldCollapseArchived && child.collapsed) {
-        this.sessionsList.expand(child.element);
+      switch (child.element.section) {
+        case "archived": {
+          const shouldCollapseArchived = !this.sessionsListFindIsOpen && // always expand when find is open
+          this.options.filter.getExcludes().archived;
+          if (shouldCollapseArchived && !child.collapsed) {
+            this.sessionsList.collapse(child.element);
+          } else if (!shouldCollapseArchived && child.collapsed) {
+            this.sessionsList.expand(child.element);
+          }
+          break;
+        }
+        case "more": {
+          if (child.collapsed && this.sessionsListFindIsOpen) {
+            this.sessionsList.expand(child.element);
+          }
+          break;
+        }
       }
-      break;
     }
   }
   refresh() {
     return this.agentSessionsService.model.resolve(void 0);
   }
   async update() {
-    await this.sessionsList?.updateChildren();
+    return this.updateSessionsListThrottler.queue(async () => this.sessionsList?.updateChildren());
   }
   setVisible(visible) {
     if (this.visible === visible) {
@@ -226,7 +257,7 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
     }
     this.visible = visible;
     if (this.visible) {
-      this.sessionsList?.updateChildren();
+      this.update();
     }
   }
   layout(height, width) {
@@ -239,6 +270,9 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
     this.sessionsList?.setFocus([]);
     this.sessionsList?.setSelection([]);
   }
+  hasFocusOrSelection() {
+    return (this.sessionsList?.getFocus().length ?? 0) > 0 || (this.sessionsList?.getSelection().length ?? 0) > 0;
+  }
   scrollToTop() {
     if (this.sessionsList) {
       this.sessionsList.scrollTop = 0;
@@ -250,22 +284,18 @@ let AgentSessionsControl = class AgentSessionsControl2 extends Disposable {
   }
   reveal(sessionResource) {
     if (!this.sessionsList) {
-      return;
+      return false;
     }
     const session = this.agentSessionsService.model.getSession(sessionResource);
     if (!session || !this.sessionsList.hasNode(session)) {
-      return;
+      return false;
     }
     if (this.sessionsList.getRelativeTop(session) === null) {
       this.sessionsList.reveal(session, 0.5);
     }
     this.sessionsList.setFocus([session]);
     this.sessionsList.setSelection([session]);
-  }
-  setGridMarginOffset(offset) {
-    if (this.sessionsContainer) {
-      this.sessionsContainer.style.marginBottom = `-${offset}px`;
-    }
+    return true;
   }
 };
 AgentSessionsControl = __decorate([
@@ -280,7 +310,6 @@ AgentSessionsControl = __decorate([
   __param(10, IEditorService)
 ], AgentSessionsControl);
 export {
-  AgentSessionsControl,
-  AgentSessionsControlSource
+  AgentSessionsControl
 };
 //# sourceMappingURL=agentSessionsControl.js.map

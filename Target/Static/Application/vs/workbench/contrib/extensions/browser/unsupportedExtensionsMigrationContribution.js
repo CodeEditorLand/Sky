@@ -22,10 +22,10 @@ let UnsupportedExtensionsMigrationContrib = class UnsupportedExtensionsMigration
   }
   constructor(extensionManagementServerService, extensionGalleryService, extensionStorageService, extensionEnablementService, logService) {
     if (extensionManagementServerService.remoteExtensionManagementServer) {
-      migrateUnsupportedExtensions(extensionManagementServerService.remoteExtensionManagementServer.extensionManagementService, extensionGalleryService, extensionStorageService, extensionEnablementService, logService);
+      migrateUnsupportedExtensions(void 0, extensionManagementServerService.remoteExtensionManagementServer.extensionManagementService, extensionGalleryService, extensionStorageService, extensionEnablementService, logService);
     }
     if (extensionManagementServerService.webExtensionManagementServer) {
-      migrateUnsupportedExtensions(extensionManagementServerService.webExtensionManagementServer.extensionManagementService, extensionGalleryService, extensionStorageService, extensionEnablementService, logService);
+      migrateUnsupportedExtensions(void 0, extensionManagementServerService.webExtensionManagementServer.extensionManagementService, extensionGalleryService, extensionStorageService, extensionEnablementService, logService);
     }
   }
 };

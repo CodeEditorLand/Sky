@@ -71,6 +71,7 @@ let MainThreadWorkspace = class MainThreadWorkspace2 {
     this._contextService.onDidChangeWorkspaceFolders(this._onDidChangeWorkspace, this, this._toDispose);
     this._contextService.onDidChangeWorkbenchState(this._onDidChangeWorkspace, this, this._toDispose);
     this._workspaceTrustManagementService.onDidChangeTrust(this._onDidGrantWorkspaceTrust, this, this._toDispose);
+    this._workspaceTrustManagementService.onDidChangeTrustedFolders(this._onDidChangeWorkspaceTrustedFolders, this, this._toDispose);
   }
   dispose() {
     this._toDispose.dispose();
@@ -122,7 +123,8 @@ let MainThreadWorkspace = class MainThreadWorkspace2 {
       folders: workspace.folders,
       id: workspace.id,
       name: this._labelService.getWorkspaceLabel(workspace),
-      transient: workspace.transient
+      transient: workspace.transient,
+      isAgentSessionsWorkspace: workspace.isAgentSessionsWorkspace
     };
   }
   // --- search ---
@@ -196,14 +198,26 @@ let MainThreadWorkspace = class MainThreadWorkspace2 {
     return this._requestService.loadCertificates();
   }
   // --- trust ---
+  $requestResourceTrust(optionsDto) {
+    const options = { ...optionsDto, uri: URI.revive(optionsDto.uri) };
+    return this._workspaceTrustRequestService.requestResourcesTrust(options);
+  }
   $requestWorkspaceTrust(options) {
     return this._workspaceTrustRequestService.requestWorkspaceTrust(options);
+  }
+  async $isResourceTrusted(resource) {
+    const uri = URI.revive(resource);
+    const trustInfo = await this._workspaceTrustManagementService.getUriTrustInfo(uri);
+    return trustInfo.trusted;
   }
   isWorkspaceTrusted() {
     return this._workspaceTrustManagementService.isWorkspaceTrusted();
   }
   _onDidGrantWorkspaceTrust() {
     this._proxy.$onDidGrantWorkspaceTrust();
+  }
+  _onDidChangeWorkspaceTrustedFolders() {
+    this._proxy.$onDidChangeWorkspaceTrustedFolders();
   }
   $registerEditSessionIdentityProvider(handle, scheme) {
     const disposable = this._editSessionIdentityService.registerEditSessionIdentityProvider({

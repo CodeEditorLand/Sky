@@ -266,6 +266,38 @@ export declare class DisposableMap<K, V extends IDisposable = IDisposable> imple
     [Symbol.iterator](): IterableIterator<[K, V]>;
 }
 /**
+ * A set that manages the lifecycle of the values that it stores.
+ */
+export declare class DisposableSet<V extends IDisposable = IDisposable> implements IDisposable {
+    private readonly _store;
+    private _isDisposed;
+    constructor(store?: Set<V>);
+    /**
+     * Disposes of all stored values and mark this object as disposed.
+     *
+     * Trying to use this object after it has been disposed of is an error.
+     */
+    dispose(): void;
+    /**
+     * Disposes of all stored values and clear the set, but DO NOT mark this object as disposed.
+     */
+    clearAndDisposeAll(): void;
+    has(value: V): boolean;
+    get size(): number;
+    add(value: V): void;
+    /**
+     * Delete the value from this set and also dispose of it.
+     */
+    deleteAndDispose(value: V): void;
+    /**
+     * Delete the value from this set but return it. The caller is
+     * responsible for disposing of the value.
+     */
+    deleteAndLeak(value: V): V | undefined;
+    values(): IterableIterator<V>;
+    [Symbol.iterator](): IterableIterator<V>;
+}
+/**
  * Call `then` on a Promise, unless the returned disposable is disposed.
  */
 export declare function thenIfNotDisposed<T>(promise: Promise<T>, then: (result: T) => void): IDisposable;

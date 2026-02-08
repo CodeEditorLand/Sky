@@ -13,13 +13,14 @@ var __param = function(paramIndex, decorator) {
 };
 import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
 import { Emitter, Event } from "../../../../../base/common/event.js";
-import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { Disposable, DisposableMap, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
 import { Schemas } from "../../../../../base/common/network.js";
 import { autorun } from "../../../../../base/common/observable.js";
 import { basename, isEqual } from "../../../../../base/common/resources.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { getCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
 import { ICodeEditorService } from "../../../../../editor/browser/services/codeEditorService.js";
+import { isLocation } from "../../../../../editor/common/languages.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { IEditorService } from "../../../../services/editor/common/editorService.js";
 import { getNotebookEditorFromEditorPane } from "../../../notebook/browser/notebookBrowser.js";
@@ -94,7 +95,7 @@ let ChatImplicitContextContribution = class ChatImplicitContextContribution2 ext
         return;
       }
       if (this._implicitContextEnablement[widget.location] === "first" && widget.viewModel?.getItems().length !== 0) {
-        widget.input.implicitContext.setValue(void 0, false, void 0);
+        widget.input.implicitContext.setValues([]);
       }
     }));
     this._register(this.chatWidgetService.onDidAddWidget(async (widget) => {
@@ -145,6 +146,7 @@ let ChatImplicitContextContribution = class ChatImplicitContextContribution2 ext
     let newValue;
     let isSelection = false;
     let languageId;
+    let providerContext;
     if (model) {
       languageId = model.getLanguageId();
       if (selection && !selection.isEmpty()) {
@@ -166,6 +168,7 @@ let ChatImplicitContextContribution = class ChatImplicitContextContribution2 ext
           }
         }
       }
+      providerContext = await this.chatContextService.contextForResource(model.uri, languageId);
     }
     const notebookEditor = this.findActiveNotebookEditor();
     if (notebookEditor?.isReplHistory) {
@@ -219,9 +222,9 @@ let ChatImplicitContextContribution = class ChatImplicitContextContribution2 ext
       const setting = this._implicitContextEnablement[widget.location];
       const isFirstInteraction = widget.viewModel?.getItems().length === 0;
       if ((setting === "always" || setting === "first" && isFirstInteraction) && !isPromptFile) {
-        widget.input.implicitContext.setValue(newValue, isSelection, languageId);
+        widget.input.implicitContext.setValues([{ value: newValue, isSelection }, { value: providerContext, isSelection: false }]);
       } else {
-        widget.input.implicitContext.setValue(void 0, false, void 0);
+        widget.input.implicitContext.setValues([]);
       }
     }
   }
@@ -243,6 +246,72 @@ function isEntireCellVisible(cellModel, visibleRanges) {
   return false;
 }
 __name(isEntireCellVisible, "isEntireCellVisible");
+class ChatImplicitContexts extends Disposable {
+  static {
+    __name(this, "ChatImplicitContexts");
+  }
+  constructor() {
+    super(...arguments);
+    this._onDidChangeValue = this._register(new Emitter());
+    this.onDidChangeValue = this._onDidChangeValue.event;
+    this._values = this._register(new DisposableMap());
+    this._valuesDisposables = this._register(new DisposableStore());
+  }
+  setValues(values) {
+    this._valuesDisposables.clear();
+    this._values.clearAndDisposeAll();
+    if (!values || values.length === 0) {
+      this._onDidChangeValue.fire();
+      return;
+    }
+    const definedValues = values.filter((value) => value.value !== void 0);
+    for (const value of definedValues) {
+      const implicitContext = new ChatImplicitContext();
+      implicitContext.setValue(value.value, value.isSelection);
+      const disposableStore = new DisposableStore();
+      disposableStore.add(implicitContext.onDidChangeValue(() => {
+        this._onDidChangeValue.fire();
+      }));
+      disposableStore.add(implicitContext);
+      this._values.set(implicitContext, disposableStore);
+    }
+    this._onDidChangeValue.fire();
+  }
+  get values() {
+    return Array.from(this._values.keys());
+  }
+  get hasEnabled() {
+    return Array.from(this._values.keys()).some((v) => v.enabled);
+  }
+  setEnabled(enabled) {
+    this.values.forEach((v) => v.enabled = enabled);
+  }
+  get hasValue() {
+    return this.values.some((v) => v.value !== void 0);
+  }
+  get hasNonUri() {
+    return this.values.some((v) => v.value !== void 0 && !URI.isUri(v.value));
+  }
+  getLocations() {
+    return this.values.filter((v) => isLocation(v.value)).map((v) => v.value);
+  }
+  getUris() {
+    return this.values.filter((v) => URI.isUri(v.value)).map((v) => v.value);
+  }
+  get hasNonStringContext() {
+    return this.values.some((v) => v.value !== void 0 && !isStringImplicitContextValue(v.value));
+  }
+  enabledBaseEntries(includeAllLocations) {
+    return this.values.flatMap((v) => {
+      if (v.enabled) {
+        return v.toBaseEntries();
+      } else if (includeAllLocations && isLocation(v.value)) {
+        return v.toBaseEntries();
+      }
+      return [];
+    });
+  }
+}
 class ChatImplicitContext extends Disposable {
   static {
     __name(this, "ChatImplicitContext");
@@ -254,7 +323,7 @@ class ChatImplicitContext extends Disposable {
     this._isSelection = false;
     this._onDidChangeValue = this._register(new Emitter());
     this.onDidChangeValue = this._onDidChangeValue.event;
-    this._enabled = true;
+    this._enabled = false;
   }
   get id() {
     if (URI.isUri(this.value)) {
@@ -274,19 +343,27 @@ class ChatImplicitContext extends Disposable {
   get name() {
     if (URI.isUri(this.value)) {
       return `file:${basename(this.value)}`;
-    } else if (isStringImplicitContextValue(this.value)) {
-      return this.value.name;
-    } else if (this.value) {
-      return `file:${basename(this.value.uri)}`;
-    } else {
-      return "implicit";
     }
+    if (isLocation(this.value)) {
+      return `file:${basename(this.value.uri)}`;
+    }
+    if (isStringImplicitContextValue(this.value)) {
+      if (this.value.name === void 0 && this.value.resourceUri === void 0) {
+        throw new Error("ChatContextItem must have either a label or a resourceUri");
+      }
+      return this.value.name ?? basename(this.value.resourceUri);
+    }
+    return "implicit";
   }
   get modelDescription() {
     if (URI.isUri(this.value)) {
       return `User's active file`;
     } else if (isStringImplicitContextValue(this.value)) {
-      return this.value.modelDescription ?? `User's active context from ${this.value.name}`;
+      if (this.value.name === void 0 && this.value.resourceUri === void 0) {
+        throw new Error("ChatContextItem must have either a label or a resourceUri");
+      }
+      const contextName = this.value.name ?? basename(this.value.resourceUri);
+      return this.value.modelDescription ?? `User's active context from ${contextName}`;
     } else if (this._isSelection) {
       return `User's active selection`;
     } else {
@@ -318,7 +395,7 @@ class ChatImplicitContext extends Disposable {
     }
     return void 0;
   }
-  setValue(value, isSelection, languageId) {
+  setValue(value, isSelection) {
     if (isStringImplicitContextValue(value)) {
       this._value = value;
     } else {
@@ -342,6 +419,7 @@ class ChatImplicitContext extends Disposable {
           modelDescription: this.modelDescription,
           icon: this.value.icon,
           uri: this.value.uri,
+          resourceUri: this.value.resourceUri,
           handle: this.value.handle,
           commandId: this.value.commandId
         }
@@ -358,6 +436,7 @@ class ChatImplicitContext extends Disposable {
 }
 export {
   ChatImplicitContext,
-  ChatImplicitContextContribution
+  ChatImplicitContextContribution,
+  ChatImplicitContexts
 };
 //# sourceMappingURL=chatImplicitContext.js.map

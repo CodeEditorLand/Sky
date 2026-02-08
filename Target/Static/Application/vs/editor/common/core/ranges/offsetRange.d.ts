@@ -38,6 +38,10 @@ export declare class OffsetRange implements IOffsetRange {
      */
     intersect(other: OffsetRange): OffsetRange | undefined;
     intersectionLength(range: OffsetRange): number;
+    /**
+     * `a.intersects(b)` iff there exists a number n so that `a.contains(n)` and `b.contains(n)`.
+     * Warning: If one range is empty, this method returns always false.
+    */
     intersects(other: OffsetRange): boolean;
     intersectsOrTouches(other: OffsetRange): boolean;
     isBefore(other: OffsetRange): boolean;

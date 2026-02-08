@@ -337,18 +337,6 @@ let AbstractExtensionManagementService = class AbstractExtensionManagementServic
             durationSinceUpdate,
             source: task.options.context?.[EXTENSION_INSTALL_SOURCE_CONTEXT]
           });
-          if (isWeb && task.operation !== 3) {
-            try {
-              await this.galleryService.reportStatistic(
-                local.manifest.publisher,
-                local.manifest.name,
-                local.manifest.version,
-                "install"
-                /* StatisticType.Install */
-              );
-            } catch (error) {
-            }
-          }
         }
         installExtensionResultsMap.set(key, { local, identifier: task.identifier, operation: task.operation, source: task.source, context: task.options.context, profileLocation: task.options.profileLocation, applicationScoped: local.isApplicationScoped });
       }));
@@ -743,7 +731,7 @@ let AbstractExtensionManagementService = class AbstractExtensionManagementServic
           }
           await task.run();
           await this.joinAllSettled(this.participants.map((participant) => participant.postUninstall(task.extension, task.options, CancellationToken.None)));
-          if (task.extension.identifier.uuid) {
+          if (task.extension.identifier.uuid && !isWeb) {
             try {
               await this.galleryService.reportStatistic(
                 task.extension.manifest.publisher,
@@ -823,6 +811,9 @@ let AbstractExtensionManagementService = class AbstractExtensionManagementServic
   }
   getAllPackExtensionsToUninstall(extension, installed, checked = []) {
     if (checked.indexOf(extension) !== -1) {
+      return [];
+    }
+    if (areSameExtensions(extension.identifier, { id: this.productService.defaultChatAgent.extensionId })) {
       return [];
     }
     checked.push(extension);

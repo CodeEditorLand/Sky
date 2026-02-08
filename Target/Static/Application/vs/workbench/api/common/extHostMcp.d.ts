@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
+import { Event } from '../../../base/common/event.js';
 import { Disposable, DisposableMap, IDisposable } from '../../../base/common/lifecycle.js';
 import { IAuthorizationProtectedResourceMetadata, IAuthorizationServerMetadata } from '../../../base/common/oauth.js';
 import { URI, UriComponents } from '../../../base/common/uri.js';
 import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
 import { ILogService, LogLevel } from '../../../platform/log/common/log.js';
-import { McpServerLaunch, McpServerTransportHTTP } from '../../contrib/mcp/common/mcpTypes.js';
+import { McpServerDefinition, McpServerLaunch, McpServerTransportHTTP } from '../../contrib/mcp/common/mcpTypes.js';
 import { ExtHostMcpShape, IAuthMetadataSource, IStartMcpOptions, MainThreadMcpShape } from './extHost.protocol.js';
 import { IExtHostInitDataService } from './extHostInitDataService.js';
 import { IExtHostRpcService } from './extHostRpcService.js';
@@ -13,6 +14,10 @@ import { IExtHostWorkspace } from './extHostWorkspace.js';
 export declare const IExtHostMpcService: import("../../../platform/instantiation/common/instantiation.js").ServiceIdentifier<IExtHostMpcService>;
 export interface IExtHostMpcService extends ExtHostMcpShape {
     registerMcpConfigurationProvider(extension: IExtensionDescription, id: string, provider: vscode.McpServerDefinitionProvider): IDisposable;
+    /** Event that fires when the set of MCP server definitions changes. */
+    readonly onDidChangeMcpServerDefinitions: Event<void>;
+    /** Returns all MCP server definitions known to the editor. */
+    readonly mcpServerDefinitions: readonly vscode.McpServerDefinition[];
 }
 export declare class ExtHostMcpService extends Disposable implements IExtHostMpcService {
     protected readonly _logService: ILogService;
@@ -23,7 +28,14 @@ export declare class ExtHostMcpService extends Disposable implements IExtHostMpc
     private readonly _initialProviderPromises;
     protected readonly _sseEventSources: DisposableMap<number, McpHTTPHandle>;
     private readonly _unresolvedMcpServers;
+    private readonly _onDidChangeMcpServerDefinitions;
+    readonly onDidChangeMcpServerDefinitions: Event<void>;
+    private _mcpServerDefinitions;
     constructor(extHostRpc: IExtHostRpcService, _logService: ILogService, _extHostInitData: IExtHostInitDataService, _workspaceService: IExtHostWorkspace, _variableResolver: IExtHostVariableResolverProvider);
+    /** Returns all MCP server definitions known to the editor. */
+    get mcpServerDefinitions(): readonly vscode.McpServerDefinition[];
+    /** Called by main thread to notify that MCP server definitions have changed. */
+    $onDidChangeMcpServerDefinitions(servers: McpServerDefinition.Serialized[]): void;
     $startMcp(id: number, opts: IStartMcpOptions): void;
     protected _startMcp(id: number, launch: McpServerLaunch, _defaultCwd?: URI, errorOnUserInteraction?: boolean): void;
     $substituteVariables<T>(_workspaceFolder: UriComponents | undefined, value: T): Promise<T>;

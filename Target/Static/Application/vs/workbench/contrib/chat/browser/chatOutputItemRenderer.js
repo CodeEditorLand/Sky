@@ -20,6 +20,7 @@ import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.j
 import { autorun } from "../../../../base/common/observable.js";
 import { generateUuid } from "../../../../base/common/uuid.js";
 import * as nls from "../../../../nls.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 import { IWebviewService } from "../../../contrib/webview/browser/webview.js";
 import { IExtensionService, isProposedApiEnabled } from "../../../services/extensions/common/extensions.js";
@@ -29,10 +30,11 @@ let ChatOutputRendererService = class ChatOutputRendererService2 extends Disposa
   static {
     __name(this, "ChatOutputRendererService");
   }
-  constructor(_webviewService, _extensionService) {
+  constructor(_contextKeyService, _extensionService, _webviewService) {
     super();
-    this._webviewService = _webviewService;
+    this._contextKeyService = _contextKeyService;
     this._extensionService = _extensionService;
+    this._webviewService = _webviewService;
     this._contributions = /* @__PURE__ */ new Map();
     this._renderers = /* @__PURE__ */ new Map();
     this._register(chatOutputRenderContributionPoint.setHandler((extensions) => {
@@ -40,7 +42,7 @@ let ChatOutputRendererService = class ChatOutputRendererService2 extends Disposa
     }));
   }
   registerRenderer(viewType, renderer, options) {
-    this._renderers.set(viewType, { renderer, options });
+    this._renderers.set(viewType, { viewType, renderer, options });
     return {
       dispose: /* @__PURE__ */ __name(() => {
         this._renderers.delete(viewType);
@@ -59,6 +61,7 @@ let ChatOutputRendererService = class ChatOutputRendererService2 extends Disposa
     const webview = store.add(this._webviewService.createWebviewElement({
       title: "",
       origin: webviewOptions.origin ?? generateUuid(),
+      providedViewType: rendererData.viewType,
       options: {
         enableFindWidget: false,
         purpose: "chatOutputItem",
@@ -67,6 +70,7 @@ let ChatOutputRendererService = class ChatOutputRendererService2 extends Disposa
       contentOptions: {},
       extension: rendererData.options.extension ? rendererData.options.extension : void 0
     }));
+    webview.setContextKeyService(store.add(this._contextKeyService.createScoped(parent)));
     const onDidChangeHeight = store.add(new Emitter());
     store.add(autorun((reader) => {
       const height = reader.readObservable(webview.intrinsicContentSize);
@@ -75,6 +79,9 @@ let ChatOutputRendererService = class ChatOutputRendererService2 extends Disposa
         parent.style.height = `${height.height}px`;
       }
     }));
+    if (webviewOptions.webviewState) {
+      webview.state = webviewOptions.webviewState;
+    }
     webview.mountTo(parent, getWindow(parent));
     await rendererData.renderer.renderOutputPart(mime, data, webview, token);
     return {
@@ -122,8 +129,9 @@ let ChatOutputRendererService = class ChatOutputRendererService2 extends Disposa
   }
 };
 ChatOutputRendererService = __decorate([
-  __param(0, IWebviewService),
-  __param(1, IExtensionService)
+  __param(0, IContextKeyService),
+  __param(1, IExtensionService),
+  __param(2, IWebviewService)
 ], ChatOutputRendererService);
 const chatOutputRendererContributionSchema = {
   type: "object",

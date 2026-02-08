@@ -13,7 +13,6 @@ var __param = function(paramIndex, decorator) {
 };
 import * as dom from "../../../../../../base/browser/dom.js";
 import { Button } from "../../../../../../base/browser/ui/button/button.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
 import { defaultButtonStyles } from "../../../../../../platform/theme/browser/defaultStyles.js";
@@ -29,8 +28,6 @@ let ChatErrorConfirmationContentPart = class ChatErrorConfirmationContentPart2 e
   constructor(kind, content, errorDetails, confirmationButtons, renderer, context, instantiationService, chatWidgetService, chatService) {
     super();
     this.errorDetails = errorDetails;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     const element = context.element;
     assertIsResponseVM(element);
     this.domNode = $(".chat-error-confirmation");
@@ -49,9 +46,7 @@ let ChatErrorConfirmationContentPart = class ChatErrorConfirmationContentPart2 e
         const widget = chatWidgetService.getWidgetBySessionResource(element.sessionResource);
         options.userSelectedModelId = widget?.input.currentLanguageModel;
         Object.assign(options, widget?.getModeRequestOptions());
-        if (await chatService.sendRequest(element.sessionResource, prompt, options)) {
-          this._onDidChangeHeight.fire();
-        }
+        await chatService.sendRequest(element.sessionResource, prompt, options);
       }));
     });
   }

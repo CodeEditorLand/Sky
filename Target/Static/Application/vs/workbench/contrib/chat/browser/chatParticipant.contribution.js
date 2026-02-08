@@ -24,6 +24,7 @@ import { ExtensionIdentifier } from "../../../../platform/extensions/common/exte
 import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
 import { IProductService } from "../../../../platform/product/common/productService.js";
 import { Registry } from "../../../../platform/registry/common/platform.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
 import { ViewPaneContainer } from "../../../browser/parts/views/viewPaneContainer.js";
 import { Extensions as ViewExtensions } from "../../../common/views.js";
 import { Extensions } from "../../../services/extensionManagement/common/extensionFeatures.js";
@@ -36,10 +37,11 @@ import { ChatContextKeys } from "../common/actions/chatContextKeys.js";
 import { ChatAgentLocation, ChatModeKind } from "../common/constants.js";
 import { ChatViewId, ChatViewContainerId } from "./chat.js";
 import { ChatViewPane } from "./widgetHosts/viewPane/chatViewPane.js";
+const chatViewIcon = registerIcon("chat-view-icon", Codicon.chatSparkle, localize("chatViewIcon", "View icon of the chat view."));
 const chatViewContainer = Registry.as(ViewExtensions.ViewContainersRegistry).registerViewContainer({
   id: ChatViewContainerId,
   title: localize2("chat.viewContainer.label", "Chat"),
-  icon: Codicon.chatSparkle,
+  icon: chatViewIcon,
   ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [ChatViewContainerId, { mergeViewWithContainerWhenSingleView: true }]),
   storageId: ChatViewContainerId,
   hideIfEmpty: true,

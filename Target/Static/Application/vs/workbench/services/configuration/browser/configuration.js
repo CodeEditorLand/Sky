@@ -22,12 +22,12 @@ class DefaultConfiguration extends BaseDefaultConfiguration {
   static {
     this.DEFAULT_OVERRIDES_CACHE_EXISTS_KEY = "DefaultOverridesCacheExists";
   }
-  constructor(configurationCache, environmentService, logService) {
+  constructor(cacheScope, configurationCache, environmentService, logService) {
     super(logService);
     this.configurationCache = configurationCache;
     this.configurationRegistry = Registry.as(Extensions.Configuration);
     this.cachedConfigurationDefaultsOverrides = {};
-    this.cacheKey = { type: "defaults", key: "configurationDefaultsOverrides" };
+    this.cacheKey = { type: "defaults", key: `${cacheScope}-configurationDefaultsOverrides` };
     if (environmentService.options?.configurationDefaults) {
       this.configurationRegistry.registerDefaultConfigurations([{ overrides: environmentService.options.configurationDefaults }]);
     }
@@ -72,10 +72,20 @@ class DefaultConfiguration extends BaseDefaultConfiguration {
   }
   async updateCachedConfigurationDefaultsOverrides() {
     const cachedConfigurationDefaultsOverrides = {};
-    const configurationDefaultsOverrides = this.configurationRegistry.getConfigurationDefaultsOverrides();
-    for (const [key, value] of configurationDefaultsOverrides) {
-      if (!OVERRIDE_PROPERTY_REGEX.test(key) && value.value !== void 0) {
-        cachedConfigurationDefaultsOverrides[key] = value.value;
+    const defaultConfigurations = this.configurationRegistry.getRegisteredDefaultConfigurations();
+    for (const defaultConfiguration of defaultConfigurations) {
+      if (defaultConfiguration.donotCache) {
+        continue;
+      }
+      for (const [key, value] of Object.entries(defaultConfiguration.overrides)) {
+        if (!OVERRIDE_PROPERTY_REGEX.test(key) && value !== void 0) {
+          const existingValue = cachedConfigurationDefaultsOverrides[key];
+          if (isObject(existingValue) && isObject(value)) {
+            cachedConfigurationDefaultsOverrides[key] = { ...existingValue, ...value };
+          } else {
+            cachedConfigurationDefaultsOverrides[key] = value;
+          }
+        }
       }
     }
     try {
@@ -896,6 +906,9 @@ class FolderConfiguration extends Disposable {
       const [settingsContent, standAloneConfigurationContents] = await this.folderConfiguration.resolveContents();
       this.cachedFolderConfiguration.updateConfiguration(settingsContent, standAloneConfigurationContents);
     }
+  }
+  addRelated(disposable) {
+    this._register(disposable);
   }
 }
 export {

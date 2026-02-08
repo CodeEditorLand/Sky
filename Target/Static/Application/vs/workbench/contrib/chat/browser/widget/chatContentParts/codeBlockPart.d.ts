@@ -1,6 +1,5 @@
 import './media/codeBlockPart.css';
 import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
 import { Disposable } from '../../../../../../base/common/lifecycle.js';
 import { URI } from '../../../../../../base/common/uri.js';
 import { IDiffEditor } from '../../../../../../editor/browser/editorBrowser.js';
@@ -22,14 +21,14 @@ import { ILabelService } from '../../../../../../platform/label/common/label.js'
 import { IOpenerService } from '../../../../../../platform/opener/common/opener.js';
 import { IMarkdownVulnerability } from '../../../common/widget/annotations.js';
 import { IChatResponseModel, IChatTextEditGroup } from '../../../common/model/chatModel.js';
-import { IChatResponseViewModel } from '../../../common/model/chatViewModel.js';
+import { IChatRequestViewModel, IChatResponseViewModel } from '../../../common/model/chatViewModel.js';
 import { ChatTreeItem } from '../../chat.js';
 import { IChatRendererDelegate } from '../chatListRenderer.js';
 import { ChatEditorOptions } from '../chatOptions.js';
 export interface ICodeBlockData {
     readonly codeBlockIndex: number;
     readonly codeBlockPartIndex: number;
-    readonly element: unknown;
+    readonly element: IChatRequestViewModel | IChatResponseViewModel;
     readonly textModel: Promise<ITextModel> | undefined;
     readonly languageId: string;
     readonly codemapperUri?: URI;
@@ -71,8 +70,6 @@ export declare class CodeBlockPart extends Disposable {
     protected readonly modelService: IModelService;
     private readonly configurationService;
     private readonly accessibilityService;
-    protected readonly _onDidChangeContentHeight: Emitter<void>;
-    readonly onDidChangeContentHeight: Event<void>;
     readonly editor: CodeEditorWidget;
     protected readonly toolbar: MenuWorkbenchToolBar;
     private readonly contextKeyService;
@@ -81,6 +78,7 @@ export declare class CodeBlockPart extends Disposable {
     private readonly vulnsListElement;
     private currentCodeBlockData;
     private currentScrollWidth;
+    private lastLayoutWidth;
     private isDisposed;
     private resourceContextKey;
     private get verticalPadding();
@@ -92,10 +90,11 @@ export declare class CodeBlockPart extends Disposable {
     private updatePaddingForLayout;
     private _configureForScreenReader;
     private getEditorOptionsFromConfig;
-    layout(width: number): void;
+    layout(width?: number | undefined): void;
     private getContentHeight;
     render(data: ICodeBlockData, width: number): Promise<void>;
     reset(): void;
+    onDidRemount(): void;
     private clearWidgets;
     private updateEditor;
     private getVulnerabilitiesLabel;
@@ -110,6 +109,7 @@ export interface ICodeCompareBlockActionContext {
     readonly element: IChatResponseViewModel;
     readonly diffEditor: IDiffEditor;
     readonly edit: IChatTextEditGroup;
+    toggleDiffViewMode(): void;
 }
 export interface ICodeCompareBlockDiffData {
     modified: ITextModel;
@@ -133,8 +133,6 @@ export declare class CodeCompareBlockPart extends Disposable {
     private readonly accessibilityService;
     private readonly labelService;
     private readonly openerService;
-    protected readonly _onDidChangeContentHeight: Emitter<void>;
-    readonly onDidChangeContentHeight: Event<void>;
     private readonly contextKeyService;
     private readonly diffEditor;
     private readonly resourceLabel;
@@ -145,6 +143,7 @@ export declare class CodeCompareBlockPart extends Disposable {
     private readonly _lastDiffEditorViewModel;
     private currentScrollWidth;
     private currentHorizontalPadding;
+    private lastLayoutWidth;
     constructor(options: ChatEditorOptions, menuId: MenuId, delegate: IChatRendererDelegate, overflowWidgetsDomNode: HTMLElement | undefined, isSimpleWidget: boolean | undefined, instantiationService: IInstantiationService, contextKeyService: IContextKeyService, modelService: IModelService, configurationService: IConfigurationService, accessibilityService: IAccessibilityService, labelService: ILabelService, openerService: IOpenerService);
     get uri(): URI | undefined;
     private createDiffEditor;
@@ -152,7 +151,7 @@ export declare class CodeCompareBlockPart extends Disposable {
     private updatePaddingForLayout;
     private _configureForScreenReader;
     private getEditorOptionsFromConfig;
-    layout(width: number): void;
+    layout(width?: number | undefined): void;
     render(data: ICodeCompareBlockData, width: number, token: CancellationToken): Promise<void>;
     reset(): void;
     private clearWidgets;

@@ -12,7 +12,6 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import * as dom from "../../../../../../base/browser/dom.js";
-import { Event } from "../../../../../../base/common/event.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
 import { ChatProgressContentPart } from "./chatProgressContentPart.js";
@@ -29,14 +28,12 @@ let ChatTaskContentPart = class ChatTaskContentPart2 extends Disposable {
       const refsPart = this._register(instantiationService.createInstance(ChatCollapsibleListContentPart, task.progress, task.content.value, context, contentReferencesListPool, void 0));
       this.domNode = dom.$(".chat-progress-task");
       this.domNode.appendChild(refsPart.domNode);
-      this.onDidChangeHeight = refsPart.onDidChangeHeight;
     } else {
       const isSettled = task.kind === "progressTask" ? task.isSettled() : true;
       this.isSettled = isSettled;
       const showSpinner = !isSettled && !context.element.isComplete;
       const progressPart = this._register(instantiationService.createInstance(ChatProgressContentPart, task, chatContentMarkdownRenderer, context, showSpinner, true, void 0, void 0));
       this.domNode = progressPart.domNode;
-      this.onDidChangeHeight = Event.None;
     }
   }
   hasSameContent(other) {

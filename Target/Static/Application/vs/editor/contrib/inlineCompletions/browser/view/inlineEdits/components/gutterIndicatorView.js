@@ -36,11 +36,12 @@ class InlineEditsGutterIndicatorData {
   static {
     __name(this, "InlineEditsGutterIndicatorData");
   }
-  constructor(gutterMenuData, originalRange, model, altAction) {
+  constructor(gutterMenuData, originalRange, model, altAction, customization) {
     this.gutterMenuData = gutterMenuData;
     this.originalRange = originalRange;
     this.model = model;
     this.altAction = altAction;
+    this.customization = customization;
   }
 }
 class InlineSuggestionGutterMenuData {
@@ -232,8 +233,9 @@ let InlineEditsGutterIndicator = class InlineEditsGutterIndicator2 extends Dispo
       const pillOffset = this._verticalOffset.read(reader);
       const pillFullyDockedRect = gutterEditArea.withHeight(pillHeight).translateY(pillOffset);
       const pillIsFullyDocked = gutterViewPortWithoutStickyScrollWithoutPaddingTop.containsRect(pillFullyDockedRect);
-      const iconNoneDocked = this._tabAction.map((action) => action === InlineEditTabAction.Accept ? Codicon.keyboardTab : Codicon.arrowRight);
-      const iconDocked = derived(this, (reader2) => {
+      const customIcon = this._data.read(reader)?.customization?.icon;
+      const iconNoneDocked = customIcon ? constObservable(customIcon) : this._tabAction.map((action) => action === InlineEditTabAction.Accept ? Codicon.keyboardTab : Codicon.arrowRight);
+      const iconDocked = customIcon ? constObservable(customIcon) : derived(this, (reader2) => {
         if (this._isHoveredOverIconDebounced.read(reader2) || this._isHoveredOverInlineEditDebounced.read(reader2)) {
           return Codicon.check;
         }

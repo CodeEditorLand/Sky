@@ -32,6 +32,7 @@ import { IntervalCounter } from "../../../../base/common/async.js";
 import { assertReturnsDefined } from "../../../../base/common/types.js";
 import { NotificationsToastsVisibleContext } from "../../../common/contextkeys.js";
 import { mainWindow } from "../../../../base/browser/window.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
 var ToastVisibility;
 (function(ToastVisibility2) {
   ToastVisibility2[ToastVisibility2["HIDDEN_OR_VISIBLE"] = 0] = "HIDDEN_OR_VISIBLE";
@@ -69,7 +70,7 @@ let NotificationsToasts = class NotificationsToasts2 extends Themable {
   get isVisible() {
     return !!this._isVisible;
   }
-  constructor(container, model, instantiationService, layoutService, themeService, editorGroupService, contextKeyService, lifecycleService, hostService) {
+  constructor(container, model, instantiationService, layoutService, themeService, editorGroupService, contextKeyService, lifecycleService, hostService, environmentService) {
     super(themeService);
     this.container = container;
     this.model = model;
@@ -78,6 +79,7 @@ let NotificationsToasts = class NotificationsToasts2 extends Themable {
     this.editorGroupService = editorGroupService;
     this.lifecycleService = lifecycleService;
     this.hostService = hostService;
+    this.environmentService = environmentService;
     this._onDidChangeVisibility = this._register(new Emitter());
     this.onDidChangeVisibility = this._onDidChangeVisibility.event;
     this._isVisible = false;
@@ -118,6 +120,9 @@ let NotificationsToasts = class NotificationsToasts2 extends Themable {
   }
   addToast(item) {
     if (this.isNotificationsCenterVisible) {
+      return;
+    }
+    if (this.environmentService.enableSmokeTestDriver) {
       return;
     }
     if (item.priority === NotificationPriority.SILENT) {
@@ -443,7 +448,8 @@ NotificationsToasts = NotificationsToasts_1 = __decorate([
   __param(5, IEditorGroupsService),
   __param(6, IContextKeyService),
   __param(7, ILifecycleService),
-  __param(8, IHostService)
+  __param(8, IHostService),
+  __param(9, IWorkbenchEnvironmentService)
 ], NotificationsToasts);
 export {
   NotificationsToasts

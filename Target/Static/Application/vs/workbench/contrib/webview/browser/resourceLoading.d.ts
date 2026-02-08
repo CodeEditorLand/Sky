@@ -3,6 +3,7 @@ import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { URI } from '../../../../base/common/uri.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
+import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
 export declare namespace WebviewResourceResponse {
     enum Type {
         Success = 0,
@@ -35,4 +36,5 @@ export declare namespace WebviewResourceResponse {
 export declare function loadLocalResource(requestUri: URI, options: {
     ifNoneMatch: string | undefined;
     roots: ReadonlyArray<URI>;
-}, fileService: IFileService, logService: ILogService, token: CancellationToken): Promise<WebviewResourceResponse.StreamResponse>;
+}, uriIdentityService: IUriIdentityService, fileService: IFileService, logService: ILogService, token: CancellationToken): Promise<WebviewResourceResponse.StreamResponse>;
+export declare function getResourceToLoad(requestUri: URI, roots: ReadonlyArray<URI>, uriIdentityService: IUriIdentityService): URI | undefined;

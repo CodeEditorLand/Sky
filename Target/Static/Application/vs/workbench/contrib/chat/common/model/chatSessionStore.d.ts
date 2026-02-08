@@ -68,11 +68,11 @@ export interface IChatSessionEntryMetadata {
     sessionId: string;
     title: string;
     lastMessageDate: number;
-    timing?: IChatSessionTiming;
+    timing: IChatSessionTiming;
     initialLocation?: ChatAgentLocation;
     hasPendingEdits?: boolean;
     stats?: IChatSessionStats;
-    lastResponseState?: ResponseModelState;
+    lastResponseState: ResponseModelState;
     /**
      * This only exists because the migrated data from the storage service had empty sessions persisted, and it's impossible to know which ones are
      * currently in use. Now, `clearSession` deletes empty sessions, so old ones shouldn't take up space in the store anymore, but we still need to

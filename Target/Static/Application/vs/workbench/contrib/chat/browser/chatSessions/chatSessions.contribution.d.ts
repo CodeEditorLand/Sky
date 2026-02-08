@@ -2,7 +2,7 @@ import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { Event } from '../../../../../base/common/event.js';
 import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { URI } from '../../../../../base/common/uri.js';
+import { URI, UriComponents } from '../../../../../base/common/uri.js';
 import { IMenuService } from '../../../../../platform/actions/common/actions.js';
 import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
 import { ILabelService } from '../../../../../platform/label/common/label.js';
@@ -10,7 +10,7 @@ import { ILogService } from '../../../../../platform/log/common/log.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
 import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
 import { IChatAgentAttachmentCapabilities, IChatAgentService } from '../../common/participants/chatAgents.js';
-import { IChatSession, IChatSessionContentProvider, IChatSessionItem, IChatSessionItemProvider, IChatSessionProviderOptionGroup, IChatSessionProviderOptionItem, IChatSessionsExtensionPoint, IChatSessionsService, SessionOptionsChangedCallback } from '../../common/chatSessionsService.js';
+import { IChatSession, IChatSessionContentProvider, IChatSessionItem, IChatSessionItemProvider, IChatSessionOptionsWillNotifyExtensionEvent, IChatSessionProviderOptionGroup, IChatSessionProviderOptionItem, IChatSessionsExtensionPoint, IChatSessionsService } from '../../common/chatSessionsService.js';
 import { IChatModel } from '../../common/model/chatModel.js';
 import { IChatService } from '../../common/chatService/chatService.js';
 export declare class ChatSessionsService extends Disposable implements IChatSessionsService {
@@ -29,9 +29,13 @@ export declare class ChatSessionsService extends Disposable implements IChatSess
     private readonly _alternativeIdMap;
     private readonly _contextKeys;
     private readonly _onDidChangeItemsProviders;
-    readonly onDidChangeItemsProviders: Event<IChatSessionItemProvider>;
+    readonly onDidChangeItemsProviders: Event<{
+        readonly chatSessionType: string;
+    }>;
     private readonly _onDidChangeSessionItems;
-    readonly onDidChangeSessionItems: Event<string>;
+    readonly onDidChangeSessionItems: Event<{
+        readonly chatSessionType: string;
+    }>;
     private readonly _onDidChangeAvailability;
     readonly onDidChangeAvailability: Event<void>;
     private readonly _onDidChangeInProgress;
@@ -45,6 +49,8 @@ export declare class ChatSessionsService extends Disposable implements IChatSess
     get onDidChangeSessionOptions(): Event<URI>;
     private readonly _onDidChangeOptionGroups;
     get onDidChangeOptionGroups(): Event<string>;
+    private readonly _onRequestNotifyExtension;
+    get onRequestNotifyExtension(): Event<IChatSessionOptionsWillNotifyExtensionEvent>;
     private readonly inProgressMap;
     private readonly _sessionTypeOptions;
     private readonly _sessionTypeIcons;
@@ -78,7 +84,8 @@ export declare class ChatSessionsService extends Disposable implements IChatSess
     getAllChatSessionContributions(): IChatSessionsExtensionPoint[];
     private _updateHasCanDelegateProvidersContextKey;
     getChatSessionContribution(chatSessionType: string): IChatSessionsExtensionPoint | undefined;
-    activateChatSessionItemProvider(chatViewType: string): Promise<IChatSessionItemProvider | undefined>;
+    activateChatSessionItemProvider(chatViewType: string): Promise<void>;
+    private doActivateChatSessionItemProvider;
     canResolveChatSession(chatSessionResource: URI): Promise<boolean>;
     getChatSessionItems(providersToResolve: readonly string[] | undefined, token: CancellationToken): Promise<Array<{
         readonly chatSessionType: string;
@@ -92,7 +99,6 @@ export declare class ChatSessionsService extends Disposable implements IChatSess
     hasAnySessionOptions(sessionResource: URI): boolean;
     getSessionOption(sessionResource: URI, optionId: string): string | IChatSessionProviderOptionItem | undefined;
     setSessionOption(sessionResource: URI, optionId: string, value: string | IChatSessionProviderOptionItem): boolean;
-    notifySessionItemsChanged(chatSessionType: string): void;
     /**
      * Store option groups for a session type
      */
@@ -101,11 +107,6 @@ export declare class ChatSessionsService extends Disposable implements IChatSess
      * Get available option groups for a session type
      */
     getOptionGroupsForSessionType(chatSessionType: string): IChatSessionProviderOptionGroup[] | undefined;
-    private _optionsChangeCallback?;
-    /**
-     * Set the callback for notifying extensions about option changes
-     */
-    setOptionsChangeCallback(callback: SessionOptionsChangedCallback): void;
     /**
      * Notify extension about option changes for a session
      */
@@ -133,5 +134,22 @@ export declare class ChatSessionsService extends Disposable implements IChatSess
      * Get the capabilities for a specific session type
      */
     getCapabilitiesForSessionType(chatSessionType: string): IChatAgentAttachmentCapabilities | undefined;
+    /**
+     * Get the customAgentTarget for a specific session type.
+     * When set, the mode picker should show filtered custom agents matching this target.
+     */
+    getCustomAgentTargetForSessionType(chatSessionType: string): string | undefined;
     getContentProviderSchemes(): string[];
 }
+export declare enum ChatSessionPosition {
+    Editor = "editor",
+    Sidebar = "sidebar"
+}
+export type NewChatSessionOpenOptions = {
+    readonly type: string;
+    readonly position: ChatSessionPosition;
+    readonly displayName: string;
+    readonly chatResource?: UriComponents;
+    readonly replaceEditor?: boolean;
+};
+export declare function getResourceForNewChatSession(options: NewChatSessionOpenOptions): URI;

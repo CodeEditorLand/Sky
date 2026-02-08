@@ -623,6 +623,9 @@ let XtermTerminal = class XtermTerminal2 extends Disposable {
     )?.handleCommandStart();
     this._accessibilitySignalService.playSignal(AccessibilitySignal.clear);
   }
+  reset() {
+    this.raw.reset();
+  }
   hasSelection() {
     return this.raw.hasSelection();
   }

@@ -21,6 +21,7 @@ export declare class EditorWorkerService extends Disposable implements IEditorWo
     private readonly _languageConfigurationService;
     private readonly _webWorkerService;
     readonly _serviceBrand: undefined;
+    static readonly workerDescriptor: WebWorkerDescriptor;
     private readonly _modelService;
     private readonly _workerManager;
     private readonly _logService;

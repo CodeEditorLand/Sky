@@ -14,17 +14,6 @@
       min-width: 0;
     }
   }
-  &:not(.chat-view-welcome-enabled) {
-    .interactive-session {
-      .chat-welcome-view .chat-welcome-view-icon,
-      .chat-welcome-view .chat-welcome-view-title,
-      .chat-welcome-view .chat-welcome-view-message,
-      .chat-welcome-view .chat-welcome-view-disclaimer,
-      .chat-welcome-view .chat-welcome-view-tips {
-        visibility: hidden;
-      }
-    }
-  }
 }
 .chat-viewpane.has-sessions-control .agent-sessions-container {
   display: flex;
@@ -78,6 +67,11 @@
   }
   .agent-sessions-new-button-container {
     padding: 8px 12px;
+  }
+}
+.chat-viewpane.has-sessions-control.chat-view-location-panel {
+  .agent-sessions-new-button-container {
+    display: none !important;
   }
 }
 .chat-viewpane.has-sessions-control {

@@ -1945,8 +1945,9 @@ let TerminalInstance = class TerminalInstance2 extends Disposable {
       (!this._shellLaunchConfig.isFeatureTerminal || this.reconnectionProperties && this._configurationService.getValue("task.reconnection") === true) && // Not a custom pty
       !this._shellLaunchConfig.customPtyImplementation && // Not an extension owned terminal
       !this._shellLaunchConfig.isExtensionOwnedTerminal && // Not a reconnected or revived terminal
-      !this._shellLaunchConfig.attachPersistentProcess && // Not a Windows remote using ConPTY (#187084)
-      !(this._processManager.remoteAuthority && this._terminalConfigurationService.config.windowsEnableConpty && await this._processManager.getBackendOS() === 1)
+      !this._shellLaunchConfig.attachPersistentProcess && // Not a Windows remote using ConPTY which cannot relaunch (#187084). ConPTY is used on
+      // Windows builds 18309+.
+      !(this._processManager.remoteAuthority && await this._processManager.getBackendOS() === 1 && this._processManager.processTraits?.windowsPty?.buildNumber && this._processManager.processTraits.windowsPty.buildNumber >= 18309)
     ) {
       this.relaunch();
       return;

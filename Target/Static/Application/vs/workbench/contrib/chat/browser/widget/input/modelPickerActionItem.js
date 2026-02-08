@@ -11,21 +11,22 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-import { localize } from "../../../../../../nls.js";
 import * as dom from "../../../../../../base/browser/dom.js";
 import { renderIcon, renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { autorun } from "../../../../../../base/common/observable.js";
+import { localize } from "../../../../../../nls.js";
 import { IActionWidgetService } from "../../../../../../platform/actionWidget/browser/actionWidget.js";
-import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
 import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
-import { ChatEntitlement, IChatEntitlementService } from "../../../../../services/chat/common/chatEntitlementService.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
 import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
-import { DEFAULT_MODEL_PICKER_CATEGORY } from "../../../common/widget/input/modelPickerWidget.js";
-import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
 import { IProductService } from "../../../../../../platform/product/common/productService.js";
-import { MANAGE_CHAT_COMMAND_ID } from "../../../common/constants.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
 import { TelemetryTrustedValue } from "../../../../../../platform/telemetry/common/telemetryUtils.js";
+import { ChatEntitlement, IChatEntitlementService } from "../../../../../services/chat/common/chatEntitlementService.js";
+import { MANAGE_CHAT_COMMAND_ID } from "../../../common/constants.js";
+import { DEFAULT_MODEL_PICKER_CATEGORY } from "../../../common/widget/input/modelPickerWidget.js";
 import { ChatInputPickerActionViewItem } from "./chatInputPickerActionItem.js";
-function modelDelegateToWidgetActionsProvider(delegate, telemetryService) {
+function modelDelegateToWidgetActionsProvider(delegate, telemetryService, pickerOptions) {
   return {
     getActions: /* @__PURE__ */ __name(() => {
       const models = delegate.getModels();
@@ -36,25 +37,29 @@ function modelDelegateToWidgetActionsProvider(delegate, telemetryService) {
           checked: true,
           category: DEFAULT_MODEL_PICKER_CATEGORY,
           class: void 0,
+          description: localize("chat.modelPicker.auto.detail", "Best for your request based on capacity and performance."),
           tooltip: localize("chat.modelPicker.auto", "Auto"),
           label: localize("chat.modelPicker.auto", "Auto"),
+          hover: { content: localize("chat.modelPicker.auto.description", "Automatically selects the best model for your task based on context and complexity."), position: pickerOptions.hoverPosition },
           run: /* @__PURE__ */ __name(() => {
           }, "run")
         }];
       }
       return models.map((model) => {
+        const hoverContent = model.metadata.tooltip;
         return {
           id: model.metadata.id,
           enabled: true,
           icon: model.metadata.statusIcon,
-          checked: model.identifier === delegate.getCurrentModel()?.identifier,
+          checked: model.identifier === delegate.currentModel.get()?.identifier,
           category: model.metadata.modelPickerCategory || DEFAULT_MODEL_PICKER_CATEGORY,
           class: void 0,
-          description: model.metadata.detail,
-          tooltip: model.metadata.tooltip ?? model.metadata.name,
+          description: model.metadata.multiplier ?? model.metadata.detail,
+          tooltip: hoverContent ? "" : model.metadata.name,
+          hover: hoverContent ? { content: hoverContent, position: pickerOptions.hoverPosition } : void 0,
           label: model.metadata.name,
           run: /* @__PURE__ */ __name(() => {
-            const previousModel = delegate.getCurrentModel();
+            const previousModel = delegate.currentModel.get();
             telemetryService.publicLog2("chat.modelChange", {
               fromModel: previousModel?.metadata.vendor === "copilot" ? new TelemetryTrustedValue(previousModel.identifier) : "unknown",
               toModel: model.metadata.vendor === "copilot" ? new TelemetryTrustedValue(model.identifier) : "unknown"
@@ -71,7 +76,7 @@ function getModelPickerActionBarActionProvider(commandService, chatEntitlementSe
   const actionProvider = {
     getActions: /* @__PURE__ */ __name(() => {
       const additionalActions = [];
-      if (chatEntitlementService.entitlement === ChatEntitlement.Free || chatEntitlementService.entitlement === ChatEntitlement.Pro || chatEntitlementService.entitlement === ChatEntitlement.ProPlus || chatEntitlementService.isInternal) {
+      if (chatEntitlementService.entitlement === ChatEntitlement.Free || chatEntitlementService.entitlement === ChatEntitlement.Pro || chatEntitlementService.entitlement === ChatEntitlement.ProPlus || chatEntitlementService.entitlement === ChatEntitlement.Business || chatEntitlementService.entitlement === ChatEntitlement.Enterprise || chatEntitlementService.isInternal) {
         additionalActions.push({
           id: "manageModels",
           label: localize("chat.manageModels", "Manage Models..."),
@@ -107,20 +112,22 @@ let ModelPickerActionItem = class ModelPickerActionItem2 extends ChatInputPicker
   static {
     __name(this, "ModelPickerActionItem");
   }
-  constructor(action, currentModel, widgetOptions, delegate, pickerOptions, actionWidgetService, contextKeyService, commandService, chatEntitlementService, keybindingService, telemetryService, productService) {
+  constructor(action, widgetOptions, delegate, pickerOptions, actionWidgetService, contextKeyService, commandService, chatEntitlementService, keybindingService, telemetryService, productService) {
     const actionWithLabel = {
       ...action,
-      label: currentModel?.metadata.name ?? localize("chat.modelPicker.auto", "Auto"),
+      label: delegate.currentModel.get()?.metadata.name ?? localize("chat.modelPicker.auto", "Auto"),
       run: /* @__PURE__ */ __name(() => {
       }, "run")
     };
     const modelPickerActionWidgetOptions = {
-      actionProvider: modelDelegateToWidgetActionsProvider(delegate, telemetryService),
-      actionBarActionProvider: getModelPickerActionBarActionProvider(commandService, chatEntitlementService, productService)
+      actionProvider: modelDelegateToWidgetActionsProvider(delegate, telemetryService, pickerOptions),
+      actionBarActionProvider: getModelPickerActionBarActionProvider(commandService, chatEntitlementService, productService),
+      reporter: { id: "ChatModelPicker", name: "ChatModelPicker", includeOptions: true }
     };
-    super(actionWithLabel, widgetOptions ?? modelPickerActionWidgetOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService);
-    this.currentModel = currentModel;
-    this._register(delegate.onDidChangeModel((model) => {
+    super(actionWithLabel, widgetOptions ?? modelPickerActionWidgetOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
+    this.currentModel = delegate.currentModel.get();
+    this._register(autorun((t) => {
+      const model = delegate.currentModel.read(t);
       this.currentModel = model;
       this.updateTooltip();
       if (this.element) {
@@ -153,13 +160,13 @@ let ModelPickerActionItem = class ModelPickerActionItem2 extends ChatInputPicker
   }
 };
 ModelPickerActionItem = __decorate([
-  __param(5, IActionWidgetService),
-  __param(6, IContextKeyService),
-  __param(7, ICommandService),
-  __param(8, IChatEntitlementService),
-  __param(9, IKeybindingService),
-  __param(10, ITelemetryService),
-  __param(11, IProductService)
+  __param(4, IActionWidgetService),
+  __param(5, IContextKeyService),
+  __param(6, ICommandService),
+  __param(7, IChatEntitlementService),
+  __param(8, IKeybindingService),
+  __param(9, ITelemetryService),
+  __param(10, IProductService)
 ], ModelPickerActionItem);
 export {
   ModelPickerActionItem

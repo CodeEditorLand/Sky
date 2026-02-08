@@ -64,6 +64,7 @@ let TerminalStickyScrollOverlay = class TerminalStickyScrollOverlay2 extends Dis
     this._state = 0;
     this._isRefreshQueued = false;
     this._rawMaxLineCount = 5;
+    this._ignoredCommands = [];
     this._pendingShowOperation = false;
     this._contextMenu = this._register(menuService.createMenu(MenuId.TerminalStickyScrollContext, contextKeyService));
     this._register(Event.runAndSubscribe(this._xterm.raw.buffer.onBufferChange, (buffer) => {
@@ -80,6 +81,15 @@ let TerminalStickyScrollOverlay = class TerminalStickyScrollOverlay2 extends Dis
         this._rawMaxLineCount = configurationService.getValue(
           "terminal.integrated.stickyScroll.maxLineCount"
           /* TerminalStickyScrollSettingId.MaxLineCount */
+        );
+      }
+      if (!e || e.affectsConfiguration(
+        "terminal.integrated.stickyScroll.ignoredCommands"
+        /* TerminalStickyScrollSettingId.IgnoredCommands */
+      )) {
+        this._ignoredCommands = configurationService.getValue(
+          "terminal.integrated.stickyScroll.ignoredCommands"
+          /* TerminalStickyScrollSettingId.IgnoredCommands */
         );
       }
     }));
@@ -195,7 +205,7 @@ let TerminalStickyScrollOverlay = class TerminalStickyScrollOverlay2 extends Dis
   _refreshNow() {
     const command = this._commandDetection.getCommandForLine(this._xterm.raw.buffer.active.viewportY);
     this._currentStickyCommand = void 0;
-    if (!command || this._isClearCommand(command)) {
+    if (!command || this._isIgnoredCommand(command)) {
       this._setVisible(false);
       return;
     }
@@ -413,17 +423,12 @@ let TerminalStickyScrollOverlay = class TerminalStickyScrollOverlay2 extends Dis
       selectionInactiveBackground: void 0
     };
   }
-  _isClearCommand(command) {
+  _isIgnoredCommand(command) {
     if (!command.command) {
       return false;
     }
     const trimmedCommand = command.command.trim().toLowerCase();
-    const clearCommands = [
-      "clear",
-      "cls",
-      "clear-host"
-    ];
-    return clearCommands.includes(trimmedCommand);
+    return this._ignoredCommands.some((cmd) => cmd.toLowerCase() === trimmedCommand);
   }
 };
 __decorate([

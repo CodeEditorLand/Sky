@@ -16,23 +16,30 @@ import * as resources from "../../../../base/common/resources.js";
 import { Disposable } from "../../../../base/common/lifecycle.js";
 import { ITaskService } from "../common/taskService.js";
 import { RunOnOptions, TaskSourceKind, TASKS_CATEGORY } from "../common/tasks.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
 import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
 import { Action2 } from "../../../../platform/actions/common/actions.js";
 import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
 import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
 import { Event } from "../../../../base/common/event.js";
 import { ILogService } from "../../../../platform/log/common/log.js";
+const HAS_PROMPTED_FOR_AUTOMATIC_TASKS = "task.hasPromptedForAutomaticTasks.v2";
 const ALLOW_AUTOMATIC_TASKS = "task.allowAutomaticTasks";
 let RunAutomaticTasks = class RunAutomaticTasks2 extends Disposable {
   static {
     __name(this, "RunAutomaticTasks");
   }
-  constructor(_taskService, _configurationService, _workspaceTrustManagementService, _logService) {
+  constructor(_taskService, _configurationService, _workspaceTrustManagementService, _logService, _storageService, _notificationService, _openerService) {
     super();
     this._taskService = _taskService;
     this._configurationService = _configurationService;
     this._workspaceTrustManagementService = _workspaceTrustManagementService;
     this._logService = _logService;
+    this._storageService = _storageService;
+    this._notificationService = _notificationService;
+    this._openerService = _openerService;
     this._hasRunTasks = false;
     if (this._taskService.isReconnected) {
       this._tryRunTasks();
@@ -45,7 +52,8 @@ let RunAutomaticTasks = class RunAutomaticTasks2 extends Disposable {
     if (!this._workspaceTrustManagementService.isWorkspaceTrusted()) {
       return;
     }
-    if (this._hasRunTasks || this._configurationService.getValue(ALLOW_AUTOMATIC_TASKS) === "off") {
+    const { value, userValue } = this._configurationService.inspect(ALLOW_AUTOMATIC_TASKS);
+    if (this._hasRunTasks || value === "off" && userValue !== void 0) {
       return;
     }
     this._hasRunTasks = true;
@@ -84,7 +92,7 @@ let RunAutomaticTasks = class RunAutomaticTasks2 extends Disposable {
       autoTasks = this._findAutoTasks(this._taskService, workspaceTasks);
       this._logService.trace(`RunAutomaticTasks: updated taskNames=${JSON.stringify(autoTasks.taskNames)}`);
     }
-    this._runWithPermission(this._taskService, this._configurationService, autoTasks.tasks, autoTasks.taskNames);
+    this._runWithPermission(this._taskService, this._configurationService, this._storageService, this._notificationService, this._openerService, autoTasks.tasks, autoTasks.taskNames, autoTasks.locations);
   }
   _runTasks(taskService, tasks) {
     tasks.forEach((task) => {
@@ -151,21 +159,78 @@ let RunAutomaticTasks = class RunAutomaticTasks2 extends Disposable {
     }
     return { tasks, taskNames, locations };
   }
-  async _runWithPermission(taskService, configurationService, tasks, taskNames) {
+  async _runWithPermission(taskService, configurationService, storageService, notificationService, openerService, tasks, taskNames, locations) {
     if (taskNames.length === 0) {
       return;
     }
-    if (configurationService.getValue(ALLOW_AUTOMATIC_TASKS) === "off") {
+    if (configurationService.getValue(ALLOW_AUTOMATIC_TASKS) === "on") {
+      this._runTasks(taskService, tasks);
       return;
     }
-    this._runTasks(taskService, tasks);
+    const hasShownPromptForAutomaticTasks = storageService.getBoolean(HAS_PROMPTED_FOR_AUTOMATIC_TASKS, 1, false);
+    if (hasShownPromptForAutomaticTasks) {
+      return;
+    }
+    const allow = await this._showPrompt(notificationService, storageService, openerService, configurationService, taskNames, locations);
+    if (allow) {
+      this._runTasks(taskService, tasks);
+    }
+  }
+  _showPrompt(notificationService, storageService, openerService, configurationService, taskNames, locations) {
+    return new Promise((resolve) => {
+      notificationService.prompt(Severity.Info, nls.localize("tasks.run.allowAutomatic", "This workspace has tasks ({0}) defined ({1}) that run automatically when you open this workspace. Do you allow automatic tasks to run when you open this workspace?", taskNames.join(", "), Array.from(locations.keys()).join(", ")), [
+        {
+          label: nls.localize("allow", "Allow and Run"),
+          run: /* @__PURE__ */ __name(() => {
+            resolve(true);
+            configurationService.updateValue(
+              ALLOW_AUTOMATIC_TASKS,
+              "on",
+              2
+              /* ConfigurationTarget.USER */
+            );
+          }, "run")
+        },
+        {
+          label: nls.localize("disallow", "Disallow"),
+          run: /* @__PURE__ */ __name(() => {
+            resolve(false);
+            configurationService.updateValue(
+              ALLOW_AUTOMATIC_TASKS,
+              "off",
+              2
+              /* ConfigurationTarget.USER */
+            );
+          }, "run")
+        },
+        {
+          label: locations.size === 1 ? nls.localize("openTask", "Open File") : nls.localize("openTasks", "Open Files"),
+          run: /* @__PURE__ */ __name(async () => {
+            for (const location of locations) {
+              await openerService.open(location[1]);
+            }
+            resolve(false);
+          }, "run")
+        }
+      ], { onCancel: /* @__PURE__ */ __name(() => resolve(false), "onCancel") });
+      storageService.store(
+        HAS_PROMPTED_FOR_AUTOMATIC_TASKS,
+        true,
+        1,
+        1
+        /* StorageTarget.MACHINE */
+      );
+    });
   }
 };
 RunAutomaticTasks = __decorate([
   __param(0, ITaskService),
   __param(1, IConfigurationService),
   __param(2, IWorkspaceTrustManagementService),
-  __param(3, ILogService)
+  __param(3, ILogService),
+  __param(4, IStorageService),
+  __param(5, INotificationService),
+  __param(6, IOpenerService)
 ], RunAutomaticTasks);
 class ManageAutomaticTaskRunning extends Action2 {
   static {

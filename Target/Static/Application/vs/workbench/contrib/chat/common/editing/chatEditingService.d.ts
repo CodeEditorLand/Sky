@@ -5,15 +5,15 @@ import { IDisposable } from '../../../../../base/common/lifecycle.js';
 import { IObservable, IReader } from '../../../../../base/common/observable.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { IDocumentDiff } from '../../../../../editor/common/diff/documentDiffProvider.js';
-import { Location, TextEdit } from '../../../../../editor/common/languages.js';
+import { TextEdit } from '../../../../../editor/common/languages.js';
 import { ITextModel } from '../../../../../editor/common/model.js';
 import { EditSuggestionId } from '../../../../../editor/common/textModelEditSource.js';
 import { RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
 import { IEditorPane } from '../../../../common/editor.js';
 import { ICellEditOperation } from '../../../notebook/common/notebookCommon.js';
-import { IChatAgentResult } from '../participants/chatAgents.js';
+import { IChatMultiDiffData, IChatProgress, IChatWorkspaceEdit } from '../chatService/chatService.js';
 import { ChatModel, IChatRequestDisablement, IChatResponseModel } from '../model/chatModel.js';
-import { IChatMultiDiffData, IChatProgress } from '../chatService/chatService.js';
+import { IChatAgentResult } from '../participants/chatAgents.js';
 export declare const IChatEditingService: import("../../../../../platform/instantiation/common/instantiation.js").ServiceIdentifier<IChatEditingService>;
 export interface IChatEditingService {
     _serviceBrand: undefined;
@@ -31,27 +31,6 @@ export interface IChatEditingService {
      * Creates an editing session with state transferred from the provided session.
      */
     transferEditingSession(chatModel: ChatModel, session: IChatEditingSession): IChatEditingSession;
-    hasRelatedFilesProviders(): boolean;
-    registerRelatedFilesProvider(handle: number, provider: IChatRelatedFilesProvider): IDisposable;
-    getRelatedFiles(chatSessionResource: URI, prompt: string, files: URI[], token: CancellationToken): Promise<{
-        group: string;
-        files: IChatRelatedFile[];
-    }[] | undefined>;
-}
-export interface IChatRequestDraft {
-    readonly prompt: string;
-    readonly files: readonly URI[];
-}
-export interface IChatRelatedFileProviderMetadata {
-    readonly description: string;
-}
-export interface IChatRelatedFile {
-    readonly uri: URI;
-    readonly description: string;
-}
-export interface IChatRelatedFilesProvider {
-    readonly description: string;
-    provideRelatedFiles(chatRequest: IChatRequestDraft, token: CancellationToken): Promise<IChatRelatedFile[] | undefined>;
 }
 export interface WorkingSetDisplayMetadata {
     state: ModifiedFileEntryState;
@@ -83,6 +62,8 @@ export interface ISnapshotEntry {
     readonly current: string;
     readonly state: ModifiedFileEntryState;
     telemetryInfo: IModifiedEntryTelemetryInfo;
+    /** True if this entry represents a deleted file */
+    readonly isDeleted?: boolean;
 }
 export interface IChatEditingSession extends IDisposable {
     readonly isGlobalEditingSession: boolean;
@@ -125,6 +106,13 @@ export interface IChatEditingSession extends IDisposable {
      */
     startStreamingEdits(resource: URI, responseModel: IChatResponseModel, inUndoStop: string | undefined): IStreamingEdits;
     /**
+     * Applies a workspace edit (file deletions, creations, renames).
+     * @param edit The workspace edit containing file operations
+     * @param responseModel The response model making the edit
+     * @param undoStopId The undo stop ID for this edit
+     */
+    applyWorkspaceEdit(edit: IChatWorkspaceEdit, responseModel: IChatResponseModel, undoStopId: string): void;
+    /**
      * Gets the document diff of a change made to a URI between one undo stop and
      * the next one.
      * @returns The observable or undefined if there is no diff between the stops.
@@ -156,6 +144,18 @@ export interface IChatEditingSession extends IDisposable {
     readonly canRedo: IObservable<boolean>;
     undoInteraction(): Promise<void>;
     redoInteraction(): Promise<void>;
+    /**
+     * Triggers generation of explanations for all modified files in the session.
+     */
+    triggerExplanationGeneration(): Promise<void>;
+    /**
+     * Clears any active explanation generation.
+     */
+    clearExplanations(): void;
+    /**
+     * Whether explanations are currently being generated or displayed.
+     */
+    hasExplanations(): boolean;
 }
 export declare function chatEditingSessionIsReady(session: IChatEditingSession): Promise<void>;
 export declare function editEntriesToMultiDiffData(entriesObs: IObservable<readonly IEditSessionEntryDiff[]>): IChatMultiDiffData;
@@ -235,6 +235,7 @@ export interface IModifiedFileEntry {
     readonly entryId: string;
     readonly originalURI: URI;
     readonly modifiedURI: URI;
+    readonly isDeletion?: boolean;
     readonly lastModifyingRequestId: string;
     readonly state: IObservable<ModifiedFileEntryState>;
     readonly isCurrentlyBeingModifiedBy: IObservable<{
@@ -270,7 +271,6 @@ export interface IModifiedFileEntry {
      */
     readonly linesRemoved?: IObservable<number>;
     getEditorIntegration(editor: IEditorPane): IModifiedFileEntryEditorIntegration;
-    hasModificationAt(location: Location): boolean;
     /**
      * Gets the document diff info, waiting for any ongoing promises to flush.
      */
@@ -299,7 +299,8 @@ export declare const chatEditingMaxFileAssignmentName = "chatEditingSessionFileL
 export declare const defaultChatEditingMaxFileLimit = 10;
 export declare const enum ChatEditKind {
     Created = 0,
-    Modified = 1
+    Modified = 1,
+    Deleted = 2
 }
 export interface IChatEditingActionContext {
     sessionResource: URI;

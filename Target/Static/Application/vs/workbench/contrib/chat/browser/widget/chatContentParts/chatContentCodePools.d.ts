@@ -10,6 +10,7 @@ export declare class EditorPool extends Disposable {
     inUse(): Iterable<CodeBlockPart>;
     constructor(options: ChatEditorOptions, delegate: IChatRendererDelegate, overflowWidgetsDomNode: HTMLElement | undefined, isSimpleWidget: boolean | undefined, instantiationService: IInstantiationService);
     get(): IDisposableReference<CodeBlockPart>;
+    clear(): void;
 }
 export declare class DiffEditorPool extends Disposable {
     private readonly isSimpleWidget;
@@ -17,4 +18,5 @@ export declare class DiffEditorPool extends Disposable {
     inUse(): Iterable<CodeCompareBlockPart>;
     constructor(options: ChatEditorOptions, delegate: IChatRendererDelegate, overflowWidgetsDomNode: HTMLElement | undefined, isSimpleWidget: boolean | undefined, instantiationService: IInstantiationService);
     get(): IDisposableReference<CodeCompareBlockPart>;
+    clear(): void;
 }

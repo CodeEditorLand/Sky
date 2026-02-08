@@ -1,7 +1,8 @@
 import { IMarkdownString } from '../../../../../../base/common/htmlContent.js';
 import { Disposable } from '../../../../../../base/common/lifecycle.js';
 import { URI } from '../../../../../../base/common/uri.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
+import { ILanguageService } from '../../../../../../editor/common/languages/language.js';
+import { IModelService } from '../../../../../../editor/common/services/model.js';
 import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
 import { IHoverService } from '../../../../../../platform/hover/browser/hover.js';
 import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
@@ -12,15 +13,21 @@ import { ICodeBlockRenderOptions } from './codeBlockPart.js';
 import { IChatContentPartRenderContext } from './chatContentParts.js';
 export interface IChatCollapsibleIOCodePart {
     kind: 'code';
-    textModel: ITextModel;
+    data: string;
     languageId: string;
     options: ICodeBlockRenderOptions;
-    codeBlockInfo: IChatCodeBlockInfo;
+    codeBlockIndex: number;
+    ownerMarkdownPartId: string;
     title?: string | IMarkdownString;
 }
 export interface IChatCollapsibleIODataPart {
     kind: 'data';
     value?: Uint8Array;
+    /**
+     * Base64-encoded value that can be decoded lazily to avoid expensive
+     * decoding during scroll. Takes precedence over `value` when present.
+     */
+    base64Value?: string;
     audience?: LanguageModelPartAudience[];
     mimeType: string | undefined;
     uri: URI;
@@ -37,19 +44,19 @@ export declare class ChatCollapsibleInputOutputContentPart extends Disposable {
     private readonly output;
     private readonly contextKeyService;
     private readonly _instantiationService;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
-    private _currentWidth;
+    private readonly modelService;
+    private readonly languageService;
     private readonly _editorReferences;
     private readonly _titlePart;
     private _outputSubPart;
     readonly domNode: HTMLElement;
+    private _contentInitialized;
     get codeblocks(): IChatCodeBlockInfo[];
     set title(s: string | IMarkdownString);
     get title(): string | IMarkdownString;
     private readonly _expanded;
     get expanded(): boolean;
-    constructor(title: IMarkdownString | string, subtitle: string | IMarkdownString | undefined, progressTooltip: IMarkdownString | string | undefined, context: IChatContentPartRenderContext, input: IChatCollapsibleInputData, output: IChatCollapsibleOutputData | undefined, isError: boolean, initiallyExpanded: boolean, contextKeyService: IContextKeyService, _instantiationService: IInstantiationService, hoverService: IHoverService);
+    constructor(title: IMarkdownString | string, subtitle: string | IMarkdownString | undefined, progressTooltip: IMarkdownString | string | undefined, context: IChatContentPartRenderContext, input: IChatCollapsibleInputData, output: IChatCollapsibleOutputData | undefined, isError: boolean, initiallyExpanded: boolean, contextKeyService: IContextKeyService, _instantiationService: IInstantiationService, hoverService: IHoverService, modelService: IModelService, languageService: ILanguageService);
     private createMessageContents;
     private addCodeBlock;
     hasSameContent(other: IChatRendererContent, followingContent: IChatRendererContent[], element: ChatTreeItem): boolean;

@@ -22,6 +22,7 @@ import { SetMap } from "../../../common/map.js";
 import { Emitter, Event, EventBufferer, Relay } from "../../../common/event.js";
 import { fuzzyScore, FuzzyScore } from "../../../common/filters.js";
 import { Disposable, DisposableStore, dispose, toDisposable } from "../../../common/lifecycle.js";
+import { isMacintosh } from "../../../common/platform.js";
 import { clamp } from "../../../common/numbers.js";
 import "./media/tree.css";
 import { localize } from "../../../../nls.js";
@@ -132,7 +133,10 @@ function asListOptions(modelProvider, disposableStore, options) {
     identityProvider: options.identityProvider && {
       getId(el) {
         return options.identityProvider.getId(el.element);
-      }
+      },
+      getGroupId: options.identityProvider.getGroupId ? (el) => {
+        return options.identityProvider.getGroupId(el.element);
+      } : void 0
     },
     dnd: options.dnd && disposableStore.add(new TreeNodeListDragAndDrop(modelProvider, options.dnd)),
     multipleSelectionController: options.multipleSelectionController && {
@@ -2497,6 +2501,14 @@ class AbstractTree {
     this.onDidChangeCollapseStateRelay.input = model.onDidChangeCollapseState;
     this.onDidChangeRenderNodeCountRelay.input = model.onDidChangeRenderNodeCount;
     this.onDidSpliceModelRelay.input = model.onDidSpliceModel;
+    if (isMacintosh) {
+      this.modelDisposables.add(model.onDidChangeCollapseState((e) => {
+        const { node, deep } = e;
+        if (node.collapsible && !deep && this.isDOMFocused()) {
+          alert(node.collapsed ? localize("treeNodeCollapsed", "collapsed") : localize("treeNodeExpanded", "expanded"));
+        }
+      }));
+    }
   }
   navigate(start) {
     return new TreeNavigator(this.view, this.model, start);

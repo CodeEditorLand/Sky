@@ -1,18 +1,13 @@
-import { Event } from '../../../../../../base/common/event.js';
 import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
+import { URI } from '../../../../../../base/common/uri.js';
 import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
 import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
 import { IChatTodoListService } from '../../../common/tools/chatTodoListService.js';
-import { URI } from '../../../../../../base/common/uri.js';
 export declare class ChatTodoListWidget extends Disposable {
     private readonly chatTodoListService;
-    private readonly configurationService;
     private readonly instantiationService;
     private readonly contextKeyService;
     readonly domNode: HTMLElement;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: Event<void>;
     private _isExpanded;
     private _userManuallyExpanded;
     private expandoButton;
@@ -23,7 +18,7 @@ export declare class ChatTodoListWidget extends Disposable {
     private clearButton;
     private _currentSessionResource;
     private _todoList;
-    constructor(chatTodoListService: IChatTodoListService, configurationService: IConfigurationService, instantiationService: IInstantiationService, contextKeyService: IContextKeyService);
+    constructor(chatTodoListService: IChatTodoListService, instantiationService: IInstantiationService, contextKeyService: IContextKeyService);
     get height(): number;
     private hideWidget;
     private createChatTodoWidget;

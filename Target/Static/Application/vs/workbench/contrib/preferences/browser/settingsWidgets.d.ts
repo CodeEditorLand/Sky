@@ -7,6 +7,7 @@ import { IContextViewService } from '../../../../platform/contextview/browser/co
 import { IHoverService } from '../../../../platform/hover/browser/hover.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { SettingValueType } from '../../../services/preferences/common/preferences.js';
+import { IJSONSchema } from '../../../../base/common/jsonSchema.js';
 import './media/settingsWidgets.css';
 type EditKey = 'none' | 'create' | number;
 type RowElementGroup = {
@@ -211,6 +212,7 @@ interface IObjectSetValueOptions {
     isReadOnly?: boolean;
     keySuggester?: IObjectKeySuggester;
     valueSuggester?: IObjectValueSuggester;
+    propertyNames?: IJSONSchema;
 }
 export declare class ObjectSettingDropdownWidget extends AbstractListSettingWidget<IObjectDataItem> {
     private readonly hoverService;
@@ -219,6 +221,7 @@ export declare class ObjectSettingDropdownWidget extends AbstractListSettingWidg
     private showAddButton;
     private keySuggester;
     private valueSuggester;
+    private propertyNames;
     constructor(container: HTMLElement, themeService: IThemeService, contextViewService: IContextViewService, hoverService: IHoverService, configurationService: IConfigurationService);
     setValue(listData: IObjectDataItem[], options?: IObjectSetValueOptions): void;
     isItemNew(item: IObjectDataItem): boolean;

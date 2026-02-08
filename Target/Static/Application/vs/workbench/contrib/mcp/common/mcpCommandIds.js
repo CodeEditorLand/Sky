@@ -2,6 +2,7 @@ var McpCommandIds;
 (function(McpCommandIds2) {
   McpCommandIds2["AddConfiguration"] = "workbench.mcp.addConfiguration";
   McpCommandIds2["Browse"] = "workbench.mcp.browseServers";
+  McpCommandIds2["InstallFromManifest"] = "workbench.mcp.installFromManifest";
   McpCommandIds2["BrowsePage"] = "workbench.mcp.browseServersPage";
   McpCommandIds2["BrowseResources"] = "workbench.mcp.browseResources";
   McpCommandIds2["ConfigureSamplingModels"] = "workbench.mcp.configureSamplingModels";

@@ -13,7 +13,7 @@ var __param = function(paramIndex, decorator) {
 };
 import "./media/chatExtensionsContent.css";
 import * as dom from "../../../../../../base/browser/dom.js";
-import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Event } from "../../../../../../base/common/event.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
 import { ExtensionsList, getExtensions } from "../../../../extensions/browser/extensionsViewer.js";
@@ -36,8 +36,6 @@ let ChatExtensionsContentPart = class ChatExtensionsContentPart2 extends Disposa
   constructor(extensionsContent, extensionsWorkbenchService, instantiationService) {
     super();
     this.extensionsContent = extensionsContent;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this.domNode = dom.$(".chat-extensions-content-part");
     const loadingElement = dom.append(this.domNode, dom.$(".loading-extensions-element"));
     dom.append(loadingElement, dom.$(ThemeIcon.asCSSSelector(ThemeIcon.modify(Codicon.loading, "spin"))), dom.$("span.loading-message", void 0, localize("chat.extensions.loading", "Loading extensions...")));
@@ -50,7 +48,6 @@ let ChatExtensionsContentPart = class ChatExtensionsContentPart2 extends Disposa
       }
       list.setModel(new PagedModel(extensions));
       list.layout();
-      this._onDidChangeHeight.fire();
     });
   }
   hasSameContent(other, followingContent, element) {

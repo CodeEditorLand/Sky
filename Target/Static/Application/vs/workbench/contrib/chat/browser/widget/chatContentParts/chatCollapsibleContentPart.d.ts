@@ -1,5 +1,4 @@
 import { ButtonWithIcon } from '../../../../../../base/browser/ui/button/button.js';
-import { Emitter } from '../../../../../../base/common/event.js';
 import { IMarkdownString, MarkdownString } from '../../../../../../base/common/htmlContent.js';
 import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
 import { IObservable } from '../../../../../../base/common/observable.js';
@@ -17,12 +16,12 @@ export declare abstract class ChatCollapsibleContentPart extends Disposable impl
     private readonly hoverService;
     private _domNode?;
     private readonly _renderedTitleWithWidgets;
-    protected readonly _onDidChangeHeight: Emitter<void>;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
     protected readonly hasFollowingContent: boolean;
     protected _isExpanded: import("../../../../../../base/common/observable.js").ISettableObservable<boolean, void>;
     protected _collapseButton: ButtonWithIcon | undefined;
     private readonly _overrideIcon;
+    private _contentElement?;
+    private _contentInitialized;
     get icon(): ThemeIcon | undefined;
     set icon(value: ThemeIcon | undefined);
     protected readonly element: ChatTreeItem;
@@ -30,6 +29,7 @@ export declare abstract class ChatCollapsibleContentPart extends Disposable impl
     get domNode(): HTMLElement;
     protected init(): HTMLElement;
     protected abstract initContent(): HTMLElement;
+    protected shouldInitEarly(): boolean;
     abstract hasSameContent(other: IChatRendererContent, followingContent: IChatRendererContent[], element: ChatTreeItem): boolean;
     private updateAriaLabel;
     addDisposable(disposable: IDisposable): void;

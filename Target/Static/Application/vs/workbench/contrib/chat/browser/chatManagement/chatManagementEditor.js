@@ -25,7 +25,7 @@ import { Button } from "../../../../../base/browser/ui/button/button.js";
 import { ICommandService } from "../../../../../platform/commands/common/commands.js";
 import { localize } from "../../../../../nls.js";
 import { defaultButtonStyles } from "../../../../../platform/theme/browser/defaultStyles.js";
-import { IChatEntitlementService, ChatEntitlement } from "../../../../services/chat/common/chatEntitlementService.js";
+import { IChatEntitlementService, ChatEntitlement, getChatPlanName } from "../../../../services/chat/common/chatEntitlementService.js";
 import { ChatUsageWidget } from "./chatUsageWidget.js";
 import { Sizing, SplitView } from "../../../../../base/browser/ui/splitview/splitview.js";
 import { WorkbenchList } from "../../../../../platform/list/browser/listService.js";
@@ -82,6 +82,9 @@ let ModelsManagementEditor = class ModelsManagementEditor2 extends EditorPane {
   }
   clearSearch() {
     this.modelsWidget?.clearSearch();
+  }
+  search(query) {
+    this.modelsWidget?.search(query);
   }
 };
 ModelsManagementEditor = ModelsManagementEditor_1 = __decorate([
@@ -298,19 +301,7 @@ let ChatManagementEditor = class ChatManagementEditor2 extends EditorPane {
     }
   }
   getCurrentPlanName() {
-    const entitlement = this.chatEntitlementService.entitlement;
-    switch (entitlement) {
-      case ChatEntitlement.Pro:
-        return localize("plan.proName", "Copilot Pro");
-      case ChatEntitlement.ProPlus:
-        return localize("plan.proPlusName", "Copilot Pro+");
-      case ChatEntitlement.Business:
-        return localize("plan.businessName", "Copilot Business");
-      case ChatEntitlement.Enterprise:
-        return localize("plan.enterpriseName", "Copilot Enterprise");
-      default:
-        return localize("plan.freeName", "Copilot Free");
-    }
+    return getChatPlanName(this.chatEntitlementService.entitlement);
   }
   shouldShowUpgradeButton() {
     const entitlement = this.chatEntitlementService.entitlement;

@@ -15,7 +15,7 @@ import * as dom from "../../base/browser/dom.js";
 import { createFastDomNode } from "../../base/browser/fastDomNode.js";
 import { inputLatency } from "../../base/browser/performance.js";
 import { BugIndicatingError, onUnexpectedError } from "../../base/common/errors.js";
-import { Disposable } from "../../base/common/lifecycle.js";
+import { Disposable, DisposableStore } from "../../base/common/lifecycle.js";
 import { PointerHandlerLastRenderData } from "./controller/mouseTarget.js";
 import { PointerHandler } from "./controller/pointerHandler.js";
 import { RenderingContext } from "./view/renderingContext.js";
@@ -68,6 +68,13 @@ let View = class View2 extends ViewEventHandler {
   constructor(editorContainer, ownerID, commandDelegate, configuration, colorTheme, model, userInputEvents, overflowWidgetsDomNode, _instantiationService) {
     super();
     this._instantiationService = _instantiationService;
+    this._editContextClipboardListeners = new DisposableStore();
+    this._onWillCopy = this._register(new Emitter());
+    this.onWillCopy = this._onWillCopy.event;
+    this._onWillCut = this._register(new Emitter());
+    this.onWillCut = this._onWillCut.event;
+    this._onWillPaste = this._register(new Emitter());
+    this.onWillPaste = this._onWillPaste.event;
     this._shouldRecomputeGlyphMarginLanes = false;
     this._ownerID = ownerID;
     this._widgetFocusTracker = this._register(new CodeEditorWidgetFocusTracker(editorContainer, overflowWidgetsDomNode));
@@ -96,6 +103,7 @@ let View = class View2 extends ViewEventHandler {
       /* EditorOption.accessibilitySupport */
     );
     this._editContext = this._instantiateEditContext();
+    this._connectEditContextClipboardEvents();
     this._viewParts.push(this._editContext);
     this._linesContent = createFastDomNode(document.createElement("div"));
     this._linesContent.setClassName("lines-content monaco-editor-background");
@@ -217,12 +225,19 @@ let View = class View2 extends ViewEventHandler {
     const indexOfEditContext = this._viewParts.indexOf(this._editContext);
     this._editContext.dispose();
     this._editContext = this._instantiateEditContext();
+    this._connectEditContextClipboardEvents();
     if (isEditContextFocused) {
       this._editContext.focus();
     }
     if (indexOfEditContext !== -1) {
       this._viewParts.splice(indexOfEditContext, 1, this._editContext);
     }
+  }
+  _connectEditContextClipboardEvents() {
+    this._editContextClipboardListeners.clear();
+    this._editContextClipboardListeners.add(this._editContext.onWillCopy((e) => this._onWillCopy.fire(e)));
+    this._editContextClipboardListeners.add(this._editContext.onWillCut((e) => this._onWillCut.fire(e)));
+    this._editContextClipboardListeners.add(this._editContext.onWillPaste((e) => this._onWillPaste.fire(e)));
   }
   _computeGlyphMarginLanes() {
     const model = this._context.viewModel.model;
@@ -361,6 +376,7 @@ let View = class View2 extends ViewEventHandler {
       this._renderAnimationFrame.dispose();
       this._renderAnimationFrame = null;
     }
+    this._editContextClipboardListeners.dispose();
     this._contentWidgets.overflowingContentWidgetsDomNode.domNode.remove();
     this._overlayWidgets.overflowingOverlayWidgetsDomNode.domNode.remove();
     this._context.removeEventHandler(this);
@@ -393,11 +409,11 @@ let View = class View2 extends ViewEventHandler {
             this._renderAnimationFrame = null;
           }
         }, "prepareRenderText"),
-        renderText: /* @__PURE__ */ __name(() => {
+        renderText: /* @__PURE__ */ __name((viewportData) => {
           if (this._store.isDisposed) {
             throw new BugIndicatingError();
           }
-          return rendering.renderText();
+          return rendering.renderText(viewportData);
         }, "renderText"),
         prepareRender: /* @__PURE__ */ __name((viewParts, ctx) => {
           if (this._store.isDisposed) {
@@ -416,13 +432,17 @@ let View = class View2 extends ViewEventHandler {
   }
   _flushAccumulatedAndRenderNow() {
     const rendering = this._createCoordinatedRendering();
-    safeInvokeNoArg(() => rendering.prepareRenderText());
-    const data = safeInvokeNoArg(() => rendering.renderText());
-    if (data) {
-      const [viewParts, ctx] = data;
-      safeInvokeNoArg(() => rendering.prepareRender(viewParts, ctx));
-      safeInvokeNoArg(() => rendering.render(viewParts, ctx));
+    const viewportData = safeInvokeNoArg(() => rendering.prepareRenderText());
+    if (!viewportData) {
+      return;
     }
+    const data = safeInvokeNoArg(() => rendering.renderText(viewportData));
+    if (!data) {
+      return;
+    }
+    const [viewParts, ctx] = data;
+    safeInvokeNoArg(() => rendering.prepareRender(viewParts, ctx));
+    safeInvokeNoArg(() => rendering.render(viewParts, ctx));
   }
   _getViewPartsToRender() {
     const result = [];
@@ -443,30 +463,33 @@ let View = class View2 extends ViewEventHandler {
           this._context.configuration.setGlyphMarginDecorationLaneCount(model.requiredLanes);
         }
         inputLatency.onRenderStart();
-      }, "prepareRenderText"),
-      renderText: /* @__PURE__ */ __name(() => {
         if (!this.domNode.domNode.isConnected) {
           return null;
         }
-        let viewPartsToRender = this._getViewPartsToRender();
+        const viewPartsToRender = this._getViewPartsToRender();
         if (!this._viewLines.shouldRender() && viewPartsToRender.length === 0) {
           return null;
         }
         const partialViewportData = this._context.viewLayout.getLinesViewportData();
         this._context.viewModel.setViewport(partialViewportData.startLineNumber, partialViewportData.endLineNumber, partialViewportData.centeredLineNumber);
         const viewportData = new ViewportData(this._selections, partialViewportData, this._context.viewLayout.getWhitespaceViewportData(), this._context.viewModel);
-        if (this._contentWidgets.shouldRender()) {
-          this._contentWidgets.onBeforeRender(viewportData);
+        for (const viewPart of this._viewParts) {
+          if (viewPart.shouldRender()) {
+            viewPart.onBeforeRender(viewportData);
+          }
         }
+        return viewportData;
+      }, "prepareRenderText"),
+      renderText: /* @__PURE__ */ __name((viewportData) => {
         if (this._viewLines.shouldRender()) {
           this._viewLines.renderText(viewportData);
           this._viewLines.onDidRender();
-          viewPartsToRender = this._getViewPartsToRender();
         }
         if (this._viewLinesGpu?.shouldRender()) {
           this._viewLinesGpu.renderText(viewportData);
           this._viewLinesGpu.onDidRender();
         }
+        const viewPartsToRender = this._getViewPartsToRender();
         return [viewPartsToRender, new RenderingContext(this._context.viewLayout, viewportData, this._viewLines, this._viewLinesGpu)];
       }, "renderText"),
       prepareRender: /* @__PURE__ */ __name((viewPartsToRender, ctx) => {
@@ -519,6 +542,9 @@ let View = class View2 extends ViewEventHandler {
     this._flushAccumulatedAndRenderNow();
     const width = this._viewLines.getLineWidth(viewLine);
     return width;
+  }
+  resetLineWidthCaches() {
+    this._viewLines.resetLineWidthCaches();
   }
   getTargetAtClientPoint(clientX, clientY) {
     const mouseTarget = this._pointerHandler.getTargetAtClientPoint(clientX, clientY);
@@ -669,13 +695,20 @@ class EditorRenderingCoordinator {
   _onRenderScheduled() {
     const coordinatedRenderings = this._coordinatedRenderings.slice(0);
     this._coordinatedRenderings = [];
-    for (const rendering of coordinatedRenderings) {
-      safeInvokeNoArg(() => rendering.prepareRenderText());
+    const viewportDatas = [];
+    for (let i = 0, len = coordinatedRenderings.length; i < len; i++) {
+      const rendering = coordinatedRenderings[i];
+      viewportDatas[i] = safeInvokeNoArg(() => rendering.prepareRenderText());
     }
     const datas = [];
     for (let i = 0, len = coordinatedRenderings.length; i < len; i++) {
       const rendering = coordinatedRenderings[i];
-      datas[i] = safeInvokeNoArg(() => rendering.renderText());
+      const viewportData = viewportDatas[i];
+      if (!viewportData) {
+        datas[i] = null;
+        continue;
+      }
+      datas[i] = safeInvokeNoArg(() => rendering.renderText(viewportData));
     }
     for (let i = 0, len = coordinatedRenderings.length; i < len; i++) {
       const rendering = coordinatedRenderings[i];

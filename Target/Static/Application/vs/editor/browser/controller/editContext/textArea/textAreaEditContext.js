@@ -221,6 +221,9 @@ let TextAreaEditContext = class TextAreaEditContext2 extends AbstractEditContext
       isFirefox: browser.isFirefox,
       isSafari: browser.isSafari
     }));
+    this._register(this._textAreaInput.onWillCopy((e) => this._onWillCopy.fire(e)));
+    this._register(this._textAreaInput.onWillCut((e) => this._onWillCut.fire(e)));
+    this._register(this._textAreaInput.onWillPaste((e) => this._onWillPaste.fire(e)));
     this._register(this._textAreaInput.onKeyDown((e) => {
       this._viewController.emitKeyDown(e);
     }));

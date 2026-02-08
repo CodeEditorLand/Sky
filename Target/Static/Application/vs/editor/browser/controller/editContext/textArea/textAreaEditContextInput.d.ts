@@ -6,7 +6,7 @@ import { Position } from '../../../../common/core/position.js';
 import { Selection } from '../../../../common/core/selection.js';
 import { IAccessibilityService } from '../../../../../platform/accessibility/common/accessibility.js';
 import { ILogService } from '../../../../../platform/log/common/log.js';
-import { ClipboardStoredMetadata } from '../clipboardUtils.js';
+import { ClipboardStoredMetadata, IClipboardCopyEvent, IClipboardPasteEvent } from '../clipboardUtils.js';
 import { ITextAreaWrapper, ITypeData, TextAreaState } from './textAreaEditContextState.js';
 import { ViewContext } from '../../../../common/viewModel/viewContext.js';
 export declare namespace TextAreaSyntethicEvents {
@@ -20,7 +20,7 @@ export interface IPasteData {
     metadata: ClipboardStoredMetadata | null;
 }
 export interface ITextAreaInputHost {
-    readonly context: ViewContext | null;
+    readonly context: ViewContext;
     getScreenReaderContent(): TextAreaState;
     deduceModelPosition(viewAnchorPosition: Position, deltaOffset: number, lineFeedCnt: number): Position;
 }
@@ -81,6 +81,12 @@ export declare class TextAreaInput extends Disposable {
     readonly onCut: Event<void>;
     private _onPaste;
     readonly onPaste: Event<IPasteData>;
+    private _onWillCopy;
+    readonly onWillCopy: Event<IClipboardCopyEvent>;
+    private _onWillCut;
+    readonly onWillCut: Event<IClipboardCopyEvent>;
+    private _onWillPaste;
+    readonly onWillPaste: Event<IClipboardPasteEvent>;
     private _onType;
     readonly onType: Event<ITypeData>;
     private _onCompositionStart;

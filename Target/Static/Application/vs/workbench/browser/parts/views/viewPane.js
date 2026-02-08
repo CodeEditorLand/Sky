@@ -82,6 +82,7 @@ let ViewWelcomeController = class ViewWelcomeController2 {
     this.contextKeyService = contextKeyService;
     this.items = [];
     this._enabled = false;
+    this._wide = false;
     this.disposables = new DisposableStore();
     this.enabledDisposables = this.disposables.add(new DisposableStore());
     this.renderDisposables = this.disposables.add(new DisposableStore());
@@ -94,7 +95,8 @@ let ViewWelcomeController = class ViewWelcomeController2 {
     }
     this.element.style.height = `${height}px`;
     this.element.style.width = `${width}px`;
-    this.element.classList.toggle("wide", width > 640);
+    this._wide = width > 640;
+    this.element.classList.toggle("wide", this._wide);
     this.scrollableElement.scanDomNode();
   }
   focus() {
@@ -115,7 +117,10 @@ let ViewWelcomeController = class ViewWelcomeController2 {
     }
     this.container.classList.add("welcome");
     const viewWelcomeContainer = append(this.container, $(".welcome-view"));
-    this.element = $(".welcome-view-content", { tabIndex: 0 });
+    this.element = $(".welcome-view-content", { tabIndex: 0, role: "region", "aria-label": nls.localize("welcomeViewAriaLabel", "Welcome") });
+    if (this._wide) {
+      this.element.classList.add("wide");
+    }
     this.scrollableElement = new DomScrollableElement(this.element, { alwaysConsumeMouseWheel: true, horizontal: 2, vertical: 3 });
     append(viewWelcomeContainer, this.scrollableElement.getDomNode());
     this.enabledDisposables.add(toDisposable(() => {

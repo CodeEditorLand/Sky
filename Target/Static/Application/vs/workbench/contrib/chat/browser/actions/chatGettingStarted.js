@@ -19,6 +19,7 @@ import { ExtensionIdentifier } from "../../../../../platform/extensions/common/e
 import { IExtensionManagementService } from "../../../../../platform/extensionManagement/common/extensionManagement.js";
 import { IStorageService } from "../../../../../platform/storage/common/storage.js";
 import { IChatWidgetService } from "../chat.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 let ChatGettingStartedContribution = class ChatGettingStartedContribution2 extends Disposable {
   static {
     __name(this, "ChatGettingStartedContribution");
@@ -32,13 +33,14 @@ let ChatGettingStartedContribution = class ChatGettingStartedContribution2 exten
   static {
     this.hideWelcomeView = "workbench.chat.hideWelcomeView";
   }
-  constructor(productService, extensionService, extensionManagementService, storageService, chatWidgetService) {
+  constructor(productService, extensionService, extensionManagementService, storageService, chatWidgetService, configurationService) {
     super();
     this.productService = productService;
     this.extensionService = extensionService;
     this.extensionManagementService = extensionManagementService;
     this.storageService = storageService;
     this.chatWidgetService = chatWidgetService;
+    this.configurationService = configurationService;
     this.recentlyInstalled = false;
     const defaultChatAgent = this.productService.defaultChatAgent;
     const hideWelcomeView = this.storageService.getBoolean(ChatGettingStartedContribution_1.hideWelcomeView, -1, false);
@@ -69,7 +71,10 @@ let ChatGettingStartedContribution = class ChatGettingStartedContribution2 exten
     }));
   }
   async onDidInstallChat() {
-    this.chatWidgetService.revealWidget();
+    const startupEditor = this.configurationService.getValue("workbench.startupEditor");
+    if (startupEditor !== "agentSessionsWelcomePage") {
+      this.chatWidgetService.revealWidget();
+    }
     this.storageService.store(
       ChatGettingStartedContribution_1.hideWelcomeView,
       true,
@@ -85,7 +90,8 @@ ChatGettingStartedContribution = ChatGettingStartedContribution_1 = __decorate([
   __param(1, IExtensionService),
   __param(2, IExtensionManagementService),
   __param(3, IStorageService),
-  __param(4, IChatWidgetService)
+  __param(4, IChatWidgetService),
+  __param(5, IConfigurationService)
 ], ChatGettingStartedContribution);
 export {
   ChatGettingStartedContribution

@@ -2285,9 +2285,11 @@ let ExtensionsWorkbenchService = class ExtensionsWorkbenchService2 extends Dispo
       }
     }
     const extensionsToUninstall = [{ extension: extension.local }];
-    for (const packExtension of this.getAllPackedExtensions(extension, this.local)) {
-      if (packExtension.local && !extensionsToUninstall.some((e2) => areSameExtensions(e2.extension.identifier, packExtension.identifier))) {
-        extensionsToUninstall.push({ extension: packExtension.local });
+    if (!areSameExtensions(extension.identifier, { id: this.productService.defaultChatAgent.extensionId })) {
+      for (const packExtension of this.getAllPackedExtensions(extension, this.local)) {
+        if (packExtension.local && !extensionsToUninstall.some((e2) => areSameExtensions(e2.extension.identifier, packExtension.identifier))) {
+          extensionsToUninstall.push({ extension: packExtension.local });
+        }
       }
     }
     const dependents = [];

@@ -114,6 +114,7 @@ var ChatEditKind;
 (function(ChatEditKind2) {
   ChatEditKind2[ChatEditKind2["Created"] = 0] = "Created";
   ChatEditKind2[ChatEditKind2["Modified"] = 1] = "Modified";
+  ChatEditKind2[ChatEditKind2["Deleted"] = 2] = "Deleted";
 })(ChatEditKind || (ChatEditKind = {}));
 function isChatEditingActionContext(thing) {
   return typeof thing === "object" && !!thing && hasKey(thing, { sessionResource: true });

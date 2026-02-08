@@ -37,6 +37,7 @@ import { IConfigurationService } from "../../../../platform/configuration/common
 import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 import { IFileService } from "../../../../platform/files/common/files.js";
 import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
 import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
 import { ISharedWebContentExtractorService } from "../../../../platform/webContentExtractor/common/webContentExtractor.js";
 import { IEditorService, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
@@ -46,12 +47,14 @@ import { IChatService } from "../../chat/common/chatService/chatService.js";
 import { IDiagnosticVariableEntryFilterData } from "../../chat/common/attachments/chatVariableEntries.js";
 import { isResponseVM } from "../../chat/common/model/chatViewModel.js";
 import { ChatAgentLocation } from "../../chat/common/constants.js";
-import { ILanguageModelsService, isILanguageModelChatSelector } from "../../chat/common/languageModels.js";
+import { ILanguageModelChatMetadata, ILanguageModelsService, isILanguageModelChatSelector } from "../../chat/common/languageModels.js";
 import { isNotebookContainingCellEditor as isNotebookWithCellEditor } from "../../notebook/browser/notebookEditor.js";
 import { INotebookEditorService } from "../../notebook/browser/services/notebookEditorService.js";
 import { CellUri } from "../../notebook/common/notebookCommon.js";
 import { INotebookService } from "../../notebook/common/notebookService.js";
 import { CTX_INLINE_CHAT_VISIBLE } from "../common/inlineChat.js";
+import { InlineChatAffordance } from "./inlineChatAffordance.js";
+import { InlineChatInputWidget, InlineChatSessionOverlayWidget } from "./inlineChatOverlayWidget.js";
 import { IInlineChatSessionService } from "./inlineChatSessionService.js";
 import { InlineChatZoneWidget } from "./inlineChatZoneWidget.js";
 class InlineChatRunOptions {
@@ -86,16 +89,13 @@ let InlineChatController = class InlineChatController2 {
   static get(editor) {
     return editor.getContribution(InlineChatController_1.ID) ?? void 0;
   }
-  static {
-    this._selectVendorDefaultLanguageModel = true;
-  }
   get widget() {
     return this._zone.value.widget;
   }
   get isActive() {
     return Boolean(this._currentSession.get());
   }
-  constructor(_editor, _instaService, _notebookEditorService, _inlineChatSessionService, codeEditorService, contextKeyService, _configurationService, _webContentExtractorService, _fileService, _chatAttachmentResolveService, _editorService, _markerDecorationsService, _languageModelService) {
+  constructor(_editor, _instaService, _notebookEditorService, _inlineChatSessionService, codeEditorService, contextKeyService, _configurationService, _webContentExtractorService, _fileService, _chatAttachmentResolveService, _editorService, _markerDecorationsService, _languageModelService, _logService) {
     this._editor = _editor;
     this._instaService = _instaService;
     this._notebookEditorService = _notebookEditorService;
@@ -107,10 +107,16 @@ let InlineChatController = class InlineChatController2 {
     this._editorService = _editorService;
     this._markerDecorationsService = _markerDecorationsService;
     this._languageModelService = _languageModelService;
+    this._logService = _logService;
     this._store = new DisposableStore();
     this._isActiveController = observableValue(this, false);
+    const editorObs = observableCodeEditor(_editor);
     const ctxInlineChatVisible = CTX_INLINE_CHAT_VISIBLE.bindTo(contextKeyService);
     const notebookAgentConfig = observableConfigValue("inlineChat.notebookAgent", false, this._configurationService);
+    this._renderMode = observableConfigValue("inlineChat.renderMode", "zone", this._configurationService);
+    const overlayWidget = this._store.add(this._instaService.createInstance(InlineChatInputWidget, editorObs));
+    const sessionOverlayWidget = this._store.add(this._instaService.createInstance(InlineChatSessionOverlayWidget, editorObs));
+    this._gutterIndicator = this._store.add(this._instaService.createInstance(InlineChatAffordance, this._editor, overlayWidget));
     this._zone = new Lazy(() => {
       assertType(this._editor.hasModel(), "[Illegal State] widget should only be created when the editor has a model");
       const location = {
@@ -163,7 +169,6 @@ let InlineChatController = class InlineChatController2 {
       result.domNode.classList.add("inline-chat-2");
       return result;
     });
-    const editorObs = observableCodeEditor(_editor);
     const sessionsSignal = observableSignalFromEvent(this, _inlineChatSessionService.onDidChangeSessions);
     this._currentSession = derived((r) => {
       sessionsSignal.read(r);
@@ -213,11 +218,16 @@ let InlineChatController = class InlineChatController2 {
     });
     this._store.add(autorun((r) => {
       const session = visibleSessionObs.read(r);
+      const renderMode = this._renderMode.read(r);
       if (!session) {
         this._zone.rawValue?.hide();
         this._zone.rawValue?.widget.chatWidget.setModel(void 0);
         _editor.focus();
         ctxInlineChatVisible.reset();
+      } else if (renderMode === "hover") {
+        this._zone.value.widget.chatWidget.setModel(session.chatModel);
+        this._zone.rawValue?.hide();
+        ctxInlineChatVisible.set(true);
       } else {
         ctxInlineChatVisible.set(true);
         this._zone.value.widget.chatWidget.setModel(session.chatModel);
@@ -228,6 +238,23 @@ let InlineChatController = class InlineChatController2 {
         }
         this._zone.value.reveal(this._zone.value.position);
         this._zone.value.widget.focus();
+      }
+    }));
+    this._store.add(autorun((r) => {
+      const session = visibleSessionObs.read(r);
+      const renderMode = this._renderMode.read(r);
+      if (!session || renderMode !== "hover") {
+        sessionOverlayWidget.hide();
+        return;
+      }
+      const lastRequest = session.chatModel.lastRequestObs.read(r);
+      const isInProgress = lastRequest?.response?.isInProgress.read(r);
+      const entry = session.editingSession.readEntry(session.uri, r);
+      const isNotSettled = entry ? entry.state.read(r) === 0 : false;
+      if (isInProgress || isNotSettled) {
+        sessionOverlayWidget.show(session);
+      } else {
+        sessionOverlayWidget.hide();
       }
     }));
     this._store.add(autorun((r) => {
@@ -328,71 +355,61 @@ let InlineChatController = class InlineChatController2 {
       await existingSession.editingSession.accept();
       existingSession.dispose();
     }
+    if (!arg?.message && this._configurationService.getValue(
+      "inlineChat.renderMode"
+      /* InlineChatConfigKeys.RenderMode */
+    ) === "hover") {
+      await this._gutterIndicator.showMenuAtSelection();
+      return true;
+    }
     this._isActiveController.set(true, void 0);
     const session = this._inlineChatSessionService.createSession(this._editor);
-    const store = new DisposableStore();
-    const persistModelChoice = this._configurationService.getValue(
-      "inlineChat.persistModelChoice"
-      /* InlineChatConfigKeys.PersistModelChoice */
-    );
-    const model = this._zone.value.widget.chatWidget.input.selectedLanguageModel;
-    if (!persistModelChoice && InlineChatController_1._selectVendorDefaultLanguageModel && model && !model.metadata.isDefaultForLocation[session.chatModel.initialLocation]) {
-      const ids = await this._languageModelService.selectLanguageModels({ vendor: model.metadata.vendor });
-      for (const identifier of ids) {
-        const candidate = this._languageModelService.lookupLanguageModel(identifier);
-        if (candidate?.isDefaultForLocation[session.chatModel.initialLocation]) {
-          this._zone.value.widget.chatWidget.input.setCurrentLanguageModel({ metadata: candidate, identifier });
-          break;
-        }
-      }
-    }
-    store.add(this._zone.value.widget.chatWidget.input.onDidChangeCurrentLanguageModel((newModel) => {
-      InlineChatController_1._selectVendorDefaultLanguageModel = Boolean(newModel.metadata.isDefaultForLocation[session.chatModel.initialLocation]);
-    }));
-    const entries = [];
-    for (const [range, marker] of this._markerDecorationsService.getLiveMarkers(uri)) {
-      if (range.intersectRanges(this._editor.getSelection())) {
-        const filter = IDiagnosticVariableEntryFilterData.fromMarker(marker);
-        entries.push(IDiagnosticVariableEntryFilterData.toEntry(filter));
-      }
-    }
-    if (entries.length > 0) {
-      this._zone.value.widget.chatWidget.attachmentModel.addContext(...entries);
-      this._zone.value.widget.chatWidget.input.setValue(entries.length > 1 ? localize("fixN", "Fix the attached problems") : localize("fix1", "Fix the attached problem"), true);
-      this._zone.value.widget.chatWidget.inputEditor.setSelection(new Selection(1, 1, Number.MAX_SAFE_INTEGER, 1));
-    }
-    if (arg && InlineChatRunOptions.isInlineChatRunOptions(arg)) {
-      if (arg.initialRange) {
-        this._editor.revealRange(arg.initialRange);
-      }
-      if (arg.initialSelection) {
-        this._editor.setSelection(arg.initialSelection);
-      }
-      if (arg.attachments) {
-        await Promise.all(arg.attachments.map(async (attachment) => {
-          await this._zone.value.widget.chatWidget.attachmentModel.addFile(attachment);
-        }));
-        delete arg.attachments;
-      }
-      if (arg.modelSelector) {
-        const id = (await this._languageModelService.selectLanguageModels(arg.modelSelector)).sort().at(0);
-        if (!id) {
-          throw new Error(`No language models found matching selector: ${JSON.stringify(arg.modelSelector)}.`);
-        }
-        const model2 = this._languageModelService.lookupLanguageModel(id);
-        if (!model2) {
-          throw new Error(`Language model not loaded: ${id}.`);
-        }
-        this._zone.value.widget.chatWidget.input.setCurrentLanguageModel({ metadata: model2, identifier: id });
-      }
-      if (arg.message) {
-        this._zone.value.widget.chatWidget.setInput(arg.message);
-        if (arg.autoSend) {
-          await this._zone.value.widget.chatWidget.acceptInput();
-        }
-      }
-    }
+    const sessionStore = new DisposableStore();
     try {
+      await this._applyModelDefaults(session, sessionStore);
+      const entries = [];
+      for (const [range, marker] of this._markerDecorationsService.getLiveMarkers(uri)) {
+        if (range.intersectRanges(this._editor.getSelection())) {
+          const filter = IDiagnosticVariableEntryFilterData.fromMarker(marker);
+          entries.push(IDiagnosticVariableEntryFilterData.toEntry(filter));
+        }
+      }
+      if (entries.length > 0) {
+        this._zone.value.widget.chatWidget.attachmentModel.addContext(...entries);
+        this._zone.value.widget.chatWidget.input.setValue(entries.length > 1 ? localize("fixN", "Fix the attached problems") : localize("fix1", "Fix the attached problem"), true);
+        this._zone.value.widget.chatWidget.inputEditor.setSelection(new Selection(1, 1, Number.MAX_SAFE_INTEGER, 1));
+      }
+      if (arg && InlineChatRunOptions.isInlineChatRunOptions(arg)) {
+        if (arg.initialRange) {
+          this._editor.revealRange(arg.initialRange);
+        }
+        if (arg.initialSelection) {
+          this._editor.setSelection(arg.initialSelection);
+        }
+        if (arg.attachments) {
+          await Promise.all(arg.attachments.map(async (attachment) => {
+            await this._zone.value.widget.chatWidget.attachmentModel.addFile(attachment);
+          }));
+          delete arg.attachments;
+        }
+        if (arg.modelSelector) {
+          const id = (await this._languageModelService.selectLanguageModels(arg.modelSelector)).sort().at(0);
+          if (!id) {
+            throw new Error(`No language models found matching selector: ${JSON.stringify(arg.modelSelector)}.`);
+          }
+          const model = this._languageModelService.lookupLanguageModel(id);
+          if (!model) {
+            throw new Error(`Language model not loaded: ${id}.`);
+          }
+          this._zone.value.widget.chatWidget.input.setCurrentLanguageModel({ metadata: model, identifier: id });
+        }
+        if (arg.message) {
+          this._zone.value.widget.chatWidget.setInput(arg.message);
+          if (arg.autoSend) {
+            await this._zone.value.widget.chatWidget.acceptInput();
+          }
+        }
+      }
       if (!arg?.resolveOnResponse) {
         await Event.toPromise(session.editingSession.onDidDispose);
         const rejected = session.editingSession.getEntry(uri)?.state.get() === 2;
@@ -406,7 +423,7 @@ let InlineChatController = class InlineChatController2 {
         return true;
       }
     } finally {
-      store.dispose();
+      sessionStore.dispose();
     }
   }
   async acceptSession() {
@@ -424,6 +441,61 @@ let InlineChatController = class InlineChatController2 {
     }
     await session.editingSession.reject();
     session.dispose();
+  }
+  async _selectVendorDefaultModel(session) {
+    const model = this._zone.value.widget.chatWidget.input.selectedLanguageModel.get();
+    if (model && !model.metadata.isDefaultForLocation[session.chatModel.initialLocation]) {
+      const ids = await this._languageModelService.selectLanguageModels({ vendor: model.metadata.vendor });
+      for (const identifier of ids) {
+        const candidate = this._languageModelService.lookupLanguageModel(identifier);
+        if (candidate?.isDefaultForLocation[session.chatModel.initialLocation]) {
+          this._zone.value.widget.chatWidget.input.setCurrentLanguageModel({ metadata: candidate, identifier });
+          break;
+        }
+      }
+    }
+  }
+  /**
+   * Applies model defaults based on settings and tracks user model changes.
+   * Prioritization: user session choice > inlineChat.defaultModel setting > vendor default
+   */
+  async _applyModelDefaults(session, sessionStore) {
+    const userSelectedModel = InlineChatController_1._userSelectedModel;
+    const defaultModelSetting = this._configurationService.getValue(
+      "inlineChat.defaultModel"
+      /* InlineChatConfigKeys.DefaultModel */
+    );
+    let modelApplied = false;
+    if (userSelectedModel) {
+      modelApplied = this._zone.value.widget.chatWidget.input.switchModelByQualifiedName([userSelectedModel]);
+      if (!modelApplied) {
+        InlineChatController_1._userSelectedModel = void 0;
+      }
+    }
+    if (!modelApplied && defaultModelSetting) {
+      modelApplied = this._zone.value.widget.chatWidget.input.switchModelByQualifiedName([defaultModelSetting]);
+      if (!modelApplied) {
+        this._logService.warn(`inlineChat.defaultModel setting value '${defaultModelSetting}' did not match any available model. Falling back to vendor default.`);
+      }
+    }
+    if (!modelApplied) {
+      await this._selectVendorDefaultModel(session);
+    }
+    let initialModelId;
+    sessionStore.add(autorun((r) => {
+      const newModel = this._zone.value.widget.chatWidget.input.selectedLanguageModel.read(r);
+      if (!newModel) {
+        return;
+      }
+      if (!initialModelId) {
+        initialModelId = newModel.identifier;
+        return;
+      }
+      if (initialModelId !== newModel.identifier) {
+        InlineChatController_1._userSelectedModel = ILanguageModelChatMetadata.asQualifiedName(newModel.metadata);
+        initialModelId = newModel.identifier;
+      }
+    }));
   }
   async createImageAttachment(attachment) {
     const value = this._currentSession.get();
@@ -455,7 +527,8 @@ InlineChatController = InlineChatController_1 = __decorate([
   __param(9, IChatAttachmentResolveService),
   __param(10, IEditorService),
   __param(11, IMarkerDecorationsService),
-  __param(12, ILanguageModelsService)
+  __param(12, ILanguageModelsService),
+  __param(13, ILogService)
 ], InlineChatController);
 async function reviewEdits(accessor, editor, stream, token, applyCodeBlockSuggestionId) {
   if (!editor.hasModel()) {

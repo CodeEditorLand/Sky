@@ -28,7 +28,6 @@ let ChatResultListSubPart = class ChatResultListSubPart2 extends BaseChatToolInv
       reference: detail
     })), message, context, listPool, getToolApprovalMessage(toolInvocation)));
     collapsibleListPart.icon = Codicon.check;
-    this._register(collapsibleListPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
     this.domNode = collapsibleListPart.domNode;
   }
 };

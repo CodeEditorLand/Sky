@@ -714,4 +714,8 @@ export declare const Codicon: {
     readonly removeSmall: ThemeIcon;
     readonly worktreeSmall: ThemeIcon;
     readonly worktree: ThemeIcon;
+    readonly screenCut: ThemeIcon;
+    readonly ask: ThemeIcon;
+    readonly openai: ThemeIcon;
+    readonly claude: ThemeIcon;
 };

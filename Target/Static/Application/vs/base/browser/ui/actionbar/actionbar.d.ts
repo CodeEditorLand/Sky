@@ -93,6 +93,7 @@ export declare class ActionBar extends Disposable implements IActionRunner {
     clear(): void;
     length(): number;
     isEmpty(): boolean;
+    isFocused(index?: number): boolean;
     focus(index?: number): void;
     focus(selectFirst?: boolean): void;
     private focusFirst;

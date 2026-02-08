@@ -14,6 +14,8 @@ export declare const DirtyWorkingCopiesContext: RawContextKey<boolean>;
 export declare const RemoteNameContext: RawContextKey<string>;
 export declare const VirtualWorkspaceContext: RawContextKey<string>;
 export declare const TemporaryWorkspaceContext: RawContextKey<boolean>;
+export declare const IsAgentSessionsWorkspaceContext: RawContextKey<boolean>;
+export declare const WorkbenchModeContext: RawContextKey<string>;
 export declare const HasWebFileSystemAccess: RawContextKey<boolean>;
 export declare const EmbedderIdentifierContext: RawContextKey<string | undefined>;
 export declare const InAutomationContext: RawContextKey<boolean>;

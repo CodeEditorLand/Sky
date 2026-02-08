@@ -11,16 +11,12 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-import { Codicon } from "../../../../../../base/common/codicons.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
-import { ThemeIcon } from "../../../../../../base/common/themables.js";
-import { localize } from "../../../../../../nls.js";
-import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
-import { ILanguageModelToolsService, SpecedToolAliases, ToolDataSource } from "../languageModelToolsService.js";
+import { ILanguageModelToolsService } from "../languageModelToolsService.js";
 import { ConfirmationTool, ConfirmationToolData } from "./confirmationTool.js";
 import { EditTool, EditToolData } from "./editFileTool.js";
-import { createManageTodoListToolData, ManageTodoListTool, TodoListToolDescriptionFieldSettingId, TodoListToolWriteOnlySettingId } from "./manageTodoListTool.js";
+import { createManageTodoListToolData, ManageTodoListTool } from "./manageTodoListTool.js";
 import { RunSubagentTool } from "./runSubagentTool.js";
 let BuiltinToolsContribution = class BuiltinToolsContribution2 extends Disposable {
   static {
@@ -29,31 +25,25 @@ let BuiltinToolsContribution = class BuiltinToolsContribution2 extends Disposabl
   static {
     this.ID = "chat.builtinTools";
   }
-  constructor(toolsService, instantiationService, configurationService) {
+  constructor(toolsService, instantiationService) {
     super();
-    this.configurationService = configurationService;
     const editTool = instantiationService.createInstance(EditTool);
     this._register(toolsService.registerTool(EditToolData, editTool));
-    const writeOnlyMode = this.configurationService.getValue(TodoListToolWriteOnlySettingId) === true;
-    const includeDescription = this.configurationService.getValue(TodoListToolDescriptionFieldSettingId) !== false;
-    const todoToolData = createManageTodoListToolData(writeOnlyMode, includeDescription);
-    const manageTodoListTool = this._register(instantiationService.createInstance(ManageTodoListTool, writeOnlyMode, includeDescription));
+    const todoToolData = createManageTodoListToolData();
+    const manageTodoListTool = this._register(instantiationService.createInstance(ManageTodoListTool));
     this._register(toolsService.registerTool(todoToolData, manageTodoListTool));
     const confirmationTool = instantiationService.createInstance(ConfirmationTool);
     this._register(toolsService.registerTool(ConfirmationToolData, confirmationTool));
     const runSubagentTool = this._register(instantiationService.createInstance(RunSubagentTool));
-    const customAgentToolSet = this._register(toolsService.createToolSet(ToolDataSource.Internal, "custom-agent", SpecedToolAliases.agent, {
-      icon: ThemeIcon.fromId(Codicon.agent.id),
-      description: localize("toolset.custom-agent", "Delegate tasks to other agents")
-    }));
     let runSubagentRegistration;
     let toolSetRegistration;
     const registerRunSubagentTool = /* @__PURE__ */ __name(() => {
       runSubagentRegistration?.dispose();
       toolSetRegistration?.dispose();
+      toolsService.flushToolUpdates();
       const runSubagentToolData = runSubagentTool.getToolData();
       runSubagentRegistration = toolsService.registerTool(runSubagentToolData, runSubagentTool);
-      toolSetRegistration = customAgentToolSet.addTool(runSubagentToolData);
+      toolSetRegistration = toolsService.agentToolSet.addTool(runSubagentToolData);
     }, "registerRunSubagentTool");
     registerRunSubagentTool();
     this._register(runSubagentTool.onDidUpdateToolData(registerRunSubagentTool));
@@ -67,8 +57,7 @@ let BuiltinToolsContribution = class BuiltinToolsContribution2 extends Disposabl
 };
 BuiltinToolsContribution = __decorate([
   __param(0, ILanguageModelToolsService),
-  __param(1, IInstantiationService),
-  __param(2, IConfigurationService)
+  __param(1, IInstantiationService)
 ], BuiltinToolsContribution);
 const InternalFetchWebPageToolId = "vscode_fetchWebPage_internal";
 export {

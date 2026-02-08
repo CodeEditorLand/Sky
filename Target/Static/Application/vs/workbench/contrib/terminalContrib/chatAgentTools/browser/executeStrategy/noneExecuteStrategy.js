@@ -13,21 +13,22 @@ var __param = function(paramIndex, decorator) {
 };
 import { CancellationError } from "../../../../../../base/common/errors.js";
 import { Emitter } from "../../../../../../base/common/event.js";
-import { DisposableStore, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
 import { ITerminalLogService } from "../../../../../../platform/terminal/common/terminal.js";
 import { waitForIdle, waitForIdleWithPromptHeuristics } from "./executeStrategy.js";
 import { createAltBufferPromise, setupRecreatingStartMarker } from "./strategyHelpers.js";
-let NoneExecuteStrategy = class NoneExecuteStrategy2 {
+let NoneExecuteStrategy = class NoneExecuteStrategy2 extends Disposable {
   static {
     __name(this, "NoneExecuteStrategy");
   }
   constructor(_instance, _hasReceivedUserInput, _logService) {
+    super();
     this._instance = _instance;
     this._hasReceivedUserInput = _hasReceivedUserInput;
     this._logService = _logService;
     this.type = "none";
-    this._startMarker = new MutableDisposable();
-    this._onDidCreateStartMarker = new Emitter();
+    this._startMarker = this._register(new MutableDisposable());
+    this._onDidCreateStartMarker = this._register(new Emitter());
     this.onDidCreateStartMarker = this._onDidCreateStartMarker.event;
   }
   async execute(commandLine, token, commandId) {

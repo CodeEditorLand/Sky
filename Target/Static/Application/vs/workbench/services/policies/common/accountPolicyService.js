@@ -22,22 +22,18 @@ let AccountPolicyService = class AccountPolicyService2 extends AbstractPolicySer
     super();
     this.logService = logService;
     this.defaultAccountService = defaultAccountService;
-    this.account = null;
-    this.defaultAccountService.getDefaultAccount().then((account) => {
-      this.account = account;
+    this._updatePolicyDefinitions(this.policyDefinitions);
+    this._register(this.defaultAccountService.onDidChangePolicyData(() => {
       this._updatePolicyDefinitions(this.policyDefinitions);
-      this._register(this.defaultAccountService.onDidChangeDefaultAccount((account2) => {
-        this.account = account2;
-        this._updatePolicyDefinitions(this.policyDefinitions);
-      }));
-    });
+    }));
   }
   async _updatePolicyDefinitions(policyDefinitions) {
     this.logService.trace(`AccountPolicyService#_updatePolicyDefinitions: Got ${Object.keys(policyDefinitions).length} policy definitions`);
     const updated = [];
+    const policyData = this.defaultAccountService.policyData;
     for (const key in policyDefinitions) {
       const policy = policyDefinitions[key];
-      const policyValue = this.account && policy.value ? policy.value(this.account) : void 0;
+      const policyValue = policyData && policy.value ? policy.value(policyData) : void 0;
       if (policyValue !== void 0) {
         if (this.policies.get(key) !== policyValue) {
           this.policies.set(key, policyValue);

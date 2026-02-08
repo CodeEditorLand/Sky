@@ -304,7 +304,7 @@ let UserDataProfileImportExportService = class UserDataProfileImportExportServic
       throw new Error(localize("invalid profile content", "This profile is not valid."));
     }
     if (!isUserDataProfileTemplate(profileTemplate)) {
-      throw new Error(localize("invalid profile content", "This profile is not valid."));
+      return null;
     }
     if (options?.name) {
       profileTemplate.name = options.name;

@@ -2,60 +2,53 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { isWindows } from "../../../../base/common/platform.js";
 import { Mimes } from "../../../../base/common/mime.js";
-import { LogLevel } from "../../../../platform/log/common/log.js";
 import { generateUuid } from "../../../../base/common/uuid.js";
-function ensureClipboardGetsEditorSelection(e, context, logService, isFirefox) {
-  const viewModel = context.viewModel;
-  const options = context.configuration.options;
-  let id = void 0;
-  if (logService.getLevel() === LogLevel.Trace) {
-    id = generateUuid();
-  }
-  const { dataToCopy, storedMetadata } = generateDataToCopyAndStoreInMemory(viewModel, options, id, isFirefox);
-  CopyOptions.electronBugWorkaroundCopyEventHasFired = true;
-  e.preventDefault();
-  if (e.clipboardData) {
-    ClipboardEventUtils.setTextData(e.clipboardData, dataToCopy.text, dataToCopy.html, storedMetadata);
-  }
-  logService.trace("ensureClipboardGetsEditorSelection with id : ", id, " with text.length: ", dataToCopy.text.length);
+import { toExternalVSDataTransfer } from "../../dataTransfer.js";
+function generateDataToCopyAndStoreInMemory(viewModel, id, isFirefox) {
+  const { dataToCopy, metadata } = generateDataToCopy(viewModel);
+  storeMetadataInMemory(dataToCopy.text, metadata, isFirefox);
+  return { dataToCopy, metadata };
 }
-__name(ensureClipboardGetsEditorSelection, "ensureClipboardGetsEditorSelection");
-function generateDataToCopyAndStoreInMemory(viewModel, options, id, isFirefox) {
-  const emptySelectionClipboard = options.get(
+__name(generateDataToCopyAndStoreInMemory, "generateDataToCopyAndStoreInMemory");
+function storeMetadataInMemory(textToCopy, metadata, isFirefox) {
+  InMemoryClipboardMetadataManager.INSTANCE.set(
+    // When writing "LINE\r\n" to the clipboard and then pasting,
+    // Firefox pastes "LINE\n", so let's work around this quirk
+    isFirefox ? textToCopy.replace(/\r\n/g, "\n") : textToCopy,
+    metadata
+  );
+}
+__name(storeMetadataInMemory, "storeMetadataInMemory");
+function generateDataToCopy(viewModel) {
+  const emptySelectionClipboard = viewModel.getEditorOption(
     45
     /* EditorOption.emptySelectionClipboard */
   );
-  const copyWithSyntaxHighlighting = options.get(
+  const copyWithSyntaxHighlighting = viewModel.getEditorOption(
     31
     /* EditorOption.copyWithSyntaxHighlighting */
   );
   const selections = viewModel.getCursorStates().map((cursorState) => cursorState.modelState.selection);
   const dataToCopy = getDataToCopy(viewModel, selections, emptySelectionClipboard, copyWithSyntaxHighlighting);
-  const storedMetadata = {
+  const metadata = {
     version: 1,
-    id,
+    id: generateUuid(),
     isFromEmptySelection: dataToCopy.isFromEmptySelection,
     multicursorText: dataToCopy.multicursorText,
     mode: dataToCopy.mode
   };
-  InMemoryClipboardMetadataManager.INSTANCE.set(
-    // When writing "LINE\r\n" to the clipboard and then pasting,
-    // Firefox pastes "LINE\n", so let's work around this quirk
-    isFirefox ? dataToCopy.text.replace(/\r\n/g, "\n") : dataToCopy.text,
-    storedMetadata
-  );
-  return { dataToCopy, storedMetadata };
+  return { dataToCopy, metadata };
 }
-__name(generateDataToCopyAndStoreInMemory, "generateDataToCopyAndStoreInMemory");
+__name(generateDataToCopy, "generateDataToCopy");
 function getDataToCopy(viewModel, modelSelections, emptySelectionClipboard, copyWithSyntaxHighlighting) {
-  const rawTextToCopy = viewModel.getPlainTextToCopy(modelSelections, emptySelectionClipboard, isWindows);
+  const { sourceRanges, sourceText } = viewModel.getPlainTextToCopy(modelSelections, emptySelectionClipboard, isWindows);
   const newLineCharacter = viewModel.model.getEOL();
   const isFromEmptySelection = emptySelectionClipboard && modelSelections.length === 1 && modelSelections[0].isEmpty();
-  const multicursorText = Array.isArray(rawTextToCopy) ? rawTextToCopy : null;
-  const text = Array.isArray(rawTextToCopy) ? rawTextToCopy.join(newLineCharacter) : rawTextToCopy;
+  const multicursorText = Array.isArray(sourceText) ? sourceText : null;
+  const text = Array.isArray(sourceText) ? sourceText.join(newLineCharacter) : sourceText;
   let html = void 0;
   let mode = null;
-  if (CopyOptions.forceCopyWithSyntaxHighlighting || copyWithSyntaxHighlighting && text.length < 65536) {
+  if (CopyOptions.forceCopyWithSyntaxHighlighting || copyWithSyntaxHighlighting && sourceText.length < 65536) {
     const richText = viewModel.getRichTextToCopy(modelSelections, emptySelectionClipboard);
     if (richText) {
       html = richText.html;
@@ -64,6 +57,7 @@ function getDataToCopy(viewModel, modelSelections, emptySelectionClipboard, copy
   }
   const dataToCopy = {
     isFromEmptySelection,
+    sourceRanges,
     multicursorText,
     text,
     html,
@@ -125,11 +119,78 @@ const ClipboardEventUtils = {
     clipboardData.setData("vscode-editor-data", JSON.stringify(metadata));
   }
 };
+function createClipboardCopyEvent(e, isCut, context, logService, isFirefox) {
+  const { dataToCopy, metadata } = generateDataToCopy(context.viewModel);
+  let handled = false;
+  return {
+    isCut,
+    clipboardData: {
+      setData: /* @__PURE__ */ __name((type, value) => {
+        e.clipboardData?.setData(type, value);
+      }, "setData")
+    },
+    dataToCopy,
+    ensureClipboardGetsEditorData: /* @__PURE__ */ __name(() => {
+      e.preventDefault();
+      if (e.clipboardData) {
+        ClipboardEventUtils.setTextData(e.clipboardData, dataToCopy.text, dataToCopy.html, metadata);
+      }
+      storeMetadataInMemory(dataToCopy.text, metadata, isFirefox);
+      logService.trace("ensureClipboardGetsEditorSelection with id : ", metadata.id, " with text.length: ", dataToCopy.text.length);
+    }, "ensureClipboardGetsEditorData"),
+    setHandled: /* @__PURE__ */ __name(() => {
+      handled = true;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, "setHandled"),
+    get isHandled() {
+      return handled;
+    }
+  };
+}
+__name(createClipboardCopyEvent, "createClipboardCopyEvent");
+function createClipboardPasteEvent(e) {
+  let handled = false;
+  let [text, metadata] = e.clipboardData ? ClipboardEventUtils.getTextData(e.clipboardData) : ["", null];
+  metadata = metadata || InMemoryClipboardMetadataManager.INSTANCE.get(text);
+  return {
+    clipboardData: createReadableClipboardData(e.clipboardData),
+    metadata,
+    text,
+    toExternalVSDataTransfer: /* @__PURE__ */ __name(() => e.clipboardData ? toExternalVSDataTransfer(e.clipboardData) : void 0, "toExternalVSDataTransfer"),
+    browserEvent: e,
+    setHandled: /* @__PURE__ */ __name(() => {
+      handled = true;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, "setHandled"),
+    get isHandled() {
+      return handled;
+    }
+  };
+}
+__name(createClipboardPasteEvent, "createClipboardPasteEvent");
+function createReadableClipboardData(dataTransfer) {
+  return {
+    types: Array.from(dataTransfer?.types ?? []),
+    files: Array.prototype.slice.call(dataTransfer?.files ?? [], 0),
+    getData: /* @__PURE__ */ __name((type) => dataTransfer?.getData(type) ?? "", "getData")
+  };
+}
+__name(createReadableClipboardData, "createReadableClipboardData");
+function createWritableClipboardData(dataTransfer) {
+  return {
+    setData: /* @__PURE__ */ __name((type, value) => dataTransfer?.setData(type, value), "setData")
+  };
+}
+__name(createWritableClipboardData, "createWritableClipboardData");
 export {
-  ClipboardEventUtils,
   CopyOptions,
   InMemoryClipboardMetadataManager,
-  ensureClipboardGetsEditorSelection,
+  createClipboardCopyEvent,
+  createClipboardPasteEvent,
+  createReadableClipboardData,
+  createWritableClipboardData,
   generateDataToCopyAndStoreInMemory
 };
 //# sourceMappingURL=clipboardUtils.js.map

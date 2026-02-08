@@ -208,13 +208,13 @@ let GettingStartedPage = class GettingStartedPage2 extends EditorPane {
             badgeelement.parentElement?.setAttribute("aria-checked", "true");
             badgeelement.classList.remove(...ThemeIcon.asClassNameArray(gettingStartedUncheckedCodicon));
             badgeelement.classList.add("complete", ...ThemeIcon.asClassNameArray(gettingStartedCheckedCodicon));
-            badgeelement.setAttribute("aria-label", localize("stepDone", "Checkbox for Step {0}: Completed", step.title));
+            badgeelement.setAttribute("aria-label", localize("stepDone", "{0}: Completed", step.title));
           } else {
             badgeelement.setAttribute("aria-checked", "false");
             badgeelement.parentElement?.setAttribute("aria-checked", "false");
             badgeelement.classList.remove("complete", ...ThemeIcon.asClassNameArray(gettingStartedCheckedCodicon));
             badgeelement.classList.add(...ThemeIcon.asClassNameArray(gettingStartedUncheckedCodicon));
-            badgeelement.setAttribute("aria-label", localize("stepNotDone", "Checkbox for Step {0}: Not completed", step.title));
+            badgeelement.setAttribute("aria-label", localize("stepNotDone", "{0}: Not completed", step.title));
           }
         });
         if (step.done) {
@@ -286,6 +286,7 @@ let GettingStartedPage = class GettingStartedPage2 extends EditorPane {
     this.editorInput.showTelemetryNotice = options?.showTelemetryNotice ?? true;
     this.editorInput.selectedCategory = options?.selectedCategory;
     this.editorInput.selectedStep = options?.selectedStep;
+    this.editorInput.returnToCommand = options?.returnToCommand;
     this.container.classList.remove("animatable");
     await this.buildCategoriesSlide(options?.preserveFocus);
     if (this.shouldAnimate()) {
@@ -352,6 +353,7 @@ let GettingStartedPage = class GettingStartedPage2 extends EditorPane {
         break;
       }
       case "selectCategory": {
+        this.telemetryService.publicLog2("gettingStarted.ActionExecuted", { command: "selectCategory", argument, walkthroughId: this.currentWalkthrough?.id });
         this.scrollToCategory(argument);
         this.gettingStartedService.markWalkthroughOpened(argument);
         break;
@@ -359,6 +361,7 @@ let GettingStartedPage = class GettingStartedPage2 extends EditorPane {
       case "selectStartEntry": {
         const selected = startEntries.find((e) => e.id === argument);
         if (selected) {
+          this.telemetryService.publicLog2("gettingStarted.ActionExecuted", { command: "selectStartEntry", argument, walkthroughId: this.currentWalkthrough?.id });
           this.runStepCommand(selected.content.command);
         } else {
           throw Error("could not find start entry with id: " + argument);
@@ -1296,7 +1299,7 @@ let GettingStartedPage = class GettingStartedPage2 extends EditorPane {
           "x-dispatch": "toggleStepCompletion:" + step.id,
           "role": "checkbox",
           "aria-checked": step.done ? "true" : "false",
-          "aria-label": step.done ? localize("stepDone", "Checkbox for Step {0}: Completed", step.title) : localize("stepNotDone", "Checkbox for Step {0}: Not completed", step.title)
+          "aria-label": step.done ? localize("stepDone", "{0}: Completed", step.title) : localize("stepNotDone", "{0}: Not completed", step.title)
         });
         const container = $(".step-description-container", { "x-step-description-for": step.id });
         this.buildMarkdownDescription(container, step.description);
@@ -1368,6 +1371,8 @@ let GettingStartedPage = class GettingStartedPage2 extends EditorPane {
         this.currentWalkthrough = this.prevWalkthrough;
         this.prevWalkthrough = void 0;
         this.makeCategoryVisibleWhenAvailable(this.currentWalkthrough.id);
+      } else if (this.editorInput?.returnToCommand) {
+        this.commandService.executeCommand(this.editorInput.returnToCommand);
       } else {
         this.currentWalkthrough = void 0;
         if (this.editorInput) {
@@ -1408,7 +1413,7 @@ let GettingStartedPage = class GettingStartedPage2 extends EditorPane {
       slideManager.classList.add("showDetails");
       slideManager.classList.remove("showCategories");
       const prevButton = this.container.querySelector(".prev-button.button-link");
-      prevButton.style.display = this.editorInput?.showWelcome || this.prevWalkthrough ? "block" : "none";
+      prevButton.style.display = this.editorInput?.showWelcome || this.editorInput?.returnToCommand || this.prevWalkthrough ? "block" : "none";
       const moreTextElement = prevButton.querySelector(".moreText");
       moreTextElement.textContent = firstLaunch ? localize("welcome", "Welcome") : localize("goBack", "Go Back");
       this.container.querySelector(".gettingStartedSlideDetails").querySelectorAll("button").forEach((button) => button.disabled = false);

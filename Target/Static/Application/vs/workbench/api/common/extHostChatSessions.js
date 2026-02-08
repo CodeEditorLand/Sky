@@ -13,23 +13,24 @@ var __param = function(paramIndex, decorator) {
 };
 var ExtHostChatSessions_1;
 import { coalesce } from "../../../base/common/arrays.js";
-import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { CancellationToken, CancellationTokenSource } from "../../../base/common/cancellation.js";
 import { CancellationError } from "../../../base/common/errors.js";
-import { Emitter } from "../../../base/common/event.js";
+import { Emitter, Event } from "../../../base/common/event.js";
 import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
 import { ResourceMap } from "../../../base/common/map.js";
+import { basename } from "../../../base/common/resources.js";
 import { URI } from "../../../base/common/uri.js";
+import { SymbolKinds } from "../../../editor/common/languages.js";
 import { ILogService } from "../../../platform/log/common/log.js";
+import { IDiagnosticVariableEntryFilterData, PromptFileVariableKind } from "../../contrib/chat/common/attachments/chatVariableEntries.js";
 import { ChatAgentLocation } from "../../contrib/chat/common/constants.js";
 import { MainContext } from "./extHost.protocol.js";
 import { ChatAgentResponseStream } from "./extHostChatAgents2.js";
 import { IExtHostRpcService } from "./extHostRpcService.js";
 import * as typeConvert from "./extHostTypeConverters.js";
-import * as extHostTypes from "./extHostTypes.js";
-import { IDiagnosticVariableEntryFilterData, PromptFileVariableKind } from "../../contrib/chat/common/attachments/chatVariableEntries.js";
-import { basename } from "../../../base/common/resources.js";
 import { Diagnostic } from "./extHostTypeConverters.js";
-import { SymbolKinds } from "../../../editor/common/languages.js";
+import * as extHostTypes from "./extHostTypes.js";
+import * as objects from "../../../base/common/objects.js";
 class ChatSessionItemImpl {
   static {
     __name(this, "ChatSessionItemImpl");
@@ -43,6 +44,7 @@ class ChatSessionItemImpl {
   #tooltip;
   #timing;
   #changes;
+  #metadata;
   #onChanged;
   constructor(resource, label, onChanged) {
     this.resource = resource;
@@ -130,6 +132,22 @@ class ChatSessionItemImpl {
       this.#onChanged();
     }
   }
+  get metadata() {
+    return this.#metadata;
+  }
+  set metadata(value) {
+    if (value !== void 0) {
+      try {
+        JSON.stringify(value);
+      } catch {
+        throw new Error("metadata must be JSON-serializable");
+      }
+    }
+    if (!objects.equals(this.#metadata, value)) {
+      this.#metadata = value;
+      this.#onChanged();
+    }
+  }
 }
 class ChatSessionItemCollectionImpl {
   static {
@@ -144,6 +162,9 @@ class ChatSessionItemCollectionImpl {
     return this.#items.size;
   }
   replace(items) {
+    if (items.length === 0 && this.#items.size === 0) {
+      return;
+    }
     this.#items.clear();
     for (const item of items) {
       this.#items.set(item.resource, item);
@@ -180,13 +201,14 @@ class ExtHostChatSession {
     this.proxy = proxy;
     this.commandsConverter = commandsConverter;
     this.sessionDisposables = sessionDisposables;
-    this._stream = new ChatAgentResponseStream(extension, request, proxy, commandsConverter, sessionDisposables);
+    this._pendingCarouselResolvers = /* @__PURE__ */ new Map();
+    this._stream = new ChatAgentResponseStream(extension, request, proxy, commandsConverter, sessionDisposables, this._pendingCarouselResolvers, CancellationToken.None);
   }
   get activeResponseStream() {
     return this._stream;
   }
   getActiveRequestStream(request) {
-    return new ChatAgentResponseStream(this.extension, request, this.proxy, this.commandsConverter, this.sessionDisposables);
+    return new ChatAgentResponseStream(this.extension, request, this.proxy, this.commandsConverter, this.sessionDisposables, this._pendingCarouselResolvers, CancellationToken.None);
   }
 }
 let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
@@ -205,12 +227,12 @@ let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
     this._languageModels = _languageModels;
     this._extHostRpc = _extHostRpc;
     this._logService = _logService;
+    this._itemProviderHandlePool = 0;
     this._chatSessionItemProviders = /* @__PURE__ */ new Map();
+    this._itemControllerHandlePool = 0;
     this._chatSessionItemControllers = /* @__PURE__ */ new Map();
-    this._nextChatSessionItemProviderHandle = 0;
+    this._contentProviderHandlePool = 0;
     this._chatSessionContentProviders = /* @__PURE__ */ new Map();
-    this._nextChatSessionItemControllerHandle = 0;
-    this._nextChatSessionContentProviderHandle = 0;
     this._sessionItems = new ResourceMap();
     this._extHostChatSessions = new ResourceMap();
     this._providerOptionGroups = /* @__PURE__ */ new Map();
@@ -232,12 +254,13 @@ let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
     });
   }
   registerChatSessionItemProvider(extension, chatSessionType, provider) {
-    const handle = this._nextChatSessionItemProviderHandle++;
+    const handle = this._itemProviderHandlePool++;
     const disposables = new DisposableStore();
     this._chatSessionItemProviders.set(handle, { provider, extension, disposable: disposables, sessionType: chatSessionType });
     this._proxy.$registerChatSessionItemProvider(handle, chatSessionType);
     if (provider.onDidChangeChatSessionItems) {
       disposables.add(provider.onDidChangeChatSessionItems(() => {
+        this._logService.trace(`ExtHostChatSessions. Firing $onDidChangeChatSessionItems for ${chatSessionType}`);
         this._proxy.$onDidChangeChatSessionItems(handle);
       }));
     }
@@ -256,33 +279,62 @@ let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
     };
   }
   createChatSessionItemController(extension, id, refreshHandler) {
-    const controllerHandle = this._nextChatSessionItemControllerHandle++;
+    const controllerHandle = this._itemControllerHandlePool++;
     const disposables = new DisposableStore();
-    const onDidArchiveChatSessionItem = disposables.add(new Emitter());
-    const collection = new ChatSessionItemCollectionImpl(() => {
-      this._proxy.$onDidChangeChatSessionItems(controllerHandle);
-    });
     let isDisposed = false;
-    const controller = {
+    let refreshIdPool = 0;
+    let activeRefreshId = void 0;
+    const onDidChangeItemsEmitter = disposables.add(new Emitter());
+    const onDidChangeChatSessionItemStateEmitter = disposables.add(new Emitter());
+    const notifyItemsChanged = /* @__PURE__ */ __name(() => {
+      if (typeof activeRefreshId === "undefined") {
+        onDidChangeItemsEmitter.fire();
+      }
+    }, "notifyItemsChanged");
+    const collection = new ChatSessionItemCollectionImpl(() => {
+      notifyItemsChanged();
+    });
+    const controller = Object.freeze({
       id,
-      refreshHandler,
+      refreshHandler: /* @__PURE__ */ __name(async (refreshToken) => {
+        if (isDisposed) {
+          throw new Error("ChatSessionItemController has been disposed");
+        }
+        const opId = ++refreshIdPool;
+        activeRefreshId = opId;
+        try {
+          this._logService.trace(`ExtHostChatSessions. Controller(${id}).refresh()`);
+          await refreshHandler(refreshToken);
+        } finally {
+          if (activeRefreshId === opId) {
+            activeRefreshId = void 0;
+          }
+        }
+      }, "refreshHandler"),
       items: collection,
-      onDidArchiveChatSessionItem: onDidArchiveChatSessionItem.event,
+      onDidChangeChatSessionItemState: onDidChangeChatSessionItemStateEmitter.event,
       createChatSessionItem: /* @__PURE__ */ __name((resource, label) => {
         if (isDisposed) {
           throw new Error("ChatSessionItemController has been disposed");
         }
         return new ChatSessionItemImpl(resource, label, () => {
-          this._proxy.$onDidChangeChatSessionItems(controllerHandle);
+          notifyItemsChanged();
         });
       }, "createChatSessionItem"),
       dispose: /* @__PURE__ */ __name(() => {
         isDisposed = true;
         disposables.dispose();
       }, "dispose")
-    };
-    this._chatSessionItemControllers.set(controllerHandle, { controller, extension, disposable: disposables, sessionType: id });
-    this._proxy.$registerChatSessionItemProvider(controllerHandle, id);
+    });
+    this._chatSessionItemControllers.set(controllerHandle, { controller, extension, disposable: disposables, sessionType: id, onDidChangeChatSessionItemStateEmitter });
+    disposables.add(this.registerChatSessionItemProvider(extension, id, {
+      onDidChangeChatSessionItems: onDidChangeItemsEmitter.event,
+      onDidCommitChatSessionItem: Event.None,
+      provideChatSessionItems: /* @__PURE__ */ __name(async (token) => {
+        await controller.refreshHandler(token);
+        return Array.from(controller.items, (x) => x[1]);
+      }, "provideChatSessionItems")
+    }));
     disposables.add(toDisposable(() => {
       this._chatSessionItemControllers.delete(controllerHandle);
       this._proxy.$unregisterChatSessionItemProvider(controllerHandle);
@@ -290,7 +342,7 @@ let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
     return controller;
   }
   registerChatSessionContentProvider(extension, chatSessionScheme, chatParticipant, provider, capabilities) {
-    const handle = this._nextChatSessionContentProviderHandle++;
+    const handle = this._contentProviderHandlePool++;
     const disposables = new DisposableStore();
     this._chatSessionContentProviders.set(handle, { provider, extension, capabilities, disposable: disposables });
     this._proxy.$registerChatSessionContentProvider(handle, chatSessionScheme);
@@ -344,32 +396,20 @@ let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
         lastRequestStarted,
         lastRequestEnded
       },
-      changes: sessionContent.changes instanceof Array ? sessionContent.changes : sessionContent.changes && {
-        files: sessionContent.changes?.files ?? 0,
-        insertions: sessionContent.changes?.insertions ?? 0,
-        deletions: sessionContent.changes?.deletions ?? 0
-      }
+      changes: sessionContent.changes instanceof Array ? sessionContent.changes : void 0,
+      metadata: sessionContent.metadata
     };
   }
   async $provideChatSessionItems(handle, token) {
-    let items;
-    const controller = this._chatSessionItemControllers.get(handle);
-    if (controller) {
-      await controller.controller.refreshHandler();
-      if (token.isCancellationRequested) {
-        return [];
-      }
-      items = Array.from(controller.controller.items, (x) => x[1]);
-    } else {
-      const itemProvider = this._chatSessionItemProviders.get(handle);
-      if (!itemProvider) {
-        this._logService.error(`No provider registered for handle ${handle}`);
-        return [];
-      }
-      items = await itemProvider.provider.provideChatSessionItems(token) ?? [];
-      if (token.isCancellationRequested) {
-        return [];
-      }
+    const itemProvider = this._chatSessionItemProviders.get(handle);
+    if (!itemProvider) {
+      this._logService.error(`No provider registered for handle ${handle}`);
+      return [];
+    }
+    this._logService.trace(`ExtHostChatSessions:$provideChatSessionItems(${itemProvider.sessionType})`);
+    const items = await itemProvider.provider.provideChatSessionItems(token) ?? [];
+    if (token.isCancellationRequested) {
+      return [];
     }
     const response = [];
     for (const sessionContent of items) {
@@ -496,7 +536,7 @@ let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
     }
     const chatRequest = typeConvert.ChatAgentRequest.to(request, void 0, await this.getModelForRequest(request, entry.sessionObj.extension), [], /* @__PURE__ */ new Map(), entry.sessionObj.extension, this._logService);
     const stream = entry.sessionObj.getActiveRequestStream(request);
-    await entry.sessionObj.session.requestHandler(chatRequest, { history }, stream.apiObject, token);
+    await entry.sessionObj.session.requestHandler(chatRequest, { history, yieldRequested: false }, stream.apiObject, token);
     return {};
   }
   async getModelForRequest(request, extension) {
@@ -603,6 +643,21 @@ let ExtHostChatSessions = class ExtHostChatSessions2 extends Disposable {
       this._logService.error(`Error calling onSearch for option group ${optionGroupId}:`, error);
       return [];
     }
+  }
+  $onDidChangeChatSessionItemState(controllerHandle, sessionResourceComponents, archived) {
+    const controllerData = this._chatSessionItemControllers.get(controllerHandle);
+    if (!controllerData) {
+      this._logService.warn(`No controller found for handle ${controllerHandle}`);
+      return;
+    }
+    const sessionResource = URI.revive(sessionResourceComponents);
+    const item = controllerData.controller.items.get(sessionResource);
+    if (!item) {
+      this._logService.warn(`No item found for session resource ${sessionResource.toString()}`);
+      return;
+    }
+    item.archived = archived;
+    controllerData.onDidChangeChatSessionItemStateEmitter.fire(item);
   }
 };
 ExtHostChatSessions = ExtHostChatSessions_1 = __decorate([

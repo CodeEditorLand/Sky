@@ -19,7 +19,6 @@ import { INotebookService } from "../../../../notebook/common/notebookService.js
 import { ICodeMapperService } from "../../editing/chatCodeMapperService.js";
 import { IChatService } from "../../chatService/chatService.js";
 import { ToolDataSource, ToolInvocationPresentation } from "../languageModelToolsService.js";
-import { LocalChatSessionUri } from "../../model/chatUri.js";
 const ExtensionEditToolId = "vscode_editFile";
 const InternalEditToolId = "vscode_editFile_internal";
 const EditToolData = {
@@ -46,7 +45,7 @@ let EditTool = class EditTool2 {
     const parameters = invocation.parameters;
     const fileUri = URI.revive(parameters.uri);
     const uri = CellUri.parse(fileUri)?.notebook || fileUri;
-    const model = this.chatService.getSession(LocalChatSessionUri.forSession(invocation.context?.sessionId));
+    const model = this.chatService.getSession(invocation.context.sessionResource);
     const request = model.getRequests().at(-1);
     model.acceptResponseProgress(request, {
       kind: "markdownContent",

@@ -10,7 +10,7 @@ const GetTerminalOutputToolData = {
   toolReferenceName: "getTerminalOutput",
   legacyToolReferenceFullNames: ["runCommands/getTerminalOutput"],
   displayName: localize("getTerminalOutputTool.displayName", "Get Terminal Output"),
-  modelDescription: "Get the output of a terminal command previously started with run_in_terminal",
+  modelDescription: `Get the output of a terminal command previously started with ${"run_in_terminal"}`,
   icon: Codicon.terminal,
   source: ToolDataSource.Internal,
   inputSchema: {

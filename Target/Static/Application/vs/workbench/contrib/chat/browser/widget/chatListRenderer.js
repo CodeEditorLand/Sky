@@ -18,6 +18,7 @@ import { StandardKeyboardEvent } from "../../../../../base/browser/keyboardEvent
 import { alert } from "../../../../../base/browser/ui/aria/aria.js";
 import { DropdownMenuActionViewItem } from "../../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
 import { getDefaultHoverDelegate } from "../../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { CachedListVirtualDelegate } from "../../../../../base/browser/ui/list/list.js";
 import { coalesce, distinct } from "../../../../../base/common/arrays.js";
 import { findLast } from "../../../../../base/common/arraysFind.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
@@ -49,14 +50,14 @@ import { IThemeService } from "../../../../../platform/theme/common/themeService
 import { IChatEntitlementService } from "../../../../services/chat/common/chatEntitlementService.js";
 import { IWorkbenchIssueService } from "../../../issue/common/issue.js";
 import { CodiconActionViewItem } from "../../../notebook/browser/view/cellParts/cellActionView.js";
-import { annotateSpecialMarkdownContent, hasCodeblockUriTag } from "../../common/widget/annotations.js";
+import { annotateSpecialMarkdownContent, extractSubAgentInvocationIdFromText, hasCodeblockUriTag } from "../../common/widget/annotations.js";
 import { checkModeOption } from "../../common/chat.js";
 import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { chatSubcommandLeader } from "../../common/requestParser/chatParserTypes.js";
-import { ChatAgentVoteDirection, ChatAgentVoteDownReason, ChatErrorLevel, IChatToolInvocation, isChatFollowup } from "../../common/chatService/chatService.js";
+import { ChatAgentVoteDirection, ChatAgentVoteDownReason, ChatErrorLevel, IChatService, IChatToolInvocation, isChatFollowup } from "../../common/chatService/chatService.js";
 import { localChatSessionType } from "../../common/chatSessionsService.js";
 import { getChatSessionType } from "../../common/model/chatUri.js";
-import { isRequestVM, isResponseVM } from "../../common/model/chatViewModel.js";
+import { isRequestVM, isResponseVM, isPendingDividerVM } from "../../common/model/chatViewModel.js";
 import { getNWords } from "../../common/model/chatWordCounter.js";
 import { CodeBlockModelCollection } from "../../common/widget/codeBlockModelCollection.js";
 import { ChatAgentLocation, ChatConfiguration, CollapsedToolsDisplayMode, ThinkingDisplayMode } from "../../common/constants.js";
@@ -75,6 +76,7 @@ import { DiffEditorPool, EditorPool } from "./chatContentParts/chatContentCodePo
 import { ChatElicitationContentPart } from "./chatContentParts/chatElicitationContentPart.js";
 import { ChatErrorConfirmationContentPart } from "./chatContentParts/chatErrorConfirmationPart.js";
 import { ChatErrorContentPart } from "./chatContentParts/chatErrorContentPart.js";
+import { ChatQuestionCarouselPart } from "./chatContentParts/chatQuestionCarouselPart.js";
 import { ChatExtensionsContentPart } from "./chatContentParts/chatExtensionsContentPart.js";
 import { ChatMarkdownContentPart, codeblockHasClosingBackticks } from "./chatContentParts/chatMarkdownContentPart.js";
 import { ChatMcpServersInteractionContentPart } from "./chatContentParts/chatMcpServersInteractionContentPart.js";
@@ -87,12 +89,16 @@ import { ChatTaskContentPart } from "./chatContentParts/chatTaskContentPart.js";
 import { ChatTextEditContentPart } from "./chatContentParts/chatTextEditContentPart.js";
 import { ChatThinkingContentPart } from "./chatContentParts/chatThinkingContentPart.js";
 import { ChatSubagentContentPart } from "./chatContentParts/chatSubagentContentPart.js";
+import { ChatTipContentPart } from "./chatContentParts/chatTipContentPart.js";
 import { ChatTreeContentPart, TreePool } from "./chatContentParts/chatTreeContentPart.js";
+import { ChatWorkspaceEditContentPart } from "./chatContentParts/chatWorkspaceEditContentPart.js";
 import { ChatToolInvocationPart } from "./chatContentParts/toolInvocationParts/chatToolInvocationPart.js";
 import { ChatMarkdownDecorationsRenderer } from "./chatContentParts/chatMarkdownDecorationsRenderer.js";
 import { ChatCodeBlockContentProvider } from "./chatContentParts/codeBlockPart.js";
 import { autorun, observableValue } from "../../../../../base/common/observable.js";
 import { RunSubagentTool } from "../../common/tools/builtinTools/runSubagentTool.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { IChatTipService } from "../chatTipService.js";
 const $ = dom.$;
 const COPILOT_USERNAME = "GitHub Copilot";
 const forceVerboseLayoutTracing = false;
@@ -107,7 +113,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   static {
     this.ID = "item";
   }
-  constructor(editorOptions, rendererOptions, delegate, codeBlockModelCollection, overflowWidgetsDomNode, viewModel, instantiationService, configService, logService, contextKeyService, themeService, commandService, hoverService, chatWidgetService, chatEntitlementService) {
+  constructor(editorOptions, rendererOptions, delegate, codeBlockModelCollection, overflowWidgetsDomNode, viewModel, instantiationService, configService, logService, contextKeyService, themeService, commandService, hoverService, chatWidgetService, chatEntitlementService, chatService, chatTipService) {
     super();
     this.rendererOptions = rendererOptions;
     this.delegate = delegate;
@@ -122,11 +128,14 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     this.hoverService = hoverService;
     this.chatWidgetService = chatWidgetService;
     this.chatEntitlementService = chatEntitlementService;
+    this.chatService = chatService;
+    this.chatTipService = chatTipService;
     this.codeBlocksByResponseId = /* @__PURE__ */ new Map();
     this.codeBlocksByEditorUri = new ResourceMap();
     this.fileTreesByResponseId = /* @__PURE__ */ new Map();
     this.focusedFileTreesByResponseId = /* @__PURE__ */ new Map();
     this.templateDataByRequestId = /* @__PURE__ */ new Map();
+    this.pendingQuestionCarousels = new ResourceMap();
     this._onDidClickFollowup = this._register(new Emitter());
     this.onDidClickFollowup = this._onDidClickFollowup.event;
     this._onDidClickRerunWithAgentOrCommandDetection = new Emitter();
@@ -141,6 +150,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     this.onDidFocusOutside = this._onDidFocusOutside.event;
     this._onDidChangeItemHeight = this._register(new Emitter());
     this.onDidChangeItemHeight = this._onDidChangeItemHeight.event;
+    this._onDidUpdateViewModel = this._register(new Emitter());
     this._currentLayoutWidth = observableValue(this, 0);
     this._isVisible = true;
     this._onDidChangeVisibility = this._register(new Emitter());
@@ -154,6 +164,15 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     this._contentReferencesListPool = this._register(this.instantiationService.createInstance(CollapsibleListPool, this._onDidChangeVisibility.event, void 0, void 0));
     this._register(this.instantiationService.createInstance(ChatCodeBlockContentProvider));
     this._toolInvocationCodeBlockCollection = this._register(this.instantiationService.createInstance(CodeBlockModelCollection, "tools"));
+    this._register(this.chatService.onDidSubmitRequest((e) => {
+      const carousels = this.pendingQuestionCarousels.get(e.chatSessionResource);
+      if (carousels) {
+        for (const carousel of carousels) {
+          carousel.skip();
+        }
+        carousels.clear();
+      }
+    }));
   }
   updateOptions(options) {
     this.rendererOptions = { ...this.rendererOptions, ...options };
@@ -177,7 +196,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   getProgressiveRenderRate(element) {
     let Rate;
     (function(Rate2) {
-      Rate2[Rate2["Min"] = 5] = "Min";
+      Rate2[Rate2["Min"] = 40] = "Min";
       Rate2[Rate2["Max"] = 2e3] = "Max";
     })(Rate || (Rate = {}));
     const minAfterComplete = 80;
@@ -197,7 +216,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     if (typeof rate === "number") {
       return clamp(
         rate,
-        5,
+        40,
         2e3
         /* Rate.Max */
       );
@@ -215,6 +234,12 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     this.codeBlocksByResponseId.clear();
     this.fileTreesByResponseId.clear();
     this.focusedFileTreesByResponseId.clear();
+    this._editorPool.clear();
+    this._toolEditorPool.clear();
+    this._diffEditorPool.clear();
+    this._treePool.clear();
+    this._contentReferencesListPool.clear();
+    this._onDidUpdateViewModel.fire();
   }
   getCodeBlockInfoForEditor(uri) {
     return this.codeBlocksByEditorUri.get(uri);
@@ -327,7 +352,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     const detail = dom.append(detailContainer, $("span.detail"));
     dom.append(detailContainer, $("span.chat-animated-ellipsis"));
     const value = dom.append(valueParent, $(".value"));
-    const elementDisposables = new DisposableStore();
+    const elementDisposables = templateDisposables.add(new DisposableStore());
     const footerToolbarContainer = dom.append(rowContainer, $(".chat-footer-toolbar"));
     if (this.rendererOptions.noFooter) {
       footerToolbarContainer.classList.add("hidden");
@@ -396,7 +421,17 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
         this.hoverService.hideHover();
       }
     }));
+    const connectionObserver = document.createElement("connection-observer");
+    dom.append(container, connectionObserver);
     const template = { header, avatarContainer, requestHover, username, detail, value, rowContainer, elementDisposables, templateDisposables, contextKeyService, instantiationService: scopedInstantiationService, agentHover, titleToolbar, footerToolbar, footerDetailsContainer, disabledOverlay, checkpointToolbar, checkpointRestoreToolbar, checkpointContainer, checkpointRestoreContainer };
+    connectionObserver.onDidDisconnect = () => {
+      template.renderedPartsMounted = false;
+    };
+    templateDisposables.add(this._onDidUpdateViewModel.event(() => {
+      if (!template.currentElement || !this.viewModel?.sessionResource || !isEqual(template.currentElement.sessionResource, this.viewModel.sessionResource)) {
+        this.clearRenderedParts(template);
+      }
+    }));
     templateDisposables.add(dom.addDisposableListener(disabledOverlay, dom.EventType.CLICK, (e) => {
       if (!this.viewModel?.editing) {
         return;
@@ -411,6 +446,24 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
         this._onDidFocusOutside.fire();
       }
     }));
+    const resizeObserver = templateDisposables.add(new dom.DisposableResizeObserver((entries) => {
+      if (!template.currentElement) {
+        return;
+      }
+      const entry = entries[0];
+      if (entry) {
+        const height = entry.borderBoxSize.at(0)?.blockSize;
+        if (height === 0 || !height || !template.rowContainer.isConnected) {
+          return;
+        }
+        const normalizedHeight = Math.ceil(height);
+        template.currentElement.currentRenderedHeight = normalizedHeight;
+        if (template.currentElement !== this._elementBeingRendered) {
+          this._onDidChangeItemHeight.fire({ element: template.currentElement, height: normalizedHeight });
+        }
+      }
+    }));
+    templateDisposables.add(resizeObserver.observe(rowContainer));
     return template;
   }
   renderElement(node, index, templateData) {
@@ -421,29 +474,44 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       this._elementBeingRendered = void 0;
     }
   }
+  /**
+   * Dispose the rendered parts in the template, which aren't done in disposeElement
+   * so they can be reused when a new render is started.
+   */
   clearRenderedParts(templateData) {
     if (templateData.renderedParts) {
       dispose(coalesce(templateData.renderedParts));
       templateData.renderedParts = void 0;
       dom.clearNode(templateData.value);
     }
+    if (templateData.titleToolbar) {
+      templateData.titleToolbar.context = void 0;
+    }
+    templateData.footerToolbar.context = void 0;
+    templateData.checkpointToolbar.context = void 0;
+    templateData.checkpointRestoreToolbar.context = void 0;
   }
   renderChatTreeItem(element, index, templateData) {
     if (templateData.currentElement && templateData.currentElement.id !== element.id) {
       this.traceLayout("renderChatTreeItem", `Rendering a different element into the template, index=${index}`);
-      this.clearRenderedParts(templateData);
       const mappedTemplateData = this.templateDataByRequestId.get(templateData.currentElement.id);
       if (mappedTemplateData && mappedTemplateData.currentElement?.id !== templateData.currentElement.id) {
         this.templateDataByRequestId.delete(templateData.currentElement.id);
       }
+      this.clearRenderedParts(templateData);
     }
     templateData.currentElement = element;
     this.templateDataByRequestId.set(element.id, templateData);
-    const kind = isRequestVM(element) ? "request" : isResponseVM(element) ? "response" : "welcome";
+    if (isPendingDividerVM(element)) {
+      this.renderPendingDivider(element, templateData);
+      return;
+    }
+    const kind = isRequestVM(element) ? "request" : isResponseVM(element) ? "response" : isPendingDividerVM(element) ? "pendingDivider" : "welcome";
     this.traceLayout("renderElement", `${kind}, index=${index}`);
     ChatContextKeys.isResponse.bindTo(templateData.contextKeyService).set(isResponseVM(element));
     ChatContextKeys.itemId.bindTo(templateData.contextKeyService).set(element.id);
     ChatContextKeys.isRequest.bindTo(templateData.contextKeyService).set(isRequestVM(element));
+    ChatContextKeys.isPendingRequest.bindTo(templateData.contextKeyService).set(isRequestVM(element) && !!element.pendingKind);
     ChatContextKeys.responseDetectedAgentCommand.bindTo(templateData.contextKeyService).set(isResponseVM(element) && element.agentOrSlashCommandDetected);
     if (isResponseVM(element)) {
       ChatContextKeys.responseSupportsIssueReporting.bindTo(templateData.contextKeyService).set(!!element.agent?.metadata.supportIssueReporting);
@@ -468,6 +536,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     templateData.rowContainer.classList.toggle("editing-session", location === ChatAgentLocation.Chat);
     templateData.rowContainer.classList.toggle("interactive-request", isRequestVM(element));
     templateData.rowContainer.classList.toggle("interactive-response", isResponseVM(element));
+    templateData.rowContainer.classList.remove("pending-item", "pending-divider", "pending-request");
     const progressMessageAtBottomOfResponse = checkModeOption(this.delegate.currentChatMode(), this.rendererOptions.progressMessageAtBottomOfResponse);
     templateData.rowContainer.classList.toggle("show-detail-progress", isResponseVM(element) && !element.isComplete && !element.progressMessages.length && !progressMessageAtBottomOfResponse);
     if (!this.rendererOptions.noHeader) {
@@ -483,8 +552,9 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     }
     templateData.checkpointToolbar.context = element;
     const checkpointEnabled = this.configService.getValue(ChatConfiguration.CheckpointsEnabled) && (this.rendererOptions.restorable ?? true);
-    templateData.checkpointContainer.classList.toggle("hidden", isResponseVM(element) || !checkpointEnabled);
-    const shouldShowRestore = this.viewModel?.model.checkpoint && !this.viewModel?.editing && index === this.delegate.getListLength() - 1;
+    const isPendingRequest = isRequestVM(element) && !!element.pendingKind;
+    templateData.checkpointContainer.classList.toggle("hidden", isResponseVM(element) || isPendingRequest || !checkpointEnabled);
+    const shouldShowRestore = this.viewModel?.model.checkpoint && !this.viewModel?.editing && index === this.delegate.getListLength() - 1 && !isPendingRequest;
     templateData.checkpointRestoreContainer.classList.toggle("hidden", !(shouldShowRestore && checkpointEnabled));
     const editing = element.id === this.viewModel?.editing?.id;
     const isInput = this.configService.getValue("chat.editRequests") === "input";
@@ -495,7 +565,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     templateData.rowContainer.classList.toggle("editing", editing && !isInput);
     templateData.rowContainer.classList.toggle("editing-input", editing && isInput);
     templateData.requestHover.classList.toggle("editing", editing && isInput);
-    templateData.requestHover.classList.toggle("hidden", !!this.viewModel?.editing && !editing || isResponseVM(element));
+    templateData.requestHover.classList.toggle("hidden", !!this.viewModel?.editing && !editing || isResponseVM(element) || !this.rendererOptions.editable);
     templateData.requestHover.classList.toggle("expanded", this.configService.getValue("chat.editRequests") === "hover");
     templateData.requestHover.classList.toggle("checkpoints-enabled", checkpointEnabled);
     templateData.elementDisposables.add(dom.addStandardDisposableListener(templateData.rowContainer, dom.EventType.CLICK, (e) => {
@@ -538,6 +608,32 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     }
     templateData.renderedPartsMounted = true;
   }
+  renderPendingDivider(element, templateData) {
+    templateData.rowContainer.classList.add("pending-item");
+    templateData.rowContainer.classList.add("pending-divider");
+    templateData.rowContainer.classList.remove("interactive-request", "interactive-response", "pending-request");
+    templateData.avatarContainer.classList.add("hidden");
+    templateData.username.classList.add("hidden");
+    templateData.requestHover.classList.add("hidden");
+    templateData.checkpointContainer.classList.add("hidden");
+    templateData.checkpointRestoreContainer.classList.add("hidden");
+    templateData.footerToolbar.getElement().classList.add("hidden");
+    if (templateData.titleToolbar) {
+      templateData.titleToolbar.getElement().classList.add("hidden");
+    }
+    dom.clearNode(templateData.value);
+    dom.clearNode(templateData.detail);
+    const dividerContent = dom.$(".pending-divider-content");
+    const label = dom.append(dividerContent, dom.$("span.pending-divider-label"));
+    if (element.dividerKind === "steering") {
+      label.textContent = localize("steeringDivider", "Steering");
+      label.title = localize("steeringDividerTooltip", "Steering message will be sent after the next tool call happens");
+    } else {
+      label.textContent = localize("queuedDivider", "Queued");
+      label.title = localize("queuedDividerTooltip", "Queued messages will be sent after the current request completes");
+    }
+    templateData.value.appendChild(dividerContent);
+  }
   renderDetail(element, templateData) {
     dom.clearNode(templateData.detail);
     if (element.agentOrSlashCommandDetected) {
@@ -564,7 +660,17 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     }
   }
   renderAvatar(element, templateData) {
-    const icon = isResponseVM(element) ? this.getAgentIcon(element.agent?.metadata) : element.avatarIcon ?? Codicon.account;
+    if (isPendingDividerVM(element)) {
+      return;
+    }
+    let icon;
+    if (isResponseVM(element)) {
+      icon = this.getAgentIcon(element.agent?.metadata);
+    } else if (isRequestVM(element)) {
+      icon = element.avatarIcon ?? Codicon.account;
+    } else {
+      icon = Codicon.account;
+    }
     if (icon instanceof URI) {
       const avatarIcon = dom.$("img.icon");
       avatarIcon.src = FileAccess.uriToBrowserUri(icon).toString(true);
@@ -587,9 +693,9 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   }
   renderChatResponseBasic(element, index, templateData) {
     templateData.rowContainer.classList.toggle("chat-response-loading", isResponseVM(element) && !element.isComplete);
-    if (element.isCanceled) {
+    if (element.isComplete || element.isCanceled) {
       const lastThinking = this.getLastThinkingPart(templateData.renderedParts);
-      if (lastThinking?.domNode) {
+      if (lastThinking?.domNode && lastThinking.getIsActive()) {
         lastThinking.finalizeTitleIfDefault();
         lastThinking.markAsInactive();
       }
@@ -613,7 +719,6 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     }
     const diff = this.diff(templateData.renderedParts ?? [], content, element);
     this.renderChatContentDiff(diff, content, element, index, templateData);
-    this.updateItemHeightOnRender(element, templateData);
   }
   shouldShowWorkingProgress(element, partsToRender, templateData) {
     if (element.agentOrSlashCommandDetected || this.rendererOptions.renderStyle === "minimal" || element.isComplete || !checkModeOption(this.delegate.currentChatMode(), this.rendererOptions.progressMessageAtBottomOfResponse)) {
@@ -623,12 +728,16 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       return false;
     }
     const lastPart = findLast(partsToRender, (part) => part.kind !== "markdownContent" || part.content.value.trim().length > 0);
-    const collapsedToolsMode = this.configService.getValue("chat.agent.thinking.collapsedTools");
+    if (partsToRender.some((part) => part.kind === "thinking")) {
+      return false;
+    }
     const lastThinking = this.getLastThinkingPart(templateData.renderedParts);
-    if (lastThinking && (collapsedToolsMode === CollapsedToolsDisplayMode.Always || collapsedToolsMode === CollapsedToolsDisplayMode.WithThinking)) {
-      if (!lastPart || lastPart.kind === "thinking" || lastPart.kind === "toolInvocation" || lastPart.kind === "textEditGroup" || lastPart.kind === "notebookEditGroup") {
-        return false;
-      }
+    if (lastThinking) {
+      return false;
+    }
+    const collapsedToolsMode = this.configService.getValue("chat.agent.thinking.collapsedTools");
+    if (collapsedToolsMode !== CollapsedToolsDisplayMode.Off && partsToRender.some((part) => (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") && part.presentation !== "hidden" && this.shouldPinPart(part, element))) {
+      return false;
     }
     if (this.getSubagentPart(templateData.renderedParts)) {
       return false;
@@ -649,6 +758,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   }
   renderChatRequest(element, index, templateData) {
     templateData.rowContainer.classList.toggle("chat-response-loading", false);
+    templateData.rowContainer.classList.toggle("pending-request", !!element.pendingKind);
     if (element.id === this.viewModel?.editing?.id) {
       this._onDidRerender.fire(templateData);
     }
@@ -684,6 +794,12 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     }
     dom.clearNode(templateData.value);
     const parts = [];
+    const tip = this.chatTipService.getNextTip(element.id, element.timestamp, this.contextKeyService);
+    if (tip) {
+      const tipPart = new ChatTipContentPart(tip, this.chatContentMarkdownRenderer);
+      templateData.value.appendChild(tipPart.domNode);
+      templateData.elementDisposables.add(tipPart);
+    }
     let inlineSlashCommandRendered = false;
     content.forEach((data, contentIndex) => {
       const context = {
@@ -732,31 +848,6 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       }
       templateData.elementDisposables.add(newPart);
     }
-    this.updateItemHeightOnRender(element, templateData);
-  }
-  updateItemHeightOnRender(element, templateData) {
-    const newHeight = templateData.rowContainer.offsetHeight;
-    const fireEvent = !element.currentRenderedHeight || element.currentRenderedHeight !== newHeight;
-    element.currentRenderedHeight = newHeight;
-    if (fireEvent) {
-      const disposable = templateData.elementDisposables.add(dom.scheduleAtNextAnimationFrame(dom.getWindow(templateData.value), () => {
-        if (templateData.rowContainer.isConnected) {
-          element.currentRenderedHeight = templateData.rowContainer.offsetHeight;
-          this._onDidChangeItemHeight.fire({ element, height: element.currentRenderedHeight });
-        }
-        disposable.dispose();
-      }));
-    }
-  }
-  updateItemHeight(templateData) {
-    if (!templateData.currentElement || templateData.currentElement === this._elementBeingRendered) {
-      return;
-    }
-    if (templateData.rowContainer.isConnected) {
-      const newHeight = templateData.rowContainer.offsetHeight;
-      templateData.currentElement.currentRenderedHeight = newHeight;
-      this._onDidChangeItemHeight.fire({ element: templateData.currentElement, height: newHeight });
-    }
   }
   /**
    *	@returns true if progressive rendering should be considered complete- the element's data is fully rendered or the view is not visible
@@ -772,7 +863,7 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       return true;
     }
     templateData.rowContainer.classList.toggle("chat-response-loading", true);
-    this.traceLayout("doNextProgressiveRender", `START progressive render, index=${index}, renderData=${JSON.stringify(element.renderData)}`);
+    this.traceLayout("doNextProgressiveRender", `START progressive render, index=${index}`);
     const contentForThisTurn = this.getNextProgressiveRenderContent(element, templateData);
     const partsToRender = this.diff(templateData.renderedParts ?? [], contentForThisTurn.content, element);
     const contentIsAlreadyRendered = partsToRender.every((part) => part === null);
@@ -787,20 +878,11 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
         return true;
       } else {
         this.traceLayout("doNextProgressiveRender", "caught up with the stream- no new content to render");
-        if (!templateData.renderedParts) {
-          const height2 = templateData.rowContainer.offsetHeight;
-          element.currentRenderedHeight = height2;
-        }
         return true;
       }
     }
     this.traceLayout("doNextProgressiveRender", `doing progressive render, ${partsToRender.length} parts to render`);
     this.renderChatContentDiff(partsToRender, contentForThisTurn.content, element, index, templateData);
-    const height = templateData.rowContainer.offsetHeight;
-    element.currentRenderedHeight = height;
-    if (!isInRenderElement) {
-      this._onDidChangeItemHeight.fire({ element, height });
-    }
     return false;
   }
   renderChatContentDiff(partsToRender, contentForThisTurn, element, elementIndex, templateData) {
@@ -1004,12 +1086,16 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     if (this.hasCodeblockUri(part) || part.kind === "textEditGroup") {
       return true;
     }
-    const isMcpTool = (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") && part.source.type === "mcp";
+    const isMcpTool = (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") && part.source?.type === "mcp";
     if (isMcpTool) {
       return false;
     }
     const isMermaidTool = (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") && part.toolId.toLowerCase().includes("mermaid");
     if (isMermaidTool) {
+      return false;
+    }
+    const isAskQuestionsTool = (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") && part.toolId === "copilot_askQuestions";
+    if (isAskQuestionsTool) {
       return false;
     }
     const isSubagentTool = (part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") && (part.subAgentInvocationId || part.toolId === RunSubagentTool.Id);
@@ -1029,6 +1115,10 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       if (IChatToolInvocation.isStreaming(part)) {
         return true;
       }
+      const state = part.state.get();
+      if (state.type === 1 || state.type === 3) {
+        return false;
+      }
       return !IChatToolInvocation.getConfirmationMessages(part);
     }
     if (part.kind === "toolInvocationSerialized") {
@@ -1047,6 +1137,24 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       }
     }
     return void 0;
+  }
+  /**
+   * Determines if a thinking part at the given content index is "look-ahead complete".
+   * A thinking part is look-ahead complete if there are subsequent parts that will NOT
+   * be pinned to it, meaning we know this thinking part is already done even though
+   * the overall response is still in progress.
+   */
+  isThinkingLookAheadComplete(context, element) {
+    if (element?.isComplete) {
+      return true;
+    }
+    for (let i = context.contentIndex + 1; i < context.content.length; i++) {
+      const nextPart = context.content[i];
+      if (!this.shouldPinPart(nextPart, element)) {
+        return true;
+      }
+    }
+    return false;
   }
   getSubagentPart(renderedParts, subAgentInvocationId) {
     if (!renderedParts || renderedParts.length === 0) {
@@ -1075,24 +1183,19 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       }
     }
   }
-  handleSubagentToolGrouping(toolInvocation, part, subagentId, context, templateData) {
+  handleSubagentToolGrouping(toolInvocation, subagentId, context, templateData, codeBlockStartIndex) {
     this.finalizeCurrentThinkingPart(context, templateData);
     const lastSubagent = this.getSubagentPart(templateData.renderedParts, subagentId);
     if (lastSubagent) {
       if (toolInvocation.toolId !== RunSubagentTool.Id) {
-        lastSubagent.appendItem(part.domNode, toolInvocation);
+        lastSubagent.appendToolInvocation(toolInvocation, codeBlockStartIndex);
       }
-      lastSubagent.addDisposable(part);
       return lastSubagent;
     }
-    const subagentPart = this.instantiationService.createInstance(ChatSubagentContentPart, subagentId, toolInvocation, context, this.chatContentMarkdownRenderer);
+    const subagentPart = this.instantiationService.createInstance(ChatSubagentContentPart, subagentId, toolInvocation, context, this.chatContentMarkdownRenderer, this._contentReferencesListPool, this._toolEditorPool, () => this._currentLayoutWidth.get(), this._toolInvocationCodeBlockCollection, this._announcedToolProgressKeys);
     if (toolInvocation.toolId !== RunSubagentTool.Id) {
-      subagentPart.appendItem(part.domNode, toolInvocation);
+      subagentPart.appendToolInvocation(toolInvocation, codeBlockStartIndex);
     }
-    subagentPart.addDisposable(part);
-    subagentPart.addDisposable(subagentPart.onDidChangeHeight(() => {
-      this.updateItemHeight(templateData);
-    }));
     return subagentPart;
   }
   finalizeCurrentThinkingPart(context, templateData) {
@@ -1169,12 +1272,16 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
         return this.renderChatErrorDetails(context, content, templateData);
       } else if (content.kind === "elicitation2" || content.kind === "elicitationSerialized") {
         return this.renderElicitation(context, content, templateData);
+      } else if (content.kind === "questionCarousel") {
+        return this.renderQuestionCarousel(context, content, templateData);
       } else if (content.kind === "changesSummary") {
         return this.renderChangesSummary(content, context, templateData);
       } else if (content.kind === "mcpServersStarting") {
         return this.renderMcpServersInteractionRequired(content, context, templateData);
       } else if (content.kind === "thinking") {
         return this.renderThinkingPart(content, context, templateData);
+      } else if (content.kind === "workspaceEdit") {
+        return this.instantiationService.createInstance(ChatWorkspaceEditContentPart, content, context, this.chatContentMarkdownRenderer);
       }
       return this.renderNoContent((other) => content.kind === other.kind);
     } catch (err) {
@@ -1199,7 +1306,6 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     const isLast = context.elementIndex === this.delegate.getListLength() - 1;
     if (content.errorDetails.isQuotaExceeded) {
       const renderedError = this.instantiationService.createInstance(ChatQuotaExceededPart, context.element, content, this.chatContentMarkdownRenderer);
-      renderedError.addDisposable(renderedError.onDidChangeHeight(() => this.updateItemHeight(templateData)));
       return renderedError;
     } else if (content.errorDetails.isRateLimited && this.chatEntitlementService.anonymous) {
       const renderedError = this.instantiationService.createInstance(ChatAnonymousRateLimitedPart, content);
@@ -1207,7 +1313,6 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     } else if (content.errorDetails.confirmationButtons && isLast) {
       const level = content.errorDetails.level ?? ChatErrorLevel.Error;
       const errorConfirmation = this.instantiationService.createInstance(ChatErrorConfirmationContentPart, level, new MarkdownString(content.errorDetails.message), content, content.errorDetails.confirmationButtons, this.chatContentMarkdownRenderer, context);
-      errorConfirmation.addDisposable(errorConfirmation.onDidChangeHeight(() => this.updateItemHeight(templateData)));
       return errorConfirmation;
     } else {
       const level = content.errorDetails.level ?? ChatErrorLevel.Error;
@@ -1228,9 +1333,6 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   renderTreeData(content, templateData, context) {
     const data = content.treeData;
     const treePart = this.instantiationService.createInstance(ChatTreeContentPart, data, this._treePool);
-    treePart.addDisposable(treePart.onDidChangeHeight(() => {
-      this.updateItemHeight(templateData);
-    }));
     if (isResponseVM(context.element)) {
       const fileTreeFocusInfo = {
         treeDataId: data.uri.toString(),
@@ -1251,16 +1353,10 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   }
   renderMultiDiffData(content, templateData, context) {
     const multiDiffPart = this.instantiationService.createInstance(ChatMultiDiffContentPart, content, context.element);
-    multiDiffPart.addDisposable(multiDiffPart.onDidChangeHeight(() => {
-      this.updateItemHeight(templateData);
-    }));
     return multiDiffPart;
   }
   renderContentReferencesListData(references, labelOverride, context, templateData) {
     const referencesPart = this.instantiationService.createInstance(ChatUsedReferencesListContentPart, references.references, labelOverride, context, this._contentReferencesListPool, { expandedWhenEmptyResponse: checkModeOption(this.delegate.currentChatMode(), this.rendererOptions.referencesExpandedWhenEmptyResponse) });
-    referencesPart.addDisposable(referencesPart.onDidChangeHeight(() => {
-      this.updateItemHeight(templateData);
-    }));
     return referencesPart;
   }
   renderCodeCitations(citations, context, templateData) {
@@ -1305,69 +1401,91 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       this.finalizeCurrentThinkingPart(context, templateData);
     }
     const codeBlockStartIndex = context.codeBlockStartIndex;
-    const part = this.instantiationService.createInstance(ChatToolInvocationPart, toolInvocation, context, this.chatContentMarkdownRenderer, this._contentReferencesListPool, this._toolEditorPool, () => this._currentLayoutWidth.get(), this._toolInvocationCodeBlockCollection, this._announcedToolProgressKeys, codeBlockStartIndex);
-    part.addDisposable(part.onDidChangeHeight(() => {
-      this.updateItemHeight(templateData);
-    }));
-    this.handleRenderedCodeblocks(context.element, part, codeBlockStartIndex);
-    const subagentId = toolInvocation.toolId === RunSubagentTool.Id ? toolInvocation.toolCallId : toolInvocation.subAgentInvocationId;
-    if (subagentId && isResponseVM(context.element) && part?.domNode && toolInvocation.presentation !== "hidden") {
-      return this.handleSubagentToolGrouping(toolInvocation, part, subagentId, context, templateData);
-    }
+    let lazilyCreatedPart = void 0;
+    const createToolPart = /* @__PURE__ */ __name(() => {
+      lazilyCreatedPart = this.instantiationService.createInstance(ChatToolInvocationPart, toolInvocation, context, this.chatContentMarkdownRenderer, this._contentReferencesListPool, this._toolEditorPool, () => this._currentLayoutWidth.get(), this._toolInvocationCodeBlockCollection, this._announcedToolProgressKeys, codeBlockStartIndex);
+      this.handleRenderedCodeblocks(context.element, lazilyCreatedPart, codeBlockStartIndex);
+      return { domNode: lazilyCreatedPart.domNode, part: lazilyCreatedPart };
+    }, "createToolPart");
     const collapsedToolsMode = this.configService.getValue("chat.agent.thinking.collapsedTools");
     if (isResponseVM(context.element) && collapsedToolsMode !== CollapsedToolsDisplayMode.Off) {
       const lastThinking = this.getLastThinkingPart(templateData.renderedParts);
-      if (!lastThinking && part?.domNode && toolInvocation.presentation !== "hidden" && this.shouldPinPart(toolInvocation, context.element) && collapsedToolsMode === CollapsedToolsDisplayMode.Always) {
+      if (!lastThinking && toolInvocation.presentation !== "hidden" && this.shouldPinPart(toolInvocation, context.element) && collapsedToolsMode === CollapsedToolsDisplayMode.Always) {
         const thinkingPart = this.renderThinkingPart({
           kind: "thinking"
         }, context, templateData);
         if (thinkingPart instanceof ChatThinkingContentPart) {
-          thinkingPart.appendItem(part?.domNode, toolInvocation.toolId, toolInvocation, templateData.value);
-          thinkingPart.addDisposable(part);
-          thinkingPart.addDisposable(thinkingPart.onDidChangeHeight(() => {
-            this.updateItemHeight(templateData);
-          }));
+          thinkingPart.appendItem(createToolPart, toolInvocation.toolId, toolInvocation, templateData.value);
+          this.setupConfirmationTransitionWatcher(toolInvocation, thinkingPart, () => lazilyCreatedPart, createToolPart, context, templateData);
         }
         return thinkingPart;
       }
       if (this.shouldPinPart(toolInvocation, context.element)) {
-        if (lastThinking && part?.domNode && toolInvocation.presentation !== "hidden") {
-          lastThinking.appendItem(part?.domNode, toolInvocation.toolId, toolInvocation, templateData.value);
-          lastThinking.addDisposable(part);
-          if (toolInvocation.kind === "toolInvocation" && IChatToolInvocation.isStreaming(toolInvocation)) {
-            let wasStreaming = true;
-            part.addDisposable(autorun((reader) => {
-              const state = toolInvocation.state.read(reader);
-              if (wasStreaming && state.type !== 0) {
-                wasStreaming = false;
-                if (state.type === 1) {
-                  if (part.domNode) {
-                    const wrapper = part.domNode.parentElement;
-                    if (wrapper?.classList.contains("chat-thinking-tool-wrapper")) {
-                      wrapper.remove();
-                    }
-                    templateData.value.appendChild(part.domNode);
-                  }
-                  this.finalizeCurrentThinkingPart(context, templateData);
-                }
-              }
-            }));
-          }
+        if (lastThinking && toolInvocation.presentation !== "hidden") {
+          lastThinking.appendItem(createToolPart, toolInvocation.toolId, toolInvocation, templateData.value);
+          this.setupConfirmationTransitionWatcher(toolInvocation, lastThinking, () => lazilyCreatedPart, createToolPart, context, templateData);
+          return this.renderNoContent((other, followingContent, element) => lazilyCreatedPart ? lazilyCreatedPart.hasSameContent(other, followingContent, element) : toolInvocation.kind === other.kind);
         }
       } else {
         this.finalizeCurrentThinkingPart(context, templateData);
       }
     }
+    const subagentId = toolInvocation.toolId === RunSubagentTool.Id ? toolInvocation.toolCallId : toolInvocation.subAgentInvocationId;
+    if (subagentId && isResponseVM(context.element) && toolInvocation.presentation !== "hidden") {
+      return this.handleSubagentToolGrouping(toolInvocation, subagentId, context, templateData, codeBlockStartIndex);
+    }
+    const { part } = createToolPart();
     return part;
+  }
+  // watch for confirmation part transition when tool invocation is streaming
+  setupConfirmationTransitionWatcher(toolInvocation, thinkingPart, getCreatedPart, createToolPart, context, templateData) {
+    if (toolInvocation.kind !== "toolInvocation") {
+      return;
+    }
+    const removeConfirmationWidget = /* @__PURE__ */ __name(() => {
+      const createdPart = getCreatedPart();
+      if (createdPart?.domNode) {
+        const wrapper = createdPart.domNode.parentElement;
+        if (wrapper?.classList.contains("chat-thinking-tool-wrapper")) {
+          wrapper.remove();
+        }
+        templateData.value.appendChild(createdPart.domNode);
+      } else {
+        thinkingPart.removeLazyItem(toolInvocation.toolId);
+        const { domNode } = createToolPart();
+        templateData.value.appendChild(domNode);
+      }
+      this.finalizeCurrentThinkingPart(context, templateData);
+    }, "removeConfirmationWidget");
+    const currentState = toolInvocation.state.get();
+    if (currentState.type === 1 || currentState.type === 3) {
+      removeConfirmationWidget();
+      return;
+    }
+    const isWorkingState = /* @__PURE__ */ __name((type) => type === 0 || type === 2, "isWorkingState");
+    if (!isWorkingState(currentState.type)) {
+      return;
+    }
+    let didRemoveConfirmationWidget = false;
+    const disposable = autorun((reader) => {
+      const state = toolInvocation.state.read(reader);
+      if (state.type === 1 || state.type === 3) {
+        if (didRemoveConfirmationWidget) {
+          return;
+        }
+        didRemoveConfirmationWidget = true;
+        disposable.dispose();
+        removeConfirmationWidget();
+      }
+    });
+    thinkingPart.addDisposable(disposable);
   }
   renderExtensionsContent(extensionsContent, context, templateData) {
     const part = this.instantiationService.createInstance(ChatExtensionsContentPart, extensionsContent);
-    part.addDisposable(part.onDidChangeHeight(() => this.updateItemHeight(templateData)));
     return part;
   }
   renderPullRequestContent(pullRequestContent, context, templateData) {
     const part = this.instantiationService.createInstance(ChatPullRequestContentPart, pullRequestContent);
-    part.addDisposable(part.onDidChangeHeight(() => this.updateItemHeight(templateData)));
     return part;
   }
   renderProgressTask(task, templateData, context) {
@@ -1375,29 +1493,62 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       return;
     }
     const taskPart = this.instantiationService.createInstance(ChatTaskContentPart, task, this._contentReferencesListPool, this.chatContentMarkdownRenderer, context);
-    taskPart.addDisposable(taskPart.onDidChangeHeight(() => {
-      this.updateItemHeight(templateData);
-    }));
     return taskPart;
   }
   renderConfirmation(context, confirmation, templateData) {
     const part = this.instantiationService.createInstance(ChatConfirmationContentPart, confirmation, context);
-    part.addDisposable(part.onDidChangeHeight(() => this.updateItemHeight(templateData)));
     return part;
   }
   renderElicitation(context, elicitation, templateData) {
     if (elicitation.kind === "elicitationSerialized" ? elicitation.isHidden : elicitation.isHidden?.get()) {
       return this.renderNoContent((other) => elicitation.kind === other.kind);
     }
+    this.finalizeCurrentThinkingPart(context, templateData);
     const part = this.instantiationService.createInstance(ChatElicitationContentPart, elicitation, context);
-    part.addDisposable(part.onDidChangeHeight(() => this.updateItemHeight(templateData)));
     return part;
+  }
+  renderQuestionCarousel(context, carousel, templateData) {
+    this.finalizeCurrentThinkingPart(context, templateData);
+    const widget = isResponseVM(context.element) ? this.chatWidgetService.getWidgetBySessionResource(context.element.sessionResource) : void 0;
+    const shouldAutoFocus = widget ? widget.getInput() === "" : true;
+    const part = this.instantiationService.createInstance(ChatQuestionCarouselPart, carousel, context, {
+      shouldAutoFocus,
+      onSubmit: /* @__PURE__ */ __name(async (answers) => {
+        const answersRecord = answers ? Object.fromEntries(answers) : void 0;
+        if (answersRecord) {
+          carousel.data = answersRecord;
+        }
+        carousel.isUsed = true;
+        if (isResponseVM(context.element) && carousel.resolveId) {
+          this.chatService.notifyQuestionCarouselAnswer(context.element.requestId, carousel.resolveId, answersRecord);
+        }
+        this.removeCarouselFromTracking(context, part);
+      }, "onSubmit")
+    });
+    if (!carousel.isUsed && this.configService.getValue(ChatConfiguration.GlobalAutoApprove)) {
+      part.skip();
+    }
+    if (isResponseVM(context.element) && carousel.allowSkip && !carousel.isUsed) {
+      let carousels = this.pendingQuestionCarousels.get(context.element.sessionResource);
+      if (!carousels) {
+        carousels = /* @__PURE__ */ new Set();
+        this.pendingQuestionCarousels.set(context.element.sessionResource, carousels);
+      }
+      carousels.add(part);
+      part.addDisposable({ dispose: /* @__PURE__ */ __name(() => this.removeCarouselFromTracking(context, part), "dispose") });
+    }
+    return part;
+  }
+  removeCarouselFromTracking(context, part) {
+    if (isResponseVM(context.element)) {
+      const carousels = this.pendingQuestionCarousels.get(context.element.sessionResource);
+      if (carousels) {
+        carousels.delete(part);
+      }
+    }
   }
   renderChangesSummary(content, context, templateData) {
     const part = this.instantiationService.createInstance(ChatCheckpointFileChangesSummaryContentPart, content, context);
-    part.addDisposable(part.onDidChangeHeight(() => {
-      this.updateItemHeight(templateData);
-    }));
     return part;
   }
   renderAttachments(variables, contentReferences, templateData) {
@@ -1409,10 +1560,6 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   }
   renderTextEdit(context, chatTextEdit, templateData) {
     const textEditPart = this.instantiationService.createInstance(ChatTextEditContentPart, chatTextEdit, context, this.rendererOptions, this._diffEditorPool, this._currentLayoutWidth.get());
-    textEditPart.addDisposable(textEditPart.onDidChangeHeight(() => {
-      textEditPart.layout(this._currentLayoutWidth.get());
-      this.updateItemHeight(templateData);
-    }));
     return textEditPart;
   }
   renderMarkdown(markdown, templateData, context) {
@@ -1460,32 +1607,33 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
         this.hoverHidden(templateData.requestHover);
       }));
     }
-    markdownPart.addDisposable(markdownPart.onDidChangeHeight(() => {
-      markdownPart.layout(this._currentLayoutWidth.get());
-      this.updateItemHeight(templateData);
-    }));
     this.handleRenderedCodeblocks(element, markdownPart, codeBlockStartIndex);
     const collapsedToolsMode = this.configService.getValue("chat.agent.thinking.collapsedTools");
-    if (isResponseVM(context.element) && collapsedToolsMode !== CollapsedToolsDisplayMode.Off) {
+    if (isResponseVM(context.element) && collapsedToolsMode !== CollapsedToolsDisplayMode.Off && !isFinalAnswerPart) {
       const isComplete = this.isCodeblockComplete(markdown, context.element);
+      const subAgentInvocationId = extractSubAgentInvocationIdFromText(markdown.content.value);
+      if (subAgentInvocationId) {
+        const subagentPart = this.getSubagentPart(templateData.renderedParts, subAgentInvocationId);
+        if (subagentPart && markdownPart?.domNode && isComplete) {
+          subagentPart.appendMarkdownItem(() => ({ domNode: markdownPart.domNode, disposable: markdownPart }), markdownPart.codeblocksPartId, markdown, templateData.value);
+          return subagentPart;
+        }
+      }
       const lastThinking = this.getLastThinkingPart(templateData.renderedParts);
       if (!lastThinking && markdownPart?.domNode && this.shouldPinPart(markdown, context.element) && collapsedToolsMode === CollapsedToolsDisplayMode.Always && isComplete) {
         const thinkingPart = this.renderThinkingPart({
           kind: "thinking"
         }, context, templateData);
         if (thinkingPart instanceof ChatThinkingContentPart) {
-          thinkingPart.appendItem(markdownPart.domNode, markdownPart.codeblocksPartId, markdown, templateData.value);
-          thinkingPart.addDisposable(markdownPart.onDidChangeHeight(() => {
-            this.updateItemHeight(templateData);
-          }));
+          thinkingPart.appendItem(() => ({ domNode: markdownPart.domNode, disposable: markdownPart }), markdownPart.codeblocksPartId, markdown, templateData.value);
         }
         return thinkingPart;
       }
-      if (this.shouldPinPart(markdown, context.element) && isComplete && !isFinalAnswerPart) {
+      if (this.shouldPinPart(markdown, context.element) && isComplete) {
         if (lastThinking && markdownPart?.domNode) {
-          lastThinking.appendItem(markdownPart.domNode, markdownPart.codeblocksPartId, markdown, templateData.value);
+          lastThinking.appendItem(() => ({ domNode: markdownPart.domNode, disposable: markdownPart }), markdownPart.codeblocksPartId, markdown, templateData.value);
         }
-      } else if (!this.shouldPinPart(markdown, context.element) && !isFinalAnswerPart) {
+      } else if (!this.shouldPinPart(markdown, context.element)) {
         this.finalizeCurrentThinkingPart(context, templateData);
       }
     }
@@ -1495,6 +1643,8 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     if (!content.id) {
       content.id = Date.now().toString();
     }
+    const element = isResponseVM(context.element) ? context.element : void 0;
+    const streamingCompleted = this.isThinkingLookAheadComplete(context, element);
     if (Array.isArray(content.value)) {
       if (content.value.length < 1) {
         const lastThinking = this.getLastThinkingPart(templateData.renderedParts);
@@ -1506,11 +1656,10 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
         if (item) {
           const lastThinkingPart = lastPart instanceof ChatThinkingContentPart && lastPart.getIsActive() ? lastPart : void 0;
           if (lastThinkingPart) {
-            lastThinkingPart.setupThinkingContainer({ ...content, value: item }, context);
+            lastThinkingPart.setupThinkingContainer({ ...content, value: item });
           } else {
             const itemContent = { ...content, value: item };
-            const itemPart = templateData.instantiationService.createInstance(ChatThinkingContentPart, itemContent, context, this.chatContentMarkdownRenderer);
-            itemPart.addDisposable(itemPart.onDidChangeHeight(() => this.updateItemHeight(templateData)));
+            const itemPart = templateData.instantiationService.createInstance(ChatThinkingContentPart, itemContent, context, this.chatContentMarkdownRenderer, streamingCompleted);
             lastPart = itemPart;
           }
         }
@@ -1519,11 +1668,10 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
     } else {
       const lastActiveThinking = this.getLastThinkingPart(templateData.renderedParts);
       if (lastActiveThinking) {
-        lastActiveThinking.setupThinkingContainer(content, context);
+        lastActiveThinking.setupThinkingContainer(content);
         return lastActiveThinking;
       } else {
-        const part = templateData.instantiationService.createInstance(ChatThinkingContentPart, content, context, this.chatContentMarkdownRenderer);
-        part.addDisposable(part.onDidChangeHeight(() => this.updateItemHeight(templateData)));
+        const part = templateData.instantiationService.createInstance(ChatThinkingContentPart, content, context, this.chatContentMarkdownRenderer, streamingCompleted);
         return part;
       }
     }
@@ -1531,7 +1679,6 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
   disposeElement(node, index, templateData, details) {
     this.traceLayout("disposeElement", `Disposing element, index=${index}`);
     templateData.elementDisposables.clear();
-    templateData.renderedPartsMounted = false;
     if (templateData.currentElement && !this.viewModel?.editing) {
       this.templateDataByRequestId.delete(templateData.currentElement.id);
     }
@@ -1542,6 +1689,8 @@ let ChatListItemRenderer = class ChatListItemRenderer2 extends Disposable {
       templateData.titleToolbar.context = void 0;
     }
     templateData.footerToolbar.context = void 0;
+    templateData.checkpointToolbar.context = void 0;
+    templateData.checkpointRestoreToolbar.context = void 0;
   }
   renderMcpServersInteractionRequired(content, context, templateData) {
     return this.instantiationService.createInstance(ChatMcpServersInteractionContentPart, content, context);
@@ -1566,28 +1715,20 @@ ChatListItemRenderer = ChatListItemRenderer_1 = __decorate([
   __param(11, ICommandService),
   __param(12, IHoverService),
   __param(13, IChatWidgetService),
-  __param(14, IChatEntitlementService)
+  __param(14, IChatEntitlementService),
+  __param(15, IChatService),
+  __param(16, IChatTipService)
 ], ChatListItemRenderer);
-let ChatListDelegate = class ChatListDelegate2 {
+class ChatListDelegate extends CachedListVirtualDelegate {
   static {
     __name(this, "ChatListDelegate");
   }
-  constructor(defaultElementHeight, logService) {
+  constructor(defaultElementHeight) {
+    super();
     this.defaultElementHeight = defaultElementHeight;
-    this.logService = logService;
   }
-  _traceLayout(method, message) {
-    if (forceVerboseLayoutTracing) {
-      this.logService.info(`ChatListDelegate#${method}: ${message}`);
-    } else {
-      this.logService.trace(`ChatListDelegate#${method}: ${message}`);
-    }
-  }
-  getHeight(element) {
-    const kind = isRequestVM(element) ? "request" : "response";
-    const height = element.currentRenderedHeight ?? this.defaultElementHeight;
-    this._traceLayout("getHeight", `${kind}, height=${height}`);
-    return height;
+  estimateHeight(element) {
+    return element.currentRenderedHeight ?? this.defaultElementHeight;
   }
   getTemplateId(element) {
     return ChatListItemRenderer.ID;
@@ -1595,10 +1736,7 @@ let ChatListDelegate = class ChatListDelegate2 {
   hasDynamicHeight(element) {
     return true;
   }
-};
-ChatListDelegate = __decorate([
-  __param(1, ILogService)
-], ChatListDelegate);
+}
 const voteDownDetailLabels = {
   [ChatAgentVoteDownReason.IncorrectCode]: localize("incorrectCode", "Suggested incorrect code"),
   [ChatAgentVoteDownReason.DidNotFollowInstructions]: localize("didNotFollowInstructions", "Didn't follow instructions"),

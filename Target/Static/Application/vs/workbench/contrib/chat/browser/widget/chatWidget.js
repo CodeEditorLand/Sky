@@ -16,7 +16,6 @@ import "./media/chat.css";
 import "./media/chatAgentHover.css";
 import "./media/chatViewWelcome.css";
 import * as dom from "../../../../../base/browser/dom.js";
-import { Button } from "../../../../../base/browser/ui/button/button.js";
 import { disposableTimeout, timeout } from "../../../../../base/common/async.js";
 import { CancellationToken } from "../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
@@ -39,23 +38,19 @@ import { localize } from "../../../../../nls.js";
 import { MenuId } from "../../../../../platform/actions/common/actions.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
-import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
-import { WorkbenchObjectTree } from "../../../../../platform/list/browser/listService.js";
 import { ILogService } from "../../../../../platform/log/common/log.js";
 import { bindContextKey } from "../../../../../platform/observable/common/platformObservableUtils.js";
 import product from "../../../../../platform/product/common/product.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
-import { buttonSecondaryBackground, buttonSecondaryForeground, buttonSecondaryHoverBackground } from "../../../../../platform/theme/common/colorRegistry.js";
-import { asCssVariable } from "../../../../../platform/theme/common/colorUtils.js";
 import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
 import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
 import { EditorResourceAccessor } from "../../../../common/editor.js";
 import { IEditorService } from "../../../../services/editor/common/editorService.js";
 import { IChatEntitlementService } from "../../../../services/chat/common/chatEntitlementService.js";
 import { ILifecycleService } from "../../../../services/lifecycle/common/lifecycle.js";
-import { katexContainerClassName } from "../../../markdown/common/markedKatexExtension.js";
 import { checkModeOption } from "../../common/chat.js";
 import { IChatAgentService } from "../../common/participants/chatAgents.js";
 import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
@@ -64,7 +59,7 @@ import { IChatLayoutService } from "../../common/widget/chatLayoutService.js";
 import { ChatMode, IChatModeService } from "../../common/chatModes.js";
 import { chatAgentLeader, ChatRequestAgentPart, ChatRequestDynamicVariablePart, ChatRequestSlashPromptPart, ChatRequestToolPart, ChatRequestToolSetPart, chatSubcommandLeader, formatChatQuestion, IParsedChatRequest } from "../../common/requestParser/chatParserTypes.js";
 import { ChatRequestParser } from "../../common/requestParser/chatRequestParser.js";
-import { IChatService } from "../../common/chatService/chatService.js";
+import { ChatSendResult, IChatService } from "../../common/chatService/chatService.js";
 import { IChatSessionsService } from "../../common/chatSessionsService.js";
 import { IChatSlashCommandService } from "../../common/participants/chatSlashCommands.js";
 import { IChatTodoListService } from "../../common/tools/chatTodoListService.js";
@@ -72,17 +67,16 @@ import { isPromptFileVariableEntry, isPromptTextVariableEntry, isWorkspaceVariab
 import { ChatViewModel, isRequestVM, isResponseVM } from "../../common/model/chatViewModel.js";
 import { CodeBlockModelCollection } from "../../common/widget/codeBlockModelCollection.js";
 import { ChatConfiguration, ChatModeKind } from "../../common/constants.js";
-import { ILanguageModelToolsService, ToolSet } from "../../common/tools/languageModelToolsService.js";
+import { ILanguageModelToolsService, isToolSet } from "../../common/tools/languageModelToolsService.js";
 import { ComputeAutomaticInstructions } from "../../common/promptSyntax/computeAutomaticInstructions.js";
 import { PromptsConfig } from "../../common/promptSyntax/config/config.js";
 import { Target } from "../../common/promptSyntax/promptFileParser.js";
 import { IPromptsService } from "../../common/promptSyntax/service/promptsService.js";
 import { handleModeSwitch } from "../actions/chatActions.js";
 import { IChatAccessibilityService, IChatWidgetService, isIChatResourceViewContext, isIChatViewViewContext } from "../chat.js";
-import { ChatAccessibilityProvider } from "../accessibility/chatAccessibilityProvider.js";
 import { ChatSuggestNextWidget } from "./chatContentParts/chatSuggestNextWidget.js";
 import { ChatInputPart } from "./input/chatInputPart.js";
-import { ChatListDelegate, ChatListItemRenderer } from "./chatListRenderer.js";
+import { ChatListWidget } from "./chatListWidget.js";
 import { ChatEditorOptions } from "./chatOptions.js";
 import { ChatViewWelcomePart } from "../viewsWelcome/chatViewWelcomeController.js";
 import { IAgentSessionsService } from "../agentSessions/agentSessionsService.js";
@@ -140,7 +134,6 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     } else {
       this.logService.debug("ChatWidget#setViewModel: no viewModel");
     }
-    this.currentRequest = void 0;
     this._onDidChangeViewModel.fire({ previousSessionResource, currentSessionResource: this._viewModel?.sessionResource });
   }
   get viewModel() {
@@ -172,19 +165,19 @@ let ChatWidget = class ChatWidget2 extends Disposable {
   get locationData() {
     return this._location.resolveData?.();
   }
-  constructor(location, viewContext, viewOptions, styles, codeEditorService, editorService, configurationService, contextKeyService, instantiationService, chatService, chatAgentService, chatWidgetService, contextMenuService, chatAccessibilityService, logService, themeService, chatSlashCommandService, chatEditingService, telemetryService, promptsService, toolsService, chatModeService, chatLayoutService, chatEntitlementService, chatSessionsService, agentSessionsService, chatTodoListService, contextService, lifecycleService) {
+  constructor(location, viewContext, viewOptions, styles, codeEditorService, editorService, configurationService, dialogService, contextKeyService, instantiationService, chatService, chatAgentService, chatWidgetService, chatAccessibilityService, logService, themeService, chatSlashCommandService, chatEditingService, telemetryService, promptsService, toolsService, chatModeService, chatLayoutService, chatEntitlementService, chatSessionsService, agentSessionsService, chatTodoListService, contextService, lifecycleService) {
     super();
     this.viewOptions = viewOptions;
     this.styles = styles;
     this.codeEditorService = codeEditorService;
     this.editorService = editorService;
     this.configurationService = configurationService;
+    this.dialogService = dialogService;
     this.contextKeyService = contextKeyService;
     this.instantiationService = instantiationService;
     this.chatService = chatService;
     this.chatAgentService = chatAgentService;
     this.chatWidgetService = chatWidgetService;
-    this.contextMenuService = contextMenuService;
     this.chatAccessibilityService = chatAccessibilityService;
     this.logService = logService;
     this.themeService = themeService;
@@ -229,27 +222,23 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     this.contribs = [];
     this.visibilityTimeoutDisposable = this._register(new MutableDisposable());
     this.visibilityAnimationFrameDisposable = this._register(new MutableDisposable());
-    this.scrollAnimationFrameDisposable = this._register(new MutableDisposable());
     this.inputPartDisposable = this._register(new MutableDisposable());
     this.inlineInputPartDisposable = this._register(new MutableDisposable());
     this.recentlyRestoredCheckpoint = false;
-    this.settingChangeCounter = 0;
     this.welcomePart = this._register(new MutableDisposable());
     this.visibleChangeCount = 0;
     this._visible = false;
-    this.previousTreeScrollHeight = 0;
-    this.scrollLock = true;
     this._isRenderingWelcome = false;
     this._attachmentCapabilities = supportsAllAttachments;
     this.promptDescriptionsCache = /* @__PURE__ */ new Map();
     this.promptUriCache = /* @__PURE__ */ new Map();
     this._isLoadingPromptDescriptions = false;
-    this._mostRecentlyFocusedItemIndex = -1;
     this.viewModelDisposables = this._register(new DisposableStore());
     this._editingSession = observableValue(this, void 0);
     this._lockedToCodingAgentContextKey = ChatContextKeys.lockedToCodingAgent.bindTo(this.contextKeyService);
     this._agentSupportsAttachmentsContextKey = ChatContextKeys.agentSupportsAttachments.bindTo(this.contextKeyService);
     this._sessionIsEmptyContextKey = ChatContextKeys.chatSessionIsEmpty.bindTo(this.contextKeyService);
+    this._hasPendingRequestsContextKey = ChatContextKeys.hasPendingRequests.bindTo(this.contextKeyService);
     this.viewContext = viewContext ?? {};
     const viewModelObs = observableFromEvent(this, this.onDidChangeViewModel, () => this.viewModel);
     if (typeof location === "object") {
@@ -312,15 +301,6 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     }));
     this._codeBlockModelCollection = this._register(instantiationService.createInstance(CodeBlockModelCollection, void 0));
     this.chatSuggestNextWidget = this._register(this.instantiationService.createInstance(ChatSuggestNextWidget));
-    this._register(this.configurationService.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("chat.renderRelatedFiles")) {
-        this.input.renderChatRelatedFiles();
-      }
-      if (e.affectsConfiguration(ChatConfiguration.EditRequests) || e.affectsConfiguration(ChatConfiguration.CheckpointsEnabled)) {
-        this.settingChangeCounter++;
-        this.onDidChangeItems();
-      }
-    }));
     this._register(autorun((r) => {
       const viewModel = viewModelObs.read(r);
       const sessions = chatEditingService.editingSessionsObs.read(r);
@@ -361,7 +341,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       }
       this.reveal(item);
       await timeout(0);
-      for (const codeBlockPart of this.renderer.editorsInUse()) {
+      for (const codeBlockPart of this.listWidget.editorsInUse()) {
         if (extUri.isEqual(codeBlockPart.uri, resource, true)) {
           const editor = codeBlockPart.editor;
           let relativeTop = 0;
@@ -417,9 +397,15 @@ let ChatWidget = class ChatWidget2 extends Disposable {
   get attachmentCapabilities() {
     return this._attachmentCapabilities;
   }
+  /**
+   * Either the inline input (when editing) or the main input part
+   */
   get input() {
     return this.viewModel?.editing && this.configurationService.getValue("chat.editRequests") !== "input" ? this.inlineInputPart : this.inputPart;
   }
+  /**
+   * The main input part at the buttom of the chat widget. Use `input` to get the active input (main or inline editing part).
+   */
   get inputPart() {
     return this.inputPartDisposable.value;
   }
@@ -430,7 +416,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     return this.input.inputEditor;
   }
   get contentHeight() {
-    return this.input.inputPartHeight.get() + this.tree.contentHeight + this.chatSuggestNextWidget.height;
+    return this.input.height.get() + this.listWidget.contentHeight + this.chatSuggestNextWidget.height;
   }
   get attachmentModel() {
     return this.input.attachmentModel;
@@ -463,32 +449,19 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     }
     this.renderWelcomeViewContentIfNeeded();
     this.createList(this.listContainer, { editable: !isInlineChat(this) && !isQuickChat(this), ...this.viewOptions.rendererOptions, renderStyle });
-    const scrollDownButton = this._register(new Button(this.listContainer, {
-      supportIcons: true,
-      buttonBackground: asCssVariable(buttonSecondaryBackground),
-      buttonForeground: asCssVariable(buttonSecondaryForeground),
-      buttonHoverBackground: asCssVariable(buttonSecondaryHoverBackground)
-    }));
-    scrollDownButton.element.classList.add("chat-scroll-down");
-    scrollDownButton.label = `$(${Codicon.chevronDown.id})`;
-    scrollDownButton.setTitle(localize("scrollDownButtonLabel", "Scroll down"));
-    this._register(scrollDownButton.onDidClick(() => {
-      this.scrollLock = true;
-      this.scrollToEnd();
-    }));
     this._register(autorun((reader) => {
       const fontFamily = this.chatLayoutService.fontFamily.read(reader);
       const fontSize = this.chatLayoutService.fontSize.read(reader);
       this.container.style.setProperty("--vscode-chat-font-family", fontFamily);
       this.container.style.fontSize = `${fontSize}px`;
       if (this.visible) {
-        this.tree.rerender();
+        this.listWidget.rerender();
       }
     }));
     this._register(Event.runAndSubscribe(this.editorOptions.onDidChange, () => this.onDidStyleChange()));
     if (this.viewModel) {
       this.onDidChangeItems();
-      this.scrollToEnd();
+      this.listWidget.scrollToEnd();
     }
     this.contribs = ChatWidget_1.CONTRIBS.map((contrib) => {
       try {
@@ -520,14 +493,6 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     }));
     if (!this.focusedInputDOM) {
       this.focusedInputDOM = this.container.appendChild(dom.$(".focused-input-dom"));
-    }
-  }
-  scrollToEnd() {
-    if (this.lastItem) {
-      const offset = Math.max(this.lastItem.currentRenderedHeight ?? 0, 1e6);
-      if (this.tree.hasElement(this.lastItem)) {
-        this.tree.reveal(this.lastItem, offset);
-      }
     }
   }
   focusInput() {
@@ -588,33 +553,15 @@ let ChatWidget = class ChatWidget2 extends Disposable {
   }
   onDidChangeItems(skipDynamicLayout) {
     if (this._visible || !this.viewModel) {
-      const treeItems = (this.viewModel?.getItems() ?? []).map((item) => {
-        return {
-          element: item,
-          collapsed: false,
-          collapsible: false
-        };
-      });
-      if (treeItems.length > 0) {
+      const items = this.viewModel?.getItems() ?? [];
+      if (items.length > 0) {
         this.updateChatViewVisibility();
       } else {
         this.renderWelcomeViewContentIfNeeded();
       }
       this._onWillMaybeChangeHeight.fire();
-      this.lastItem = treeItems.at(-1)?.element;
-      ChatContextKeys.lastItemId.bindTo(this.contextKeyService).set(this.lastItem ? [this.lastItem.id] : []);
-      this.tree.setChildren(null, treeItems, {
-        diffIdentityProvider: {
-          getId: /* @__PURE__ */ __name((element) => {
-            return element.dataId + // Ensure re-rendering an element once slash commands are loaded, so the colorization can be applied.
-            `${isRequestVM(element)}${isResponseVM(element) && element.renderData ? `_${this.visibleChangeCount}` : ""}` + // Re-render once content references are loaded
-            (isResponseVM(element) ? `_${element.contentReferences.length}` : "") + // Re-render if element becomes hidden due to undo/redo
-            `_${element.shouldBeRemovedOnSend ? `${element.shouldBeRemovedOnSend.afterUndoStop || "1"}` : "0"}_${this.viewModel?.editing ? "1" : "0"}_${this.viewModel?.model.checkpoint ? "1" : "0"}_setting${this.settingChangeCounter || "0"}` + // Rerender request if we got new content references in the response
-            // since this may change how we render the corresponding attachments in the request
-            (isRequestVM(element) && element.contentReferences ? `_${element.contentReferences?.length}` : "");
-          }, "getId")
-        }
-      });
+      this.listWidget.setVisibleChangeCount(this.visibleChangeCount);
+      this.listWidget.refresh();
       if (!skipDynamicLayout && this._dynamicMessageLayoutData) {
         this.layoutDynamicChatTreeItemMode();
       }
@@ -625,12 +572,12 @@ let ChatWidget = class ChatWidget2 extends Disposable {
    * Updates the DOM visibility of welcome view and chat list immediately
    */
   updateChatViewVisibility() {
-    if (!this.viewModel) {
-      return;
+    if (this.viewModel) {
+      const numItems = this.viewModel.getItems().length;
+      dom.setVisibility(numItems === 0, this.welcomeMessageContainer);
+      dom.setVisibility(numItems !== 0, this.listContainer);
     }
-    const numItems = this.viewModel.getItems().length;
-    dom.setVisibility(numItems === 0, this.welcomeMessageContainer);
-    dom.setVisibility(numItems !== 0, this.listContainer);
+    this.container.classList.toggle("chat-view-getting-started-disabled", this.chatEntitlementService.sentiment.installed);
     this._onDidChangeEmptyState.fire();
   }
   isEmpty() {
@@ -882,13 +829,11 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     this.input.renderChatEditingSessionState(this._editingSession.get() ?? null);
   }
   async renderFollowups() {
-    if (this.lastItem && isResponseVM(this.lastItem) && this.lastItem.isComplete) {
-      this.input.renderFollowups(this.lastItem.replyFollowups, this.lastItem);
+    const lastItem = this.listWidget.lastItem;
+    if (lastItem && isResponseVM(lastItem) && lastItem.isComplete) {
+      this.input.renderFollowups(lastItem.replyFollowups, lastItem);
     } else {
       this.input.renderFollowups(void 0, void 0);
-    }
-    if (this.bodyDimension) {
-      this.layout(this.bodyDimension.height, this.bodyDimension.width);
     }
   }
   renderChatSuggestNextWidget() {
@@ -944,6 +889,9 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       this.acceptInput().catch((e) => this.logService.error("Failed to handle handoff continueOn", e));
     } else if (handoff.agent) {
       this._switchToAgentByName(handoff.agent);
+      if (handoff.model) {
+        this.input.switchModelByQualifiedName([handoff.model]);
+      }
       this.input.setValue(promptToUse, false);
       this.input.focus();
       if (handoff.send) {
@@ -955,32 +903,40 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     if (!this._shouldExitAfterDelegation(sourceAgent, targetAgent)) {
       return;
     }
+    this.logService.debug(`[Delegation] Will exit after delegation: sourceAgent=${sourceAgent?.id}, targetAgent=${targetAgent?.id}`);
     try {
       await this._handleDelegationExit();
     } catch (e) {
-      this.logService.error("Failed to handle delegation exit", e);
+      this.logService.error("[Delegation] Failed to handle delegation exit", e);
     }
   }
   _shouldExitAfterDelegation(sourceAgent, targetAgent) {
     if (!targetAgent) {
+      this.logService.debug("[Delegation] _shouldExitAfterDelegation: false (no targetAgent)");
       return false;
     }
     if (!this.configurationService.getValue(ChatConfiguration.ExitAfterDelegation)) {
+      this.logService.debug("[Delegation] _shouldExitAfterDelegation: false (ExitAfterDelegation config disabled)");
       return false;
     }
     if (sourceAgent && sourceAgent.id === targetAgent.id) {
+      this.logService.debug("[Delegation] _shouldExitAfterDelegation: false (source and target agents are the same)");
       return false;
     }
     if (!isIChatViewViewContext(this.viewContext)) {
+      this.logService.debug("[Delegation] _shouldExitAfterDelegation: false (not in chat view context)");
       return false;
     }
     const contribution = this.chatSessionsService.getChatSessionContribution(targetAgent.id);
     if (!contribution) {
+      this.logService.debug(`[Delegation] _shouldExitAfterDelegation: false (no contribution found for targetAgent.id=${targetAgent.id})`);
       return false;
     }
     if (contribution.canDelegate !== true) {
+      this.logService.debug(`[Delegation] _shouldExitAfterDelegation: false (contribution.canDelegate=${contribution.canDelegate}, expected true)`);
       return false;
     }
+    this.logService.debug("[Delegation] _shouldExitAfterDelegation: true");
     return true;
   }
   /**
@@ -991,9 +947,11 @@ let ChatWidget = class ChatWidget2 extends Disposable {
   async _handleDelegationExit() {
     const viewModel = this.viewModel;
     if (!viewModel) {
+      this.logService.debug("[Delegation] _handleDelegationExit: no viewModel, returning");
       return;
     }
     const parentSessionResource = viewModel.sessionResource;
+    this.logService.debug(`[Delegation] _handleDelegationExit: parentSessionResource=${parentSessionResource.toString()}`);
     const checkIfShouldClear = /* @__PURE__ */ __name(() => {
       const items = viewModel.getItems();
       const lastItem = items[items.length - 1];
@@ -1004,10 +962,12 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       return false;
     }, "checkIfShouldClear");
     if (checkIfShouldClear()) {
+      this.logService.debug("[Delegation] Response complete, archiving session before clearing");
+      await this.archiveLocalParentSession(parentSessionResource);
       await this.clear();
-      this.archiveLocalParentSession(parentSessionResource);
       return;
     }
+    this.logService.debug("[Delegation] Waiting for response to complete...");
     const shouldClear = await new Promise((resolve) => {
       const disposable = viewModel.onDidChange(() => {
         const result = checkIfShouldClear();
@@ -1017,6 +977,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
         }
       });
       const timeout2 = setTimeout(() => {
+        this.logService.debug("[Delegation] Timeout waiting for response to complete");
         cleanup();
         resolve(false);
       }, 3e4);
@@ -1026,23 +987,33 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       }, "cleanup");
     });
     if (shouldClear) {
+      this.logService.debug("[Delegation] Response completed, archiving session before clearing");
+      await this.archiveLocalParentSession(parentSessionResource);
       await this.clear();
-      this.archiveLocalParentSession(parentSessionResource);
+    } else {
+      this.logService.debug("[Delegation] Not clearing (timeout or error)");
     }
   }
   async archiveLocalParentSession(sessionResource) {
     if (sessionResource.scheme !== Schemas.vscodeLocalChatSession) {
+      this.logService.debug(`[Delegation] archiveLocalParentSession: skipping, scheme=${sessionResource.scheme} is not vscodeLocalChatSession`);
       return;
     }
+    this.logService.debug(`[Delegation] archiveLocalParentSession: archiving session ${sessionResource.toString()}`);
     await this.chatService.getSession(sessionResource)?.editingSession?.accept();
     const session = this.agentSessionsService.getSession(sessionResource);
-    session?.setArchived(true);
+    if (session) {
+      session.setArchived(true);
+      this.logService.debug("[Delegation] archiveLocalParentSession: session archived successfully");
+    } else {
+      this.logService.warn(`[Delegation] archiveLocalParentSession: session not found in agentSessionsService for ${sessionResource.toString()}`);
+    }
   }
   setVisible(visible) {
     const wasVisible = this._visible;
     this._visible = visible;
     this.visibleChangeCount++;
-    this.renderer.setVisible(visible);
+    this.listWidget.setVisible(visible);
     this.input.setVisible(visible);
     if (visible) {
       if (!wasVisible) {
@@ -1060,22 +1031,31 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     }
   }
   createList(listContainer, options) {
-    const scopedInstantiationService = this._register(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this.contextKeyService])));
-    const delegate = scopedInstantiationService.createInstance(ChatListDelegate, this.viewOptions.defaultElementHeight ?? 200);
-    const rendererDelegate = {
-      getListLength: /* @__PURE__ */ __name(() => this.tree.getNode(null).visibleChildrenCount, "getListLength"),
-      onDidScroll: this.onDidScroll,
-      container: listContainer,
-      currentChatMode: /* @__PURE__ */ __name(() => this.input.currentModeKind, "currentChatMode")
-    };
     const overflowWidgetsContainer = document.createElement("div");
     overflowWidgetsContainer.classList.add("chat-overflow-widget-container", "monaco-editor");
     listContainer.append(overflowWidgetsContainer);
-    this.renderer = this._register(scopedInstantiationService.createInstance(ChatListItemRenderer, this.editorOptions, options, rendererDelegate, this._codeBlockModelCollection, overflowWidgetsContainer, this.viewModel));
-    this._register(this.renderer.onDidClickRequest(async (item) => {
+    this.listWidget = this._register(this.instantiationService.createInstance(ChatListWidget, listContainer, {
+      rendererOptions: options,
+      renderStyle: this.viewOptions.renderStyle,
+      defaultElementHeight: this.viewOptions.defaultElementHeight ?? 200,
+      overflowWidgetsDomNode: overflowWidgetsContainer,
+      styles: {
+        listForeground: this.styles.listForeground,
+        listBackground: this.styles.listBackground
+      },
+      currentChatMode: /* @__PURE__ */ __name(() => this.input.currentModeKind, "currentChatMode"),
+      filter: this.viewOptions.filter ? { filter: this.viewOptions.filter.bind(this.viewOptions) } : void 0,
+      codeBlockModelCollection: this._codeBlockModelCollection,
+      viewModel: this.viewModel,
+      editorOptions: this.editorOptions,
+      location: this.location,
+      getCurrentLanguageModelId: /* @__PURE__ */ __name(() => this.input.currentLanguageModel, "getCurrentLanguageModelId"),
+      getCurrentModeInfo: /* @__PURE__ */ __name(() => this.input.currentModeInfo, "getCurrentModeInfo")
+    }));
+    this._register(this.listWidget.onDidClickRequest(async (item) => {
       this.clickedRequest(item);
     }));
-    this._register(this.renderer.onDidRerender((item) => {
+    this._register(this.listWidget.onDidRerender((item) => {
       if (isRequestVM(item.currentElement) && this.configurationService.getValue("chat.editRequests") !== "input") {
         if (!item.rowContainer.contains(this.inputContainer)) {
           item.rowContainer.appendChild(this.inputContainer);
@@ -1083,90 +1063,28 @@ let ChatWidget = class ChatWidget2 extends Disposable {
         this.input.focus();
       }
     }));
-    this._register(this.renderer.onDidDispose((item) => {
+    this._register(this.listWidget.onDidDispose(() => {
       this.focusedInputDOM.appendChild(this.inputContainer);
       this.input.focus();
     }));
-    this._register(this.renderer.onDidFocusOutside(() => {
+    this._register(this.listWidget.onDidFocusOutside(() => {
       this.finishedEditing();
     }));
-    this._register(this.renderer.onDidClickFollowup((item) => {
+    this._register(this.listWidget.onDidClickFollowup((item) => {
       this.acceptInput(item.message);
     }));
-    this._register(this.renderer.onDidClickRerunWithAgentOrCommandDetection((e) => {
-      const request = this.chatService.getSession(e.sessionResource)?.getRequests().find((candidate) => candidate.id === e.requestId);
-      if (request) {
-        const options2 = {
-          noCommandDetection: true,
-          attempt: request.attempt + 1,
-          location: this.location,
-          userSelectedModelId: this.input.currentLanguageModel,
-          modeInfo: this.input.currentModeInfo
-        };
-        this.chatService.resendRequest(request, options2).catch((e2) => this.logService.error("FAILED to rerun request", e2));
-      }
+    this._register(this.listWidget.onDidChangeContentHeight(() => {
+      this._onDidChangeContentHeight.fire();
     }));
-    this.tree = this._register(scopedInstantiationService.createInstance(WorkbenchObjectTree, "Chat", listContainer, delegate, [this.renderer], {
-      identityProvider: { getId: /* @__PURE__ */ __name((e) => e.id, "getId") },
-      horizontalScrolling: false,
-      alwaysConsumeMouseWheel: false,
-      supportDynamicHeights: true,
-      hideTwistiesOfChildlessElements: true,
-      accessibilityProvider: this.instantiationService.createInstance(ChatAccessibilityProvider),
-      keyboardNavigationLabelProvider: { getKeyboardNavigationLabel: /* @__PURE__ */ __name((e) => isRequestVM(e) ? e.message : isResponseVM(e) ? e.response.value : "", "getKeyboardNavigationLabel") },
-      // TODO
-      setRowLineHeight: false,
-      filter: this.viewOptions.filter ? { filter: this.viewOptions.filter.bind(this.viewOptions) } : void 0,
-      scrollToActiveElement: true,
-      overrideStyles: {
-        listFocusBackground: this.styles.listBackground,
-        listInactiveFocusBackground: this.styles.listBackground,
-        listActiveSelectionBackground: this.styles.listBackground,
-        listFocusAndSelectionBackground: this.styles.listBackground,
-        listInactiveSelectionBackground: this.styles.listBackground,
-        listHoverBackground: this.styles.listBackground,
-        listBackground: this.styles.listBackground,
-        listFocusForeground: this.styles.listForeground,
-        listHoverForeground: this.styles.listForeground,
-        listInactiveFocusForeground: this.styles.listForeground,
-        listInactiveSelectionForeground: this.styles.listForeground,
-        listActiveSelectionForeground: this.styles.listForeground,
-        listFocusAndSelectionForeground: this.styles.listForeground,
-        listActiveSelectionIconForeground: void 0,
-        listInactiveSelectionIconForeground: void 0
-      }
-    }));
-    this._register(this.tree.onDidChangeFocus(() => {
-      const focused = this.tree.getFocus();
-      if (focused && focused.length > 0) {
-        const focusedItem = focused[0];
-        const items = this.tree.getNode(null).children;
-        const idx = items.findIndex((i) => i.element === focusedItem);
-        if (idx !== -1) {
-          this._mostRecentlyFocusedItemIndex = idx;
-        }
-      }
-    }));
-    this._register(this.tree.onContextMenu((e) => this.onContextMenu(e)));
-    this._register(this.tree.onDidChangeContentHeight(() => {
-      this.onDidChangeTreeContentHeight();
-    }));
-    this._register(this.renderer.onDidChangeItemHeight((e) => {
-      if (this.tree.hasElement(e.element) && this.visible) {
-        this.tree.updateElementHeight(e.element, e.height);
-      }
-    }));
-    this._register(this.tree.onDidFocus(() => {
+    this._register(this.listWidget.onDidFocus(() => {
       this._onDidFocus.fire();
     }));
-    this._register(this.tree.onDidScroll(() => {
+    this._register(this.listWidget.onDidScroll(() => {
       this._onDidScroll.fire();
-      const isScrolledDown = this.tree.scrollTop >= this.tree.scrollHeight - this.tree.renderHeight - 2;
-      this.container.classList.toggle("show-scroll-down", !isScrolledDown && !this.scrollLock);
     }));
   }
   startEditing(requestId) {
-    const editedRequest = this.renderer.getTemplateDataForRequestId(requestId);
+    const editedRequest = this.listWidget.getTemplateDataForRequestId(requestId);
     if (editedRequest) {
       this.clickedRequest(editedRequest);
     }
@@ -1224,7 +1142,6 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       this.inputPart.dnd.setDisabledOverlay(!isInput);
       this.input.renderAttachedContext();
       this.input.setValue(currentElement.messageText, false);
-      this.renderer.updateItemHeightOnRender(currentElement, item);
       this.onDidChangeItems();
       this.input.inputEditor.focus();
       this._register(this.inputPart.onDidClickOverlay(() => {
@@ -1234,10 +1151,10 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       }));
       if (!isInput) {
         this._register(this.inlineInputPart.inputEditor.onDidChangeModelContent(() => {
-          this.scrollToCurrentItem(currentElement);
+          this.listWidget.scrollToCurrentItem(currentElement);
         }));
         this._register(this.inlineInputPart.inputEditor.onDidChangeCursorSelection((e) => {
-          this.scrollToCurrentItem(currentElement);
+          this.listWidget.scrollToCurrentItem(currentElement);
         }));
       }
     }
@@ -1246,7 +1163,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     });
   }
   finishedEditing(completedEdit) {
-    const editedRequest = this.renderer.getTemplateDataForRequestId(this.viewModel?.editing?.id);
+    const editedRequest = this.listWidget.getTemplateDataForRequestId(this.viewModel?.editing?.id);
     if (this.recentlyRestoredCheckpoint) {
       this.recentlyRestoredCheckpoint = false;
     } else {
@@ -1259,7 +1176,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     const isInput = this.configurationService.getValue("chat.editRequests") === "input";
     if (!isInput) {
       this.inputPart.setChatMode(this.input.currentModeObs.get().id);
-      const currentModel = this.input.selectedLanguageModel;
+      const currentModel = this.input.selectedLanguageModel.get();
       if (currentModel) {
         this.inputPart.switchModel(currentModel.metadata);
       }
@@ -1282,60 +1199,11 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     this.viewModel?.setEditing(void 0);
     this.inputPart?.setEditing(!!this.viewModel?.editing && isInput);
     this.onDidChangeItems();
-    if (editedRequest?.currentElement) {
-      this.renderer.updateItemHeightOnRender(editedRequest.currentElement, editedRequest);
-    }
     this.telemetryService.publicLog2("chat.editRequestsFinished", {
       editRequestType: this.configurationService.getValue("chat.editRequests"),
       editCanceled: !completedEdit
     });
     this.inputPart.focus();
-  }
-  scrollToCurrentItem(currentElement) {
-    if (this.viewModel?.editing && currentElement) {
-      const element = currentElement;
-      if (!this.tree.hasElement(element)) {
-        return;
-      }
-      const relativeTop = this.tree.getRelativeTop(element);
-      if (relativeTop === null || relativeTop < 0 || relativeTop > 1) {
-        this.tree.reveal(element, 0);
-      }
-    }
-  }
-  onContextMenu(e) {
-    e.browserEvent.preventDefault();
-    e.browserEvent.stopPropagation();
-    const selected = e.element;
-    const target = e.browserEvent.target;
-    const isKatexElement = target.closest(`.${katexContainerClassName}`) !== null;
-    const scopedContextKeyService = this.contextKeyService.createOverlay([
-      [ChatContextKeys.responseIsFiltered.key, isResponseVM(selected) && !!selected.errorDetails?.responseIsFiltered],
-      [ChatContextKeys.isKatexMathElement.key, isKatexElement]
-    ]);
-    this.contextMenuService.showContextMenu({
-      menuId: MenuId.ChatContext,
-      menuActionOptions: { shouldForwardArgs: true },
-      contextKeyService: scopedContextKeyService,
-      getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
-      getActionsContext: /* @__PURE__ */ __name(() => selected, "getActionsContext")
-    });
-  }
-  onDidChangeTreeContentHeight() {
-    if (this.tree.scrollHeight !== this.previousTreeScrollHeight) {
-      const lastItem = this.viewModel?.getItems().at(-1);
-      const lastResponseIsRendering = isResponseVM(lastItem) && lastItem.renderData;
-      if (!lastResponseIsRendering || this.scrollLock) {
-        const lastElementWasVisible = this.tree.scrollTop + this.tree.renderHeight >= this.previousTreeScrollHeight - 2;
-        if (lastElementWasVisible) {
-          this.scrollAnimationFrameDisposable.value = dom.scheduleAtNextAnimationFrame(dom.getWindow(this.listContainer), () => {
-            this.scrollToEnd();
-          }, 0);
-        }
-      }
-    }
-    this.previousTreeScrollHeight = this.tree.scrollHeight;
-    this._onDidChangeContentHeight.fire();
   }
   getWidgetViewKindTag() {
     if (!this.viewContext) {
@@ -1363,16 +1231,30 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       dndContainer: this.viewOptions.dndContainer,
       widgetViewKindTag: this.getWidgetViewKindTag(),
       defaultMode: this.viewOptions.defaultMode,
-      sessionTypePickerDelegate: this.viewOptions.sessionTypePickerDelegate
+      sessionTypePickerDelegate: this.viewOptions.sessionTypePickerDelegate,
+      workspacePickerDelegate: this.viewOptions.workspacePickerDelegate
     };
     if (this.viewModel?.editing) {
-      const editedRequest = this.renderer.getTemplateDataForRequestId(this.viewModel?.editing?.id);
+      const editedRequest = this.listWidget.getTemplateDataForRequestId(this.viewModel?.editing?.id);
       const scopedInstantiationService = this._register(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, editedRequest?.contextKeyService])));
       this.inlineInputPartDisposable.value = scopedInstantiationService.createInstance(ChatInputPart, this.location, commonConfig, this.styles, true);
     } else {
       this.inputPartDisposable.value = this.instantiationService.createInstance(ChatInputPart, this.location, commonConfig, this.styles, false);
+      this._register(autorun((reader) => {
+        this.inputPart.height.read(reader);
+        if (!this.listWidget) {
+          return;
+        }
+        if (this.bodyDimension) {
+          this.layout(this.bodyDimension.height, this.bodyDimension.width);
+        }
+        this._onDidChangeContentHeight.fire();
+      }));
     }
     this.input.render(container, "", this);
+    if (this.bodyDimension?.width) {
+      this.input.layout(this.bodyDimension.width);
+    }
     this._register(this.input.onDidLoadInputState(() => {
       this.refreshParsedInput();
     }));
@@ -1412,17 +1294,6 @@ let ChatWidget = class ChatWidget2 extends Disposable {
         }
       });
     }));
-    this._register(autorun((reader) => {
-      this.input.inputPartHeight.read(reader);
-      const editedRequest = this.renderer.getTemplateDataForRequestId(this.viewModel?.editing?.id);
-      if (isRequestVM(editedRequest?.currentElement) && this.viewModel?.editing) {
-        this.renderer.updateItemHeightOnRender(editedRequest?.currentElement, editedRequest);
-      }
-      if (this.bodyDimension) {
-        this.layout(this.bodyDimension.height, this.bodyDimension.width);
-      }
-      this._onDidChangeContentHeight.fire();
-    }));
     this._register(this.inputEditor.onDidChangeModelContent(() => {
       this.parsedChatRequest = void 0;
       this.updateChatInputContext();
@@ -1442,7 +1313,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       const toolIds = /* @__PURE__ */ new Set();
       for (const [entry, enabled] of this.input.selectedToolsModel.entriesMap.read(r)) {
         if (enabled) {
-          if (entry instanceof ToolSet) {
+          if (isToolSet(entry)) {
             toolSetIds.add(entry.id);
           } else {
             toolIds.add(entry.id);
@@ -1469,6 +1340,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       }
       this.viewModel = void 0;
       this.onDidChangeItems();
+      this._hasPendingRequestsContextKey.set(false);
       return;
     }
     if (isEqual(model.sessionResource, this.viewModel?.sessionResource)) {
@@ -1481,8 +1353,9 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     this.chatSuggestNextWidget.hide();
     this._codeBlockModelCollection.clear();
     this.container.setAttribute("data-session-id", model.sessionId);
-    this.viewModel = this.instantiationService.createInstance(ChatViewModel, model, this._codeBlockModelCollection);
+    this.viewModel = this.instantiationService.createInstance(ChatViewModel, model, this._codeBlockModelCollection, void 0);
     this.inputPart.setInputModel(model.inputModel, model.getRequests().length === 0);
+    this.listWidget.setViewModel(this.viewModel);
     if (this._lockedAgent) {
       let placeholder = this.chatSessionsService.getInputPlaceholderForSessionType(this._lockedAgent.id);
       if (!placeholder) {
@@ -1505,7 +1378,7 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       }
       this.onDidChangeItems();
       if (events?.some((e) => e?.kind === "addRequest") && this.visible) {
-        this.scrollToEnd();
+        this.listWidget.scrollToEnd();
       }
     })));
     this.viewModelDisposables.add(this.viewModel.onDidDisposeModel(() => {
@@ -1516,6 +1389,12 @@ let ChatWidget = class ChatWidget2 extends Disposable {
       this.onDidChangeItems();
     }));
     this._sessionIsEmptyContextKey.set(model.getRequests().length === 0);
+    const updatePendingRequestKeys = /* @__PURE__ */ __name(() => {
+      const pendingCount = model.getPendingRequests().length;
+      this._hasPendingRequestsContextKey.set(pendingCount > 0);
+    }, "updatePendingRequestKeys");
+    updatePendingRequestKeys();
+    this.viewModelDisposables.add(model.onDidChangePendingRequests(() => updatePendingRequestKeys()));
     this.refreshParsedInput();
     this.viewModelDisposables.add(model.onDidChange((e) => {
       if (e.kind === "setAgent") {
@@ -1538,31 +1417,29 @@ let ChatWidget = class ChatWidget2 extends Disposable {
           this.inputPart.clearTodoListWidget(this.viewModel?.sessionResource, true);
         }
         this.renderChatSuggestNextWidget();
+        if (this.visible && this.viewModel?.sessionResource) {
+          this.agentSessionsService.getSession(this.viewModel.sessionResource)?.setRead(true);
+        }
       }
     }));
-    if (this.tree && this.visible) {
+    if (this.listWidget && this.visible) {
       this.onDidChangeItems();
-      this.scrollToEnd();
+      this.listWidget.scrollToEnd();
     }
-    this.renderer.updateViewModel(this.viewModel);
     this.updateChatInputContext();
     this.input.renderChatTodoListWidget(this.viewModel.sessionResource);
   }
   getFocus() {
-    return this.tree.getFocus()[0] ?? void 0;
+    return this.listWidget.getFocus()[0] ?? void 0;
   }
   reveal(item, relativeTop) {
-    this.tree.reveal(item, relativeTop);
+    this.listWidget.reveal(item, relativeTop);
   }
   focus(item) {
-    const items = this.tree.getNode(null).children;
-    const node = items.find((i) => i.element?.id === item.id);
-    if (!node) {
+    if (!this.listWidget.hasElement(item)) {
       return;
     }
-    this._mostRecentlyFocusedItemIndex = items.indexOf(node);
-    this.tree.setFocus([node.element]);
-    this.tree.domFocus();
+    this.listWidget.focusItem(item);
   }
   setInputPlaceholder(placeholder) {
     this.viewModel?.setInputPlaceholder(placeholder);
@@ -1592,9 +1469,9 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     this.renderWelcomeViewContentIfNeeded();
     const agent = this.chatAgentService.getAgent(agentId);
     this._updateAgentCapabilitiesContextKeys(agent);
-    this.renderer.updateOptions({ restorable: false, editable: false, noFooter: true, progressMessageAtBottomOfResponse: true });
+    this.listWidget?.updateRendererOptions({ restorable: false, editable: false, noFooter: true, progressMessageAtBottomOfResponse: true });
     if (this.visible) {
-      this.tree.rerender();
+      this.listWidget?.rerender();
     }
   }
   unlockFromCodingAgent() {
@@ -1605,10 +1482,10 @@ let ChatWidget = class ChatWidget2 extends Disposable {
     if (this.viewModel) {
       this.viewModel.resetInputPlaceholder();
     }
-    this.inputEditor.updateOptions({ placeholder: void 0 });
-    this.renderer.updateOptions({ restorable: true, editable: true, noFooter: false, progressMessageAtBottomOfResponse: /* @__PURE__ */ __name((mode) => mode !== ChatModeKind.Ask, "progressMessageAtBottomOfResponse") });
+    this.inputEditor?.updateOptions({ placeholder: void 0 });
+    this.listWidget?.updateRendererOptions({ restorable: true, editable: true, noFooter: false, progressMessageAtBottomOfResponse: /* @__PURE__ */ __name((mode) => mode !== ChatModeKind.Ask, "progressMessageAtBottomOfResponse") });
     if (this.visible) {
-      this.tree.rerender();
+      this.listWidget?.rerender();
     }
   }
   get isLockedToCodingAgent() {
@@ -1663,10 +1540,7 @@ ${input}`;
       await this._applyPromptMetadata(parseResult.header, requestInput);
     }
   }
-  async _acceptInput(query, options) {
-    if (this.viewModel?.model.requestInProgress.get()) {
-      return;
-    }
+  async _acceptInput(query, options = {}) {
     if (!query && this.input.generating) {
       const generatingAutoSubmitWindow = 500;
       const start = Date.now();
@@ -1681,8 +1555,15 @@ ${input}`;
     if (!this.viewModel) {
       return;
     }
+    if (this.viewOptions.submitHandler) {
+      const inputValue = !query ? this.getInput() : query.query;
+      const handled = await this.viewOptions.submitHandler(inputValue, this.input.currentModeKind);
+      if (handled) {
+        return;
+      }
+    }
     this._onDidAcceptInput.fire();
-    this.scrollLock = this.isLockedToCodingAgent || !!checkModeOption(this.input.currentModeKind, this.viewOptions.autoScroll);
+    this.listWidget.setScrollLock(this.isLockedToCodingAgent || !!checkModeOption(this.input.currentModeKind, this.viewOptions.autoScroll));
     const editorValue = this.getInput();
     const requestInputs = {
       input: !query ? editorValue : query.query,
@@ -1690,8 +1571,22 @@ ${input}`;
     };
     const isUserQuery = !query;
     if (this.viewModel?.editing) {
+      const editingPendingRequest = this.viewModel.editing.pendingKind;
+      if (editingPendingRequest !== void 0) {
+        const editingRequestId = this.viewModel.editing.id;
+        this.chatService.removePendingRequest(this.viewModel.sessionResource, editingRequestId);
+        options.queue ??= editingPendingRequest;
+      }
       this.finishedEditing(true);
       this.viewModel.model?.setCheckpoint(void 0);
+    }
+    const model = this.viewModel.model;
+    const requestInProgress = model.requestInProgress.get();
+    if (requestInProgress) {
+      options.queue ??= "queued";
+    }
+    if (!requestInProgress && !await this.confirmPendingRequestsBeforeSend(model, options)) {
+      return;
     }
     await this._applyPromptFileIfSet(requestInputs);
     await this._autoAttachInstructions(requestInputs);
@@ -1713,10 +1608,6 @@ ${input}`;
       requestInputs.attachedContext = editingSessionAttachedContext;
       this.telemetryService.publicLog2("chatEditing/workingSetSize", { originalSize: uniqueWorkingSetEntries.size, actualSize: uniqueWorkingSetEntries.size });
     }
-    this.chatService.cancelCurrentRequestForSession(this.viewModel.sessionResource);
-    if (this.currentRequest) {
-      await Promise.race([this.currentRequest, timeout(1e3)]);
-    }
     this.input.validateAgentMode();
     if (this.viewModel.model.checkpoint) {
       const requests = this.viewModel.model.getRequests();
@@ -1727,7 +1618,7 @@ ${input}`;
         }
       }
     }
-    if (this.viewModel.sessionResource) {
+    if (this.viewModel.sessionResource && !options.queue) {
       this.chatAccessibilityService.acceptRequest(this._viewModel.sessionResource);
     }
     const result = await this.chatService.sendRequest(this.viewModel.sessionResource, requestInputs.input, {
@@ -1739,17 +1630,24 @@ ${input}`;
       noCommandDetection: options?.noCommandDetection,
       ...this.getModeRequestOptions(),
       modeInfo: this.input.currentModeInfo,
-      agentIdSilent: this._lockedAgent?.id
+      agentIdSilent: this._lockedAgent?.id,
+      queue: options?.queue
     });
-    if (!result) {
+    if (this.viewModel.sessionResource && !options.queue) {
       this.chatAccessibilityService.disposeRequest(this.viewModel.sessionResource);
+    }
+    if (ChatSendResult.isRejected(result)) {
       return;
     }
     this.updateChatViewVisibility();
     this.input.acceptInput(options?.storeToHistory ?? isUserQuery);
-    this._onDidSubmitAgent.fire({ agent: result.agent, slashCommand: result.slashCommand });
-    this.handleDelegationExitIfNeeded(this._lockedAgent, result.agent);
-    this.currentRequest = result.responseCompletePromise.then(() => {
+    const sent = ChatSendResult.isQueued(result) ? await result.deferred : result;
+    if (!ChatSendResult.isSent(sent)) {
+      return;
+    }
+    this._onDidSubmitAgent.fire({ agent: sent.data.agent, slashCommand: sent.data.slashCommand });
+    this.handleDelegationExitIfNeeded(this._lockedAgent, sent.data.agent);
+    sent.data.responseCompletePromise.then(() => {
       const responses = this.viewModel?.getItems().filter(isResponseVM);
       const lastResponse = responses?.[responses.length - 1];
       this.chatAccessibilityService.acceptResponse(this, this.container, lastResponse, this.viewModel?.sessionResource, options?.isVoiceInput);
@@ -1760,9 +1658,42 @@ ${input}`;
           this.input.setValue(question, false);
         }
       }
-      this.currentRequest = void 0;
     });
-    return result.responseCreatedPromise;
+    return sent.data.responseCreatedPromise;
+  }
+  async confirmPendingRequestsBeforeSend(model, options) {
+    if (options.queue) {
+      return true;
+    }
+    const hasPendingRequests = model.getPendingRequests().length > 0;
+    if (!hasPendingRequests) {
+      return true;
+    }
+    const promptResult = await this.dialogService.prompt({
+      type: "question",
+      message: localize("chat.pendingRequests.prompt.message", "You already have pending requests."),
+      detail: localize("chat.pendingRequests.prompt.detail", "Do you want to keep them in the queue or remove them before sending this message?"),
+      buttons: [
+        {
+          label: localize("chat.pendingRequests.prompt.keep", "Keep Pending Requests"),
+          run: /* @__PURE__ */ __name(() => "keep", "run")
+        },
+        {
+          label: localize("chat.pendingRequests.prompt.remove", "Remove Pending Requests"),
+          run: /* @__PURE__ */ __name(() => "remove", "run")
+        }
+      ],
+      cancelButton: true
+    });
+    if (!promptResult.result) {
+      return false;
+    }
+    if (promptResult.result === "remove") {
+      for (const pendingRequest of [...model.getPendingRequests()]) {
+        this.chatService.removePendingRequest(model.sessionResource, pendingRequest.request.id);
+      }
+    }
+    return true;
   }
   getModeRequestOptions() {
     return {
@@ -1771,61 +1702,37 @@ ${input}`;
     };
   }
   getCodeBlockInfosForResponse(response) {
-    return this.renderer.getCodeBlockInfosForResponse(response);
+    return this.listWidget.getCodeBlockInfosForResponse(response);
   }
   getCodeBlockInfoForEditor(uri) {
-    return this.renderer.getCodeBlockInfoForEditor(uri);
+    return this.listWidget.getCodeBlockInfoForEditor(uri);
   }
   getFileTreeInfosForResponse(response) {
-    return this.renderer.getFileTreeInfosForResponse(response);
+    return this.listWidget.getFileTreeInfosForResponse(response);
   }
   getLastFocusedFileTreeForResponse(response) {
-    return this.renderer.getLastFocusedFileTreeForResponse(response);
+    return this.listWidget.getLastFocusedFileTreeForResponse(response);
   }
   focusResponseItem(lastFocused) {
-    if (!this.viewModel) {
-      return;
-    }
-    const items = this.tree.getNode(null).children;
-    let item;
-    if (lastFocused) {
-      item = items[this._mostRecentlyFocusedItemIndex] ?? items[items.length - 1];
-    } else {
-      item = items[items.length - 1];
-    }
-    if (!item) {
-      return;
-    }
-    this.tree.setFocus([item.element]);
-    this.tree.domFocus();
+    this.listWidget.focusLastItem(lastFocused);
   }
   layout(height, width) {
     width = Math.min(width, this.viewOptions.renderStyle === "minimal" ? width : 950);
-    const heightUpdated = this.bodyDimension && this.bodyDimension.height !== height;
     this.bodyDimension = new dom.Dimension(width, height);
     if (this.viewModel?.editing) {
       this.inlineInputPart?.layout(width);
     }
     this.inputPart.layout(width);
-    const inputHeight = this.inputPart.inputPartHeight.get();
+    const inputHeight = this.inputPart.height.get();
     const chatSuggestNextWidgetHeight = this.chatSuggestNextWidget.height;
-    const lastElementVisible = this.tree.scrollTop + this.tree.renderHeight >= this.tree.scrollHeight - 2;
-    const lastItem = this.viewModel?.getItems().at(-1);
+    const lastElementVisible = this.listWidget.isScrolledToBottom;
+    const lastItem = this.listWidget.lastItem;
     const contentHeight = Math.max(0, height - inputHeight - chatSuggestNextWidgetHeight);
-    if (this.viewOptions.renderStyle === "compact" || this.viewOptions.renderStyle === "minimal") {
-      this.listContainer.style.removeProperty("--chat-current-response-min-height");
-    } else {
-      this.listContainer.style.setProperty("--chat-current-response-min-height", contentHeight * 0.75 + "px");
-      if (heightUpdated && lastItem && this.visible && this.tree.hasElement(lastItem)) {
-        this.tree.updateElementHeight(lastItem, void 0);
-      }
-    }
-    this.tree.layout(contentHeight, width);
+    this.listWidget.layout(contentHeight, width);
     this.welcomeMessageContainer.style.height = `${contentHeight}px`;
-    this.renderer.layout(width);
     const lastResponseIsRendering = isResponseVM(lastItem) && lastItem.renderData;
     if (lastElementVisible && (!lastResponseIsRendering || checkModeOption(this.input.currentModeKind, this.viewOptions.autoScroll))) {
-      this.scrollToEnd();
+      this.listWidget.scrollToEnd();
     }
     this.listContainer.style.height = `${contentHeight}px`;
     this._onDidChangeHeight.fire(height);
@@ -1836,9 +1743,9 @@ ${input}`;
   // TODO@TylerLeonhardt: This could use some refactoring to make it clear which layout strategy is being used
   setDynamicChatTreeItemLayout(numOfChatTreeItems, maxHeight) {
     this._dynamicMessageLayoutData = { numOfMessages: numOfChatTreeItems, maxHeight, enabled: true };
-    this._register(this.renderer.onDidChangeItemHeight(() => this.layoutDynamicChatTreeItemMode()));
+    this._register(this.listWidget.onDidChangeItemHeight(() => this.layoutDynamicChatTreeItemMode()));
     const mutableDisposable = this._register(new MutableDisposable());
-    this._register(this.tree.onDidScroll((e) => {
+    this._register(this.listWidget.onDidScroll((e) => {
       if (!this._dynamicMessageLayoutData?.enabled) {
         return;
       }
@@ -1854,7 +1761,7 @@ ${input}`;
         const possibleMaxHeight = this._dynamicMessageLayoutData?.maxHeight ?? maxHeight;
         const width = this.bodyDimension?.width ?? this.container.offsetWidth;
         this.input.layout(width);
-        const inputPartHeight = this.input.inputPartHeight.get();
+        const inputPartHeight = this.input.height.get();
         const chatSuggestNextWidgetHeight = this.chatSuggestNextWidget.height;
         const newHeight = Math.min(renderHeight + diff, possibleMaxHeight - inputPartHeight - chatSuggestNextWidgetHeight);
         this.layout(newHeight + inputPartHeight + chatSuggestNextWidgetHeight, width);
@@ -1894,7 +1801,7 @@ ${input}`;
     }
     const width = this.bodyDimension?.width ?? this.container.offsetWidth;
     this.input.layout(width);
-    const inputHeight = this.input.inputPartHeight.get();
+    const inputHeight = this.input.height.get();
     const chatSuggestNextWidgetHeight = this.chatSuggestNextWidget.height;
     const totalMessages = this.viewModel.getItems();
     const messages = totalMessages.slice(-this._dynamicMessageLayoutData.numOfMessages);
@@ -1906,7 +1813,7 @@ ${input}`;
       this._dynamicMessageLayoutData.maxHeight
     ), width);
     if (needsRerender || !listHeight) {
-      this.scrollToEnd();
+      this.listWidget.scrollToEnd();
     }
   }
   saveState() {
@@ -1944,7 +1851,7 @@ ${input}`;
       this._switchToAgentByName(agent);
     }
     if (tools !== void 0 && this.input.currentModeKind === ChatModeKind.Agent) {
-      const enablementMap = this.toolsService.toToolAndToolSetEnablementMap(tools, Target.VSCode);
+      const enablementMap = this.toolsService.toToolAndToolSetEnablementMap(tools, Target.VSCode, this.input.selectedLanguageModel.get()?.metadata);
       this.input.selectedToolsModel.set(enablementMap, true);
     }
     if (model !== void 0) {
@@ -1959,24 +1866,25 @@ ${input}`;
    */
   async _autoAttachInstructions({ attachedContext }) {
     this.logService.debug(`ChatWidget#_autoAttachInstructions: prompt files are always enabled`);
-    const enabledTools = this.input.currentModeKind === ChatModeKind.Agent ? this.input.selectedToolsModel.entriesMap.get() : void 0;
-    const computer = this.instantiationService.createInstance(ComputeAutomaticInstructions, enabledTools);
+    const enabledTools = this.input.currentModeKind === ChatModeKind.Agent ? this.input.selectedToolsModel.userSelectedTools.get() : void 0;
+    const enabledSubAgents = this.input.currentModeKind === ChatModeKind.Agent ? this.input.currentModeObs.get().agents?.get() : void 0;
+    const computer = this.instantiationService.createInstance(ComputeAutomaticInstructions, this.input.currentModeKind, enabledTools, enabledSubAgents);
     await computer.collect(attachedContext, CancellationToken.None);
   }
   delegateScrollFromMouseWheelEvent(browserEvent) {
-    this.tree.delegateScrollFromMouseWheelEvent(browserEvent);
+    this.listWidget.delegateScrollFromMouseWheelEvent(browserEvent);
   }
 };
 ChatWidget = ChatWidget_1 = __decorate([
   __param(4, ICodeEditorService),
   __param(5, IEditorService),
   __param(6, IConfigurationService),
-  __param(7, IContextKeyService),
-  __param(8, IInstantiationService),
-  __param(9, IChatService),
-  __param(10, IChatAgentService),
-  __param(11, IChatWidgetService),
-  __param(12, IContextMenuService),
+  __param(7, IDialogService),
+  __param(8, IContextKeyService),
+  __param(9, IInstantiationService),
+  __param(10, IChatService),
+  __param(11, IChatAgentService),
+  __param(12, IChatWidgetService),
   __param(13, IChatAccessibilityService),
   __param(14, ILogService),
   __param(15, IThemeService),

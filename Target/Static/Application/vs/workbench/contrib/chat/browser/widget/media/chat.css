@@ -15,6 +15,9 @@
 .interactive-list > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row > .monaco-tl-row > .monaco-tl-twistie {
   display: none !important;
 }
+.interactive-list > .chat-scroll-down {
+  padding: 4px;
+}
 .interactive-item-container {
   padding: 12px 16px;
   display: flex;
@@ -80,6 +83,14 @@
   }
   100% {
     content: "";
+  }
+}
+@keyframes chat-thinking-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
   }
 }
 .interactive-item-container .chat-animated-ellipsis::after {
@@ -190,6 +201,9 @@
   color: var(--vscode-descriptionForeground);
   line-height: 16px;
   margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .interactive-item-container .chat-footer-details.hidden {
   display: none !important;
@@ -198,7 +212,7 @@
   width: 100%;
 }
 .interactive-item-container > .value .chat-used-context {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .interactive-item-container .value .rendered-markdown:not(:has(.chat-extensions-content-part)) {
   .codicon {
@@ -435,6 +449,19 @@
       border-bottom: 1px solid var(--vscode-widget-border);
       font-size: var(--vscode-chat-font-size-body-m);
     }
+    .webview-output {
+      position: relative;
+    }
+    .progress-container {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: auto;
+      width: fit-content;
+      height: fit-content;
+    }
     .output-error {
       margin: 6px 4px;
       color: var(--vscode-errorForeground);
@@ -454,7 +481,7 @@
     }
   }
   &:not(:last-child) {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
 }
 .interactive-item-container .value > .rendered-markdown li > p {
@@ -598,6 +625,16 @@
   border-radius: 4px;
   padding: 0 6px 6px 6px;
   width: 100%;
+  position: relative;
+}
+.interactive-session .chat-input-container .chat-context-usage-container {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  z-index: 1;
+}
+.interactive-session .interactive-input-part.compact .chat-context-usage-container {
+  display: none;
 }
 .interactive-input-part:has(.chat-editing-session > .chat-editing-session-container) .chat-input-container,
 .interactive-input-part:has(.chat-todo-list-widget-container > .chat-todo-list-widget.has-todos) .chat-input-container,
@@ -755,81 +792,18 @@
   flex-direction: row;
   gap: 4px;
   margin-top: 6px;
+  margin-right: 20px;
   flex-wrap: wrap;
   cursor: default;
 }
-.chat-related-files {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  max-width: 100%;
-}
-.chat-related-files .monaco-button-dropdown .monaco-text-button {
-  font-size: 11px;
-  justify-content: left;
-  width: fit-content;
-  padding: 0px;
-  border: none;
-  height: 18px;
-}
-.chat-related-files .monaco-button-dropdown .monaco-text-button span {
-  font-style: italic;
-  height: 18px;
-  opacity: 0.7;
-}
-.chat-related-files .monaco-button-dropdown {
-  border-radius: 4px;
-  height: 18px;
-  border: 1px solid var(--vscode-input-border);
-  border-style: dashed;
-  align-items: center;
-  overflow: hidden;
-  gap: 2px;
-  padding: 0 4px;
-}
-.chat-related-files .monaco-button.codicon.codicon-add {
-  display: flex;
-  flex-direction: column;
-  color: var(--vscode-descriptionForeground);
-  padding-top: 3px;
-  margin-left: -4px;
-  padding-left: 4px;
-  font-size: 14px;
-  height: calc(100% - 3px);
-  width: 17px;
-  outline-offset: -2px !important;
-}
-.interactive-session .chat-related-files .monaco-icon-label::before {
-  padding: 4px 3px 0 2px;
-}
-.interactive-session .chat-editing-session .chat-related-files .monaco-button.secondary:first-child {
-  margin: 3px 0px 3px 3px;
-  flex-shrink: 0;
-}
-.interactive-session .chat-editing-session .chat-related-files .monaco-button.secondary.monaco-icon-label::before {
-  display: inline-flex;
-  align-items: center;
-}
-.interactive-session .chat-editing-session .chat-related-files .monaco-button.secondary:only-child {
-  width: 100%;
-}
-.interactive-session .chat-editing-session .chat-related-files .monaco-button.secondary.disabled {
-  cursor: initial;
-}
-.interactive-session .chat-editing-session .chat-related-files .monaco-button.secondary .codicon {
-  font-size: 12px;
-  margin-left: 4px;
-}
 .interactive-session .chat-editing-session .chat-editing-session-actions .monaco-button.secondary.monaco-text-button.codicon {
   cursor: pointer;
-  padding: 3px;
+  padding: 2px;
   border-radius: 4px;
   display: inline-flex;
 }
 .interactive-session .chat-editing-session .chat-editing-session-actions .monaco-button.secondary.monaco-text-button {
   background-color: var(--vscode-button-secondaryBackground);
-  border: 1px solid var(--vscode-button-border);
   color: var(--vscode-button-secondaryForeground);
 }
 .interactive-session .chat-editing-session .chat-editing-session-actions .monaco-button.secondary:hover {
@@ -1105,9 +1079,6 @@
     }
   }
 }
-.interactive-session .chat-input-toolbars.scroll-top-decoration {
-  box-shadow: var(--vscode-scrollbar-shadow) 0 6px 6px -6px inset;
-}
 .interactive-session .chat-input-toolbar .chat-input-picker-item .action-label,
 .interactive-session .chat-input-toolbar .chat-sessionPicker-item .action-label {
   height: 16px;
@@ -1257,7 +1228,7 @@
   color: var(--vscode-notificationsInfoIcon-foreground) !important;
 }
 .interactive-session .interactive-input-part {
-  margin: 0px 16px;
+  margin: 0px 12px;
   padding: 4px 0 12px 0px;
   display: flex;
   flex-direction: column;
@@ -1309,15 +1280,17 @@
   font-size: 14px;
 }
 .action-item.chat-mcp {
+  min-width: 22px !important;
   .chat-mcp-state-indicator {
     position: absolute;
     bottom: 0;
-    right: 0;
+    left: 12px;
     font-size: 12px !important;
     background: var(--vscode-input-background);
     width: fit-content;
     height: fit-content;
     border-radius: 100%;
+    pointer-events: none;
     &.chat-mcp-state-new {
       color: var(--vscode-button-foreground);
     }
@@ -1346,7 +1319,6 @@
   padding-left: 4px;
   font-size: 11px;
 }
-.chat-related-files .monaco-button.codicon.codicon-add:hover,
 .action-item.chat-attached-context-attachment.chat-add-files:hover,
 .interactive-session .chat-attached-context .chat-attached-context-attachment .monaco-button:hover {
   cursor: pointer;
@@ -1437,7 +1409,7 @@
   align-content: center;
 }
 .interactive-session .interactive-item-container.interactive-request .chat-attached-context .chat-attached-context-attachment {
-  padding-right: 6px;
+  padding: 0 6px 0 4px;
 }
 .interactive-session-followups {
   display: flex;
@@ -1663,6 +1635,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  line-height: 1.5em;
 }
 .interactive-response-progress-tree,
 .chat-notification-widget,
@@ -1680,6 +1653,11 @@
   padding: 4px 3px;
   .monaco-icon-label {
     padding: 0px 3px;
+    gap: 2px;
+    &::before {
+      width: var(--vscode-chat-font-size-body-s);
+      padding-right: 0;
+    }
   }
 }
 .interactive-session .chat-editing-session-list {
@@ -1708,11 +1686,14 @@
   user-select: none;
 }
 .interactive-session .chat-used-context-label {
-  font-size: var(--vscode-chat-font-size-body-s);
+  font-size: 13px;
   font-family: var(--vscode-chat-font-family, inherit);
   color: var(--vscode-descriptionForeground);
   -webkit-user-select: none;
   user-select: none;
+  a {
+    color: var(--vscode-descriptionForeground);
+  }
   code {
     font-size: var(--vscode-chat-font-size-body-xs);
   }
@@ -1738,7 +1719,8 @@
 }
 .interactive-session .chat-used-context-label .monaco-button {
   padding: 2px 6px 2px 2px;
-  font-size: var(--vscode-chat-font-size-body-m);
+  font-size: var(--vscode-chat-font-size-body-s);
+  line-height: unset;
 }
 .interactive-session .chat-file-changes-label .monaco-button:hover {
   background-color: var(--vscode-toolbar-hoverBackground);
@@ -1757,23 +1739,25 @@
 }
 .interactive-session .chat-file-changes-label .monaco-button .codicon,
 .interactive-session .chat-used-context-label .monaco-button .codicon {
-  font-size: var(--vscode-chat-font-size-body-s);
+  font-size: 12px;
   color: var(--vscode-icon-foreground) !important;
 }
 .interactive-item-container .progress-container {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin: 0 0 6px 4px;
+  gap: 4px;
+  margin: 0 0 6px 2px;
+  font-size: 13px;
   padding-top: 2px;
   > .codicon[class*=codicon-] {
-    font-size: var(--vscode-chat-font-size-body-s);
+    font-size: 12px;
     &::before {
-      font-size: var(--vscode-chat-font-size-body-s);
+      font-size: 12px;
     }
   }
   .codicon {
     color: var(--vscode-icon-foreground) !important;
+    margin: 0 .2em;
     &.codicon-error {
       color: var(--vscode-editorError-foreground) !important;
     }
@@ -1791,6 +1775,21 @@
     .chat-inline-anchor-widget {
       display: inline;
     }
+  }
+  &.working-progress:has(.codicon-loading) .rendered-markdown.progress-step > p {
+    background:
+      linear-gradient(
+        90deg,
+        var(--vscode-descriptionForeground) 0%,
+        var(--vscode-descriptionForeground) 30%,
+        var(--vscode-chat-thinkingShimmer) 50%,
+        var(--vscode-descriptionForeground) 70%,
+        var(--vscode-descriptionForeground) 100%);
+    background-size: 400% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: chat-thinking-shimmer 2s linear infinite;
   }
 }
 .interactive-item-container .chat-command-button {
@@ -1876,16 +1875,21 @@
   user-select: none;
   outline: none;
   border: none;
+  .codicon.codicon-file-media {
+    font-size: 12px;
+  }
 }
 .chat-attached-context-attachment .attachment-additional-info {
   opacity: 0.7;
   font-size: .9em;
+  padding-left: 4px;
 }
 .chat-attached-context-attachment .chat-attached-context-pill-image {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   border-radius: 2px;
   object-fit: cover;
+  margin-right: 3px;
 }
 .chat-attached-context-attachment .chat-attached-context-custom-text {
   vertical-align: middle;
@@ -1993,6 +1997,9 @@
   .hc-light .interactive-item-container.interactive-request .value .rendered-markdown {
     border: 1px dotted var(--vscode-focusBorder);
   }
+  .interactive-item-container.interactive-request .value .rendered-markdown > :first-child {
+    margin-top: 0px;
+  }
   .interactive-item-container.interactive-request .value .rendered-markdown > :last-child {
     margin-bottom: 0px;
   }
@@ -2035,7 +2042,6 @@
     top: -13px;
     right: 20px;
     border-radius: 3px;
-    width: 28px;
     height: 26px;
   }
   .request-hover.expanded:not(.checkpoints-enabled) {
@@ -2048,17 +2054,14 @@
     opacity: 1 !important;
   }
   .request-hover:not(.expanded) .actions-container {
-    width: 22px;
     height: 22px;
   }
   .request-hover.expanded .actions-container {
     padding: 0 3px;
   }
   .request-hover:not(.expanded) .actions-container {
-    .action-label.codicon-discard,
-    .action-label.codicon-x,
-    .action-label.codicon-edit {
-      margin-top: 4px;
+    .action-label {
+      margin: 4px 2px 0;
       padding: 3px 3px;
     }
   }
@@ -2194,7 +2197,8 @@
   width: 100%;
 }
 .chat-row-disabled-overlay,
-.interactive-item-container .chat-edit-input-container .chat-editing-session {
+.interactive-item-container .chat-edit-input-container .chat-editing-session,
+.chat-input-overlay {
   display: none;
 }
 .chat-row-disabled-overlay.disabled,
@@ -2287,6 +2291,33 @@
 }
 .chat-attachments-show-more-button .chat-attached-context-custom-text {
   font-style: italic;
+  color: var(--vscode-descriptionForeground);
+}
+.interactive-item-container.pending-request {
+  opacity: 0.7;
+  .request-hover {
+    top: -17px !important;
+  }
+}
+.interactive-item-container .chat-request-status {
+  color: var(--vscode-descriptionForeground);
+  font-size: var(--vscode-chat-font-size-body-xs);
+  margin-top: 2px;
+  text-align: right;
+}
+.interactive-item-container.pending-divider {
+  padding: 8px 16px;
+}
+.interactive-item-container.pending-divider .pending-divider-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.interactive-item-container.pending-divider .pending-divider-label {
+  font-size: var(--vscode-chat-font-size-body-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--vscode-descriptionForeground);
 }
 /*# sourceMappingURL=chat.css.map */

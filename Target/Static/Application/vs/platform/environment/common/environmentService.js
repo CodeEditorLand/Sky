@@ -77,6 +77,9 @@ class AbstractNativeEnvironmentService {
   get untitledWorkspacesHome() {
     return URI.file(join(this.userDataPath, "Workspaces"));
   }
+  get builtinWorkbenchModesHome() {
+    return joinPath(URI.file(this.appRoot), "resources", "workbenchModes");
+  }
   get builtinExtensionsPath() {
     const cliBuiltinExtensionsDir = this.args["builtin-extensions-dir"];
     if (cliBuiltinExtensionsDir) {
@@ -202,6 +205,9 @@ class AbstractNativeEnvironmentService {
     }
     return void 0;
   }
+  get agentSessionsWorkspace() {
+    return joinPath(this.appSettingsHome, "agent-sessions.code-workspace");
+  }
   get editSessionId() {
     return this.args["editSessionId"];
   }
@@ -273,7 +279,13 @@ __decorate([
 ], AbstractNativeEnvironmentService.prototype, "untitledWorkspacesHome", null);
 __decorate([
   memoize
+], AbstractNativeEnvironmentService.prototype, "builtinWorkbenchModesHome", null);
+__decorate([
+  memoize
 ], AbstractNativeEnvironmentService.prototype, "builtinExtensionsPath", null);
+__decorate([
+  memoize
+], AbstractNativeEnvironmentService.prototype, "extensionsDownloadLocation", null);
 __decorate([
   memoize
 ], AbstractNativeEnvironmentService.prototype, "extensionsPath", null);
@@ -313,6 +325,9 @@ __decorate([
 __decorate([
   memoize
 ], AbstractNativeEnvironmentService.prototype, "policyFile", null);
+__decorate([
+  memoize
+], AbstractNativeEnvironmentService.prototype, "agentSessionsWorkspace", null);
 function parseExtensionHostDebugPort(args, isBuilt) {
   return parseDebugParams(args["inspect-extensions"], args["inspect-brk-extensions"], 5870, isBuilt, args.debugId, args.extensionEnvironment);
 }

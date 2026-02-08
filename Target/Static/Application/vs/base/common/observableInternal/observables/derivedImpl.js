@@ -318,10 +318,15 @@ class Derived extends BaseObservable {
     this._value = newValue;
   }
   debugRecompute() {
-    if (!this._isComputing) {
-      this._recompute();
-    } else {
-      this._state = 2;
+    this.beginUpdate(this);
+    try {
+      if (!this._isComputing) {
+        this._recompute();
+      } else {
+        this._state = 2;
+      }
+    } finally {
+      this.endUpdate(this);
     }
   }
   setValue(newValue, tx, change) {

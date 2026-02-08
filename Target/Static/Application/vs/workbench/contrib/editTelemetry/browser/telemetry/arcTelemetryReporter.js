@@ -12,7 +12,7 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import { TimeoutTimer } from "../../../../../base/common/async.js";
-import { Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
 import { runOnChange } from "../../../../../base/common/observable.js";
 import { BaseStringEdit } from "../../../../../editor/common/core/edits/stringEdit.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
@@ -21,7 +21,7 @@ let ArcTelemetryReporter = class ArcTelemetryReporter2 extends Disposable {
   static {
     __name(this, "ArcTelemetryReporter");
   }
-  constructor(_timesMs, _documentValueBeforeTrackedEdit, _document, _gitRepo, _trackedEdit, _sendTelemetryEvent, _onBeforeDispose, _telemetryService) {
+  constructor(_timesMs, _documentValueBeforeTrackedEdit, _document, _gitRepo, _trackedEdit, _sendTelemetryEvent, _dispose, _telemetryService) {
     super();
     this._timesMs = _timesMs;
     this._documentValueBeforeTrackedEdit = _documentValueBeforeTrackedEdit;
@@ -29,12 +29,9 @@ let ArcTelemetryReporter = class ArcTelemetryReporter2 extends Disposable {
     this._gitRepo = _gitRepo;
     this._trackedEdit = _trackedEdit;
     this._sendTelemetryEvent = _sendTelemetryEvent;
-    this._onBeforeDispose = _onBeforeDispose;
+    this._dispose = _dispose;
     this._telemetryService = _telemetryService;
     this._arcTracker = new ArcTracker(this._documentValueBeforeTrackedEdit, this._trackedEdit);
-    this._store.add(toDisposable(() => {
-      this._onBeforeDispose();
-    }));
     this._store.add(runOnChange(this._document.value, (_val, _prevVal, changes) => {
       const edit = BaseStringEdit.composeOrUndefined(changes.map((c) => c.edit));
       if (edit) {
@@ -49,7 +46,7 @@ let ArcTelemetryReporter = class ArcTelemetryReporter2 extends Disposable {
         this._report(timeMs);
       } else {
         this._reportAfter(timeMs, i === this._timesMs.length - 1 ? () => {
-          this.dispose();
+          this._dispose();
         } : void 0);
       }
     }

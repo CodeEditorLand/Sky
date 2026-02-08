@@ -42,6 +42,8 @@ class AgentSessionsWelcomeInput extends EditorInput {
   constructor(options = {}) {
     super();
     this._showTelemetryNotice = !!options.showTelemetryNotice;
+    this._initiator = options.initiator ?? "command";
+    this._workspaceKind = options.workspaceKind;
   }
   getName() {
     return localize("agentSessionsWelcome", "Welcome");
@@ -51,6 +53,18 @@ class AgentSessionsWelcomeInput extends EditorInput {
   }
   set showTelemetryNotice(value) {
     this._showTelemetryNotice = value;
+  }
+  get initiator() {
+    return this._initiator;
+  }
+  get workspaceKind() {
+    return this._workspaceKind;
+  }
+  getTelemetryDescriptor() {
+    const descriptor = super.getTelemetryDescriptor();
+    descriptor["initiator"] = this._initiator;
+    descriptor["workspaceKind"] = this._workspaceKind;
+    return descriptor;
   }
 }
 export {

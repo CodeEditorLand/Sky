@@ -14,9 +14,8 @@ var __param = function(paramIndex, decorator) {
 import * as dom from "../../../../../base/browser/dom.js";
 import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
 import { alert, status } from "../../../../../base/browser/ui/aria/aria.js";
-import { Event } from "../../../../../base/common/event.js";
 import { MarkdownString } from "../../../../../base/common/htmlContent.js";
-import { Disposable, DisposableMap, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { Disposable, DisposableMap, DisposableSet, toDisposable } from "../../../../../base/common/lifecycle.js";
 import { localize } from "../../../../../nls.js";
 import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
 import { AccessibilityProgressSignalScheduler } from "../../../../../platform/accessibilitySignal/browser/progressAccessibilitySignalScheduler.js";
@@ -26,6 +25,7 @@ import { IHostService } from "../../../../services/host/browser/host.js";
 import { IChatService } from "../../common/chatService/chatService.js";
 import { ChatConfiguration } from "../../common/constants.js";
 import { IChatWidgetService } from "../chat.js";
+import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
 const CHAT_RESPONSE_PENDING_ALLOWANCE_MS = 4e3;
 let ChatAccessibilityService = class ChatAccessibilityService2 extends Disposable {
   static {
@@ -40,7 +40,7 @@ let ChatAccessibilityService = class ChatAccessibilityService2 extends Disposabl
     this._widgetService = _widgetService;
     this._chatService = _chatService;
     this._pendingSignalMap = this._register(new DisposableMap());
-    this.notifications = /* @__PURE__ */ new Set();
+    this.toasts = this._register(new DisposableSet());
     this._register(this._widgetService.onDidBackgroundSession((e) => {
       const session = this._chatService.getSession(e);
       if (!session) {
@@ -52,13 +52,6 @@ let ChatAccessibilityService = class ChatAccessibilityService2 extends Disposabl
       }
       this.disposeRequest(e);
     }));
-  }
-  dispose() {
-    for (const ds of Array.from(this.notifications)) {
-      ds.dispose();
-    }
-    this.notifications.clear();
-    super.dispose();
   }
   acceptRequest(uri, skipRequestSignal) {
     if (!skipRequestSignal) {
@@ -114,36 +107,21 @@ let ChatAccessibilityService = class ChatAccessibilityService2 extends Disposabl
       mode: 1
       /* FocusMode.Notify */
     });
-    for (const ds of Array.from(this.notifications)) {
-      ds.dispose();
-      this.notifications.delete(ds);
-    }
+    this.toasts.clearAndDisposeAll();
     const title = widget?.viewModel?.model.title ? localize("chatTitle", "Chat: {0}", widget.viewModel.model.title) : localize("chat.untitledChat", "Untitled Chat");
-    const notification = await dom.triggerNotification(title, {
-      detail: localize("notificationDetail", "New chat response.")
-    });
-    if (!notification) {
-      return;
-    }
-    const disposables = new DisposableStore();
-    disposables.add(notification);
-    this.notifications.add(disposables);
-    disposables.add(Event.once(notification.onClick)(async () => {
+    const cts = new CancellationTokenSource();
+    const disposable = toDisposable(() => cts.dispose(true));
+    this.toasts.add(disposable);
+    const { clicked } = await this._hostService.showToast({ title, body: localize("notificationDetail", "New chat response.") }, cts.token);
+    this.toasts.deleteAndDispose(disposable);
+    if (clicked) {
       await this._hostService.focus(targetWindow, {
         mode: 2
         /* FocusMode.Force */
       });
       await this._widgetService.reveal(widget);
       widget.focusInput();
-      disposables.dispose();
-      this.notifications.delete(disposables);
-    }));
-    disposables.add(this._hostService.onDidChangeFocus((focus) => {
-      if (focus) {
-        disposables.dispose();
-        this.notifications.delete(disposables);
-      }
-    }));
+    }
   }
 };
 ChatAccessibilityService = __decorate([

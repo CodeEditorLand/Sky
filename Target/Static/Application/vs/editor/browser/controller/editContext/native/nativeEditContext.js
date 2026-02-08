@@ -17,7 +17,7 @@ import { addDisposableListener, getActiveElement, getWindow, getWindowId } from 
 import { FastDomNode } from "../../../../../base/browser/fastDomNode.js";
 import { StandardKeyboardEvent } from "../../../../../base/browser/keyboardEvent.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
-import { ClipboardEventUtils, ensureClipboardGetsEditorSelection, InMemoryClipboardMetadataManager } from "../clipboardUtils.js";
+import { CopyOptions, createClipboardCopyEvent, createClipboardPasteEvent } from "../clipboardUtils.js";
 import { AbstractEditContext } from "../editContext.js";
 import { editContextAddDisposableListener, FocusTracker } from "./nativeEditContextUtils.js";
 import { ScreenReaderSupport } from "./screenReaderSupport.js";
@@ -49,6 +49,7 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
     this.logService = logService;
     this._previousEditContextSelection = new OffsetRange(0, 0);
     this._editContextPrimarySelection = new Selection(1, 1, 1, 1);
+    this._parentBounds = null;
     this._decorations = [];
     this._primarySelection = new Selection(1, 1, 1, 1);
     this._targetWindowId = -1;
@@ -81,12 +82,37 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
     this._screenReaderSupport = this._register(instantiationService.createInstance(ScreenReaderSupport, this.domNode, context, this._viewController));
     this._register(addDisposableListener(this.domNode.domNode, "copy", (e) => {
       this.logService.trace("NativeEditContext#copy");
-      ensureClipboardGetsEditorSelection(e, this._context, this.logService, isFirefox);
+      CopyOptions.electronBugWorkaroundCopyEventHasFired = true;
+      const copyEvent = createClipboardCopyEvent(
+        e,
+        /* isCut */
+        false,
+        this._context,
+        this.logService,
+        isFirefox
+      );
+      this._onWillCopy.fire(copyEvent);
+      if (copyEvent.isHandled) {
+        return;
+      }
+      copyEvent.ensureClipboardGetsEditorData();
     }));
     this._register(addDisposableListener(this.domNode.domNode, "cut", (e) => {
       this.logService.trace("NativeEditContext#cut");
+      const cutEvent = createClipboardCopyEvent(
+        e,
+        /* isCut */
+        true,
+        this._context,
+        this.logService,
+        isFirefox
+      );
+      this._onWillCut.fire(cutEvent);
+      if (cutEvent.isHandled) {
+        return;
+      }
       this._screenReaderSupport.onWillCut();
-      ensureClipboardGetsEditorSelection(e, this._context, this.logService, isFirefox);
+      cutEvent.ensureClipboardGetsEditorData();
       this.logService.trace("NativeEditContext#cut (before viewController.cut)");
       this._viewController.cut();
     }));
@@ -105,31 +131,35 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
     }));
     this._register(addDisposableListener(this.domNode.domNode, "paste", (e) => {
       this.logService.trace("NativeEditContext#paste");
+      const pasteEvent = createClipboardPasteEvent(e);
+      this._onWillPaste.fire(pasteEvent);
+      if (pasteEvent.isHandled) {
+        e.preventDefault();
+        return;
+      }
       e.preventDefault();
       if (!e.clipboardData) {
         return;
       }
-      let [text, metadata] = ClipboardEventUtils.getTextData(e.clipboardData);
-      this.logService.trace("NativeEditContext#paste with id : ", metadata?.id, " with text.length: ", text.length);
-      if (!text) {
+      this.logService.trace("NativeEditContext#paste with id : ", pasteEvent.metadata?.id, " with text.length: ", pasteEvent.text.length);
+      if (!pasteEvent.text) {
         return;
       }
-      metadata = metadata || InMemoryClipboardMetadataManager.INSTANCE.get(text);
       let pasteOnNewLine = false;
       let multicursorText = null;
       let mode = null;
-      if (metadata) {
+      if (pasteEvent.metadata) {
         const options = this._context.configuration.options;
         const emptySelectionClipboard = options.get(
           45
           /* EditorOption.emptySelectionClipboard */
         );
-        pasteOnNewLine = emptySelectionClipboard && !!metadata.isFromEmptySelection;
-        multicursorText = typeof metadata.multicursorText !== "undefined" ? metadata.multicursorText : null;
-        mode = metadata.mode;
+        pasteOnNewLine = emptySelectionClipboard && !!pasteEvent.metadata.isFromEmptySelection;
+        multicursorText = typeof pasteEvent.metadata.multicursorText !== "undefined" ? pasteEvent.metadata.multicursorText : null;
+        mode = pasteEvent.metadata.mode;
       }
       this.logService.trace("NativeEditContext#paste (before viewController.paste)");
-      this._viewController.paste(text, pasteOnNewLine, multicursorText, mode);
+      this._viewController.paste(pasteEvent.text, pasteOnNewLine, multicursorText, mode);
     }));
     this._register(editContextAddDisposableListener(this._editContext, "textformatupdate", (e) => this._handleTextFormatUpdate(e)));
     this._register(editContextAddDisposableListener(this._editContext, "characterboundsupdate", (e) => this._updateCharacterBounds(e)));
@@ -199,15 +229,16 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
   getLastRenderData() {
     return this._primarySelection.getPosition();
   }
+  onBeforeRender(viewportData) {
+    this._parentBounds = this._parent.getBoundingClientRect();
+  }
   prepareRender(ctx) {
     this._screenReaderSupport.prepareRender(ctx);
     this._updateSelectionAndControlBoundsData(ctx);
   }
-  onDidRender() {
-    this._updateSelectionAndControlBoundsAfterRender();
-  }
   render(ctx) {
     this._screenReaderSupport.render(ctx);
+    this._updateSelectionAndControlBounds();
   }
   onCursorStateChanged(e) {
     this._primarySelection = e.modelSelections[0] ?? new Selection(1, 1, 1, 1);
@@ -252,15 +283,15 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
   onZonesChanged(e) {
     return true;
   }
-  onWillPaste() {
-    this.logService.trace("NativeEditContext#onWillPaste");
-    this._onWillPaste();
+  handleWillPaste() {
+    this.logService.trace("NativeEditContext#handleWillPaste");
+    this._prepareScreenReaderForPaste();
   }
-  _onWillPaste() {
+  _prepareScreenReaderForPaste() {
     this._screenReaderSupport.onWillPaste();
   }
-  onWillCopy() {
-    this.logService.trace("NativeEditContext#onWillCopy");
+  handleWillCopy() {
+    this.logService.trace("NativeEditContext#handleWillCopy");
     this.logService.trace("NativeEditContext#isFocused : ", this.domNode.domNode === getActiveElement());
   }
   writeScreenReaderContent() {
@@ -427,7 +458,7 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
       this._linesVisibleRanges = null;
     }
   }
-  _updateSelectionAndControlBoundsAfterRender() {
+  _updateSelectionAndControlBounds() {
     const options = this._context.configuration.options;
     const contentLeft = options.get(
       165
@@ -436,7 +467,7 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
     const viewSelection = this._context.viewModel.coordinatesConverter.convertModelRangeToViewRange(this._primarySelection);
     const verticalOffsetStart = this._context.viewLayout.getVerticalOffsetForLineNumber(viewSelection.startLineNumber);
     const verticalOffsetEnd = this._context.viewLayout.getVerticalOffsetAfterLineNumber(viewSelection.endLineNumber);
-    const parentBounds = this._parent.getBoundingClientRect();
+    const parentBounds = this._parentBounds;
     const top = parentBounds.top + verticalOffsetStart - this._scrollTop;
     const height = verticalOffsetEnd - verticalOffsetStart;
     let left = parentBounds.left + contentLeft - this._scrollLeft;
@@ -463,7 +494,7 @@ let NativeEditContext = class NativeEditContext2 extends AbstractEditContext {
       165
       /* EditorOption.layoutInfo */
     ).contentLeft;
-    const parentBounds = this._parent.getBoundingClientRect();
+    const parentBounds = this._parentBounds;
     const characterBounds = [];
     const offsetTransformer = new PositionOffsetTransformer(this._editContext.text);
     for (let offset = e.rangeStart; offset < e.rangeEnd; offset++) {

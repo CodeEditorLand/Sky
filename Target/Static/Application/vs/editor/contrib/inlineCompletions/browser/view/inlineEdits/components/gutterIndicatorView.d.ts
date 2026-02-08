@@ -11,12 +11,21 @@ import { Command, InlineCompletionCommand, IInlineCompletionModelInfo } from '..
 import { InlineSuggestionItem } from '../../../model/inlineSuggestionItem.js';
 import { InlineCompletionsModel } from '../../../model/inlineCompletionsModel.js';
 import { InlineSuggestAlternativeAction } from '../../../model/InlineSuggestAlternativeAction.js';
+import { ThemeIcon } from '../../../../../../../base/common/themables.js';
+/**
+ * Customization options for the gutter indicator appearance and behavior.
+ */
+export interface GutterIndicatorCustomization {
+    /** Override the default icon */
+    readonly icon?: ThemeIcon;
+}
 export declare class InlineEditsGutterIndicatorData {
     readonly gutterMenuData: InlineSuggestionGutterMenuData;
     readonly originalRange: LineRange;
     readonly model: SimpleInlineSuggestModel;
     readonly altAction: InlineSuggestAlternativeAction | undefined;
-    constructor(gutterMenuData: InlineSuggestionGutterMenuData, originalRange: LineRange, model: SimpleInlineSuggestModel, altAction: InlineSuggestAlternativeAction | undefined);
+    readonly customization?: GutterIndicatorCustomization | undefined;
+    constructor(gutterMenuData: InlineSuggestionGutterMenuData, originalRange: LineRange, model: SimpleInlineSuggestModel, altAction: InlineSuggestAlternativeAction | undefined, customization?: GutterIndicatorCustomization | undefined);
 }
 export declare class InlineSuggestionGutterMenuData {
     readonly action: Command | undefined;
@@ -41,7 +50,7 @@ export declare class InlineEditsGutterIndicator extends Disposable {
     private readonly _verticalOffset;
     private readonly _isHoveringOverInlineEdit;
     private readonly _focusIsInMenu;
-    private readonly _hoverService;
+    protected readonly _hoverService: HoverService;
     private readonly _instantiationService;
     private readonly _accessibilityService;
     private readonly _themeService;
@@ -57,13 +66,13 @@ export declare class InlineEditsGutterIndicator extends Disposable {
     private readonly _lineNumberToRender;
     private readonly _availableWidthForIcon;
     private readonly _layout;
-    private readonly _iconRef;
+    protected readonly _iconRef: import("../../../../../../../base/browser/dom.js").IRefWithVal<HTMLDivElement>;
     readonly isVisible: IObservable<boolean>;
-    private readonly _hoverVisible;
+    protected readonly _hoverVisible: ISettableObservable<boolean, void>;
     readonly isHoverVisible: IObservable<boolean>;
     private readonly _isHoveredOverIcon;
     private readonly _isHoveredOverIconDebounced;
     readonly isHoveredOverIcon: IObservable<boolean>;
-    private _showHover;
+    protected _showHover(): void;
     private readonly _indicator;
 }

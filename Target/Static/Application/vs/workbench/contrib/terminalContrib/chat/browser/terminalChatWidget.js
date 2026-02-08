@@ -117,7 +117,7 @@ let TerminalChatWidget = class TerminalChatWidget2 extends Disposable {
       }
     });
     this._register(this._inlineChatWidget.chatWidget.onDidChangeViewModel(() => this._saveViewState()));
-    this._register(Event.any(this._inlineChatWidget.onDidChangeHeight, this._instance.onDimensionsChanged, this._inlineChatWidget.chatWidget.onDidChangeContentHeight, this._inlineChatWidget.chatWidget.input.onDidChangeCurrentLanguageModel, Event.debounce(this._xterm.raw.onCursorMove, () => void 0, MicrotaskDelay))(() => this._relayout()));
+    this._register(Event.any(this._inlineChatWidget.onDidChangeHeight, this._instance.onDimensionsChanged, this._inlineChatWidget.chatWidget.onDidChangeContentHeight, Event.fromObservableLight(this._inlineChatWidget.chatWidget.input.selectedLanguageModel), Event.debounce(this._xterm.raw.onCursorMove, () => void 0, MicrotaskDelay))(() => this._relayout()));
     const observer = new ResizeObserver(() => this._relayout());
     observer.observe(this._terminalElement);
     this._register(toDisposable(() => observer.disconnect()));

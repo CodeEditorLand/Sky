@@ -14,6 +14,50 @@ export declare const registerWindow: (window: CodeWindow) => IDisposable, getWin
     (windowId: number): IRegisteredCodeWindow | undefined;
     (windowId: number | undefined, fallbackToMain: true): IRegisteredCodeWindow;
 }, hasWindow: (windowId: number) => boolean, onDidRegisterWindow: event.Event<IRegisteredCodeWindow>, onWillUnregisterWindow: event.Event<CodeWindow>, onDidUnregisterWindow: event.Event<CodeWindow>;
+/**
+ * Information about external focus state, including the associated window.
+ */
+export interface IExternalFocusInfo {
+    readonly hasFocus: boolean;
+    readonly window?: CodeWindow;
+}
+/**
+ * A function that checks if a component outside the normal DOM tree has focus.
+ * Returns focus info including which window the component is associated with.
+ */
+export type ExternalFocusChecker = () => IExternalFocusInfo;
+/**
+ * Register a function that checks if a component outside the DOM has focus.
+ * This allows `hasExternalFocus` to detect when focus is in components like browser views,
+ * and `getExternalFocusWindow` to determine which window the focused component belongs to.
+ *
+ * @param checker A function that returns focus info for the component
+ * @returns A disposable to unregister the checker
+ */
+export declare function registerExternalFocusChecker(checker: ExternalFocusChecker): IDisposable;
+/**
+ * Check if any registered external component has focus.
+ * This is used to extend focus detection beyond the normal DOM to include
+ * components like Electron WebContentsViews.
+ *
+ * @returns true if any registered external component has focus
+ */
+export declare function hasExternalFocus(): boolean;
+/**
+ * Get the window associated with a focused external component.
+ * This is used to determine which window should receive UI like dialogs
+ * when an external component (like a browser view) has focus.
+ *
+ * @returns The window of the focused external component, or undefined if none
+ */
+export declare function getExternalFocusWindow(): CodeWindow | undefined;
+/**
+ * Check if the application has focus in any window, either via the normal DOM or via an
+ * external component like a browser view (which exists outside the document tree).
+ *
+ * @returns true if the application owns the current focus
+ */
+export declare function hasAppFocus(): boolean;
 export declare function clearNode(node: HTMLElement): void;
 export declare function addDisposableListener<K extends keyof GlobalEventHandlersEventMap>(node: EventTarget, type: K, handler: (event: GlobalEventHandlersEventMap[K]) => void, useCapture?: boolean): IDisposable;
 export declare function addDisposableListener(node: EventTarget, type: string, handler: (event: any) => void, useCapture?: boolean): IDisposable;
@@ -88,6 +132,32 @@ export declare class WindowIntervalTimer extends IntervalTimer {
 }
 export declare function measure(targetWindow: Window, callback: () => void): IDisposable;
 export declare function modify(targetWindow: Window, callback: () => void): IDisposable;
+/**
+ * A scheduler that coalesces multiple `schedule()` calls into a single callback
+ * at the next animation frame. Similar to `RunOnceScheduler` but uses animation frames
+ * instead of timeouts.
+ */
+export declare class AnimationFrameScheduler implements IDisposable {
+    private readonly runner;
+    private readonly node;
+    private readonly pendingRunner;
+    constructor(node: Node, runner: () => void);
+    dispose(): void;
+    /**
+     * Cancel the currently scheduled runner (if any).
+     */
+    cancel(): void;
+    /**
+     * Schedule the runner to execute at the next animation frame.
+     * If already scheduled, this is a no-op (the existing schedule is kept).
+     * If currently in an animation frame, the runner will execute immediately.
+     */
+    schedule(): void;
+    /**
+     * Returns true if a runner is scheduled.
+     */
+    isScheduled(): boolean;
+}
 /**
  * Add a throttled listener. `handler` is fired at most every 8.33333ms or with the next animation frame (if browser supports it).
  */
@@ -186,8 +256,8 @@ export declare function isAncestorOfActiveElement(ancestor: Element): boolean;
 export declare function isActiveDocument(element: Element): boolean;
 /**
  * Returns the active document across main and child windows.
- * Prefers the window with focus, otherwise falls back to
- * the main windows document.
+ * Prefers the window with focus (including external components like browser views),
+ * otherwise falls back to the main windows document.
  */
 export declare function getActiveDocument(): Document;
 /**
@@ -363,13 +433,6 @@ export declare function windowOpenWithSuccess(url: string, noOpener?: boolean): 
 export declare function animate(targetWindow: Window, fn: () => void): IDisposable;
 export declare function triggerDownload(dataOrUri: Uint8Array | URI, name: string): void;
 export declare function triggerUpload(): Promise<FileList | undefined>;
-export interface INotification extends IDisposable {
-    readonly onClick: event.Event<void>;
-}
-export declare function triggerNotification(message: string, options?: {
-    detail?: string;
-    sticky?: boolean;
-}): Promise<INotification | undefined>;
 export declare enum DetectedFullscreenMode {
     /**
      * The document is fullscreen, e.g. because an element
@@ -445,8 +508,7 @@ export declare class DragAndDropObserver extends Disposable {
 export declare class DisposableResizeObserver extends Disposable {
     private readonly observer;
     constructor(callback: ResizeObserverCallback);
-    observe(target: Element, options?: ResizeObserverOptions): void;
-    unobserve(target: Element): void;
+    observe(target: Element, options?: ResizeObserverOptions): IDisposable;
 }
 type HTMLElementAttributeKeys<T> = Partial<{
     [K in keyof T]: T[K] extends Function ? never : T[K] extends object ? HTMLElementAttributeKeys<T[K]> : T[K];
@@ -611,4 +673,23 @@ export declare class ObserverNodeWithElement<T extends HTMLOrSVGElement = HTMLOr
 type ElementAttributeKeys<T> = Partial<{
     [K in keyof T]: T[K] extends Function ? never : T[K] extends object ? ElementAttributeKeys<T[K]> : Value<number | T[K] | undefined | null>;
 }>;
+/**
+ * A custom element that fires callbacks when connected to or disconnected from the DOM.
+ * Useful for tracking whether a template or component is currently mounted, especially
+ * with iframes/webviews that are sensitive to movement.
+ *
+ * @example
+ * ```ts
+ * const observer = document.createElement('connection-observer') as ConnectionObserverElement;
+ * observer.onDidConnect = () => console.log('mounted');
+ * observer.onDidDisconnect = () => console.log('unmounted');
+ * container.appendChild(observer);
+ * ```
+ */
+export declare class ConnectionObserverElement extends HTMLElement {
+    onDidConnect?: () => void;
+    onDidDisconnect?: () => void;
+    disconnectedCallback(): void;
+    connectedCallback(): void;
+}
 export {};

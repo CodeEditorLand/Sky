@@ -1,5 +1,5 @@
 import { Separator } from '../../../../../../base/common/actions.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
+import { Event } from '../../../../../../base/common/event.js';
 import { IMarkdownString } from '../../../../../../base/common/htmlContent.js';
 import { Disposable } from '../../../../../../base/common/lifecycle.js';
 import type { ThemeIcon } from '../../../../../../base/common/themables.js';
@@ -48,8 +48,6 @@ declare abstract class BaseSimpleChatConfirmationWidget<T> extends Disposable {
     protected readonly _markdownRendererService: IMarkdownRendererService;
     private _onDidClick;
     get onDidClick(): Event<IChatConfirmationButton<T>>;
-    protected _onDidChangeHeight: Emitter<void>;
-    get onDidChangeHeight(): Event<void>;
     private _domNode;
     get domNode(): HTMLElement;
     setShowButtons(showButton: boolean): void;
@@ -83,8 +81,6 @@ declare abstract class BaseChatConfirmationWidget<T> extends Disposable {
     private readonly chatMarkdownAnchorService;
     private _onDidClick;
     get onDidClick(): Event<IChatConfirmationButton<T>>;
-    protected _onDidChangeHeight: Emitter<void>;
-    get onDidChangeHeight(): Event<void>;
     private _domNode;
     get domNode(): HTMLElement;
     private _buttonsDomNode;

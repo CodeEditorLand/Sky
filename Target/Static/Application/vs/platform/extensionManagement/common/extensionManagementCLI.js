@@ -21,16 +21,20 @@ import { localize } from "../../../nls.js";
 import { EXTENSION_IDENTIFIER_REGEX, IExtensionGalleryService, IExtensionManagementService } from "./extensionManagement.js";
 import { areSameExtensions, getExtensionId, getGalleryExtensionId, getIdAndVersion } from "./extensionManagementUtil.js";
 import { EXTENSION_CATEGORIES } from "../../extensions/common/extensions.js";
+import { IProductService } from "../../product/common/productService.js";
 const notFound = /* @__PURE__ */ __name((id) => localize("notFound", "Extension '{0}' not found.", id), "notFound");
 const useId = localize("useId", "Make sure you use the full extension ID, including the publisher, e.g.: {0}", "ms-dotnettools.csharp");
 let ExtensionManagementCLI = class ExtensionManagementCLI2 {
   static {
     __name(this, "ExtensionManagementCLI");
   }
-  constructor(logger, extensionManagementService, extensionGalleryService) {
+  constructor(extensionsForceVersionByQuality, logger, extensionManagementService, extensionGalleryService, productService) {
+    this.extensionsForceVersionByQuality = extensionsForceVersionByQuality;
     this.logger = logger;
     this.extensionManagementService = extensionManagementService;
     this.extensionGalleryService = extensionGalleryService;
+    this.productService = productService;
+    this.extensionsForceVersionByQuality = this.extensionsForceVersionByQuality.map((e) => e.toLowerCase());
   }
   get location() {
     return void 0;
@@ -78,6 +82,9 @@ let ExtensionManagementCLI = class ExtensionManagementCLI2 {
       const installVSIXInfos = [];
       const installExtensionInfos = [];
       const addInstallExtensionInfo = /* @__PURE__ */ __name((id, version, isBuiltin) => {
+        if (this.extensionsForceVersionByQuality?.some((e) => e === id.toLowerCase())) {
+          version = this.productService.quality !== "stable" ? "prerelease" : void 0;
+        }
         installExtensionInfos.push({ id, version: version !== "prerelease" ? version : void 0, installOptions: { ...installOptions, isBuiltin, installPreReleaseVersion: version === "prerelease" || installOptions.installPreReleaseVersion } });
       }, "addInstallExtensionInfo");
       for (const extension of extensions) {
@@ -337,8 +344,9 @@ ${useId}`);
   }
 };
 ExtensionManagementCLI = __decorate([
-  __param(1, IExtensionManagementService),
-  __param(2, IExtensionGalleryService)
+  __param(2, IExtensionManagementService),
+  __param(3, IExtensionGalleryService),
+  __param(4, IProductService)
 ], ExtensionManagementCLI);
 export {
   ExtensionManagementCLI

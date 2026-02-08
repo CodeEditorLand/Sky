@@ -9,6 +9,7 @@ import { IModelService } from '../../../../../editor/common/services/model.js';
 import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
 import { IAccessibilitySignalService } from '../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
 import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
 import { ILogService } from '../../../../../platform/log/common/log.js';
 import { IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
@@ -16,8 +17,9 @@ import { IEditorService } from '../../../../services/editor/common/editorService
 import { INotebookService } from '../../../notebook/common/notebookService.js';
 import { ChatEditingSessionState, IChatEditingSession, IEditSessionEntryDiff, IModifiedFileEntry, IStreamingEdits } from '../../common/editing/chatEditingService.js';
 import { IChatResponseModel } from '../../common/model/chatModel.js';
-import { IChatProgress } from '../../common/chatService/chatService.js';
+import { IChatProgress, IChatWorkspaceEdit } from '../../common/chatService/chatService.js';
 import { AbstractChatEditingModifiedFileEntry } from './chatEditingModifiedFileEntry.js';
+import { IChatEditingExplanationModelManager } from './chatEditingExplanationModelManager.js';
 export declare class ChatEditingSession extends Disposable implements IChatEditingSession {
     readonly chatSessionResource: URI;
     readonly isGlobalEditingSession: boolean;
@@ -33,6 +35,8 @@ export declare class ChatEditingSession extends Disposable implements IChatEditi
     private readonly _accessibilitySignalService;
     private readonly _logService;
     private readonly configurationService;
+    private readonly _fileService;
+    private readonly _explanationModelManager;
     private readonly _state;
     private readonly _timeline;
     /**
@@ -49,13 +53,14 @@ export declare class ChatEditingSession extends Disposable implements IChatEditi
     private readonly _entriesObs;
     readonly entries: IObservable<readonly IModifiedFileEntry[]>;
     private _editorPane;
+    private _explanationHandle;
     get state(): IObservable<ChatEditingSessionState>;
     readonly canUndo: IObservable<boolean>;
     readonly canRedo: IObservable<boolean>;
     get requestDisablement(): IObservable<import("../../common/model/chatModel.js").IChatRequestDisablement[]>;
     private readonly _onDidDispose;
     get onDidDispose(): import("../../../../../base/common/event.js").Event<void>;
-    constructor(chatSessionResource: URI, isGlobalEditingSession: boolean, _lookupExternalEntry: (uri: URI) => AbstractChatEditingModifiedFileEntry | undefined, transferFrom: IChatEditingSession | undefined, _instantiationService: IInstantiationService, _modelService: IModelService, _languageService: ILanguageService, _textModelService: ITextModelService, _bulkEditService: IBulkEditService, _editorGroupsService: IEditorGroupsService, _editorService: IEditorService, _notebookService: INotebookService, _accessibilitySignalService: IAccessibilitySignalService, _logService: ILogService, configurationService: IConfigurationService);
+    constructor(chatSessionResource: URI, isGlobalEditingSession: boolean, _lookupExternalEntry: (uri: URI) => AbstractChatEditingModifiedFileEntry | undefined, transferFrom: IChatEditingSession | undefined, _instantiationService: IInstantiationService, _modelService: IModelService, _languageService: ILanguageService, _textModelService: ITextModelService, _bulkEditService: IBulkEditService, _editorGroupsService: IEditorGroupsService, _editorService: IEditorService, _notebookService: INotebookService, _accessibilitySignalService: IAccessibilitySignalService, _logService: ILogService, configurationService: IConfigurationService, _fileService: IFileService, _explanationModelManager: IChatEditingExplanationModelManager);
     private _getTimelineDelegate;
     private _init;
     private _getEntry;
@@ -85,10 +90,15 @@ export declare class ChatEditingSession extends Disposable implements IChatEditi
     dispose(): void;
     private get isDisposed();
     startStreamingEdits(resource: URI, responseModel: IChatResponseModel, inUndoStop: string | undefined): IStreamingEdits;
+    startDeletion(resource: URI, responseModel: IChatResponseModel, undoStopId: string): void;
+    applyWorkspaceEdit(edit: IChatWorkspaceEdit, responseModel: IChatResponseModel, undoStopId: string): void;
     startExternalEdits(responseModel: IChatResponseModel, operationId: number, resources: URI[], undoStopId: string): Promise<IChatProgress[]>;
     stopExternalEdits(responseModel: IChatResponseModel, operationId: number): Promise<IChatProgress[]>;
     undoInteraction(): Promise<void>;
     redoInteraction(): Promise<void>;
+    triggerExplanationGeneration(): Promise<void>;
+    clearExplanations(): void;
+    hasExplanations(): boolean;
     private _recordEditOperations;
     private _getCurrentTextOrNotebookSnapshot;
     private _acceptStreamingEditsStart;

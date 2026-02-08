@@ -5,8 +5,10 @@ import type { ICommandDetectionCapability } from '../../../../../../../platform/
  * The auto-expand algorithm for terminal tool progress parts.
  *
  * The algorithm is:
- * 1. When command executes, kick off 500ms timeout - if hit without data events, expand only if there's real output
- * 2. On first data event, wait 50ms and expand if command not yet finished
+ * 1. When command executes, kick off 500ms timeout - expand if there's real output (data events
+ *    may fire before onCommandExecuted due to shell integration sequences, so we can't rely on
+ *    receivedData to skip this path)
+ * 2. On first data event, wait 50ms and expand if command not yet finished and has real output
  * 3. Fast commands (finishing quickly) should NOT auto-expand to prevent flickering
  */
 export interface ITerminalToolAutoExpandOptions {

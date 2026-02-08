@@ -21,7 +21,7 @@ const terminalCommands = [
   }
 ];
 function getRecommendedToolsOverRunInTerminal(commandLine, languageModelToolsService) {
-  const tools = languageModelToolsService.getTools();
+  const tools = languageModelToolsService.getTools(void 0);
   if (!tools || previouslyRecommededInSession) {
     return;
   }

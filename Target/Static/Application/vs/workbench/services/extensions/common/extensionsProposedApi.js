@@ -72,8 +72,9 @@ let ExtensionsProposedApi = class ExtensionsProposedApi2 {
       const diff = new Set([...extensionSet].filter((a) => !productSet.has(a)));
       if (diff.size > 0) {
         this._logService.error(`Extension '${key}' appears in product.json but enables LESS API proposals than the extension wants.
-package.json (LOSES): ${[...extensionSet].join(", ")}
-product.json (WINS): ${[...productSet].join(", ")}`);
+package.json (LOSES): ${[...extensionSet].join("\n")}
+product.json (WINS): ${[...productSet].join("\n")}
+DELTA: ${[...diff].join("\n")}`);
         if (this._environmentService.isExtensionDevelopment) {
           this._logService.error(`Proceeding with EXTRA proposals (${[...diff].join(", ")}) because extension is in development mode. Still, this EXTENSION WILL BE BROKEN unless product.json is updated.`);
           productEnabledProposals.push(...diff);

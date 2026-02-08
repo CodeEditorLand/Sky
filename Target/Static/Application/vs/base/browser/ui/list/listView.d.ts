@@ -263,6 +263,7 @@ export declare class ListView<T> implements IListView<T> {
      */
     protected _rerender(renderTop: number, renderHeight: number, inSmoothScrolling?: boolean): void;
     private probeDynamicHeight;
+    private probeDynamicHeightForItem;
     getElementDomId(index: number): string;
     dispose(): void;
 }

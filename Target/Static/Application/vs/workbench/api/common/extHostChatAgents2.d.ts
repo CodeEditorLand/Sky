@@ -1,11 +1,11 @@
 import type * as vscode from 'vscode';
+import { DeferredPromise } from '../../../base/common/async.js';
 import { CancellationToken } from '../../../base/common/cancellation.js';
 import { Disposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
+import { UriComponents } from '../../../base/common/uri.js';
 import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
 import { ILogService } from '../../../platform/log/common/log.js';
 import { IChatAgentRequest, IChatAgentResult, IChatAgentResultTimings, UserSelectedTools } from '../../contrib/chat/common/participants/chatAgents.js';
-import { IChatRelatedFile, IChatRequestDraft } from '../../contrib/chat/common/editing/chatEditingService.js';
 import { IChatFollowup, IChatUserActionEvent, IChatVoteAction } from '../../contrib/chat/common/chatService/chatService.js';
 import { ChatAgentLocation } from '../../contrib/chat/common/constants.js';
 import { Dto } from '../../services/extensions/common/proxyIdentifier.js';
@@ -24,11 +24,13 @@ export declare class ChatAgentResponseStream {
     private readonly _proxy;
     private readonly _commandsConverter;
     private readonly _sessionDisposables;
+    private readonly _pendingCarouselResolvers;
+    private readonly _token;
     private _stopWatch;
     private _isClosed;
     private _firstProgress;
     private _apiObject;
-    constructor(_extension: IExtensionDescription, _request: IChatAgentRequest, _proxy: IChatAgentProgressShape, _commandsConverter: CommandsConverter, _sessionDisposables: DisposableStore);
+    constructor(_extension: IExtensionDescription, _request: IChatAgentRequest, _proxy: IChatAgentProgressShape, _commandsConverter: CommandsConverter, _sessionDisposables: DisposableStore, _pendingCarouselResolvers: Map</* requestId */ string, Map</* resolveId */ string, DeferredPromise<Record<string, unknown> | undefined>>>, _token: CancellationToken);
     close(): void;
     get timings(): IChatAgentResultTimings;
     get apiObject(): vscode.ChatResponseStream;
@@ -46,13 +48,12 @@ export declare class ExtHostChatAgents2 extends Disposable implements ExtHostCha
     private readonly _proxy;
     private static _participantDetectionProviderIdPool;
     private readonly _participantDetectionProviders;
-    private static _relatedFilesProviderIdPool;
-    private readonly _relatedFilesProviders;
     private static _contributionsProviderIdPool;
     private readonly _promptFileProviders;
     private readonly _sessionDisposables;
     private readonly _completionDisposables;
     private readonly _inFlightRequests;
+    private readonly _pendingCarouselResolvers;
     private readonly _onDidChangeChatRequestTools;
     readonly onDidChangeChatRequestTools: import("../../../base/common/event.js").Event<vscode.ChatRequest>;
     private readonly _onDidDisposeChatSession;
@@ -62,19 +63,12 @@ export declare class ExtHostChatAgents2 extends Disposable implements ExtHostCha
     createChatAgent(extension: IExtensionDescription, id: string, handler: vscode.ChatExtendedRequestHandler): vscode.ChatParticipant;
     createDynamicChatAgent(extension: IExtensionDescription, id: string, dynamicProps: vscode.DynamicChatParticipantProps, handler: vscode.ChatExtendedRequestHandler): vscode.ChatParticipant;
     registerChatParticipantDetectionProvider(extension: IExtensionDescription, provider: vscode.ChatParticipantDetectionProvider): vscode.Disposable;
-    registerRelatedFilesProvider(extension: IExtensionDescription, provider: vscode.ChatRelatedFilesProvider, metadata: vscode.ChatRelatedFilesProviderMetadata): vscode.Disposable;
     /**
      * Internal method that handles all prompt file provider types.
      * Routes custom agents, instructions, prompt files, and skills to the unified internal implementation.
      */
-    registerPromptFileProvider(extension: IExtensionDescription, type: PromptsType, provider: vscode.CustomAgentProvider | vscode.InstructionsProvider | vscode.PromptFileProvider | vscode.SkillProvider): vscode.Disposable;
-    $provideRelatedFiles(handle: number, request: IChatRequestDraft, token: CancellationToken): Promise<Dto<IChatRelatedFile>[] | undefined>;
+    registerPromptFileProvider(extension: IExtensionDescription, type: PromptsType, provider: vscode.ChatCustomAgentProvider | vscode.ChatInstructionsProvider | vscode.ChatPromptFileProvider | vscode.ChatSkillProvider): vscode.Disposable;
     $providePromptFiles(handle: number, type: PromptsType, context: IPromptFileContext, token: CancellationToken): Promise<IPromptFileResource[] | undefined>;
-    /**
-     * Creates a virtual URI for a prompt file.
-     */
-    createVirtualPromptUri(id: string, extensionId: string): URI;
-    convertChatResourceDescriptorToPromptFileResource(resource: vscode.ChatResourceDescriptor | vscode.ChatResourceUriDescriptor, extensionId: string): IPromptFileResource;
     $detectChatParticipant(handle: number, requestDto: Dto<IChatAgentRequest>, context: {
         history: IChatAgentHistoryEntryDto[];
     }, options: {
@@ -96,6 +90,7 @@ export declare class ExtHostChatAgents2 extends Disposable implements ExtHostCha
         history: IChatAgentHistoryEntryDto[];
     }, token: CancellationToken): Promise<IChatFollowup[]>;
     $acceptFeedback(handle: number, result: IChatAgentResult, voteAction: IChatVoteAction): void;
+    $handleQuestionCarouselAnswer(requestId: string, resolveId: string, answers: Record<string, unknown> | undefined): void;
     $acceptAction(handle: number, result: IChatAgentResult, event: IChatUserActionEvent): void;
     $invokeCompletionProvider(handle: number, query: string, token: CancellationToken): Promise<IChatAgentCompletionItem[]>;
     $provideChatTitle(handle: number, context: IChatAgentHistoryEntryDto[], token: CancellationToken): Promise<string | undefined>;

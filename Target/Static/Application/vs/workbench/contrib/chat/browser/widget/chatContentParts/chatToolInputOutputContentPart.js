@@ -14,10 +14,11 @@ var __param = function(paramIndex, decorator) {
 import * as dom from "../../../../../../base/browser/dom.js";
 import { ButtonWithIcon } from "../../../../../../base/browser/ui/button/button.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { autorun, observableValue } from "../../../../../../base/common/observable.js";
 import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { ILanguageService } from "../../../../../../editor/common/languages/language.js";
+import { IModelService } from "../../../../../../editor/common/services/model.js";
 import { localize } from "../../../../../../nls.js";
 import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
 import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
@@ -30,12 +31,8 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
     __name(this, "ChatCollapsibleInputOutputContentPart");
   }
   get codeblocks() {
-    const inputCodeblocks = this._editorReferences.map((ref) => {
-      const cbi = this.input.codeBlockInfo;
-      return cbi;
-    });
     const outputCodeblocks = this._outputSubPart?.codeblocks ?? [];
-    return [...inputCodeblocks, ...outputCodeblocks];
+    return outputCodeblocks;
   }
   set title(s) {
     this._titlePart.title = s;
@@ -46,25 +43,23 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
   get expanded() {
     return this._expanded.get();
   }
-  constructor(title, subtitle, progressTooltip, context, input, output, isError, initiallyExpanded, contextKeyService, _instantiationService, hoverService) {
+  constructor(title, subtitle, progressTooltip, context, input, output, isError, initiallyExpanded, contextKeyService, _instantiationService, hoverService, modelService, languageService) {
     super();
     this.context = context;
     this.input = input;
     this.output = output;
     this.contextKeyService = contextKeyService;
     this._instantiationService = _instantiationService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
-    this._currentWidth = 0;
+    this.modelService = modelService;
+    this.languageService = languageService;
     this._editorReferences = [];
-    this._currentWidth = context.currentWidth.get();
+    this._contentInitialized = false;
     const container = dom.h(".chat-confirmation-widget-container");
     const titleEl = dom.h(".chat-confirmation-widget-title-inner");
     const elements = dom.h(".chat-confirmation-widget");
     this.domNode = container.root;
     container.root.appendChild(elements.root);
-    const titlePart = this._titlePart = this._register(_instantiationService.createInstance(ChatQueryTitlePart, titleEl.root, title, subtitle));
-    this._register(titlePart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+    this._titlePart = this._register(_instantiationService.createInstance(ChatQueryTitlePart, titleEl.root, title, subtitle));
     const spacer = document.createElement("span");
     spacer.style.flexGrow = "1";
     const btn = this._register(new ButtonWithIcon(elements.root, {}));
@@ -82,7 +77,12 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
       const value = expanded.read(r);
       btn.icon = isError ? Codicon.error : output ? Codicon.check : ThemeIcon.modify(Codicon.loading, "spin");
       elements.root.classList.toggle("collapsed", !value);
-      this._onDidChangeHeight.fire();
+      if (value && !this._contentInitialized) {
+        this._contentInitialized = true;
+        const messageContainer = dom.h(".chat-confirmation-widget-message");
+        messageContainer.root.appendChild(this.createMessageContents());
+        elements.root.appendChild(messageContainer.root);
+      }
     }));
     const toggle = /* @__PURE__ */ __name((e) => {
       if (!e.defaultPrevented) {
@@ -92,9 +92,6 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
       }
     }, "toggle");
     this._register(btn.onDidClick(toggle));
-    const message = dom.h(".chat-confirmation-widget-message");
-    message.root.appendChild(this.createMessageContents());
-    elements.root.appendChild(message.root);
     const topLevelResources = this.output?.parts.filter((p) => p.kind === "data").filter((p) => !p.audience || p.audience.includes(LanguageModelPartAudience.User));
     if (topLevelResources?.length) {
       const resourceSubPart = this._register(this._instantiationService.createInstance(ChatToolOutputContentSubPart, this.context, topLevelResources));
@@ -123,16 +120,16 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
       contents.outputTitle.textContent = localize("chat.output", "Output");
       const outputSubPart = this._register(this._instantiationService.createInstance(ChatToolOutputContentSubPart, this.context, output.parts));
       this._outputSubPart = outputSubPart;
-      this._register(outputSubPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
       contents.output.appendChild(outputSubPart.domNode);
     }
     return contents.root;
   }
   addCodeBlock(part, container) {
+    const textModel = this._register(this.modelService.createModel(part.data, this.languageService.createById(part.languageId), void 0, true));
     const data = {
       languageId: part.languageId,
-      textModel: Promise.resolve(part.textModel),
-      codeBlockIndex: part.codeBlockInfo.codeBlockIndex,
+      textModel: Promise.resolve(textModel),
+      codeBlockIndex: part.codeBlockIndex,
       codeBlockPartIndex: 0,
       element: this.context.element,
       parentContextKeyService: this.contextKeyService,
@@ -140,8 +137,7 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
       chatSessionResource: this.context.element.sessionResource
     };
     const editorReference = this._register(this.context.editorPool.get());
-    editorReference.object.render(data, this._currentWidth || 300);
-    this._register(editorReference.object.onDidChangeContentHeight(() => this._onDidChangeHeight.fire()));
+    editorReference.object.render(data, this.context.currentWidth.get() || 300);
     container.appendChild(editorReference.object.element);
     this._editorReferences.push(editorReference);
   }
@@ -149,7 +145,6 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
     return false;
   }
   layout(width) {
-    this._currentWidth = width;
     this._editorReferences.forEach((r) => r.object.layout(width));
     this._outputSubPart?.layout(width);
   }
@@ -157,7 +152,9 @@ let ChatCollapsibleInputOutputContentPart = class ChatCollapsibleInputOutputCont
 ChatCollapsibleInputOutputContentPart = __decorate([
   __param(8, IContextKeyService),
   __param(9, IInstantiationService),
-  __param(10, IHoverService)
+  __param(10, IHoverService),
+  __param(11, IModelService),
+  __param(12, ILanguageService)
 ], ChatCollapsibleInputOutputContentPart);
 export {
   ChatCollapsibleInputOutputContentPart

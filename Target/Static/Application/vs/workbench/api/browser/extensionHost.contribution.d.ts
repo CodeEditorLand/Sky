@@ -80,6 +80,7 @@ import './mainThreadChatStatus.js';
 import './mainThreadChatOutputRenderer.js';
 import './mainThreadChatSessions.js';
 import './mainThreadDataChannels.js';
+import './mainThreadHooks.js';
 export declare class ExtensionPoints implements IWorkbenchContribution {
     private readonly instantiationService;
     static readonly ID = "workbench.contrib.extensionPoints";

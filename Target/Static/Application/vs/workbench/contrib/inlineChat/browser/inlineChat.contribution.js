@@ -1,3 +1,4 @@
+import "./inlineChatDefaultModel.js";
 import { registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
 import { MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
 import { InlineChatController } from "./inlineChatController.js";
@@ -22,6 +23,7 @@ registerEditorContribution(
   /* EditorContributionInstantiation.Eager */
 );
 registerAction2(InlineChatActions.KeepSessionAction2);
+registerAction2(InlineChatActions.UndoSessionAction2);
 registerAction2(InlineChatActions.UndoAndCloseSessionAction2);
 registerSingleton(
   IInlineChatSessionService,

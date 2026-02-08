@@ -3,7 +3,6 @@ export declare const enum ExtensionGalleryResourceType {
     ExtensionQueryService = "ExtensionQueryService",
     ExtensionLatestVersionUri = "ExtensionLatestVersionUriTemplate",
     ExtensionStatisticsUri = "ExtensionStatisticsUriTemplate",
-    WebExtensionStatisticsUri = "WebExtensionStatisticsUriTemplate",
     PublisherViewUri = "PublisherViewUriTemplate",
     ExtensionDetailsViewUri = "ExtensionDetailsViewUriTemplate",
     ExtensionRatingViewUri = "ExtensionRatingViewUriTemplate",

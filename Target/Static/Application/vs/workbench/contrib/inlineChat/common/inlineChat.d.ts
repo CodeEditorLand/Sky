@@ -2,12 +2,13 @@ import { MenuId } from '../../../../platform/actions/common/actions.js';
 import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
 export declare const enum InlineChatConfigKeys {
     FinishOnType = "inlineChat.finishOnType",
-    StartWithOverlayWidget = "inlineChat.startWithOverlayWidget",
     HoldToSpeech = "inlineChat.holdToSpeech",
     /** @deprecated do not read on client */
     EnableV2 = "inlineChat.enableV2",
     notebookAgent = "inlineChat.notebookAgent",
-    PersistModelChoice = "inlineChat.persistModelChoice"
+    DefaultModel = "inlineChat.defaultModel",
+    Affordance = "inlineChat.affordance",
+    RenderMode = "inlineChat.renderMode"
 }
 export declare const INLINE_CHAT_ID = "interactiveEditor";
 export declare const INTERACTIVE_EDITOR_ACCESSIBILITY_HELP_ID = "interactiveEditorAccessiblityHelp";
@@ -35,6 +36,7 @@ export declare const CTX_INLINE_CHAT_REQUEST_IN_PROGRESS: RawContextKey<boolean>
 export declare const CTX_INLINE_CHAT_RESPONSE_TYPE: RawContextKey<InlineChatResponseType>;
 export declare const CTX_INLINE_CHAT_V1_ENABLED: import("../../../../platform/contextkey/common/contextkey.js").ContextKeyExpression | undefined;
 export declare const CTX_INLINE_CHAT_V2_ENABLED: import("../../../../platform/contextkey/common/contextkey.js").ContextKeyExpression | undefined;
+export declare const CTX_HOVER_MODE: import("../../../../platform/contextkey/common/contextkey.js").ContextKeyExpression;
 export declare const ACTION_START = "inlineChat.start";
 export declare const ACTION_ACCEPT_CHANGES = "inlineChat.acceptChanges";
 export declare const ACTION_DISCARD_CHANGES = "inlineChat.discardHunkChange";

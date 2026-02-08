@@ -66,6 +66,9 @@ var PromptHeaderAttributes;
   PromptHeaderAttributes2.license = "license";
   PromptHeaderAttributes2.compatibility = "compatibility";
   PromptHeaderAttributes2.metadata = "metadata";
+  PromptHeaderAttributes2.agents = "agents";
+  PromptHeaderAttributes2.userInvokable = "user-invokable";
+  PromptHeaderAttributes2.disableModelInvocation = "disable-model-invocation";
 })(PromptHeaderAttributes || (PromptHeaderAttributes = {}));
 var GithubPromptHeaderAttributes;
 (function(GithubPromptHeaderAttributes2) {
@@ -145,13 +148,6 @@ class PromptHeader {
     }
     return void 0;
   }
-  getBooleanAttribute(key) {
-    const attribute = this._parsedHeader.attributes.find((attr) => attr.key === key);
-    if (attribute?.value.type === "boolean") {
-      return attribute.value.value;
-    }
-    return void 0;
-  }
   get name() {
     return this.getStringAttribute(PromptHeaderAttributes.name);
   }
@@ -162,7 +158,7 @@ class PromptHeader {
     return this.getStringAttribute(PromptHeaderAttributes.agent) ?? this.getStringAttribute(PromptHeaderAttributes.mode);
   }
   get model() {
-    return this.getStringAttribute(PromptHeaderAttributes.model);
+    return this.getStringOrStringArrayAttribute(PromptHeaderAttributes.model);
   }
   get applyTo() {
     return this.getStringAttribute(PromptHeaderAttributes.applyTo);
@@ -174,7 +170,11 @@ class PromptHeader {
     return this.getStringAttribute(PromptHeaderAttributes.target);
   }
   get infer() {
-    return this.getBooleanAttribute(PromptHeaderAttributes.infer);
+    const attribute = this._parsedHeader.attributes.find((attr) => attr.key === PromptHeaderAttributes.infer);
+    if (attribute?.value.type === "boolean") {
+      return attribute.value.value;
+    }
+    return void 0;
   }
   get tools() {
     const toolsAttribute = this._parsedHeader.attributes.find((attr) => attr.key === PromptHeaderAttributes.tools);
@@ -217,6 +217,7 @@ class PromptHeader {
           let prompt;
           let send;
           let showContinueOn;
+          let model;
           for (const prop of item.properties) {
             if (prop.key.value === "agent" && prop.value.type === "string") {
               agent = prop.value.value;
@@ -228,6 +229,8 @@ class PromptHeader {
               send = prop.value.value;
             } else if (prop.key.value === "showContinueOn" && prop.value.type === "boolean") {
               showContinueOn = prop.value.value;
+            } else if (prop.key.value === "model" && prop.value.type === "string") {
+              model = prop.value.value;
             }
           }
           if (agent && label && prompt !== void 0) {
@@ -236,13 +239,65 @@ class PromptHeader {
               label,
               prompt,
               ...send !== void 0 ? { send } : {},
-              ...showContinueOn !== void 0 ? { showContinueOn } : {}
+              ...showContinueOn !== void 0 ? { showContinueOn } : {},
+              ...model !== void 0 ? { model } : {}
             };
             handoffs.push(handoff);
           }
         }
       }
       return handoffs;
+    }
+    return void 0;
+  }
+  getStringArrayAttribute(key) {
+    const attribute = this._parsedHeader.attributes.find((attr) => attr.key === key);
+    if (!attribute) {
+      return void 0;
+    }
+    if (attribute.value.type === "array") {
+      const result = [];
+      for (const item of attribute.value.items) {
+        if (item.type === "string" && item.value) {
+          result.push(item.value);
+        }
+      }
+      return result;
+    }
+    return void 0;
+  }
+  getStringOrStringArrayAttribute(key) {
+    const attribute = this._parsedHeader.attributes.find((attr) => attr.key === key);
+    if (!attribute) {
+      return void 0;
+    }
+    if (attribute.value.type === "string") {
+      return [attribute.value.value];
+    }
+    if (attribute.value.type === "array") {
+      const result = [];
+      for (const item of attribute.value.items) {
+        if (item.type === "string") {
+          result.push(item.value);
+        }
+      }
+      return result;
+    }
+    return void 0;
+  }
+  get agents() {
+    return this.getStringArrayAttribute(PromptHeaderAttributes.agents);
+  }
+  get userInvokable() {
+    return this.getBooleanAttribute(PromptHeaderAttributes.userInvokable);
+  }
+  get disableModelInvocation() {
+    return this.getBooleanAttribute(PromptHeaderAttributes.disableModelInvocation);
+  }
+  getBooleanAttribute(key) {
+    const attribute = this._parsedHeader.attributes.find((attr) => attr.key === key);
+    if (attribute?.value.type === "boolean") {
+      return attribute.value.value;
     }
     return void 0;
   }

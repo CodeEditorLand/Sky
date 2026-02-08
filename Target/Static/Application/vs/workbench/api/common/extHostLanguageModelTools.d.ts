@@ -16,7 +16,7 @@ export declare class ExtHostLanguageModelTools implements ExtHostLanguageModelTo
     private readonly _allTools;
     constructor(mainContext: IMainContext, _languageModels: ExtHostLanguageModels);
     $countTokensForInvocation(callId: string, input: string, token: CancellationToken): Promise<number>;
-    invokeTool(extension: IExtensionDescription, toolId: string, options: vscode.LanguageModelToolInvocationOptions<any>, token?: CancellationToken): Promise<vscode.LanguageModelToolResult>;
+    invokeTool(extension: IExtensionDescription, toolIdOrInfo: string | vscode.LanguageModelToolInformation, options: vscode.LanguageModelToolInvocationOptions<any>, token?: CancellationToken): Promise<vscode.LanguageModelToolResult>;
     $onDidChangeTools(tools: IToolDataDto[]): void;
     getTools(extension: IExtensionDescription): vscode.LanguageModelToolInformation[];
     $invokeTool(dto: Dto<IToolInvocation>, token: CancellationToken): Promise<Dto<IToolResult> | SerializableObjectWithBuffers<Dto<IToolResult>>>;
@@ -24,4 +24,5 @@ export declare class ExtHostLanguageModelTools implements ExtHostLanguageModelTo
     $handleToolStream(toolId: string, context: IToolInvocationStreamContext, token: CancellationToken): Promise<IStreamedToolInvocation | undefined>;
     $prepareToolInvocation(toolId: string, context: IToolInvocationPreparationContext, token: CancellationToken): Promise<IPreparedToolInvocation | undefined>;
     registerTool(extension: IExtensionDescription, id: string, tool: vscode.LanguageModelTool<any>): IDisposable;
+    registerToolDefinition(extension: IExtensionDescription, definition: vscode.LanguageModelToolDefinition, tool: vscode.LanguageModelTool<any>): IDisposable;
 }

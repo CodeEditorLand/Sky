@@ -7,7 +7,7 @@ import { DisposableStore, IDisposable } from '../../../common/lifecycle.js';
 import { ScrollbarVisibility, ScrollEvent } from '../../../common/scrollable.js';
 import { ISpliceable } from '../../../common/sequence.js';
 import './list.css';
-import { IIdentityProvider, IKeyboardNavigationDelegate, IKeyboardNavigationLabelProvider, IListContextMenuEvent, IListDragAndDrop, IListEvent, IListGestureEvent, IListMouseEvent, IListRenderer, IListTouchEvent, IListVirtualDelegate } from './list.js';
+import { IIdentityProvider, IKeyboardNavigationDelegate, IKeyboardNavigationLabelProvider, IListContextMenuEvent, IListDragAndDrop, IListEvent, IListGestureEvent, IListMouseEvent, IListRenderer, IListTouchEvent, IListVirtualDelegate, NotSelectableGroupIdType } from './list.js';
 import { IListView, IListViewAccessibilityProvider, IListViewOptions, IListViewOptionsUpdate } from './listView.js';
 import { IMouseWheelEvent } from '../../mouseEvent.js';
 import { IObservable } from '../../../common/observable.js';
@@ -232,6 +232,17 @@ export declare class List<T> implements ISpliceable<T>, IDisposable {
     setAnchor(index: number | undefined): void;
     getAnchor(): number | undefined;
     getAnchorElement(): T | undefined;
+    /**
+     * Gets the group ID for an element at the given index.
+     * Returns undefined if no identity provider, no getGroupId method, or if the group ID is undefined.
+     */
+    getElementGroupId(index: number): number | NotSelectableGroupIdType | undefined;
+    /**
+     * Filters the given indices to only include those with a matching group ID.
+     * If no identity provider or getGroupId method exists, returns the original indices.
+     * If referenceGroupId is undefined, returns an empty array (elements without group IDs are not selectable).
+     */
+    filterIndicesByGroup(indices: number[], referenceGroupId: number | NotSelectableGroupIdType): number[];
     setFocus(indexes: number[], browserEvent?: UIEvent): void;
     focusNext(n?: number, loop?: boolean, browserEvent?: UIEvent, filter?: (element: T) => boolean): void;
     focusPrevious(n?: number, loop?: boolean, browserEvent?: UIEvent, filter?: (element: T) => boolean): void;

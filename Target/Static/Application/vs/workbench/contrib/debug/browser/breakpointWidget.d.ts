@@ -51,6 +51,7 @@ export declare class BreakpointWidget extends ZoneWidget implements IPrivateBrea
     private context;
     private heightInPx;
     private triggeredByBreakpointInput;
+    private availableBreakpoints;
     constructor(editor: ICodeEditor, lineNumber: number, column: number | undefined, context: Context | undefined, contextViewService: IContextViewService, debugService: IDebugService, themeService: IThemeService, instantiationService: IInstantiationService, modelService: IModelService, codeEditorService: ICodeEditorService, _configurationService: IConfigurationService, languageFeaturesService: ILanguageFeaturesService, keybindingService: IKeybindingService, labelService: ILabelService, textModelService: ITextModelService, hoverService: IHoverService);
     private get placeholder();
     private getInputValue;
@@ -61,6 +62,8 @@ export declare class BreakpointWidget extends ZoneWidget implements IPrivateBrea
     protected _fillContainer(container: HTMLElement): void;
     private createModesInput;
     private createTriggerBreakpointInput;
+    private buildBreakpointOptions;
+    private updateTriggerBreakpointList;
     private updateContextInput;
     protected _doLayout(heightInPixel: number, widthInPixel: number): void;
     protected _onWidth(widthInPixel: number): void;

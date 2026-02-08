@@ -17,7 +17,7 @@ import { asArray } from "../../../../../../../base/common/arrays.js";
 import { Codicon } from "../../../../../../../base/common/codicons.js";
 import { ErrorNoTelemetry } from "../../../../../../../base/common/errors.js";
 import { createCommandUri, MarkdownString } from "../../../../../../../base/common/htmlContent.js";
-import { thenIfNotDisposed, thenRegisterOrDispose, toDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { thenRegisterOrDispose, toDisposable } from "../../../../../../../base/common/lifecycle.js";
 import { Schemas } from "../../../../../../../base/common/network.js";
 import Severity from "../../../../../../../base/common/severity.js";
 import { isObject } from "../../../../../../../base/common/types.js";
@@ -36,8 +36,8 @@ import { IKeybindingService } from "../../../../../../../platform/keybinding/com
 import { IStorageService } from "../../../../../../../platform/storage/common/storage.js";
 import { IPreferencesService } from "../../../../../../services/preferences/common/preferences.js";
 import { ITerminalChatService } from "../../../../../terminal/browser/terminal.js";
-import { migrateLegacyTerminalToolSpecificData } from "../../../../common/chat.js";
 import { ChatContextKeys } from "../../../../common/actions/chatContextKeys.js";
+import { migrateLegacyTerminalToolSpecificData } from "../../../../common/chat.js";
 import { IChatToolInvocation } from "../../../../common/chatService/chatService.js";
 import { AcceptToolConfirmationActionId, SkipToolConfirmationActionId } from "../../../actions/chatToolActions.js";
 import { IChatWidgetService } from "../../../chat.js";
@@ -127,7 +127,7 @@ let ChatTerminalToolConfirmationSubPart = class ChatTerminalToolConfirmationSubP
     const model = this._register(this.modelService.createModel(initialContent, this.languageService.createById(languageId), this._getUniqueCodeBlockUri(), true));
     thenRegisterOrDispose(textModelService.createModelReference(model.uri), this._store);
     const editor = this._register(this.editorPool.get());
-    const renderPromise = editor.object.render({
+    editor.object.render({
       codeBlockIndex: this.codeBlockStartIndex,
       codeBlockPartIndex: 0,
       element: this.context.element,
@@ -136,7 +136,6 @@ let ChatTerminalToolConfirmationSubPart = class ChatTerminalToolConfirmationSubP
       textModel: Promise.resolve(model),
       chatSessionResource: this.context.element.sessionResource
     }, this.currentWidthDelegate());
-    this._register(thenIfNotDisposed(renderPromise, () => this._onDidChangeHeight.fire()));
     this.codeblocks.push({
       codeBlockIndex: this.codeBlockStartIndex,
       codemapperUri: void 0,
@@ -147,10 +146,6 @@ let ChatTerminalToolConfirmationSubPart = class ChatTerminalToolConfirmationSubP
       uriPromise: Promise.resolve(model.uri),
       chatSessionResource: this.context.element.sessionResource
     });
-    this._register(editor.object.onDidChangeContentHeight(() => {
-      editor.object.layout(this.currentWidthDelegate());
-      this._onDidChangeHeight.fire();
-    }));
     this._register(model.onDidChangeContent((e) => {
       const currentValue = model.getValue();
       if (currentValue !== initialContent) {
@@ -361,7 +356,6 @@ let ChatTerminalToolConfirmationSubPart = class ChatTerminalToolConfirmationSubP
         this.chatWidgetService.getWidgetBySessionResource(this.context.element.sessionResource)?.focusInput();
       }
     }));
-    this._register(confirmWidget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
     this.domNode = confirmWidget.domNode;
   }
   _createButtons(moreActions) {
@@ -414,7 +408,6 @@ let ChatTerminalToolConfirmationSubPart = class ChatTerminalToolConfirmationSubP
       content: typeof message === "string" ? new MarkdownString().appendMarkdown(message) : message
     }, this.context, this.editorPool, false, this.codeBlockStartIndex, this.renderer, void 0, this.currentWidthDelegate(), this.codeBlockModelCollection, { codeBlockRenderOptions }));
     append(container, part.domNode);
-    this._register(part.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
   }
 };
 ChatTerminalToolConfirmationSubPart = __decorate([

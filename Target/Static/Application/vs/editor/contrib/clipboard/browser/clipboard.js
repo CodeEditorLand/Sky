@@ -192,7 +192,7 @@ function executeClipboardCopyWithWorkaround(editor, clipboardService) {
   CopyOptions.electronBugWorkaroundCopyEventHasFired = false;
   editor.getContainerDomNode().ownerDocument.execCommand("copy");
   if (platform.isNative && CopyOptions.electronBugWorkaroundCopyEventHasFired === false) {
-    const { dataToCopy } = generateDataToCopyAndStoreInMemory(editor._getViewModel(), editor.getOptions(), void 0, browser.isFirefox);
+    const { dataToCopy } = generateDataToCopyAndStoreInMemory(editor._getViewModel(), void 0, browser.isFirefox);
     clipboardService.writeText(dataToCopy.text);
   }
 }
@@ -256,7 +256,7 @@ function logCopyCommand(editor) {
   if (editContextEnabled) {
     const nativeEditContext = NativeEditContextRegistry.get(editor.getId());
     if (nativeEditContext) {
-      nativeEditContext.onWillCopy();
+      nativeEditContext.handleWillCopy();
     }
   }
 }
@@ -278,7 +278,7 @@ if (PasteAction) {
       if (editContextEnabled) {
         const nativeEditContext = NativeEditContextRegistry.get(focusedEditor.getId());
         if (nativeEditContext) {
-          nativeEditContext.onWillPaste();
+          nativeEditContext.handleWillPaste();
         }
       }
       logService.trace("registerExecCommandImpl (before triggerPaste)");

@@ -400,6 +400,7 @@ let CommentController = class CommentController2 {
     this._activeCursorHasCommentingRange = CommentContextKeys.activeCursorHasCommentingRange.bindTo(contextKeyService);
     this._activeCursorHasComment = CommentContextKeys.activeCursorHasComment.bindTo(contextKeyService);
     this._activeEditorHasCommentingRange = CommentContextKeys.activeEditorHasCommentingRange.bindTo(contextKeyService);
+    this._commentWidgetVisible = CommentContextKeys.commentWidgetVisible.bindTo(contextKeyService);
     if (editor instanceof EmbeddedCodeEditorWidget) {
       return;
     }
@@ -610,6 +611,24 @@ let CommentController = class CommentController2 {
     for (const widget of this._commentWidgets) {
       widget.collapse(true);
     }
+  }
+  async collapseVisibleComments() {
+    if (!this.editor) {
+      return;
+    }
+    const visibleRanges = this.editor.getVisibleRanges();
+    for (const widget of this._commentWidgets) {
+      if (widget.expanded && widget.commentThread.range) {
+        const isVisible = visibleRanges.some((visibleRange) => Range.areIntersectingOrTouching(visibleRange, widget.commentThread.range));
+        if (isVisible) {
+          await widget.collapse(true);
+        }
+      }
+    }
+  }
+  _updateCommentWidgetVisibleContext() {
+    const hasExpanded = this._commentWidgets.some((widget) => widget.expanded);
+    this._commentWidgetVisible.set(hasExpanded);
   }
   expandAll() {
     for (const widget of this._commentWidgets) {
@@ -908,6 +927,8 @@ ${thread.comment.body}`, cursor: thread.comment.cursor };
     const zoneWidget = this.instantiationService.createInstance(ReviewZoneWidget, this.editor, uniqueOwner, thread, pendingComment ?? continueOnCommentReply?.comment, pendingEdits);
     await zoneWidget.display(thread.range, shouldReveal);
     this._commentWidgets.push(zoneWidget);
+    zoneWidget.onDidChangeExpandedState(() => this._updateCommentWidgetVisibleContext());
+    zoneWidget.onDidClose(() => this._updateCommentWidgetVisibleContext());
     this.openCommentsView(thread);
   }
   onEditorMouseDown(e) {

@@ -106,6 +106,9 @@ class BrowserWorkbenchEnvironmentService {
   get untitledWorkspacesHome() {
     return joinPath(this.userRoamingDataHome, "Workspaces");
   }
+  get builtinWorkbenchModesHome() {
+    return joinPath(this.userRoamingDataHome, "builtinWorkbenchModes");
+  }
   get serviceMachineIdResource() {
     return joinPath(this.userRoamingDataHome, "machineid");
   }
@@ -368,6 +371,9 @@ __decorate([
 __decorate([
   memoize
 ], BrowserWorkbenchEnvironmentService.prototype, "untitledWorkspacesHome", null);
+__decorate([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "builtinWorkbenchModesHome", null);
 __decorate([
   memoize
 ], BrowserWorkbenchEnvironmentService.prototype, "serviceMachineIdResource", null);

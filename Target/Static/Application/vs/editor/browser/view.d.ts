@@ -10,6 +10,8 @@ import * as viewEvents from '../common/viewEvents.js';
 import { IViewModel } from '../common/viewModel.js';
 import { IInstantiationService } from '../../platform/instantiation/common/instantiation.js';
 import { IColorTheme } from '../../platform/theme/common/themeService.js';
+import { IClipboardCopyEvent, IClipboardPasteEvent } from './controller/editContext/clipboardUtils.js';
+import { Event } from '../../base/common/event.js';
 export interface IContentWidgetData {
     widget: IContentWidget;
     position: IContentWidgetPosition | null;
@@ -41,7 +43,14 @@ export declare class View extends ViewEventHandler {
     private _editContextEnabled;
     private _accessibilitySupport;
     private _editContext;
+    private readonly _editContextClipboardListeners;
     private readonly _pointerHandler;
+    private readonly _onWillCopy;
+    readonly onWillCopy: Event<IClipboardCopyEvent>;
+    private readonly _onWillCut;
+    readonly onWillCut: Event<IClipboardCopyEvent>;
+    private readonly _onWillPaste;
+    readonly onWillPaste: Event<IClipboardPasteEvent>;
     private readonly _linesContent;
     readonly domNode: FastDomNode<HTMLElement>;
     private readonly _overflowGuardContainer;
@@ -51,6 +60,7 @@ export declare class View extends ViewEventHandler {
     constructor(editorContainer: HTMLElement, ownerID: string, commandDelegate: ICommandDelegate, configuration: IEditorConfiguration, colorTheme: IColorTheme, model: IViewModel, userInputEvents: ViewUserInputEvents, overflowWidgetsDomNode: HTMLElement | undefined, _instantiationService: IInstantiationService);
     private _instantiateEditContext;
     private _updateEditContext;
+    private _connectEditContextClipboardEvents;
     private _computeGlyphMarginLanes;
     private _createPointerHandlerHelper;
     private _createTextAreaHandlerHelper;
@@ -75,6 +85,7 @@ export declare class View extends ViewEventHandler {
     }): void;
     getOffsetForColumn(modelLineNumber: number, modelColumn: number): number;
     getLineWidth(modelLineNumber: number): number;
+    resetLineWidthCaches(): void;
     getTargetAtClientPoint(clientX: number, clientY: number): IMouseTarget | null;
     createOverviewRuler(cssClassName: string): OverviewRuler;
     change(callback: (changeAccessor: IViewZoneChangeAccessor) => unknown): void;

@@ -135,11 +135,15 @@ let UserDataProfilesService = class UserDataProfilesService2 extends Disposable 
       const profiles = [defaultProfile];
       try {
         for (const storedProfile of this.getStoredProfiles()) {
-          if (!storedProfile.name || !isString(storedProfile.name) || !storedProfile.location) {
+          if (this.isInvalidProfile(storedProfile)) {
             this.logService.warn("Skipping the invalid stored profile", storedProfile.location || storedProfile.name);
             continue;
           }
-          profiles.push(toUserDataProfile(basename(storedProfile.location), storedProfile.name, storedProfile.location, this.profilesCacheHome, { icon: storedProfile.icon, useDefaultFlags: storedProfile.useDefaultFlags }, defaultProfile));
+          const id = basename(storedProfile.location);
+          profiles.push(toUserDataProfile(id, storedProfile.name, storedProfile.location, this.profilesCacheHome, {
+            icon: storedProfile.icon,
+            useDefaultFlags: storedProfile.useDefaultFlags
+          }, defaultProfile));
         }
       } catch (error) {
         this.logService.error(error);
@@ -174,6 +178,24 @@ let UserDataProfilesService = class UserDataProfilesService2 extends Disposable 
       this._profilesObject = { profiles, emptyWindows };
     }
     return this._profilesObject;
+  }
+  isInvalidProfile(storedProfile) {
+    if (!storedProfile.name) {
+      return true;
+    }
+    if (!isString(storedProfile.name)) {
+      return true;
+    }
+    if (!storedProfile.location) {
+      return true;
+    }
+    if (storedProfile.isSystem) {
+      return true;
+    }
+    if (this.uriIdentityService.extUri.basename(this.uriIdentityService.extUri.dirname(storedProfile.location)) === "builtin") {
+      return true;
+    }
+    return false;
   }
   createDefaultProfile() {
     const defaultProfile = toUserDataProfile("__default__profile__", localize("defaultProfile", "Default"), this.environmentService.userRoamingDataHome, this.profilesCacheHome);
@@ -214,7 +236,7 @@ let UserDataProfilesService = class UserDataProfilesService2 extends Disposable 
           if (URI.isUri(workspace)) {
             options = { ...options, workspaces: [workspace] };
           }
-          const profile = toUserDataProfile(id, name, joinPath(this.profilesHome, id), this.profilesCacheHome, options, this.defaultProfile);
+          const profile = toUserDataProfile(id, name, this.uriIdentityService.extUri.joinPath(this.profilesHome, id), this.profilesCacheHome, options, this.defaultProfile);
           await this.fileService.createFolder(profile.location);
           const joiners = [];
           this._onWillCreateProfile.fire({
@@ -345,9 +367,37 @@ let UserDataProfilesService = class UserDataProfilesService2 extends Disposable 
     this._onDidResetWorkspaces.fire();
   }
   async cleanUp() {
-    if (await this.fileService.exists(this.profilesHome)) {
-      const stat = await this.fileService.resolve(this.profilesHome);
-      await Promise.all((stat.children || []).filter((child) => child.isDirectory && this.profiles.every((p) => !this.uriIdentityService.extUri.isEqual(p.location, child.resource))).map((child) => this.fileService.del(child.resource, { recursive: true })));
+    try {
+      if (await this.fileService.exists(this.profilesHome)) {
+        const systemProfilesFolder = this.uriIdentityService.extUri.joinPath(this.profilesHome, "builtin");
+        if (await this.fileService.exists(systemProfilesFolder)) {
+          try {
+            await this.fileService.del(systemProfilesFolder, { recursive: true });
+          } catch (error) {
+            this.logService.error(error);
+          }
+        }
+        const stat = await this.fileService.resolve(this.profilesHome);
+        await Promise.all((stat.children || []).filter((child) => child.isDirectory && this.profiles.every((p) => !this.uriIdentityService.extUri.isEqual(p.location, child.resource))).map((child) => this.fileService.del(child.resource, { recursive: true })));
+      }
+    } catch (error) {
+      this.logService.error("Error deleting redundant profile folders", error);
+    }
+    try {
+      const existing = this.getStoredProfiles();
+      const valid = [];
+      for (const storedProfile of this.getStoredProfiles()) {
+        if (this.isInvalidProfile(storedProfile)) {
+          this.logService.warn(`Invalid user data profile found: ${storedProfile.name}`);
+        } else {
+          valid.push(storedProfile);
+        }
+      }
+      if (existing.length !== valid.length) {
+        this.saveStoredProfiles(valid);
+      }
+    } catch (error) {
+      this.logService.error("Error removing invalid stored profiles", error);
     }
   }
   async cleanUpTransientProfiles() {
@@ -379,7 +429,7 @@ let UserDataProfilesService = class UserDataProfilesService2 extends Disposable 
     }
     return false;
   }
-  updateProfiles(added, removed, updated) {
+  updateProfiles(added, removed, updated, donotTrigger = false) {
     const allProfiles = [...this.profiles, ...added];
     const transientProfiles = this.transientProfilesObject.profiles;
     this.transientProfilesObject.profiles = [];
@@ -416,7 +466,9 @@ let UserDataProfilesService = class UserDataProfilesService2 extends Disposable 
       profiles.push(profile);
     }
     this.updateStoredProfiles(profiles);
-    this.triggerProfilesChanges(added, removed, updated);
+    if (!donotTrigger) {
+      this.triggerProfilesChanges(added, removed, updated);
+    }
   }
   triggerProfilesChanges(added, removed, updated) {
     this._onDidChangeProfiles.fire({ added, removed, updated, all: this.profiles });
@@ -447,7 +499,12 @@ let UserDataProfilesService = class UserDataProfilesService2 extends Disposable 
         continue;
       }
       if (!profile.isDefault) {
-        storedProfiles.push({ location: profile.location, name: profile.name, icon: profile.icon, useDefaultFlags: profile.useDefaultFlags });
+        storedProfiles.push({
+          location: profile.location,
+          name: profile.name,
+          icon: profile.icon,
+          useDefaultFlags: profile.useDefaultFlags
+        });
       }
       if (profile.workspaces) {
         for (const workspace of profile.workspaces) {

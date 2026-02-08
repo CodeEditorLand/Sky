@@ -11,10 +11,8 @@ var __param = function(paramIndex, decorator) {
     decorator(target, key, paramIndex);
   };
 };
-import "./media/chatStatusWidget.css";
 import * as dom from "../../../../../../base/browser/dom.js";
 import { Button } from "../../../../../../base/browser/ui/button/button.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable } from "../../../../../../base/common/lifecycle.js";
 import { localize } from "../../../../../../nls.js";
 import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
@@ -23,9 +21,10 @@ import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/con
 import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
 import { defaultButtonStyles } from "../../../../../../platform/theme/browser/defaultStyles.js";
 import { ChatEntitlement, ChatEntitlementContextKeys, IChatEntitlementService } from "../../../../../services/chat/common/chatEntitlementService.js";
-import { ChatInputPartWidgetsRegistry } from "./chatInputPartWidgets.js";
 import { ChatContextKeys } from "../../../common/actions/chatContextKeys.js";
 import { CHAT_SETUP_ACTION_ID } from "../../actions/chatActions.js";
+import { ChatInputPartWidgetsRegistry } from "./chatInputPartWidgets.js";
+import "./media/chatStatusWidget.css";
 const $ = dom.$;
 let ChatStatusWidget = class ChatStatusWidget2 extends Disposable {
   static {
@@ -40,28 +39,22 @@ let ChatStatusWidget = class ChatStatusWidget2 extends Disposable {
     this.commandService = commandService;
     this.configurationService = configurationService;
     this.telemetryService = telemetryService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this.domNode = $(".chat-status-widget");
     this.domNode.style.display = "none";
     this.initializeIfEnabled();
   }
   initializeIfEnabled() {
-    const enabledSku = this.configurationService.getValue("chat.statusWidget.sku");
-    if (enabledSku !== "free" && enabledSku !== "anonymous") {
-      return;
-    }
     const entitlement = this.chatEntitlementService.entitlement;
     const isAnonymous = this.chatEntitlementService.anonymous;
-    if (enabledSku === "anonymous" && isAnonymous) {
-      this.createWidgetContent(enabledSku);
-    } else if (enabledSku === "free" && entitlement === ChatEntitlement.Free) {
-      this.createWidgetContent(enabledSku);
+    const enabledSku = this.configurationService.getValue("chat.statusWidget.sku");
+    if (isAnonymous && enabledSku === "anonymous") {
+      this.createWidgetContent("anonymous");
+    } else if (entitlement === ChatEntitlement.Free) {
+      this.createWidgetContent("free");
     } else {
       return;
     }
     this.domNode.style.display = "";
-    this._onDidChangeHeight.fire();
   }
   get height() {
     return this.domNode.style.display === "none" ? 0 : this.domNode.offsetHeight;

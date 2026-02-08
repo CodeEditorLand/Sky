@@ -26,7 +26,7 @@ import { IAccessibilityService } from '../../../../platform/accessibility/common
  *
  * Internal definitions:
  * - Process: The process launched with the terminalProcess.ts file, or the pty as a whole
- * - Pty Process: The pseudoterminal parent process (or the conpty/winpty agent process)
+ * - Pty Process: The pseudoterminal parent process (or the conpty agent process)
  * - Shell Process: The pseudoterminal child process (ie. the shell)
  */
 export declare class TerminalProcessManager extends Disposable implements ITerminalProcessManager {

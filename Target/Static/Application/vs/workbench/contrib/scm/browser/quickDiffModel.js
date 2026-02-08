@@ -151,6 +151,8 @@ let QuickDiffModel = class QuickDiffModel2 extends Disposable {
     return this._quickDiffs.map((quickDiff) => {
       const changes = this.allChanges.filter((change) => change.providerId === quickDiff.id);
       return {
+        providerId: quickDiff.id,
+        providerKind: quickDiff.kind,
         original: quickDiff.originalResource,
         modified: this._model.resource,
         changes: changes.map((change) => change.change),

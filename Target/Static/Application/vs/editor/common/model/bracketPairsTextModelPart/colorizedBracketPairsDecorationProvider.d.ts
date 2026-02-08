@@ -12,6 +12,6 @@ export declare class ColorizedBracketPairsDecorationProvider extends Disposable 
     readonly onDidChange: import("../../../../base/common/event.js").Event<void>;
     constructor(textModel: TextModel);
     handleDidChangeOptions(e: IModelOptionsChangedEvent): void;
-    getDecorationsInRange(range: Range, ownerId?: number, filterOutValidation?: boolean, onlyMinimapDecorations?: boolean): IModelDecoration[];
-    getAllDecorations(ownerId?: number, filterOutValidation?: boolean): IModelDecoration[];
+    getDecorationsInRange(range: Range, ownerId?: number, filterOutValidation?: boolean, filterFontDecorations?: boolean, onlyMinimapDecorations?: boolean): IModelDecoration[];
+    getAllDecorations(ownerId?: number, filterOutValidation?: boolean, filterFontDecorations?: boolean): IModelDecoration[];
 }

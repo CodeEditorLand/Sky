@@ -32,6 +32,7 @@ import { autorun, constObservable, derived, derivedOpts, observableFromEvent } f
 import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
 import { isITextModel } from "../../../editor/common/model.js";
 import { equals } from "../../../base/common/arrays.js";
+import { Event } from "../../../base/common/event.js";
 let MainThreadTextEditors = class MainThreadTextEditors2 {
   static {
     __name(this, "MainThreadTextEditors");
@@ -114,27 +115,42 @@ let MainThreadTextEditors = class MainThreadTextEditors2 {
     const editorModelObs = diffEditor ? observableFromEvent(this, diffEditor.onDidChangeModel, () => diffEditor.getModel()) : observableFromEvent(this, codeEditor.onDidChangeModel, () => codeEditor.getModel());
     const editorChangesObs = derived((reader) => {
       const editorModel = editorModelObs.read(reader);
-      const editorModelUri = codeEditor.getModel()?.uri;
-      if (!editorModel || !editorModelUri) {
+      if (!editorModel) {
         return constObservable(void 0);
       }
-      let quickDiffModelRef;
       if (isITextModel(editorModel)) {
-        quickDiffModelRef = this._quickDiffModelService.createQuickDiffModelReference(editorModelUri);
-      } else {
-        const diffAlgorithm = this._configurationService.getValue("diffEditor.diffAlgorithm");
-        quickDiffModelRef = this._quickDiffModelService.createQuickDiffModelReference(editorModelUri, { algorithm: diffAlgorithm });
+        const quickDiffModelRef2 = this._quickDiffModelService.createQuickDiffModelReference(editorModel.uri);
+        if (!quickDiffModelRef2) {
+          return constObservable(void 0);
+        }
+        toDispose.push(quickDiffModelRef2);
+        return observableFromEvent(this, quickDiffModelRef2.object.onDidChange, () => {
+          return quickDiffModelRef2.object.getQuickDiffResults().map((result) => ({
+            original: result.original,
+            modified: result.modified,
+            changes: result.changes2
+          }));
+        });
       }
+      const diffAlgorithm = this._configurationService.getValue("diffEditor.diffAlgorithm");
+      const quickDiffModelRef = this._quickDiffModelService.createQuickDiffModelReference(editorModel.modified.uri, { algorithm: diffAlgorithm });
       if (!quickDiffModelRef) {
         return constObservable(void 0);
       }
       toDispose.push(quickDiffModelRef);
-      return observableFromEvent(this, quickDiffModelRef.object.onDidChange, () => {
-        return quickDiffModelRef.object.getQuickDiffResults().map((result) => ({
+      return observableFromEvent(Event.any(quickDiffModelRef.object.onDidChange, diffEditor.onDidUpdateDiff), () => {
+        const diffChanges = diffEditor.getDiffComputationResult()?.changes2 ?? [];
+        const diffInformation = [{
+          original: editorModel.original.uri,
+          modified: editorModel.modified.uri,
+          changes: diffChanges.map((change) => change)
+        }];
+        const quickDiffInformation = quickDiffModelRef.object.getQuickDiffResults().filter((result) => result.providerKind !== "primary").map((result) => ({
           original: result.original,
           modified: result.modified,
           changes: result.changes2
         }));
+        return diffInformation.concat(quickDiffInformation);
       });
     });
     return derivedOpts({

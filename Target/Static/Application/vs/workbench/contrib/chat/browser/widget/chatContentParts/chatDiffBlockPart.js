@@ -12,7 +12,6 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import { CancellationToken } from "../../../../../../base/common/cancellation.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { hashAsync } from "../../../../../../base/common/hash.js";
 import { Disposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
 import { Schemas } from "../../../../../../base/common/network.js";
@@ -76,13 +75,8 @@ let MarkdownDiffBlockPart = class MarkdownDiffBlockPart2 extends Disposable {
     this.modelService = modelService;
     this.textModelService = textModelService;
     this.languageService = languageService;
-    this._onDidChangeContentHeight = this._register(new Emitter());
-    this.onDidChangeContentHeight = this._onDidChangeContentHeight.event;
     this.modelRef = this._register(new MutableDisposable());
     this.comparePart = this._register(diffEditorPool.get());
-    this._register(this.comparePart.object.onDidChangeContentHeight(() => {
-      this._onDidChangeContentHeight.fire();
-    }));
     const originalUri = URI.from({
       scheme: Schemas.vscodeChatCodeBlock,
       path: `/chat-diff-original-${data.codeBlockIndex}-${generateUuid()}`

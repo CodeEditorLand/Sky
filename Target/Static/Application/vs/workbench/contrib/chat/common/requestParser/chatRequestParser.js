@@ -14,13 +14,13 @@ var __param = function(paramIndex, decorator) {
 import { Position } from "../../../../../editor/common/core/position.js";
 import { Range } from "../../../../../editor/common/core/range.js";
 import { OffsetRange } from "../../../../../editor/common/core/ranges/offsetRange.js";
-import { IChatAgentService } from "../participants/chatAgents.js";
-import { ChatRequestAgentPart, ChatRequestAgentSubcommandPart, ChatRequestDynamicVariablePart, ChatRequestSlashCommandPart, ChatRequestSlashPromptPart, ChatRequestTextPart, ChatRequestToolPart, ChatRequestToolSetPart, chatAgentLeader, chatSubcommandLeader, chatVariableLeader } from "./chatParserTypes.js";
-import { IChatSlashCommandService } from "../participants/chatSlashCommands.js";
 import { IChatVariablesService } from "../attachments/chatVariables.js";
 import { ChatAgentLocation, ChatModeKind } from "../constants.js";
-import { ToolSet } from "../tools/languageModelToolsService.js";
+import { IChatAgentService } from "../participants/chatAgents.js";
+import { IChatSlashCommandService } from "../participants/chatSlashCommands.js";
 import { IPromptsService } from "../promptSyntax/service/promptsService.js";
+import { isToolSet } from "../tools/languageModelToolsService.js";
+import { ChatRequestAgentPart, ChatRequestAgentSubcommandPart, ChatRequestDynamicVariablePart, ChatRequestSlashCommandPart, ChatRequestSlashPromptPart, ChatRequestTextPart, ChatRequestToolPart, ChatRequestToolSetPart, chatAgentLeader, chatSubcommandLeader, chatVariableLeader } from "./chatParserTypes.js";
 const agentReg = /^@([\w_\-\.]+)(?=(\s|$|\b))/i;
 const variableReg = /^#([\w_\-]+)(:\d+)?(?=(\s|$|\b))/i;
 const slashReg = /^\/([\p{L}\d_\-\.:]+)(?=(\s|$|\b))/iu;
@@ -41,7 +41,7 @@ let ChatRequestParser = class ChatRequestParser2 {
     const toolSetsByName = /* @__PURE__ */ new Map();
     for (const [entry, enabled] of this.variableService.getSelectedToolAndToolSets(sessionResource)) {
       if (enabled) {
-        if (entry instanceof ToolSet) {
+        if (isToolSet(entry)) {
           toolSetsByName.set(entry.referenceName, entry);
         } else {
           toolsByName.set(entry.toolReferenceName ?? entry.displayName, entry);

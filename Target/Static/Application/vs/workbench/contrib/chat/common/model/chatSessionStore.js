@@ -243,7 +243,8 @@ let ChatSessionStore = class ChatSessionStore2 extends Disposable {
       } else {
         await this.fileService.writeFile(storageLocation.flat, VSBuffer.fromString(JSON.stringify(session)));
       }
-      index.entries[session.sessionId] = await getSessionMetadata(session);
+      const newMetadata = await getSessionMetadata(session);
+      index.entries[session.sessionId] = newMetadata;
     } catch (e) {
       this.reportError("sessionWrite", "Error writing chat session", e);
     }
@@ -340,8 +341,12 @@ let ChatSessionStore = class ChatSessionStore2 extends Disposable {
     });
   }
   reportError(reasonForTelemetry, message, error) {
-    this.logService.error(`ChatSessionStore: ` + message, toErrorMessage(error));
     const fileOperationReason = error && toFileOperationResult(error);
+    if (fileOperationReason === 1) {
+      this.logService.trace(`ChatSessionStore: ` + message, toErrorMessage(error));
+    } else {
+      this.logService.error(`ChatSessionStore: ` + message, toErrorMessage(error));
+    }
     this.telemetryService.publicLog2("chatSessionStoreError", {
       reason: reasonForTelemetry,
       fileOperationReason: fileOperationReason ?? -1
@@ -364,12 +369,19 @@ let ChatSessionStore = class ChatSessionStore2 extends Disposable {
         this.reportError("invalidIndexFormat", `Invalid index format: ${data}`);
         this.indexCache = { version: 1, entries: {} };
       }
-      return this.indexCache;
     } catch (e) {
       this.reportError("invalidIndexJSON", `Index corrupt: ${data}`, e);
       this.indexCache = { version: 1, entries: {} };
-      return this.indexCache;
     }
+    for (const entry of Object.values(this.indexCache.entries)) {
+      entry.timing ??= {
+        created: entry.lastMessageDate,
+        lastRequestStarted: void 0,
+        lastRequestEnded: entry.lastMessageDate
+      };
+      entry.lastResponseState ??= entry.lastResponseState === 0 || entry.lastResponseState === 4 ? 1 : entry.lastResponseState || 1;
+    }
+    return this.indexCache;
   }
   async getIndex() {
     return this.storeQueue.queue(async () => {

@@ -3,6 +3,7 @@ import { IInstantiationService } from '../../../../../../../platform/instantiati
 import { IMarkdownRenderer } from '../../../../../../../platform/markdown/browser/markdownRenderer.js';
 import { IChatToolInvocation, IChatToolInvocationSerialized } from '../../../../common/chatService/chatService.js';
 import { IChatRendererContent } from '../../../../common/model/chatViewModel.js';
+import { IChatTodoListService } from '../../../../common/tools/chatTodoListService.js';
 import { CodeBlockModelCollection } from '../../../../common/widget/codeBlockModelCollection.js';
 import { ChatTreeItem, IChatCodeBlockInfo } from '../../../chat.js';
 import { EditorPool } from '../chatContentCodePools.js';
@@ -19,15 +20,14 @@ export declare class ChatToolInvocationPart extends Disposable implements IChatC
     private readonly announcedToolProgressKeys;
     private readonly codeBlockStartIndex;
     private readonly instantiationService;
+    private readonly chatTodoListService;
     readonly domNode: HTMLElement;
-    private _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../../base/common/event.js").Event<void>;
     get codeblocks(): IChatCodeBlockInfo[];
     get codeblocksPartId(): string | undefined;
     private subPart;
     private mcpAppPart;
     private readonly _onDidRemount;
-    constructor(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized, context: IChatContentPartRenderContext, renderer: IMarkdownRenderer, listPool: CollapsibleListPool, editorPool: EditorPool, currentWidthDelegate: () => number, codeBlockModelCollection: CodeBlockModelCollection, announcedToolProgressKeys: Set<string> | undefined, codeBlockStartIndex: number, instantiationService: IInstantiationService);
+    constructor(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized, context: IChatContentPartRenderContext, renderer: IMarkdownRenderer, listPool: CollapsibleListPool, editorPool: EditorPool, currentWidthDelegate: () => number, codeBlockModelCollection: CodeBlockModelCollection, announcedToolProgressKeys: Set<string> | undefined, codeBlockStartIndex: number, instantiationService: IInstantiationService, chatTodoListService: IChatTodoListService);
     private createToolInvocationSubPart;
     /**
      * Gets MCP App render data if this tool invocation has MCP App UI.

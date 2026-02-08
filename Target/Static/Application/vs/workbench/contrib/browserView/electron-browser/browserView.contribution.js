@@ -29,6 +29,13 @@ import { Schemas } from "../../../../base/common/network.js";
 import { IBrowserViewWorkbenchService } from "../common/browserView.js";
 import { BrowserViewWorkbenchService } from "./browserViewWorkbenchService.js";
 import { BrowserViewStorageScope } from "../../../../platform/browserView/common/browserView.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { isLocalhostAuthority } from "../../../../platform/url/common/trustedDomains.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { logBrowserOpen } from "./browserViewTelemetry.js";
 import "./browserViewActions.js";
 Registry.as(EditorExtensions.EditorPane).registerEditorPane(EditorPaneDescriptor.create(BrowserEditor, BrowserEditor.ID, localize("browser.editorLabel", "Browser")), [
   new SyncDescriptor(BrowserEditorInput)
@@ -82,6 +89,54 @@ registerWorkbenchContribution2(
   1
   /* WorkbenchPhase.BlockStartup */
 );
+let LocalhostLinkOpenerContribution = class LocalhostLinkOpenerContribution2 extends Disposable {
+  static {
+    __name(this, "LocalhostLinkOpenerContribution");
+  }
+  static {
+    this.ID = "workbench.contrib.localhostLinkOpener";
+  }
+  constructor(openerService, configurationService, editorService, telemetryService) {
+    super();
+    this.configurationService = configurationService;
+    this.editorService = editorService;
+    this.telemetryService = telemetryService;
+    this._register(openerService.registerOpener(this));
+  }
+  async open(resource, _options) {
+    if (!this.configurationService.getValue("workbench.browser.openLocalhostLinks")) {
+      return false;
+    }
+    const url = typeof resource === "string" ? resource : resource.toString(true);
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return false;
+      }
+      if (!isLocalhostAuthority(parsed.host)) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+    logBrowserOpen(this.telemetryService, "localhostLinkOpener");
+    const browserUri = BrowserViewUri.forUrl(url);
+    await this.editorService.openEditor({ resource: browserUri, options: { pinned: true } });
+    return true;
+  }
+};
+LocalhostLinkOpenerContribution = __decorate([
+  __param(0, IOpenerService),
+  __param(1, IConfigurationService),
+  __param(2, IEditorService),
+  __param(3, ITelemetryService)
+], LocalhostLinkOpenerContribution);
+registerWorkbenchContribution2(
+  LocalhostLinkOpenerContribution.ID,
+  LocalhostLinkOpenerContribution,
+  1
+  /* WorkbenchPhase.BlockStartup */
+);
 registerSingleton(
   IBrowserViewWorkbenchService,
   BrowserViewWorkbenchService,
@@ -91,6 +146,11 @@ registerSingleton(
 Registry.as(ConfigurationExtensions.Configuration).registerConfiguration({
   ...workbenchConfigurationNodeBase,
   properties: {
+    "workbench.browser.openLocalhostLinks": {
+      type: "boolean",
+      default: false,
+      markdownDescription: localize({ comment: ["This is the description for a setting."], key: "browser.openLocalhostLinks" }, "When enabled, localhost links from the terminal, chat, and other sources will open in the Integrated Browser instead of the system browser.")
+    },
     "workbench.browser.dataStorage": {
       type: "string",
       enum: [
@@ -100,7 +160,7 @@ Registry.as(ConfigurationExtensions.Configuration).registerConfiguration({
       ],
       markdownEnumDescriptions: [
         localize({ comment: ["This is the description for a setting. Values surrounded by single quotes are not to be translated."], key: "browser.dataStorage.global" }, "All browser views share a single persistent session across all workspaces."),
-        localize({ comment: ["This is the description for a setting. Values surrounded by single quotes are not to be translated."], key: "browser.dataStorage.workspace" }, "Browser views within the same workspace share a persistent session."),
+        localize({ comment: ["This is the description for a setting. Values surrounded by single quotes are not to be translated."], key: "browser.dataStorage.workspace" }, "Browser views within the same workspace share a persistent session. If no workspace is opened, `ephemeral` storage is used."),
         localize({ comment: ["This is the description for a setting. Values surrounded by single quotes are not to be translated."], key: "browser.dataStorage.ephemeral" }, "Each browser view has its own session that is cleaned up when closed.")
       ],
       restricted: true,

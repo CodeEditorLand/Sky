@@ -17,13 +17,15 @@ import { IActionWidgetService } from "../../../../../platform/actionWidget/brows
 import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
 import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
 import { ActionWidgetDropdownActionViewItem } from "../../../../../platform/actions/browser/actionWidgetDropdownActionViewItem.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 import { renderLabelWithIcons, renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
 import { localize } from "../../../../../nls.js";
 let ChatSessionPickerActionItem = class ChatSessionPickerActionItem2 extends ActionWidgetDropdownActionViewItem {
   static {
     __name(this, "ChatSessionPickerActionItem");
   }
-  constructor(action, initialState, delegate, actionWidgetService, contextKeyService, keybindingService) {
+  constructor(action, initialState, delegate, actionWidgetService, contextKeyService, keybindingService, commandService, telemetryService) {
     const { group, item } = initialState;
     const actionWithLabel = {
       ...action,
@@ -36,10 +38,12 @@ let ChatSessionPickerActionItem = class ChatSessionPickerActionItem2 extends Act
       actionProvider: {
         getActions: /* @__PURE__ */ __name(() => this.getDropdownActions(), "getActions")
       },
-      actionBarActionProvider: void 0
+      actionBarActionProvider: void 0,
+      reporter: { id: group.id, name: `ChatSession:${group.name}`, includeOptions: false }
     };
-    super(actionWithLabel, sessionPickerActionWidgetOptions, actionWidgetService, keybindingService, contextKeyService);
+    super(actionWithLabel, sessionPickerActionWidgetOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
     this.delegate = delegate;
+    this.commandService = commandService;
     this.currentOption = item;
     this._register(this.delegate.onDidChangeOption((newOption) => {
       this.currentOption = newOption;
@@ -61,7 +65,7 @@ let ChatSessionPickerActionItem = class ChatSessionPickerActionItem2 extends Act
     if (!group) {
       return [];
     }
-    return group.items.map((optionItem) => {
+    const actions = group.items.map((optionItem) => {
       const isCurrent = optionItem.id === currentOption?.id;
       return {
         id: optionItem.id,
@@ -77,6 +81,31 @@ let ChatSessionPickerActionItem = class ChatSessionPickerActionItem2 extends Act
         }, "run")
       };
     });
+    if (group.commands?.length) {
+      const addSeparator = actions.length > 0;
+      for (const command of group.commands) {
+        const args = command.arguments ? [...command.arguments] : [];
+        const sessionResource = this.delegate.getSessionResource();
+        if (sessionResource) {
+          args.unshift(sessionResource);
+        }
+        actions.push({
+          id: command.command,
+          enabled: true,
+          checked: false,
+          class: void 0,
+          description: void 0,
+          tooltip: command.tooltip ?? command.title,
+          label: command.title,
+          // Use category to create a separator before commands (only if there are options)
+          category: addSeparator ? { label: "", order: Number.MAX_SAFE_INTEGER } : void 0,
+          run: /* @__PURE__ */ __name(() => {
+            this.commandService.executeCommand(command.command, ...args);
+          }, "run")
+        });
+      }
+    }
+    return actions;
   }
   /**
    * Creates a disabled action for a locked option.
@@ -98,12 +127,13 @@ let ChatSessionPickerActionItem = class ChatSessionPickerActionItem2 extends Act
   renderLabel(element) {
     const domChildren = [];
     element.classList.add("chat-session-option-picker");
+    const group = this.delegate.getOptionGroup();
     const isDefaultWithIcon = this.currentOption?.default && this.currentOption?.icon;
     if (this.currentOption?.icon) {
       domChildren.push(renderIcon(this.currentOption.icon));
     }
     if (!isDefaultWithIcon) {
-      domChildren.push(dom.$("span.chat-session-option-label", void 0, this.currentOption?.name ?? localize("chat.sessionPicker.label", "Pick Option")));
+      domChildren.push(dom.$("span.chat-session-option-label", void 0, this.currentOption?.name ?? group?.description ?? localize("chat.sessionPicker.label", "Pick Option")));
     }
     domChildren.push(...renderLabelWithIcons(`$(chevron-down)`));
     dom.reset(element, ...domChildren);
@@ -139,7 +169,9 @@ let ChatSessionPickerActionItem = class ChatSessionPickerActionItem2 extends Act
 ChatSessionPickerActionItem = __decorate([
   __param(3, IActionWidgetService),
   __param(4, IContextKeyService),
-  __param(5, IKeybindingService)
+  __param(5, IKeybindingService),
+  __param(6, ICommandService),
+  __param(7, ITelemetryService)
 ], ChatSessionPickerActionItem);
 export {
   ChatSessionPickerActionItem

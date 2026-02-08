@@ -27,8 +27,12 @@ class ExtHostChatOutputRenderer {
     if (!entry) {
       throw new Error(`No chat output renderer registered for: ${viewType}`);
     }
-    const webview = this.webviews.createNewWebview(webviewHandle, {}, entry.extension);
-    return entry.renderer.renderChatOutput(Object.freeze({ mime, value: valueData.buffer }), webview, {}, token);
+    const extHostWebview = this.webviews.createNewWebview(webviewHandle, {}, entry.extension);
+    const chatOutputWebview = Object.freeze({
+      webview: extHostWebview,
+      onDidDispose: extHostWebview._onDidDispose
+    });
+    return entry.renderer.renderChatOutput(Object.freeze({ mime, value: valueData.buffer }), chatOutputWebview, {}, token);
   }
 }
 export {

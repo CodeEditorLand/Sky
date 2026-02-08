@@ -13,7 +13,7 @@ var __param = function(paramIndex, decorator) {
 };
 import * as dom from "../../../../../../base/browser/dom.js";
 import { CancellationTokenSource } from "../../../../../../base/common/cancellation.js";
-import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Event } from "../../../../../../base/common/event.js";
 import { Disposable, RefCountedDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
 import { Schemas } from "../../../../../../base/common/network.js";
 import { isEqual } from "../../../../../../base/common/resources.js";
@@ -39,8 +39,6 @@ let ChatTextEditContentPart = class ChatTextEditContentPart2 extends Disposable 
   constructor(chatTextEdit, context, rendererOptions, diffEditorPool, currentWidth, codeCompareModelService) {
     super();
     this.codeCompareModelService = codeCompareModelService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     const element = context.element;
     assertType(isResponseVM(element));
     if (rendererOptions.renderTextEditsAsSummary?.(chatTextEdit.uri)) {
@@ -57,9 +55,6 @@ let ChatTextEditContentPart = class ChatTextEditContentPart2 extends Disposable 
         cts.dispose(true);
       }));
       this.comparePart = this._register(diffEditorPool.get());
-      this._register(this.comparePart.object.onDidChangeContentHeight(() => {
-        this._onDidChangeHeight.fire();
-      }));
       const data = {
         element,
         edit: chatTextEdit,

@@ -135,7 +135,10 @@ let ExtHostOutputService = class ExtHostOutputService2 {
       if (existingOutputChannel) {
         return existingOutputChannel;
       }
-      logLevel = this.loggerService.getLogLevel(logFile) ?? logLevel;
+      const registeredLogger = this.loggerService.getRegisteredLogger(logFile);
+      if (registeredLogger?.logLevel !== void 0) {
+        logLevel = registeredLogger.logLevel;
+      }
       extHostOutputChannelPromise = this.doCreateLogOutputChannel(name, logFile, logLevel, extension, channelDisposables);
     } else {
       extHostOutputChannelPromise = this.doCreateOutputChannel(name, languageId, extension, channelDisposables);

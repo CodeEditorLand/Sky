@@ -17,6 +17,7 @@ import { Disposable, DisposableStore } from "../../../../../../../base/common/li
 import { autorun, derived } from "../../../../../../../base/common/observable.js";
 import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
 import { IChatToolInvocation } from "../../../../common/chatService/chatService.js";
+import { IChatTodoListService } from "../../../../common/tools/chatTodoListService.js";
 import { isToolResultInputOutputDetails, isToolResultOutputDetails, ToolInvocationPresentation } from "../../../../common/tools/languageModelToolsService.js";
 import { ExtensionsInstallConfirmationWidgetSubPart } from "./chatExtensionsInstallToolSubPart.js";
 import { ChatInputOutputMarkdownProgressPart } from "./chatInputOutputMarkdownProgressPart.js";
@@ -43,7 +44,7 @@ let ChatToolInvocationPart = class ChatToolInvocationPart2 extends Disposable {
   get codeblocksPartId() {
     return this.subPart?.codeblocksPartId;
   }
-  constructor(toolInvocation, context, renderer, listPool, editorPool, currentWidthDelegate, codeBlockModelCollection, announcedToolProgressKeys, codeBlockStartIndex, instantiationService) {
+  constructor(toolInvocation, context, renderer, listPool, editorPool, currentWidthDelegate, codeBlockModelCollection, announcedToolProgressKeys, codeBlockStartIndex, instantiationService, chatTodoListService) {
     super();
     this.toolInvocation = toolInvocation;
     this.context = context;
@@ -55,12 +56,24 @@ let ChatToolInvocationPart = class ChatToolInvocationPart2 extends Disposable {
     this.announcedToolProgressKeys = announcedToolProgressKeys;
     this.codeBlockStartIndex = codeBlockStartIndex;
     this.instantiationService = instantiationService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
+    this.chatTodoListService = chatTodoListService;
     this._onDidRemount = this._register(new Emitter());
     this.domNode = dom.$(".chat-tool-invocation-part");
     if (toolInvocation.presentation === "hidden") {
       return;
+    }
+    if (toolInvocation.toolSpecificData?.kind === "todoList") {
+      const sessionResource = context.element.sessionResource;
+      const todos = toolInvocation.toolSpecificData.todoList.map((todo, index) => {
+        const parsedId = parseInt(todo.id, 10);
+        const id = Number.isNaN(parsedId) ? index + 1 : parsedId;
+        return {
+          id,
+          title: todo.title,
+          status: todo.status
+        };
+      });
+      this.chatTodoListService.setTodos(sessionResource, todos);
     }
     if (toolInvocation.kind === "toolInvocation") {
       const initialState = toolInvocation.state.get().type;
@@ -81,9 +94,9 @@ let ChatToolInvocationPart = class ChatToolInvocationPart2 extends Disposable {
       this.subPart = partStore.add(this.createToolInvocationSubPart());
       subPartDomNode.replaceWith(this.subPart.domNode);
       subPartDomNode = this.subPart.domNode;
-      partStore.add(this.subPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
+      const isConfirmation = this.subPart instanceof ToolConfirmationSubPart || this.subPart instanceof ChatTerminalToolConfirmationSubPart || this.subPart instanceof ExtensionsInstallConfirmationWidgetSubPart || this.subPart instanceof ChatToolPostExecuteConfirmationPart;
+      this.domNode.classList.toggle("has-confirmation", isConfirmation);
       partStore.add(this.subPart.onNeedsRerender(render));
-      this._onDidChangeHeight.fire();
     }, "render");
     const mcpAppRenderData = this.getMcpAppRenderData();
     if (mcpAppRenderData) {
@@ -98,12 +111,10 @@ let ChatToolInvocationPart = class ChatToolInvocationPart2 extends Disposable {
           this.mcpAppPart = r.store.add(this.instantiationService.createInstance(ChatMcpAppSubPart, this.toolInvocation, this._onDidRemount.event, context, mcpAppRenderData));
           appDomNode.replaceWith(this.mcpAppPart.domNode);
           appDomNode = this.mcpAppPart.domNode;
-          r.store.add(this.mcpAppPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
         } else {
           this.mcpAppPart = void 0;
           dom.clearNode(appDomNode);
         }
-        this._onDidChangeHeight.fire();
       }));
     }
     render();
@@ -136,7 +147,7 @@ let ChatToolInvocationPart = class ChatToolInvocationPart2 extends Disposable {
       return this.instantiationService.createInstance(ChatResultListSubPart, this.toolInvocation, this.context, this.toolInvocation.pastTenseMessage ?? this.toolInvocation.invocationMessage, resultDetails, this.listPool);
     }
     if (isToolResultOutputDetails(resultDetails)) {
-      return this.instantiationService.createInstance(ChatToolOutputSubPart, this.toolInvocation, this.context);
+      return this.instantiationService.createInstance(ChatToolOutputSubPart, this.toolInvocation, this.context, this._onDidRemount.event);
     }
     if (isToolResultInputOutputDetails(resultDetails)) {
       return this.instantiationService.createInstance(ChatInputOutputMarkdownProgressPart, this.toolInvocation, this.context, this.codeBlockStartIndex, this.toolInvocation.pastTenseMessage ?? this.toolInvocation.invocationMessage, this.toolInvocation.originMessage, resultDetails.input, resultDetails.output, !!resultDetails.isError);
@@ -177,7 +188,8 @@ let ChatToolInvocationPart = class ChatToolInvocationPart2 extends Disposable {
   }
 };
 ChatToolInvocationPart = __decorate([
-  __param(9, IInstantiationService)
+  __param(9, IInstantiationService),
+  __param(10, IChatTodoListService)
 ], ChatToolInvocationPart);
 export {
   ChatToolInvocationPart

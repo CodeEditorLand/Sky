@@ -207,6 +207,20 @@ let PreferencesService = class PreferencesService2 extends Disposable {
       ...options,
       jsonEditor: options.jsonEditor ?? this.shouldOpenJsonByDefault()
     };
+    if (options.jsonEditor && options.query && !options.revealSetting) {
+      const query = options.query.trim();
+      const idMatch = query.match(/^@id:(.+)$/);
+      let key;
+      if (idMatch) {
+        key = idMatch[1].trim();
+      } else if (Registry.as(Extensions.Configuration).getConfigurationProperties()[query.trim()]) {
+        key = query.trim();
+      }
+      options.query = void 0;
+      if (key) {
+        options.revealSetting = { key };
+      }
+    }
     return options.jsonEditor ? this.openSettingsJson(settingsResource, options) : this.openSettings2(options);
   }
   async openSettings2(options) {
@@ -451,18 +465,18 @@ let PreferencesService = class PreferencesService2 extends Disposable {
   }
   getMostCommonlyUsedSettings() {
     return [
-      "files.autoSave",
       "editor.fontSize",
+      "editor.formatOnSave",
+      "files.autoSave",
+      "editor.defaultFormatter",
       "editor.fontFamily",
-      "editor.tabSize",
-      "editor.renderWhitespace",
-      "editor.cursorStyle",
-      "editor.multiCursorModifier",
-      "editor.insertSpaces",
       "editor.wordWrap",
+      "chat.agent.maxRequests",
       "files.exclude",
-      "files.associations",
-      "workbench.editor.enablePreview"
+      "workbench.colorTheme",
+      "editor.tabSize",
+      "editor.mouseWheelZoom",
+      "editor.formatOnPaste"
     ];
   }
   async revealSetting(settingKey, edit, editor, settingsResource) {

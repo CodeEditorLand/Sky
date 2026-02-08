@@ -65,7 +65,7 @@ import { TEXT_FILE_EDITOR_ID } from "../../files/common/files.js";
 import { McpContextKeys } from "../common/mcpContextKeys.js";
 import { IMcpRegistry } from "../common/mcpRegistryTypes.js";
 import { HasInstalledMcpServersContext, IMcpSamplingService, IMcpService, InstalledMcpServersViewId, McpConnectionState, mcpPromptPrefix, McpStartServerInteraction } from "../common/mcpTypes.js";
-import { McpAddConfigurationCommand } from "./mcpCommandsAddConfiguration.js";
+import { McpAddConfigurationCommand, McpInstallFromManifestCommand } from "./mcpCommandsAddConfiguration.js";
 import { McpResourceQuickAccess, McpResourceQuickPick } from "./mcpResourceQuickAccess.js";
 import { startServerAndWaitForLiveTools } from "../common/mcpTypesUtils.js";
 import "./media/mcpServerAction.css";
@@ -617,6 +617,27 @@ class AddConfigurationAction extends Action2 {
     return instantiationService.createInstance(McpAddConfigurationCommand, target ?? void 0).run();
   }
 }
+class InstallFromManifestAction extends Action2 {
+  static {
+    __name(this, "InstallFromManifestAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.mcp.installFromManifest",
+      title: localize2("mcp.installFromManifest", "Install Server from Manifest..."),
+      metadata: {
+        description: localize2("mcp.installFromManifest.description", "Install an MCP server from a JSON manifest file")
+      },
+      category,
+      f1: true,
+      precondition: ChatContextKeys.Setup.hidden.negate()
+    });
+  }
+  async run(accessor) {
+    const instantiationService = accessor.get(IInstantiationService);
+    return instantiationService.createInstance(McpInstallFromManifestCommand).run();
+  }
+}
 class RemoveStoredInput extends Action2 {
   static {
     __name(this, "RemoveStoredInput");
@@ -1032,6 +1053,7 @@ class McpSkipCurrentAutostartCommand extends Action2 {
 export {
   AddConfigurationAction,
   EditStoredInput,
+  InstallFromManifestAction,
   ListMcpServerCommand,
   MCPServerActionRendering,
   McpBrowseCommand,

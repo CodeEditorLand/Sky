@@ -47,4 +47,5 @@ export interface ICommandLineAnalyzerResult {
     readonly disclaimers?: readonly (string | IMarkdownString)[];
     readonly autoApproveInfo?: IMarkdownString;
     readonly customActions?: ToolConfirmationAction[];
+    readonly forceAutoApproval?: boolean;
 }

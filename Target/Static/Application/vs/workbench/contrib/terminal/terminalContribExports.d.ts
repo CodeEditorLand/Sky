@@ -8,7 +8,8 @@ export declare const enum TerminalContribCommandId {
     FocusMostRecentChatTerminalOutput = "workbench.action.terminal.chat.focusMostRecentChatTerminalOutput",
     FocusMostRecentChatTerminal = "workbench.action.terminal.chat.focusMostRecentChatTerminal",
     ToggleChatTerminalOutput = "workbench.action.terminal.chat.toggleChatTerminalOutput",
-    FocusChatInstanceAction = "workbench.action.terminal.chat.focusChatInstance"
+    FocusChatInstanceAction = "workbench.action.terminal.chat.focusChatInstance",
+    ContinueInBackground = "workbench.action.terminal.chat.continueInBackground"
 }
 export declare const enum TerminalContribSettingId {
     StickyScrollEnabled = "terminal.integrated.stickyScroll.enabled",

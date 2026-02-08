@@ -19,6 +19,7 @@ import { IWorkbenchEnvironmentService } from "../../environment/common/environme
 import { determineExtensionHostKinds } from "./extensionHostKind.js";
 import { IExtensionManifestPropertiesService } from "./extensionManifestPropertiesService.js";
 import { LocalProcessRunningLocation, LocalWebWorkerRunningLocation, RemoteRunningLocation } from "./extensionRunningLocation.js";
+import { isProposedApiEnabled } from "./extensions.js";
 let ExtensionRunningLocationTracker = class ExtensionRunningLocationTracker2 {
   static {
     __name(this, "ExtensionRunningLocationTracker");
@@ -102,6 +103,26 @@ let ExtensionRunningLocationTracker = class ExtensionRunningLocationTracker2 {
           continue;
         }
         changeGroup(depGroup, myGroup);
+      }
+    }
+    for (const [_, extension] of extensions) {
+      if (!extension.extensionAffinity) {
+        continue;
+      }
+      if (!isProposedApiEnabled(extension, "extensionAffinity")) {
+        this._logService.warn(`Extension '${extension.identifier.value}' declares 'extensionAffinity' in its package.json but does not enable the 'extensionAffinity' API proposal. Add '"enabledApiProposals": ["extensionAffinity"]' to the extension's package.json to use this feature.`);
+        continue;
+      }
+      const myGroup = groups.get(extension.identifier);
+      for (const colocateId of extension.extensionAffinity) {
+        const colocateGroup = groups.get(colocateId);
+        if (!colocateGroup) {
+          continue;
+        }
+        if (colocateGroup === myGroup) {
+          continue;
+        }
+        changeGroup(colocateGroup, myGroup);
       }
     }
     const resultingAffinities = /* @__PURE__ */ new Map();

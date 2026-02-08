@@ -13,22 +13,23 @@ var __param = function(paramIndex, decorator) {
 };
 import { CancellationError } from "../../../../../../base/common/errors.js";
 import { Emitter, Event } from "../../../../../../base/common/event.js";
-import { DisposableStore, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
 import { isNumber } from "../../../../../../base/common/types.js";
 import { ITerminalLogService } from "../../../../../../platform/terminal/common/terminal.js";
 import { trackIdleOnPrompt } from "./executeStrategy.js";
 import { createAltBufferPromise, setupRecreatingStartMarker } from "./strategyHelpers.js";
-let RichExecuteStrategy = class RichExecuteStrategy2 {
+let RichExecuteStrategy = class RichExecuteStrategy2 extends Disposable {
   static {
     __name(this, "RichExecuteStrategy");
   }
   constructor(_instance, _commandDetection, _logService) {
+    super();
     this._instance = _instance;
     this._commandDetection = _commandDetection;
     this._logService = _logService;
     this.type = "rich";
-    this._startMarker = new MutableDisposable();
-    this._onDidCreateStartMarker = new Emitter();
+    this._startMarker = this._register(new MutableDisposable());
+    this._onDidCreateStartMarker = this._register(new Emitter());
     this.onDidCreateStartMarker = this._onDidCreateStartMarker.event;
   }
   async execute(commandLine, token, commandId) {

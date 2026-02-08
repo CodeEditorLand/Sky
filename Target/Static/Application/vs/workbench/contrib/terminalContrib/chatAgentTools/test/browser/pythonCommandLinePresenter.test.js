@@ -189,7 +189,7 @@ suite("PythonCommandLinePresenter", () => {
   const presenter = new PythonCommandLinePresenter();
   test("should return Python presentation for python -c command", () => {
     const result = presenter.present({
-      commandLine: `python -c "print('hello')"`,
+      commandLine: { forDisplay: `python -c "print('hello')"` },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -201,7 +201,7 @@ suite("PythonCommandLinePresenter", () => {
   });
   test("should return Python presentation for python3 -c command", () => {
     const result = presenter.present({
-      commandLine: `python3 -c 'x = 1; print(x)'`,
+      commandLine: { forDisplay: `python3 -c 'x = 1; print(x)'` },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -213,7 +213,7 @@ suite("PythonCommandLinePresenter", () => {
   });
   test("should return undefined for non-python commands", () => {
     const result = presenter.present({
-      commandLine: "echo hello",
+      commandLine: { forDisplay: "echo hello" },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -222,7 +222,7 @@ suite("PythonCommandLinePresenter", () => {
   });
   test("should return undefined for regular python script execution", () => {
     const result = presenter.present({
-      commandLine: "python script.py",
+      commandLine: { forDisplay: "python script.py" },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -231,7 +231,7 @@ suite("PythonCommandLinePresenter", () => {
   });
   test("should handle PowerShell backtick escaping", () => {
     const result = presenter.present({
-      commandLine: 'python -c "print(`"hello`")"',
+      commandLine: { forDisplay: 'python -c "print(`"hello`")"' },
       shell: "pwsh",
       os: 1
       /* OperatingSystem.Windows */

@@ -312,6 +312,7 @@ class ExtHostTreeView extends Disposable {
     this._elements = /* @__PURE__ */ new Map();
     this._nodes = /* @__PURE__ */ new Map();
     this._childrenFetchTokens = /* @__PURE__ */ new Map();
+    this._globalFetchTokenCounter = 0;
     this._visible = false;
     this._selectedHandles = [];
     this._focusedHandle = void 0;
@@ -606,21 +607,24 @@ class ExtHostTreeView extends Disposable {
     }
     return asPromise(() => this._dataProvider.getParent(element));
   }
-  _resolveTreeNode(element, parent) {
+  async _resolveTreeNode(element, parent) {
     const node = this._nodes.get(element);
     if (node) {
-      return Promise.resolve(node);
+      return node;
     }
-    return asPromise(() => this._dataProvider.getTreeItem(element)).then((extTreeItem) => this._createHandle(element, extTreeItem, parent, true)).then((handle) => this.getChildren(parent ? parent.item.handle : void 0).then(() => {
-      const cachedElement = this.getExtensionElement(handle);
-      if (cachedElement) {
-        const node2 = this._nodes.get(cachedElement);
-        if (node2) {
-          return Promise.resolve(node2);
-        }
+    const extTreeItem = await asPromise(() => this._dataProvider.getTreeItem(element));
+    const handle = this._createHandle(element, extTreeItem, parent, true);
+    await this.getChildren(parent ? parent.item.handle : void 0);
+    const cachedElement = this.getExtensionElement(handle);
+    if (cachedElement) {
+      const node2 = this._nodes.get(cachedElement);
+      if (node2) {
+        return node2;
       }
-      throw new Error(`Cannot resolve tree item for element ${handle} from extension ${this._extension.identifier.value}`);
-    }));
+    }
+    this._logService.error(`[TreeView:${this._viewId}] Failed to resolve tree node for element ${handle}`);
+    this._proxy.$logResolveTreeNodeFailure(this._extension.identifier.value);
+    throw new Error(`Cannot resolve tree item for element ${handle} from extension ${this._extension.identifier.value}`);
   }
   _getChildrenNodes(parentNodeOrHandle) {
     if (parentNodeOrHandle) {
@@ -641,8 +645,7 @@ class ExtHostTreeView extends Disposable {
   async _fetchChildrenNodes(parentElement) {
     this._addChildrenToClear(parentElement);
     const fetchKey = this._getFetchKey(parentElement);
-    let requestId = this._childrenFetchTokens.get(fetchKey) ?? 0;
-    requestId++;
+    const requestId = ++this._globalFetchTokenCounter;
     this._childrenFetchTokens.set(fetchKey, requestId);
     const cts = new CancellationTokenSource(this._refreshCancellationSource.token);
     try {

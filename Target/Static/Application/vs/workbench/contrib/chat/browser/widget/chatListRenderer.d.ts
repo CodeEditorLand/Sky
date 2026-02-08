@@ -1,10 +1,11 @@
 import { DropdownMenuActionViewItem, IDropdownMenuActionViewItemOptions } from '../../../../../base/browser/ui/dropdown/dropdownActionViewItem.js';
-import { IListElementRenderDetails, IListVirtualDelegate } from '../../../../../base/browser/ui/list/list.js';
+import { CachedListVirtualDelegate, IListElementRenderDetails } from '../../../../../base/browser/ui/list/list.js';
 import { ITreeNode, ITreeRenderer } from '../../../../../base/browser/ui/tree/tree.js';
 import { IAction } from '../../../../../base/common/actions.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
 import { FuzzyScore } from '../../../../../base/common/filters.js';
 import { Disposable, DisposableStore, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { ScrollEvent } from '../../../../../base/common/scrollable.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { MenuWorkbenchToolBar } from '../../../../../platform/actions/browser/toolbar.js';
 import { ICommandService } from '../../../../../platform/commands/common/commands.js';
@@ -17,7 +18,7 @@ import { ILogService } from '../../../../../platform/log/common/log.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
 import { IChatEntitlementService } from '../../../../services/chat/common/chatEntitlementService.js';
 import { IWorkbenchIssueService } from '../../../issue/common/issue.js';
-import { IChatFollowup, IChatThinkingPart } from '../../common/chatService/chatService.js';
+import { IChatFollowup, IChatService, IChatThinkingPart } from '../../common/chatService/chatService.js';
 import { IChatResponseViewModel, IChatViewModel } from '../../common/model/chatViewModel.js';
 import { CodeBlockModelCollection } from '../../common/widget/codeBlockModelCollection.js';
 import { ChatModeKind } from '../../common/constants.js';
@@ -26,6 +27,7 @@ import { ChatAgentHover } from './chatAgentHover.js';
 import { IChatContentPart, IChatContentPartRenderContext } from './chatContentParts/chatContentParts.js';
 import { ChatEditorOptions } from './chatOptions.js';
 import { CodeBlockPart } from './chatContentParts/codeBlockPart.js';
+import { IChatTipService } from '../chatTipService.js';
 export interface IChatListItemTemplate {
     currentElement?: ChatTreeItem;
     /**
@@ -34,9 +36,7 @@ export interface IChatListItemTemplate {
      */
     renderedParts?: IChatContentPart[];
     /**
-     * Whether the parts are mounted in the DOM. This is undefined after
-     * the element is disposed so the `renderedParts.onDidMount` can be
-     * called on the next render as appropriate.
+     * Element used to track whether the template is mounted in the DOM.
      */
     renderedPartsMounted?: boolean;
     readonly rowContainer: HTMLElement;
@@ -68,7 +68,7 @@ export interface IChatRendererDelegate {
     container: HTMLElement;
     getListLength(): number;
     currentChatMode(): ChatModeKind;
-    readonly onDidScroll?: Event<void>;
+    readonly onDidScroll?: Event<ScrollEvent>;
 }
 export declare class ChatListItemRenderer extends Disposable implements ITreeRenderer<ChatTreeItem, FuzzyScore, IChatListItemTemplate> {
     private rendererOptions;
@@ -84,12 +84,16 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
     private readonly hoverService;
     private readonly chatWidgetService;
     private readonly chatEntitlementService;
+    private readonly chatService;
+    private readonly chatTipService;
     static readonly ID = "item";
     private readonly codeBlocksByResponseId;
     private readonly codeBlocksByEditorUri;
     private readonly fileTreesByResponseId;
     private readonly focusedFileTreesByResponseId;
     private readonly templateDataByRequestId;
+    /** Track pending question carousels by session resource for auto-skip on chat submission */
+    private readonly pendingQuestionCarousels;
     private readonly chatContentMarkdownRenderer;
     private readonly markdownDecorationsRenderer;
     protected readonly _onDidClickFollowup: Emitter<IChatFollowup>;
@@ -109,6 +113,7 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
     readonly onDidFocusOutside: Event<void>;
     protected readonly _onDidChangeItemHeight: Emitter<IItemHeightChangeParams>;
     readonly onDidChangeItemHeight: Event<IItemHeightChangeParams>;
+    private readonly _onDidUpdateViewModel;
     private readonly _editorPool;
     private readonly _toolEditorPool;
     private readonly _diffEditorPool;
@@ -128,7 +133,7 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
      * by screen readers
      */
     private readonly _announcedToolProgressKeys;
-    constructor(editorOptions: ChatEditorOptions, rendererOptions: IChatListItemRendererOptions, delegate: IChatRendererDelegate, codeBlockModelCollection: CodeBlockModelCollection, overflowWidgetsDomNode: HTMLElement | undefined, viewModel: IChatViewModel | undefined, instantiationService: IInstantiationService, configService: IConfigurationService, logService: ILogService, contextKeyService: IContextKeyService, themeService: IThemeService, commandService: ICommandService, hoverService: IHoverService, chatWidgetService: IChatWidgetService, chatEntitlementService: IChatEntitlementService);
+    constructor(editorOptions: ChatEditorOptions, rendererOptions: IChatListItemRendererOptions, delegate: IChatRendererDelegate, codeBlockModelCollection: CodeBlockModelCollection, overflowWidgetsDomNode: HTMLElement | undefined, viewModel: IChatViewModel | undefined, instantiationService: IInstantiationService, configService: IConfigurationService, logService: ILogService, contextKeyService: IContextKeyService, themeService: IThemeService, commandService: ICommandService, hoverService: IHoverService, chatWidgetService: IChatWidgetService, chatEntitlementService: IChatEntitlementService, chatService: IChatService, chatTipService: IChatTipService);
     updateOptions(options: IChatListItemRendererOptions): void;
     get templateId(): string;
     editorsInUse(): Iterable<CodeBlockPart>;
@@ -147,8 +152,13 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
     layout(width: number): void;
     renderTemplate(container: HTMLElement): IChatListItemTemplate;
     renderElement(node: ITreeNode<ChatTreeItem, FuzzyScore>, index: number, templateData: IChatListItemTemplate): void;
+    /**
+     * Dispose the rendered parts in the template, which aren't done in disposeElement
+     * so they can be reused when a new render is started.
+     */
     private clearRenderedParts;
     private renderChatTreeItem;
+    private renderPendingDivider;
     private renderDetail;
     private renderConfirmationAction;
     private renderAvatar;
@@ -157,8 +167,6 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
     private shouldShowWorkingProgress;
     private getChatFileChangesSummaryPart;
     private renderChatRequest;
-    updateItemHeightOnRender(element: ChatTreeItem, templateData: IChatListItemTemplate): void;
-    private updateItemHeight;
     /**
      *	@returns true if progressive rendering should be considered complete- the element's data is fully rendered or the view is not visible
      */
@@ -175,6 +183,13 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
     private isCodeblockComplete;
     private shouldPinPart;
     private getLastThinkingPart;
+    /**
+     * Determines if a thinking part at the given content index is "look-ahead complete".
+     * A thinking part is look-ahead complete if there are subsequent parts that will NOT
+     * be pinned to it, meaning we know this thinking part is already done even though
+     * the overall response is still in progress.
+     */
+    private isThinkingLookAheadComplete;
     private getSubagentPart;
     private finalizeAllSubagentParts;
     private handleSubagentToolGrouping;
@@ -190,11 +205,14 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
     private renderCodeCitations;
     private handleRenderedCodeblocks;
     private renderToolInvocation;
+    private setupConfirmationTransitionWatcher;
     private renderExtensionsContent;
     private renderPullRequestContent;
     private renderProgressTask;
     private renderConfirmation;
     private renderElicitation;
+    private renderQuestionCarousel;
+    private removeCarouselFromTracking;
     private renderChangesSummary;
     private renderAttachments;
     private renderTextEdit;
@@ -206,12 +224,10 @@ export declare class ChatListItemRenderer extends Disposable implements ITreeRen
     private hoverVisible;
     private hoverHidden;
 }
-export declare class ChatListDelegate implements IListVirtualDelegate<ChatTreeItem> {
+export declare class ChatListDelegate extends CachedListVirtualDelegate<ChatTreeItem> {
     private readonly defaultElementHeight;
-    private readonly logService;
-    constructor(defaultElementHeight: number, logService: ILogService);
-    private _traceLayout;
-    getHeight(element: ChatTreeItem): number;
+    constructor(defaultElementHeight: number);
+    protected estimateHeight(element: ChatTreeItem): number;
     getTemplateId(element: ChatTreeItem): string;
     hasDynamicHeight(element: ChatTreeItem): boolean;
 }

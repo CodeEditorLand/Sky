@@ -1,3 +1,4 @@
+import { IMarkdownString } from '../../../../../base/common/htmlContent.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { IRange } from '../../../../../editor/common/core/range.js';
@@ -7,7 +8,7 @@ import { MarkerSeverity, IMarker } from '../../../../../platform/markers/common/
 import { ISCMHistoryItem } from '../../../scm/common/history.js';
 import { IChatContentReference } from '../chatService/chatService.js';
 import { IChatRequestVariableValue } from './chatVariables.js';
-import { IToolData, ToolSet } from '../tools/languageModelToolsService.js';
+import { IToolData, IToolSet } from '../tools/languageModelToolsService.js';
 interface IBaseChatRequestVariableEntry {
     readonly id: string;
     readonly fullName?: string;
@@ -25,6 +26,7 @@ interface IBaseChatRequestVariableEntry {
 }
 export interface IGenericChatRequestVariableEntry extends IBaseChatRequestVariableEntry {
     kind: 'generic';
+    tooltip?: IMarkdownString;
 }
 export interface IChatRequestDirectoryEntry extends IBaseChatRequestVariableEntry {
     kind: 'directory';
@@ -47,10 +49,12 @@ export interface IChatRequestToolSetEntry extends IBaseChatRequestVariableEntry 
 export type ChatRequestToolReferenceEntry = IChatRequestToolEntry | IChatRequestToolSetEntry;
 export interface StringChatContextValue {
     value?: string;
-    name: string;
+    name?: string;
     modelDescription?: string;
-    icon: ThemeIcon;
+    icon?: ThemeIcon;
     uri: URI;
+    resourceUri?: URI;
+    tooltip?: IMarkdownString;
     /**
      * Command ID to execute when this context item is clicked.
      */
@@ -69,8 +73,10 @@ export interface IChatRequestStringVariableEntry extends IBaseChatRequestVariabl
     readonly kind: 'string';
     readonly value: string | undefined;
     readonly modelDescription?: string;
-    readonly icon: ThemeIcon;
+    readonly icon?: ThemeIcon;
     readonly uri: URI;
+    readonly resourceUri?: URI;
+    readonly tooltip?: IMarkdownString;
     /**
      * Command ID to execute when this context item is clicked.
      */
@@ -232,7 +238,7 @@ export declare function toPromptFileVariableEntry(uri: URI, kind: PromptFileVari
 export declare function toPromptTextVariableEntry(content: string, automaticallyAdded?: boolean, toolReferences?: ChatRequestToolReferenceEntry[]): IPromptTextVariableEntry;
 export declare function toFileVariableEntry(uri: URI, range?: IRange): IChatRequestFileEntry;
 export declare function toToolVariableEntry(entry: IToolData, range?: IOffsetRange): IChatRequestToolEntry;
-export declare function toToolSetVariableEntry(entry: ToolSet, range?: IOffsetRange): IChatRequestToolSetEntry;
+export declare function toToolSetVariableEntry(entry: IToolSet, range?: IOffsetRange): IChatRequestToolSetEntry;
 export declare class ChatRequestVariableSet {
     private _ids;
     private _entries;

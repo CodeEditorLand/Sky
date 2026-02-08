@@ -1,6 +1,5 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { findLastIdx } from "../../../../../base/common/arraysFind.js";
 import { MarkdownString } from "../../../../../base/common/htmlContent.js";
 import { basename } from "../../../../../base/common/resources.js";
 import { URI } from "../../../../../base/common/uri.js";
@@ -11,7 +10,7 @@ function annotateSpecialMarkdownContent(response) {
   let refIdPool = 0;
   const result = [];
   for (const item of response) {
-    const previousItemIndex = findLastIdx(result, (p) => p.kind !== "textEditGroup" && p.kind !== "undoStop");
+    const previousItemIndex = result.findLastIndex((p) => p.kind !== "textEditGroup" && p.kind !== "undoStop");
     const previousItem = result[previousItemIndex];
     if (item.kind === "inlineReference") {
       let label = item.name;
@@ -49,7 +48,8 @@ function annotateSpecialMarkdownContent(response) {
     } else if (item.kind === "codeblockUri") {
       if (previousItem?.kind === "markdownContent") {
         const isEditText = item.isEdit ? ` isEdit` : "";
-        const markdownText = `<vscode_codeblock_uri${isEditText}>${item.uri.toString()}</vscode_codeblock_uri>`;
+        const subAgentText = item.subAgentInvocationId ? ` subAgentInvocationId="${encodeURIComponent(item.subAgentInvocationId)}"` : "";
+        const markdownText = `<vscode_codeblock_uri${isEditText}${subAgentText}>${item.uri.toString()}</vscode_codeblock_uri>`;
         const merged = appendMarkdownString(previousItem.content, new MarkdownString(markdownText));
         result.splice(previousItemIndex, 1);
         result.push({ ...previousItem, content: merged });
@@ -62,18 +62,38 @@ function annotateSpecialMarkdownContent(response) {
 }
 __name(annotateSpecialMarkdownContent, "annotateSpecialMarkdownContent");
 function extractCodeblockUrisFromText(text) {
-  const match = /<vscode_codeblock_uri( isEdit)?>(.*?)<\/vscode_codeblock_uri>/ms.exec(text);
+  const match = /<vscode_codeblock_uri( isEdit)?( subAgentInvocationId="([^"]*)")?>([\s\S]*?)<\/vscode_codeblock_uri>/ms.exec(text);
   if (match) {
-    const [all, isEdit, uriString] = match;
+    const [all, isEdit, , encodedSubAgentId, uriString] = match;
     if (uriString) {
       const result = URI.parse(uriString);
       const textWithoutResult = text.substring(0, match.index) + text.substring(match.index + all.length);
-      return { uri: result, textWithoutResult, isEdit: !!isEdit };
+      let subAgentInvocationId;
+      if (encodedSubAgentId) {
+        try {
+          subAgentInvocationId = decodeURIComponent(encodedSubAgentId);
+        } catch {
+          subAgentInvocationId = encodedSubAgentId;
+        }
+      }
+      return { uri: result, textWithoutResult, isEdit: !!isEdit, subAgentInvocationId };
     }
   }
   return void 0;
 }
 __name(extractCodeblockUrisFromText, "extractCodeblockUrisFromText");
+function extractSubAgentInvocationIdFromText(text) {
+  const match = /<vscode_codeblock_uri[^>]* subAgentInvocationId="([^"]*)"/ms.exec(text);
+  if (match) {
+    try {
+      return decodeURIComponent(match[1]);
+    } catch {
+      return match[1];
+    }
+  }
+  return void 0;
+}
+__name(extractSubAgentInvocationIdFromText, "extractSubAgentInvocationIdFromText");
 function hasCodeblockUriTag(text) {
   return text.includes("<vscode_codeblock_uri");
 }
@@ -110,6 +130,7 @@ export {
   annotateSpecialMarkdownContent,
   contentRefUrl,
   extractCodeblockUrisFromText,
+  extractSubAgentInvocationIdFromText,
   extractVulnerabilitiesFromText,
   hasCodeblockUriTag
 };

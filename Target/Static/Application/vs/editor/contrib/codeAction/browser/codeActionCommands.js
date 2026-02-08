@@ -2,14 +2,16 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
 import { escapeRegExpCharacters } from "../../../../base/common/strings.js";
-import { EditorAction, EditorCommand } from "../../../browser/editorExtensions.js";
+import { EditorAction, EditorAction2, EditorCommand } from "../../../browser/editorExtensions.js";
 import { EditorContextKeys } from "../../../common/editorContextKeys.js";
 import { autoFixCommandId, codeActionCommandId, fixAllCommandId, organizeImportsCommandId, quickFixCommandId, refactorCommandId, sourceActionCommandId } from "./codeAction.js";
 import * as nls from "../../../../nls.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
 import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
 import { CodeActionCommandArgs, CodeActionKind, CodeActionTriggerSource } from "../common/types.js";
 import { CodeActionController } from "./codeActionController.js";
 import { SUPPORTED_CODE_ACTIONS } from "./codeActionModel.js";
+import { Codicon } from "../../../../base/common/codicons.js";
 function contextKeyForSupportedActions(kind) {
   return ContextKeyExpr.regex(SUPPORTED_CODE_ACTIONS.keys()[0], new RegExp("(\\s|^)" + escapeRegExpCharacters(kind.value) + "\\b"));
 }
@@ -52,24 +54,32 @@ function triggerCodeActionsForEditorSelection(editor, notAvailableMessage, filte
   }
 }
 __name(triggerCodeActionsForEditorSelection, "triggerCodeActionsForEditorSelection");
-class QuickFixAction extends EditorAction {
+class QuickFixAction extends EditorAction2 {
   static {
     __name(this, "QuickFixAction");
   }
   constructor() {
     super({
       id: quickFixCommandId,
-      label: nls.localize2("quickfix.trigger.label", "Quick Fix..."),
+      title: nls.localize2("quickfix.trigger.label", "Quick Fix..."),
       precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasCodeActionsProvider),
-      kbOpts: {
-        kbExpr: EditorContextKeys.textInputFocus,
+      icon: Codicon.lightBulb,
+      f1: true,
+      keybinding: {
+        when: EditorContextKeys.textInputFocus,
         primary: 2048 | 89,
         weight: 100
         /* KeybindingWeight.EditorContrib */
+      },
+      menu: {
+        id: MenuId.InlineChatEditorAffordance,
+        group: "0_quickfix",
+        order: 0,
+        when: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasCodeActionsProvider)
       }
     });
   }
-  run(_accessor, editor) {
+  runEditorCommand(_accessor, editor) {
     return triggerCodeActionsForEditorSelection(editor, nls.localize("editor.action.quickFix.noneMessage", "No code actions available"), void 0, void 0, CodeActionTriggerSource.QuickFix);
   }
 }

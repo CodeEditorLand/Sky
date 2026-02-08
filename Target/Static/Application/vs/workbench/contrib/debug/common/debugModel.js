@@ -12,7 +12,6 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import { distinct } from "../../../../base/common/arrays.js";
-import { findLastIdx } from "../../../../base/common/arraysFind.js";
 import { DeferredPromise, RunOnceScheduler } from "../../../../base/common/async.js";
 import { VSBuffer, decodeBase64, encodeBase64 } from "../../../../base/common/buffer.js";
 import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
@@ -1179,7 +1178,7 @@ let DebugModel = class DebugModel2 extends Disposable {
     }
     let index = -1;
     if (session.parentSession) {
-      index = findLastIdx(this.sessions, (s) => s.parentSession === session.parentSession || s === session.parentSession);
+      index = this.sessions.findLastIndex((s) => s.parentSession === session.parentSession || s === session.parentSession);
     }
     if (index >= 0) {
       this.sessions.splice(index + 1, 0, session);

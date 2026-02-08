@@ -103,6 +103,10 @@ class OffsetRange {
     const end = Math.min(this.endExclusive, range.endExclusive);
     return Math.max(0, end - start);
   }
+  /**
+   * `a.intersects(b)` iff there exists a number n so that `a.contains(n)` and `b.contains(n)`.
+   * Warning: If one range is empty, this method returns always false.
+  */
   intersects(other) {
     const start = Math.max(this.start, other.start);
     const end = Math.min(this.endExclusive, other.endExclusive);

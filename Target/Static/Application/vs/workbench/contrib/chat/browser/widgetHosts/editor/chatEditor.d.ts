@@ -28,7 +28,6 @@ export interface IChatEditorOptions extends IEditorOptions {
         preferred?: string;
         fallback?: string;
     };
-    expanded?: boolean;
 }
 export declare class ChatEditor extends EditorPane {
     private readonly instantiationService;

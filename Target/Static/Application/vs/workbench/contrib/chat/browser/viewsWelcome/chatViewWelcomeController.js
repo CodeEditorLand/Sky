@@ -60,6 +60,11 @@ let ChatViewWelcomeController = class ChatViewWelcomeController2 extends Disposa
     this._register(Event.runAndSubscribe(delegate.onDidChangeViewWelcomeState, () => this.update()));
     this._register(chatViewsWelcomeRegistry.onDidChange(() => this.update(true)));
   }
+  getMatchingWelcomeView() {
+    const descriptors = chatViewsWelcomeRegistry.get();
+    const matchingDescriptors = descriptors.filter((descriptor) => this.contextKeyService.contextMatchesRules(descriptor.when));
+    return matchingDescriptors.at(0);
+  }
   update(force) {
     const enabled = this.delegate.shouldShowWelcome();
     if (this.enabled === enabled && !force) {

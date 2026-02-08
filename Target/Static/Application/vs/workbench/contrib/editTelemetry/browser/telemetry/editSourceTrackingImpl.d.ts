@@ -28,7 +28,7 @@ declare class TrackedDocumentInfo extends Disposable {
     readonly windowedFocusTracker: IObservable<DocumentEditSourceTracker<undefined> | undefined>;
     private readonly _repo;
     constructor(_doc: AnnotatedDocument, _scm: ScmAdapter, _statsEnabled: IObservable<boolean>, _instantiationService: IInstantiationService, _telemetryService: ITelemetryService, _randomService: IRandomService, _userAttentionService: IUserAttentionService);
-    sendTelemetry(mode: 'longterm' | '5minWindow' | '10minFocusWindow', trigger: string, t: DocumentEditSourceTracker, focusTime: number, actualTime: number): Promise<void>;
+    sendTelemetry(mode: 'longterm' | '5minWindow' | '20minFocusWindow', trigger: string, t: DocumentEditSourceTracker, focusTime: number, actualTime: number): Promise<void>;
     getTelemetryData(ranges: readonly TrackedEdit[]): {
         nesModifiedCount: number;
         inlineCompletionsCopilotModifiedCount: number;

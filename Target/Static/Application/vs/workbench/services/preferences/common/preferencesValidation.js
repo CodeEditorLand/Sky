@@ -284,17 +284,26 @@ function getArrayValidator(prop) {
 __name(getArrayValidator, "getArrayValidator");
 function getObjectValidator(prop) {
   if (prop.type === "object") {
-    const { properties, patternProperties, additionalProperties } = prop;
+    const { properties, patternProperties, additionalProperties, propertyNames } = prop;
     return (value) => {
       if (!value) {
         return null;
       }
       const errors = [];
+      let propertyNamesErrorShown = false;
       if (!isObject(value)) {
         errors.push(nls.localize("validations.objectIncorrectType", "Incorrect type. Expected an object."));
       } else {
         Object.keys(value).forEach((key) => {
           const data = value[key];
+          if (propertyNames?.pattern && !propertyNamesErrorShown) {
+            const patternRegex = toRegExp(propertyNames.pattern);
+            if (!patternRegex.test(key)) {
+              const errorMessage = propertyNames.patternErrorMessage || nls.localize("validations.propertyNamePattern", "Property name must match pattern `{0}`.", propertyNames.pattern);
+              errors.push(errorMessage + "\n");
+              propertyNamesErrorShown = true;
+            }
+          }
           if (properties && key in properties) {
             const errorMessage = getErrorsForSchema(properties[key], data);
             if (errorMessage) {
@@ -335,6 +344,14 @@ function getObjectValidator(prop) {
   return null;
 }
 __name(getObjectValidator, "getObjectValidator");
+function validatePropertyName(propertyNames, key) {
+  if (!propertyNames?.pattern) {
+    return true;
+  }
+  const patternRegex = toRegExp(propertyNames.pattern);
+  return patternRegex.test(key);
+}
+__name(validatePropertyName, "validatePropertyName");
 function getErrorsForSchema(propertySchema, data) {
   const validator = createValidator(propertySchema);
   const errorMessage = validator(data);
@@ -343,6 +360,7 @@ function getErrorsForSchema(propertySchema, data) {
 __name(getErrorsForSchema, "getErrorsForSchema");
 export {
   createValidator,
-  getInvalidTypeError
+  getInvalidTypeError,
+  validatePropertyName
 };
 //# sourceMappingURL=preferencesValidation.js.map

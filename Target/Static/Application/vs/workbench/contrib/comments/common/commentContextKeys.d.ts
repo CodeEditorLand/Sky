@@ -41,6 +41,10 @@ export declare namespace CommentContextKeys {
      */
     const commentFocused: RawContextKey<boolean>;
     /**
+     * A context key that is set when a comment widget is visible in the editor.
+     */
+    const commentWidgetVisible: RawContextKey<boolean>;
+    /**
      * A context key that is set when commenting is enabled.
      */
     const commentingEnabled: RawContextKey<boolean>;

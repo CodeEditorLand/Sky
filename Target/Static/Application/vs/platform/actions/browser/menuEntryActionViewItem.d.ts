@@ -82,8 +82,10 @@ export declare class DropdownWithDefaultActionViewItem extends BaseActionViewIte
     private readonly _dropdown;
     private _container;
     private readonly _storageKey;
+    private readonly _primaryActionListener;
     get onDidChangeDropdownVisibility(): Event<boolean>;
     constructor(submenuAction: SubmenuItemAction, options: IDropdownWithDefaultActionViewItemOptions | undefined, _keybindingService: IKeybindingService, _notificationService: INotificationService, _contextMenuService: IContextMenuService, _menuService: IMenuService, _instaService: IInstantiationService, _storageService: IStorageService);
+    private registerTogglePrimaryActionListener;
     private update;
     private _getDefaultActionKeybindingLabel;
     setActionContext(newContext: unknown): void;

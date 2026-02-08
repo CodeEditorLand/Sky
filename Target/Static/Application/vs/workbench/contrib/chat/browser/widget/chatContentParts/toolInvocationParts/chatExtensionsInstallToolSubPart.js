@@ -46,7 +46,6 @@ let ExtensionsInstallConfirmationWidgetSubPart = class ExtensionsInstallConfirma
     const extensionsContent = toolInvocation.toolSpecificData;
     this.domNode = dom.$("");
     const chatExtensionsContentPart = this._register(instantiationService.createInstance(ChatExtensionsContentPart, extensionsContent));
-    this._register(chatExtensionsContentPart.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
     dom.append(this.domNode, chatExtensionsContentPart.domNode);
     const state = toolInvocation.state.get();
     if (state.type === 1) {
@@ -82,7 +81,6 @@ let ExtensionsInstallConfirmationWidgetSubPart = class ExtensionsInstallConfirma
         buttons
       }));
       this._confirmWidget = confirmWidget;
-      this._register(confirmWidget.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
       dom.append(this.domNode, confirmWidget.domNode);
       this._register(confirmWidget.onDidClick((button) => {
         IChatToolInvocation.confirmWith(toolInvocation, button.data);

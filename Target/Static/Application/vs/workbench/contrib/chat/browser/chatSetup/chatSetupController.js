@@ -17,7 +17,7 @@ import { Emitter } from "../../../../../base/common/event.js";
 import { Disposable } from "../../../../../base/common/lifecycle.js";
 import Severity from "../../../../../base/common/severity.js";
 import { StopWatch } from "../../../../../base/common/stopwatch.js";
-import { isObject } from "../../../../../base/common/types.js";
+import { isObject, isUndefined } from "../../../../../base/common/types.js";
 import { localize } from "../../../../../nls.js";
 import { ICommandService } from "../../../../../platform/commands/common/commands.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
@@ -31,13 +31,13 @@ import { IQuickInputService } from "../../../../../platform/quickinput/common/qu
 import { Registry } from "../../../../../platform/registry/common/platform.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 import { IActivityService, ProgressBadge } from "../../../../services/activity/common/activity.js";
-import { IAuthenticationService } from "../../../../services/authentication/common/authentication.js";
 import { ILifecycleService } from "../../../../services/lifecycle/common/lifecycle.js";
 import { IExtensionsWorkbenchService } from "../../../extensions/common/extensions.js";
-import { ChatEntitlement, ChatEntitlementRequests, isProUser } from "../../../../services/chat/common/chatEntitlementService.js";
+import { ChatEntitlement, isProUser } from "../../../../services/chat/common/chatEntitlementService.js";
 import { CHAT_OPEN_ACTION_ID } from "../actions/chatActions.js";
 import { ChatViewId, ChatViewContainerId } from "../chat.js";
 import { ChatSetupStep, refreshTokens } from "./chatSetup.js";
+import { IDefaultAccountService } from "../../../../../platform/defaultAccount/common/defaultAccount.js";
 const defaultChat = {
   chatExtensionId: product.defaultChatAgent?.chatExtensionId ?? "",
   provider: product.defaultChatAgent?.provider ?? { default: { id: "", name: "" }, enterprise: { id: "", name: "" }, apple: { id: "", name: "" }, google: { id: "", name: "" } },
@@ -51,12 +51,11 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
   get step() {
     return this._step;
   }
-  constructor(context, requests, telemetryService, authenticationService, extensionsWorkbenchService, productService, logService, progressService, activityService, commandService, dialogService, configurationService, lifecycleService, quickInputService) {
+  constructor(context, requests, telemetryService, extensionsWorkbenchService, productService, logService, progressService, activityService, commandService, dialogService, configurationService, lifecycleService, quickInputService, defaultAccountService) {
     super();
     this.context = context;
     this.requests = requests;
     this.telemetryService = telemetryService;
-    this.authenticationService = authenticationService;
     this.extensionsWorkbenchService = extensionsWorkbenchService;
     this.productService = productService;
     this.logService = logService;
@@ -67,6 +66,7 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
     this.configurationService = configurationService;
     this.lifecycleService = lifecycleService;
     this.quickInputService = quickInputService;
+    this.defaultAccountService = defaultAccountService;
     this._onDidChange = this._register(new Emitter());
     this.onDidChange = this._onDidChange.event;
     this._step = ChatSetupStep.Initial;
@@ -102,8 +102,6 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
     this.context.suspend();
     let success = false;
     try {
-      const providerId = ChatEntitlementRequests.providerId(this.configurationService);
-      let session;
       let entitlement;
       let signIn;
       if (options.forceSignIn) {
@@ -120,17 +118,16 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
       if (signIn) {
         this.setStep(ChatSetupStep.SigningIn);
         const result = await this.signIn(options);
-        if (!result.session) {
+        if (!result.defaultAccount) {
           this.doInstall();
           const provider = options.useSocialProvider ?? (options.useEnterpriseProvider ? defaultChat.provider.enterprise.id : defaultChat.provider.default.id);
           this.telemetryService.publicLog2("commandCenter.chatInstall", { installResult: "failedNotSignedIn", installDuration: watch.elapsed(), signUpErrorCode: void 0, provider });
           return void 0;
         }
-        session = result.session;
         entitlement = result.entitlement;
       }
       this.setStep(ChatSetupStep.Installing);
-      success = await this.install(session, entitlement ?? this.context.state.entitlement, providerId, watch, options);
+      success = await this.install(entitlement ?? this.context.state.entitlement, watch, options);
     } finally {
       this.setStep(ChatSetupStep.Initial);
       this.context.resume();
@@ -138,17 +135,17 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
     return success;
   }
   async signIn(options) {
-    let session;
     let entitlements;
+    let defaultAccount;
     try {
-      ({ session, entitlements } = await this.requests.signIn(options));
+      ({ defaultAccount, entitlements } = await this.requests.signIn(options));
     } catch (e) {
       this.logService.error(`[chat setup] signIn: error ${e}`);
     }
-    if (!session && !this.lifecycleService.willShutdown) {
+    if (!defaultAccount && !this.lifecycleService.willShutdown) {
       const { confirmed } = await this.dialogService.confirm({
         type: Severity.Error,
-        message: localize("unknownSignInError", "Failed to sign in to {0}. Would you like to try again?", ChatEntitlementRequests.providerId(this.configurationService) === defaultChat.provider.enterprise.id ? defaultChat.provider.enterprise.name : defaultChat.provider.default.name),
+        message: localize("unknownSignInError", "Failed to sign in to {0}. Would you like to try again?", this.defaultAccountService.getDefaultAccountAuthenticationProvider().name),
         detail: localize("unknownSignInErrorDetail", "You must be signed in to use AI features."),
         primaryButton: localize("retry", "Retry")
       });
@@ -156,9 +153,9 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
         return this.signIn(options);
       }
     }
-    return { session, entitlement: entitlements?.entitlement };
+    return { defaultAccount, entitlement: entitlements?.entitlement };
   }
-  async install(session, entitlement, providerId, watch, options) {
+  async install(entitlement, watch, options) {
     const wasRunning = this.context.state.installed && !this.context.state.disabled;
     let signUpResult = void 0;
     let provider;
@@ -167,24 +164,16 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
     } else {
       provider = options.useSocialProvider ?? (options.useEnterpriseProvider ? defaultChat.provider.enterprise.id : defaultChat.provider.default.id);
     }
-    let sessions = session ? [session] : void 0;
     try {
       if (!options.forceAnonymous && // User is not asking for anonymous access
       entitlement !== ChatEntitlement.Free && // User is not signed up to Copilot Free
       !isProUser(entitlement) && // User is not signed up for a Copilot subscription
       entitlement !== ChatEntitlement.Unavailable) {
-        if (!sessions) {
-          try {
-            const existingSessions = await this.authenticationService.getSessions(providerId);
-            sessions = existingSessions.length > 0 ? [...existingSessions] : void 0;
-          } catch (error) {
-          }
-          if (!sessions || sessions.length === 0) {
-            this.telemetryService.publicLog2("commandCenter.chatInstall", { installResult: "failedNoSession", installDuration: watch.elapsed(), signUpErrorCode: void 0, provider });
-            return false;
-          }
+        signUpResult = await this.requests.signUpFree();
+        if (isUndefined(signUpResult)) {
+          this.telemetryService.publicLog2("commandCenter.chatInstall", { installResult: "failedNoSession", installDuration: watch.elapsed(), signUpErrorCode: void 0, provider });
+          return false;
         }
-        signUpResult = await this.requests.signUpFree(sessions);
         if (typeof signUpResult !== "boolean") {
           this.telemetryService.publicLog2("commandCenter.chatInstall", { installResult: "failedSignUp", installDuration: watch.elapsed(), signUpErrorCode: signUpResult.errorCode, provider });
         }
@@ -349,17 +338,17 @@ let ChatSetupController = class ChatSetupController2 extends Disposable {
 };
 ChatSetupController = __decorate([
   __param(2, ITelemetryService),
-  __param(3, IAuthenticationService),
-  __param(4, IExtensionsWorkbenchService),
-  __param(5, IProductService),
-  __param(6, ILogService),
-  __param(7, IProgressService),
-  __param(8, IActivityService),
-  __param(9, ICommandService),
-  __param(10, IDialogService),
-  __param(11, IConfigurationService),
-  __param(12, ILifecycleService),
-  __param(13, IQuickInputService)
+  __param(3, IExtensionsWorkbenchService),
+  __param(4, IProductService),
+  __param(5, ILogService),
+  __param(6, IProgressService),
+  __param(7, IActivityService),
+  __param(8, ICommandService),
+  __param(9, IDialogService),
+  __param(10, IConfigurationService),
+  __param(11, ILifecycleService),
+  __param(12, IQuickInputService),
+  __param(13, IDefaultAccountService)
 ], ChatSetupController);
 export {
   ChatSetupController

@@ -13,33 +13,35 @@ import { IContextKeyService } from '../../../../../../platform/contextkey/common
 import { IFileService } from '../../../../../../platform/files/common/files.js';
 import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
 import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { ILabelService } from '../../../../../../platform/label/common/label.js';
 import { ILogService } from '../../../../../../platform/log/common/log.js';
 import { IStorageService } from '../../../../../../platform/storage/common/storage.js';
 import { IThemeService } from '../../../../../../platform/theme/common/themeService.js';
 import { ISharedWebContentExtractorService } from '../../../../../../platform/webContentExtractor/common/webContentExtractor.js';
+import { IWorkspaceContextService } from '../../../../../../platform/workspace/common/workspace.js';
+import { IWorkbenchLayoutService } from '../../../../../services/layout/browser/layoutService.js';
+import { IViewDescriptorService } from '../../../../../common/views.js';
 import { IWorkbenchAssignmentService } from '../../../../../services/assignment/common/assignmentService.js';
 import { IChatEntitlementService } from '../../../../../services/chat/common/chatEntitlementService.js';
 import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { IChatAgentService } from '../../../common/participants/chatAgents.js';
-import { IChatEditingSession } from '../../../common/editing/chatEditingService.js';
-import { IChatModelInputState, IChatRequestModeInfo, IInputModel } from '../../../common/model/chatModel.js';
+import { ChatRequestVariableSet, IChatRequestVariableEntry } from '../../../common/attachments/chatVariableEntries.js';
 import { IChatMode, IChatModeService } from '../../../common/chatModes.js';
 import { IChatFollowup, IChatService } from '../../../common/chatService/chatService.js';
 import { IChatSessionsService } from '../../../common/chatSessionsService.js';
-import { ChatRequestVariableSet, IChatRequestVariableEntry } from '../../../common/attachments/chatVariableEntries.js';
-import { IChatResponseViewModel } from '../../../common/model/chatViewModel.js';
 import { ChatAgentLocation, ChatModeKind } from '../../../common/constants.js';
+import { IChatEditingSession } from '../../../common/editing/chatEditingService.js';
 import { ILanguageModelChatMetadata, ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from '../../../common/languageModels.js';
+import { IChatModelInputState, IChatRequestModeInfo, IInputModel } from '../../../common/model/chatModel.js';
+import { IChatResponseViewModel } from '../../../common/model/chatViewModel.js';
+import { IChatAgentService } from '../../../common/participants/chatAgents.js';
 import { ILanguageModelToolsService } from '../../../common/tools/languageModelToolsService.js';
+import { AgentSessionProviders } from '../../agentSessions/agentSessions.js';
 import { IAgentSessionsService } from '../../agentSessions/agentSessionsService.js';
-import { IChatWidget, ISessionTypePickerDelegate } from '../../chat.js';
 import { ChatAttachmentModel } from '../../attachments/chatAttachmentModel.js';
+import { ChatImplicitContexts } from '../../attachments/chatImplicitContext.js';
+import { IChatWidget, ISessionTypePickerDelegate, IWorkspacePickerDelegate } from '../../chat.js';
 import { IChatContextService } from '../../contextContrib/chatContextService.js';
 import { ChatDragAndDrop } from '../chatDragAndDrop.js';
 import { ChatSelectedTools } from './chatSelectedTools.js';
-import { ChatImplicitContext } from '../../attachments/chatImplicitContext.js';
-import { ChatRelatedFiles } from '../../attachments/chatInputRelatedFilesContrib.js';
 export interface IChatInputStyles {
     overlayBackground: string;
     listForeground: string;
@@ -66,9 +68,25 @@ export interface IChatInputPartOptions {
      * When provided, allows the input part to maintain independent state for the selected session type.
      */
     sessionTypePickerDelegate?: ISessionTypePickerDelegate;
+    /**
+     * Optional delegate for the workspace picker.
+     * When provided, shows a workspace picker allowing users to select a target workspace
+     * for their chat request. This is useful for empty window contexts.
+     */
+    workspacePickerDelegate?: IWorkspacePickerDelegate;
 }
 export interface IWorkingSetEntry {
     uri: URI;
+}
+export declare const enum ChatWidgetLocation {
+    SidebarLeft = "sidebarLeft",
+    SidebarRight = "sidebarRight",
+    Panel = "panel",
+    Editor = "editor"
+}
+export interface IChatWidgetLocationInfo {
+    readonly location: ChatWidgetLocation;
+    readonly isMaximized: boolean;
 }
 export declare class ChatInputPart extends Disposable implements IHistoryNavigationWidget {
     private readonly location;
@@ -87,7 +105,6 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private readonly themeService;
     private readonly textModelResolverService;
     private readonly storageService;
-    private readonly labelService;
     private readonly agentService;
     private readonly sharedWebExtracterService;
     private readonly experimentService;
@@ -98,6 +115,9 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private readonly chatSessionsService;
     private readonly chatContextService;
     private readonly agentSessionsService;
+    private readonly workspaceContextService;
+    private readonly layoutService;
+    private readonly viewDescriptorService;
     private static _counter;
     private _workingSetCollapsed;
     private readonly _chatInputTodoListWidget;
@@ -121,6 +141,7 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     }>;
     private _onDidClickOverlay;
     readonly onDidClickOverlay: Event<void>;
+    private readonly _implicitContextWidget;
     private readonly _attachmentModel;
     private _widget?;
     get attachmentModel(): ChatAttachmentModel;
@@ -130,9 +151,7 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private _indexOfLastAttachedContextDeletedWithKeyboard;
     private _indexOfLastOpenedContext;
     private _implicitContext;
-    get implicitContext(): ChatImplicitContext | undefined;
-    private _relatedFiles;
-    get relatedFiles(): ChatRelatedFiles | undefined;
+    get implicitContext(): ChatImplicitContexts | undefined;
     private _hasFileAttachmentContextKey;
     private readonly _onDidChangeVisibility;
     private readonly _contextResourceLabels;
@@ -147,12 +166,14 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private readonly overlayClickListener;
     private attachedContextContainer;
     private readonly attachedContextDisposables;
-    private relatedFilesContainer;
     private chatEditingSessionWidgetContainer;
     private chatInputTodoListWidgetContainer;
     private chatInputWidgetsContainer;
     private readonly _widgetController;
-    readonly inputPartHeight: ISettableObservable<number, void>;
+    private contextUsageWidget?;
+    private contextUsageWidgetContainer;
+    private readonly _contextUsageDisposables;
+    readonly height: ISettableObservable<number, void>;
     private _inputEditor;
     private _inputEditorElement;
     private _inputModel;
@@ -174,14 +195,17 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private inputEditorHasFocus;
     private currentlyEditingInputKey;
     private chatModeKindKey;
+    private chatModeNameKey;
     private withinEditSessionKey;
     private filePartOfEditSessionKey;
     private chatSessionHasOptions;
     private chatSessionOptionsValid;
     private agentSessionTypeKey;
+    private chatSessionHasCustomAgentTarget;
     private modelWidget;
     private modeWidget;
     private sessionTargetWidget;
+    private delegationWidget;
     private chatSessionPickerWidgets;
     private chatSessionPickerContainer;
     private _lastSessionPickerAction;
@@ -199,11 +223,9 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private readonly _optionContextKeys;
     private _currentLanguageModel;
     get currentLanguageModel(): string | undefined;
-    get selectedLanguageModel(): ILanguageModelChatMetadataAndIdentifier | undefined;
+    get selectedLanguageModel(): IObservable<ILanguageModelChatMetadataAndIdentifier | undefined>;
     private _onDidChangeCurrentChatMode;
     readonly onDidChangeCurrentChatMode: Event<void>;
-    private _onDidChangeCurrentLanguageModel;
-    readonly onDidChangeCurrentLanguageModel: Event<ILanguageModelChatMetadataAndIdentifier>;
     private readonly _currentModeObservable;
     get currentModeKind(): ChatModeKind;
     get currentModeObs(): IObservable<IChatMode>;
@@ -227,12 +249,19 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
      */
     get attemptedWorkingSetEntriesCount(): number;
     /**
+     * Gets the pending delegation target if one is set.
+     * This is used when the user changes the session target picker to a different provider
+     * but hasn't submitted yet, so the delegation will happen on submit.
+     */
+    get pendingDelegationTarget(): AgentSessionProviders | undefined;
+    /**
      * Number consumers holding the 'generating' lock.
      */
     private _generating?;
     private _emptyInputState;
     private _chatSessionIsEmpty;
-    constructor(location: ChatAgentLocation, options: IChatInputPartOptions, styles: IChatInputStyles, inline: boolean, modelService: IModelService, instantiationService: IInstantiationService, contextKeyService: IContextKeyService, configurationService: IConfigurationService, keybindingService: IKeybindingService, accessibilityService: IAccessibilityService, languageModelsService: ILanguageModelsService, logService: ILogService, fileService: IFileService, editorService: IEditorService, themeService: IThemeService, textModelResolverService: ITextModelService, storageService: IStorageService, labelService: ILabelService, agentService: IChatAgentService, sharedWebExtracterService: ISharedWebContentExtractorService, experimentService: IWorkbenchAssignmentService, entitlementService: IChatEntitlementService, chatModeService: IChatModeService, toolService: ILanguageModelToolsService, chatService: IChatService, chatSessionsService: IChatSessionsService, chatContextService: IChatContextService, agentSessionsService: IAgentSessionsService);
+    private _pendingDelegationTarget;
+    constructor(location: ChatAgentLocation, options: IChatInputPartOptions, styles: IChatInputStyles, inline: boolean, modelService: IModelService, instantiationService: IInstantiationService, contextKeyService: IContextKeyService, configurationService: IConfigurationService, keybindingService: IKeybindingService, accessibilityService: IAccessibilityService, languageModelsService: ILanguageModelsService, logService: ILogService, fileService: IFileService, editorService: IEditorService, themeService: IThemeService, textModelResolverService: ITextModelService, storageService: IStorageService, agentService: IChatAgentService, sharedWebExtracterService: ISharedWebContentExtractorService, experimentService: IWorkbenchAssignmentService, entitlementService: IChatEntitlementService, chatModeService: IChatModeService, toolService: ILanguageModelToolsService, chatService: IChatService, chatSessionsService: IChatSessionsService, chatContextService: IChatContextService, agentSessionsService: IAgentSessionsService, workspaceContextService: IWorkspaceContextService, layoutService: IWorkbenchLayoutService, viewDescriptorService: IViewDescriptorService);
     private setImplicitContextEnablement;
     setIsWithinEditSession(inInsideDiff: boolean, isFilePartOfEditSession: boolean): void;
     private getSelectedModelStorageKey;
@@ -240,11 +269,12 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private initSelectedModel;
     setEditing(enabled: boolean): void;
     switchModel(modelMetadata: Pick<ILanguageModelChatMetadata, 'vendor' | 'id' | 'family'>): void;
-    switchModelByQualifiedName(qualifiedModelName: string): boolean;
+    switchModelByQualifiedName(qualifiedModelNames: readonly string[]): boolean;
     switchToNextModel(): void;
     openModelPicker(): void;
     openModePicker(): void;
     openSessionTargetPicker(): void;
+    openDelegationPicker(): void;
     openChatSessionPicker(): void;
     /**
      * Create picker widgets for all option groups available for the current session type.
@@ -343,7 +373,7 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private disposeSessionPickerWidgets;
     /**
      * Get the current option for a specific option group.
-     * If no option is currently set, initializes with the first item as default.
+     * Returns undefined if the session doesn't have this option configured.
      */
     private getCurrentOptionForGroup;
     private getEffectiveSessionType;
@@ -360,10 +390,13 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
      * Updates the widget controller based on session type.
      */
     private tryUpdateWidgetController;
+    /**
+     * Updates the context usage widget based on the current model.
+     */
+    private updateContextUsageWidget;
     render(container: HTMLElement, initialValue: string, widget: IChatWidget): void;
     toggleChatInputOverlay(editing: boolean): void;
     renderAttachedContext(): void;
-    private hasImplicitContextBlock;
     private isAttachmentAlreadyAttached;
     private handleAttachmentDeletion;
     private handleAttachmentOpen;
@@ -373,7 +406,6 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     setWorkingSetCollapsed(collapsed: boolean): void;
     renderChatEditingSessionState(chatEditingSession: IChatEditingSession | null): void;
     private renderChatEditingSessionWithEntries;
-    renderChatRelatedFiles(): Promise<void>;
     renderFollowups(items: IChatFollowup[] | undefined, response: IChatResponseViewModel | undefined): Promise<void>;
     /**
      * Layout the input part with the given width. Height is intrinsic - determined by content
@@ -383,4 +415,8 @@ export declare class ChatInputPart extends Disposable implements IHistoryNavigat
     private previousInputEditorDimension;
     private _layout;
     private getLayoutData;
+    /**
+     * Gets the location of the chat widget and whether that location is maximized.
+     */
+    private getWidgetLocationInfo;
 }

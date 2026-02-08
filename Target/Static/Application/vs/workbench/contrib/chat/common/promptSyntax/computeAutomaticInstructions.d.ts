@@ -7,8 +7,10 @@ import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { ChatRequestVariableSet } from '../attachments/chatVariableEntries.js';
-import { ILanguageModelToolsService, IToolAndToolSetEnablementMap } from '../tools/languageModelToolsService.js';
+import { ILanguageModelToolsService } from '../tools/languageModelToolsService.js';
 import { IPromptPath, IPromptsService } from './service/promptsService.js';
+import { ChatModeKind } from '../constants.js';
+import { UserSelectedTools } from '../participants/chatAgents.js';
 export type InstructionsCollectionEvent = {
     applyingInstructionsCount: number;
     referencedInstructionsCount: number;
@@ -18,7 +20,9 @@ export type InstructionsCollectionEvent = {
 };
 export declare function newInstructionsCollectionEvent(): InstructionsCollectionEvent;
 export declare class ComputeAutomaticInstructions {
+    private readonly _modeKind;
     private readonly _enabledTools;
+    private readonly _enabledSubagents;
     private readonly _promptsService;
     readonly _logService: ILogService;
     private readonly _labelService;
@@ -28,7 +32,7 @@ export declare class ComputeAutomaticInstructions {
     private readonly _telemetryService;
     private readonly _languageModelToolsService;
     private _parseResults;
-    constructor(_enabledTools: IToolAndToolSetEnablementMap | undefined, _promptsService: IPromptsService, _logService: ILogService, _labelService: ILabelService, _configurationService: IConfigurationService, _workspaceService: IWorkspaceContextService, _fileService: IFileService, _telemetryService: ITelemetryService, _languageModelToolsService: ILanguageModelToolsService);
+    constructor(_modeKind: ChatModeKind, _enabledTools: UserSelectedTools | undefined, _enabledSubagents: (readonly string[]) | undefined, _promptsService: IPromptsService, _logService: ILogService, _labelService: ILabelService, _configurationService: IConfigurationService, _workspaceService: IWorkspaceContextService, _fileService: IFileService, _telemetryService: ITelemetryService, _languageModelToolsService: ILanguageModelToolsService);
     private _parseInstructionsFile;
     collect(variables: ChatRequestVariableSet, token: CancellationToken): Promise<void>;
     private sendTelemetry;

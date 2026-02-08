@@ -100,6 +100,7 @@ import "./mainThreadChatStatus.js";
 import "./mainThreadChatOutputRenderer.js";
 import "./mainThreadChatSessions.js";
 import "./mainThreadDataChannels.js";
+import "./mainThreadHooks.js";
 let ExtensionPoints = class ExtensionPoints2 {
   static {
     __name(this, "ExtensionPoints");

@@ -269,7 +269,30 @@ class ThemeConfiguration {
     return this.configurationService.getValue(ThemeSettings.COLOR_CUSTOMIZATIONS) || {};
   }
   get tokenColorCustomizations() {
-    return this.configurationService.getValue(ThemeSettings.TOKEN_COLOR_CUSTOMIZATIONS) || {};
+    const tokenColorCustomization = this.configurationService.getValue(ThemeSettings.TOKEN_COLOR_CUSTOMIZATIONS) || {};
+    const textMateRules = tokenColorCustomization.textMateRules;
+    if (!textMateRules) {
+      return tokenColorCustomization;
+    }
+    const updatedRules = textMateRules.map((rule) => {
+      const fontSize = rule.settings?.fontSize;
+      const lineHeight = rule.settings?.lineHeight;
+      if (fontSize !== void 0 && lineHeight === void 0) {
+        return {
+          ...rule,
+          settings: {
+            ...rule.settings,
+            lineHeight: fontSize
+          }
+        };
+      }
+      return rule;
+    });
+    const updatedTokenColorCustomization = {
+      ...tokenColorCustomization,
+      textMateRules: updatedRules
+    };
+    return updatedTokenColorCustomization;
   }
   get semanticTokenColorCustomizations() {
     return this.configurationService.getValue(ThemeSettings.SEMANTIC_TOKEN_COLOR_CUSTOMIZATIONS);

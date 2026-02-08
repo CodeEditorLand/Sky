@@ -10,13 +10,52 @@ import { EditSuggestionId } from '../../../../../editor/common/textModelEditSour
 import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ICellEditOperation } from '../../../notebook/common/notebookCommon.js';
 import { ChatRequestToolReferenceEntry, IChatRequestVariableEntry } from '../attachments/chatVariableEntries.js';
-import { ChatAgentVoteDirection, ChatAgentVoteDownReason, IChatAgentMarkdownContentWithVulnerability, IChatClearToPreviousToolInvocation, IChatCodeCitation, IChatCommandButton, IChatConfirmation, IChatContentInlineReference, IChatContentReference, IChatEditingSessionAction, IChatElicitationRequest, IChatElicitationRequestSerialized, IChatExtensionsContent, IChatFollowup, IChatLocationData, IChatMarkdownContent, IChatMcpServersStarting, IChatMcpServersStartingSerialized, IChatMultiDiffData, IChatMultiDiffDataSerialized, IChatNotebookEdit, IChatProgress, IChatProgressMessage, IChatPullRequestContent, IChatResponseCodeblockUriPart, IChatResponseProgressFileTreeData, IChatService, IChatSessionContext, IChatSessionTiming, IChatTask, IChatTaskSerialized, IChatTextEdit, IChatThinkingPart, IChatToolInvocation, IChatToolInvocationSerialized, IChatTreeData, IChatUndoStop, IChatUsedContext, IChatWarningMessage, ResponseModelState } from '../chatService/chatService.js';
+import { ChatAgentVoteDirection, ChatAgentVoteDownReason, ChatRequestQueueKind, IChatAgentMarkdownContentWithVulnerability, IChatClearToPreviousToolInvocation, IChatCodeCitation, IChatCommandButton, IChatConfirmation, IChatContentInlineReference, IChatContentReference, IChatEditingSessionAction, IChatElicitationRequest, IChatElicitationRequestSerialized, IChatExtensionsContent, IChatFollowup, IChatLocationData, IChatMarkdownContent, IChatMcpServersStarting, IChatMcpServersStartingSerialized, IChatMultiDiffData, IChatMultiDiffDataSerialized, IChatNotebookEdit, IChatProgress, IChatProgressMessage, IChatPullRequestContent, IChatQuestionCarousel, IChatResponseCodeblockUriPart, IChatResponseProgressFileTreeData, IChatSendRequestOptions, IChatService, IChatSessionContext, IChatSessionTiming, IChatTask, IChatTaskSerialized, IChatTextEdit, IChatThinkingPart, IChatToolInvocation, IChatToolInvocationSerialized, IChatTreeData, IChatUndoStop, IChatUsage, IChatUsedContext, IChatWarningMessage, IChatWorkspaceEdit, ResponseModelState } from '../chatService/chatService.js';
 import { ChatAgentLocation, ChatModeKind } from '../constants.js';
 import { IChatEditingService, IChatEditingSession } from '../editing/chatEditingService.js';
 import { ILanguageModelChatMetadata, ILanguageModelChatMetadataAndIdentifier } from '../languageModels.js';
 import { IChatAgentCommand, IChatAgentData, IChatAgentResult, IChatAgentService, UserSelectedTools } from '../participants/chatAgents.js';
 import { IParsedChatRequest } from '../requestParser/chatParserTypes.js';
 import { ObjectMutationLog } from './objectMutationLog.js';
+/**
+ * Represents a queued chat request waiting to be processed.
+ */
+export interface IChatPendingRequest {
+    readonly request: IChatRequestModel;
+    readonly kind: ChatRequestQueueKind;
+    /**
+     * The options that were passed to sendRequest when this request was queued.
+     * userSelectedTools is snapshotted to a static observable at queue time.
+     */
+    readonly sendOptions: IChatSendRequestOptions;
+}
+/**
+ * Serializable version of IChatSendRequestOptions for pending requests.
+ * Excludes observables and non-serializable fields.
+ */
+export interface ISerializableSendOptions {
+    modeInfo?: IChatRequestModeInfo;
+    userSelectedModelId?: string;
+    /** Static snapshot of user-selected tools (not an observable) */
+    userSelectedTools?: UserSelectedTools;
+    location?: ChatAgentLocation;
+    locationData?: IChatLocationData;
+    attempt?: number;
+    noCommandDetection?: boolean;
+    agentId?: string;
+    agentIdSilent?: string;
+    slashCommand?: string;
+    confirmation?: string;
+}
+/**
+ * Serializable representation of a pending chat request.
+ */
+export interface ISerializablePendingRequestData {
+    id: string;
+    request: ISerializableChatRequestData;
+    kind: ChatRequestQueueKind;
+    sendOptions: ISerializableSendOptions;
+}
 export declare const CHAT_ATTACHABLE_IMAGE_MIME_TYPES: Record<string, string>;
 export declare function getAttachableImageExtension(mimeType: string): string | undefined;
 export interface IChatRequestVariableData {
@@ -79,7 +118,7 @@ export interface IChatNotebookEditGroup {
  * Progress kinds that are included in the history of a response.
  * Excludes "internal" types that are included in history.
  */
-export type IChatProgressHistoryResponseContent = IChatMarkdownContent | IChatAgentMarkdownContentWithVulnerability | IChatResponseCodeblockUriPart | IChatTreeData | IChatMultiDiffDataSerialized | IChatContentInlineReference | IChatProgressMessage | IChatCommandButton | IChatWarningMessage | IChatTask | IChatTaskSerialized | IChatTextEditGroup | IChatNotebookEditGroup | IChatConfirmation | IChatExtensionsContent | IChatThinkingPart | IChatPullRequestContent;
+export type IChatProgressHistoryResponseContent = IChatMarkdownContent | IChatAgentMarkdownContentWithVulnerability | IChatResponseCodeblockUriPart | IChatTreeData | IChatMultiDiffDataSerialized | IChatContentInlineReference | IChatProgressMessage | IChatCommandButton | IChatWarningMessage | IChatTask | IChatTaskSerialized | IChatTextEditGroup | IChatNotebookEditGroup | IChatConfirmation | IChatQuestionCarousel | IChatExtensionsContent | IChatThinkingPart | IChatPullRequestContent | IChatWorkspaceEdit;
 /**
  * "Normal" progress kinds that are rendered as parts of the stream of content.
  */
@@ -141,11 +180,13 @@ export interface IChatResponseModel {
     readonly voteDownReason: ChatAgentVoteDownReason | undefined;
     readonly followups?: IChatFollowup[] | undefined;
     readonly result?: IChatAgentResult;
+    readonly usage?: IChatUsage;
     readonly codeBlockInfos: ICodeBlockInfo[] | undefined;
     initializeCodeBlockInfos(codeBlockInfo: ICodeBlockInfo[]): void;
     addUndoStop(undoStop: IChatUndoStop): void;
     setVote(vote: ChatAgentVoteDirection): void;
     setVoteDownReason(reason: ChatAgentVoteDownReason | undefined): void;
+    setUsage(usage: IChatUsage): void;
     setEditApplied(edit: IChatTextEditGroup, editCount: number): boolean;
     updateContent(progress: IChatProgressResponseContent | IChatTextEdit | IChatNotebookEdit | IChatTask, quiet?: boolean): void;
     /**
@@ -306,6 +347,7 @@ export declare class ChatResponseModel extends Disposable implements IChatRespon
     private _vote?;
     private _voteDownReason?;
     private _result?;
+    private _usage?;
     private _shouldBeRemovedOnSend;
     readonly isCompleteAddedRequest: boolean;
     private readonly _shouldBeBlocked;
@@ -330,6 +372,7 @@ export declare class ChatResponseModel extends Disposable implements IChatRespon
     private _finalizedResponse?;
     get entireResponse(): IResponse;
     get result(): IChatAgentResult | undefined;
+    get usage(): IChatUsage | undefined;
     get username(): string;
     private _followups?;
     get agent(): IChatAgentData | undefined;
@@ -357,6 +400,7 @@ export declare class ChatResponseModel extends Disposable implements IChatRespon
     get codeBlockInfos(): ICodeBlockInfo[] | undefined;
     constructor(params: IChatResponseModelParameters);
     initializeCodeBlockInfos(codeBlockInfo: ICodeBlockInfo[]): void;
+    setBlockedState(isBlocked: boolean): void;
     /**
      * Apply a progress update to the actual response content.
      */
@@ -372,6 +416,7 @@ export declare class ChatResponseModel extends Disposable implements IChatRespon
     applyCodeCitation(progress: IChatCodeCitation): void;
     setAgent(agent: IChatAgentData, slashCommand?: IChatAgentCommand): void;
     setResult(result: IChatAgentResult): void;
+    setUsage(usage: IChatUsage): void;
     complete(): void;
     cancel(): void;
     setFollowups(followups: IChatFollowup[] | undefined): void;
@@ -430,6 +475,8 @@ export interface IChatModel extends IDisposable {
     readonly contributedChatSession: IChatSessionContext | undefined;
     readonly repoData: IExportableRepoData | undefined;
     setRepoData(data: IExportableRepoData | undefined): void;
+    readonly onDidChangePendingRequests: Event<void>;
+    getPendingRequests(): readonly IChatPendingRequest[];
 }
 export interface ISerializableChatsData {
     [sessionId: string]: ISerializableChatData;
@@ -579,6 +626,8 @@ export interface ISerializableChatData3 extends Omit<ISerializableChatData2, 've
     /** Current draft input state (added later, fully backwards compatible) */
     inputState?: ISerializableChatModelInputState;
     repoData?: IExportableRepoData;
+    /** Pending requests that were queued but not yet processed */
+    pendingRequests?: ISerializablePendingRequestData[];
 }
 /**
  * Input model for managing chat input state independently from the chat model.
@@ -667,15 +716,10 @@ export type ISerializableChatDataIn = ISerializableChatData1 | ISerializableChat
 export declare function normalizeSerializableChatData(raw: ISerializableChatDataIn): ISerializableChatData;
 export declare function isExportableSessionData(obj: unknown): obj is IExportableChatData;
 export declare function isSerializableSessionData(obj: unknown): obj is ISerializableChatData;
-export type IChatChangeEvent = IChatInitEvent | IChatAddRequestEvent | IChatChangedRequestEvent | IChatRemoveRequestEvent | IChatAddResponseEvent | IChatSetAgentEvent | IChatMoveEvent | IChatSetHiddenEvent | IChatCompletedRequestEvent | IChatSetCheckpointEvent | IChatSetCustomTitleEvent;
+export type IChatChangeEvent = IChatInitEvent | IChatAddRequestEvent | IChatChangedRequestEvent | IChatRemoveRequestEvent | IChatAddResponseEvent | IChatSetAgentEvent | IChatMoveEvent | IChatSetHiddenEvent | IChatCompletedRequestEvent | IChatSetCustomTitleEvent;
 export interface IChatAddRequestEvent {
     kind: 'addRequest';
     request: IChatRequestModel;
-}
-export interface IChatSetCheckpointEvent {
-    kind: 'setCheckpoint';
-    disabledRequestIds: Set<string>;
-    disabledResponseIds: Set<string>;
 }
 export interface IChatChangedRequestEvent {
     kind: 'changedRequest';
@@ -750,6 +794,9 @@ export declare class ChatModel extends Disposable implements IChatModel {
     readonly onDidDispose: Event<void>;
     private readonly _onDidChange;
     readonly onDidChange: Event<IChatChangeEvent>;
+    private readonly _pendingRequests;
+    private readonly _onDidChangePendingRequests;
+    readonly onDidChangePendingRequests: Event<void>;
     private _requests;
     private _contributedChatSession;
     get contributedChatSession(): IChatSessionContext | undefined;
@@ -757,6 +804,28 @@ export declare class ChatModel extends Disposable implements IChatModel {
     private _repoData;
     get repoData(): IExportableRepoData | undefined;
     setRepoData(data: IExportableRepoData | undefined): void;
+    getPendingRequests(): readonly IChatPendingRequest[];
+    setPendingRequests(requests: readonly {
+        requestId: string;
+        kind: ChatRequestQueueKind;
+    }[]): void;
+    /**
+     * @internal Used by ChatService to add a request to the queue.
+     * Steering messages are placed before queued messages.
+     */
+    addPendingRequest(request: ChatRequestModel, kind: ChatRequestQueueKind, sendOptions: IChatSendRequestOptions): IChatPendingRequest;
+    /**
+     * @internal Used by ChatService to remove a pending request
+     */
+    removePendingRequest(id: string): void;
+    /**
+     * @internal Used by ChatService to dequeue the next pending request
+     */
+    dequeuePendingRequest(): IChatPendingRequest | undefined;
+    /**
+     * @internal Used by ChatService to clear all pending requests
+     */
+    clearPendingRequests(): void;
     readonly lastRequestObs: IObservable<IChatRequestModel | undefined>;
     private readonly _sessionId;
     /** @deprecated Use {@link sessionResource} instead */
@@ -803,8 +872,14 @@ export declare class ChatModel extends Disposable implements IChatModel {
     private currentEditedFileEvents;
     notifyEditingAction(action: IChatEditingSessionAction): void;
     private _deserialize;
+    private _deserializeRequest;
     private reviveVariableData;
     private getParsedRequestFromString;
+    /**
+     * Hydrates pending requests from serialized data.
+     * For each serialized pending request, finds the matching request model and adds it to the pending queue.
+     */
+    private _deserializePendingRequests;
     getRequests(): ChatRequestModel[];
     resetCheckpoint(): void;
     setCheckpoint(requestId: string | undefined): void;
@@ -829,6 +904,11 @@ export declare function updateRanges(variableData: IChatRequestVariableData, dif
 export declare function canMergeMarkdownStrings(md1: IMarkdownString, md2: IMarkdownString): boolean;
 export declare function appendMarkdownString(md1: IMarkdownString, md2: IMarkdownString | string): IMarkdownString;
 export declare function getCodeCitationsMessage(citations: ReadonlyArray<IChatCodeCitation>): string;
+/**
+ * Converts IChatSendRequestOptions to a serializable format by extracting only
+ * serializable fields and converting observables to static values.
+ */
+export declare function serializeSendOptions(options: IChatSendRequestOptions): ISerializableSendOptions;
 export declare enum ChatRequestEditedFileEventKind {
     Keep = 1,
     Undo = 2,

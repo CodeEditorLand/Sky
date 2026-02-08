@@ -15,17 +15,14 @@ import * as dom from "../../../../../../base/browser/dom.js";
 import { Button } from "../../../../../../base/browser/ui/button/button.js";
 import { IconLabel } from "../../../../../../base/browser/ui/iconLabel/iconLabel.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../../../base/common/resources.js";
 import { localize } from "../../../../../../nls.js";
-import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
 import { WorkbenchList } from "../../../../../../platform/list/browser/listService.js";
-import { IChatTodoListService } from "../../../common/tools/chatTodoListService.js";
 import { ChatContextKeys } from "../../../common/actions/chatContextKeys.js";
-import { TodoListToolDescriptionFieldSettingId } from "../../../common/tools/builtinTools/manageTodoListTool.js";
-import { isEqual } from "../../../../../../base/common/resources.js";
+import { IChatTodoListService } from "../../../common/tools/chatTodoListService.js";
 class TodoListDelegate {
   static {
     __name(this, "TodoListDelegate");
@@ -41,12 +38,11 @@ class TodoListRenderer {
   static {
     __name(this, "TodoListRenderer");
   }
+  constructor() {
+    this.templateId = TodoListRenderer.TEMPLATE_ID;
+  }
   static {
     this.TEMPLATE_ID = "todoListRenderer";
-  }
-  constructor(configurationService) {
-    this.configurationService = configurationService;
-    this.templateId = TodoListRenderer.TEMPLATE_ID;
   }
   renderTemplate(container) {
     const templateDisposables = new DisposableStore();
@@ -62,11 +58,9 @@ class TodoListRenderer {
     const { todoElement, statusIcon, iconLabel } = templateData;
     statusIcon.className = `todo-status-icon codicon ${this.getStatusIconClass(todo.status)}`;
     statusIcon.style.color = this.getStatusIconColor(todo.status);
-    const includeDescription = this.configurationService.getValue(TodoListToolDescriptionFieldSettingId) !== false;
-    const title = includeDescription && todo.description && todo.description.trim() ? todo.description : void 0;
-    iconLabel.setLabel(todo.title, void 0, { title });
+    iconLabel.setLabel(todo.title);
     const statusText = this.getStatusText(todo.status);
-    const ariaLabel = includeDescription && todo.description && todo.description.trim() ? localize("chat.todoList.itemWithDescription", "{0}, {1}, {2}", todo.title, statusText, todo.description) : localize("chat.todoList.item", "{0}, {1}", todo.title, statusText);
+    const ariaLabel = localize("chat.todoList.item", "{0}, {1}", todo.title, statusText);
     todoElement.setAttribute("aria-label", ariaLabel);
   }
   disposeTemplate(templateData) {
@@ -110,14 +104,11 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
   static {
     __name(this, "ChatTodoListWidget");
   }
-  constructor(chatTodoListService, configurationService, instantiationService, contextKeyService) {
+  constructor(chatTodoListService, instantiationService, contextKeyService) {
     super();
     this.chatTodoListService = chatTodoListService;
-    this.configurationService = configurationService;
     this.instantiationService = instantiationService;
     this.contextKeyService = contextKeyService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this._isExpanded = false;
     this._userManuallyExpanded = false;
     this.domNode = this.createChatTodoWidget();
@@ -132,7 +123,6 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
   }
   hideWidget() {
     this.domNode.style.display = "none";
-    this._onDidChangeHeight.fire();
   }
   createChatTodoWidget() {
     const container = dom.$(".chat-todo-list-widget");
@@ -170,7 +160,8 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
   }
   createClearButton() {
     this.clearButton = new Button(this.clearButtonContainer, {
-      supportIcons: true
+      supportIcons: true,
+      ariaLabel: localize("chat.todoList.clearButton", "Clear all todos")
     });
     this.clearButton.element.tabIndex = 0;
     this.clearButton.icon = Codicon.clearAll;
@@ -214,7 +205,6 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
     this.domNode.classList.add("has-todos");
     this.renderTodoList(todoList);
     this.domNode.style.display = "block";
-    this._onDidChangeHeight.fire();
   }
   renderTodoList(todoList) {
     this.updateTitleElement(this.titleElement, todoList);
@@ -223,13 +213,12 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
       this._userManuallyExpanded = false;
     }
     if (!this._todoList) {
-      this._todoList = this._register(this.instantiationService.createInstance(WorkbenchList, "ChatTodoListRenderer", this.todoListContainer, new TodoListDelegate(), [new TodoListRenderer(this.configurationService)], {
+      this._todoList = this._register(this.instantiationService.createInstance(WorkbenchList, "ChatTodoListRenderer", this.todoListContainer, new TodoListDelegate(), [new TodoListRenderer()], {
         alwaysConsumeMouseWheel: false,
         accessibilityProvider: {
           getAriaLabel: /* @__PURE__ */ __name((todo) => {
             const statusText = this.getStatusText(todo.status);
-            const includeDescription = this.configurationService.getValue(TodoListToolDescriptionFieldSettingId) !== false;
-            return includeDescription && todo.description && todo.description.trim() ? localize("chat.todoList.itemWithDescription", "{0}, {1}, {2}", todo.title, statusText, todo.description) : localize("chat.todoList.item", "{0}, {1}", todo.title, statusText);
+            return localize("chat.todoList.item", "{0}, {1}", todo.title, statusText);
           }, "getAriaLabel"),
           getWidgetAriaLabel: /* @__PURE__ */ __name(() => localize("chatTodoList", "Chat Todo List"), "getWidgetAriaLabel")
         }
@@ -251,7 +240,6 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
       this.expandIcon.classList.remove("codicon-chevron-down");
       this.expandIcon.classList.add("codicon-chevron-right");
       this.updateTitleElement(this.titleElement, todoList);
-      this._onDidChangeHeight.fire();
     }
   }
   toggleExpanded() {
@@ -264,7 +252,6 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
       const todoList = this.chatTodoListService.getTodos(this._currentSessionResource);
       this.updateTitleElement(this.titleElement, todoList);
     }
-    this._onDidChangeHeight.fire();
   }
   clearAllTodos() {
     if (!this._currentSessionResource) {
@@ -348,9 +335,8 @@ let ChatTodoListWidget = class ChatTodoListWidget2 extends Disposable {
 };
 ChatTodoListWidget = __decorate([
   __param(0, IChatTodoListService),
-  __param(1, IConfigurationService),
-  __param(2, IInstantiationService),
-  __param(3, IContextKeyService)
+  __param(1, IInstantiationService),
+  __param(2, IContextKeyService)
 ], ChatTodoListWidget);
 export {
   ChatTodoListWidget

@@ -67,6 +67,7 @@ import { normalizeDriveLetter } from "../../../../base/common/labels.js";
 import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
 import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
 import { DropdownMenuActionViewItem } from "../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
 const editIcon = registerIcon("profiles-editor-edit-folder", Codicon.edit, localize("editIcon", "Icon for the edit folder icon in the profiles editor."));
 const removeIcon = registerIcon("profiles-editor-remove-folder", Codicon.close, localize("removeIcon", "Icon for the remove folder icon in the profiles editor."));
 const profilesSashBorder = registerColor("profiles.sashBorder", PANEL_BORDER, localize("profilesSashBorder", "The color of the Profiles editor splitview sash border."));
@@ -470,7 +471,9 @@ let ProfileWidget = class ProfileWidget2 extends Disposable {
     this.layoutParticipants = [];
     const header = append(parent, $(".profile-header"));
     const title = append(header, $(".profile-title-container"));
-    this.profileTitle = append(title, $(""));
+    this.profileTitle = append(title, $(".profile-title"));
+    this.builtInLabel = append(title, $(".profile-built-in-label", void 0, localize("builtIn", "Built-in")));
+    this.builtInLabel.classList.add("hide");
     const body = append(parent, $(".profile-body"));
     const delegate = new ProfileTreeDelegate();
     const contentsRenderer = this._register(this.instantiationService.createInstance(ContentsProfileRenderer));
@@ -552,6 +555,7 @@ let ProfileWidget = class ProfileWidget2 extends Disposable {
     const disposables = new DisposableStore();
     this._profileElement.value = { element: profileElement, dispose: /* @__PURE__ */ __name(() => disposables.dispose(), "dispose") };
     this.profileTitle.textContent = profileElement.name;
+    this.builtInLabel.classList.toggle("hide", !(profileElement instanceof UserDataProfileElement && profileElement.profile.isDefault));
     disposables.add(profileElement.onDidChange((e) => {
       if (e.name) {
         this.profileTitle.textContent = profileElement.name;
@@ -847,14 +851,14 @@ let ProfileNameRenderer = class ProfileNameRenderer2 extends ProfilePropertyRend
     const renderName = /* @__PURE__ */ __name((profileElement2) => {
       nameInput.value = profileElement2.root.name;
       nameInput.validate();
-      const isDefaultProfile = profileElement2.root instanceof UserDataProfileElement && profileElement2.root.profile.isDefault;
-      if (profileElement2.root.disabled || isDefaultProfile) {
+      const isSystemProfile = profileElement2.root instanceof UserDataProfileElement && profileElement2.root.profile.isDefault;
+      if (profileElement2.root.disabled || isSystemProfile) {
         nameInput.disable();
       } else {
         nameInput.enable();
       }
-      if (isDefaultProfile) {
-        nameInput.setTooltip(localize("defaultProfileName", "Name cannot be changed for the default profile"));
+      if (isSystemProfile) {
+        nameInput.setTooltip(localize("defaultProfileName", "Name cannot be changed for the built in profiles"));
       } else {
         nameInput.setTooltip(localize("profileName", "Profile Name"));
       }
@@ -1893,15 +1897,15 @@ let ChangeProfileAction = class ChangeProfileAction2 {
   static {
     __name(this, "ChangeProfileAction");
   }
-  constructor(item, userDataProfilesService) {
+  constructor(item, userDataProfilesService, uriIdentityService, environmentService) {
     this.item = item;
     this.userDataProfilesService = userDataProfilesService;
     this.id = "changeProfile";
     this.label = "Change Profile";
     this.class = ThemeIcon.asClassName(editIcon);
-    this.enabled = true;
     this.tooltip = localize("change profile", "Change Profile");
     this.checked = false;
+    this.enabled = !uriIdentityService.extUri.isEqual(item.workspace, environmentService.agentSessionsWorkspace);
   }
   run() {
   }
@@ -1923,7 +1927,9 @@ let ChangeProfileAction = class ChangeProfileAction2 {
   }
 };
 ChangeProfileAction = __decorate([
-  __param(1, IUserDataProfilesService)
+  __param(1, IUserDataProfilesService),
+  __param(2, IUriIdentityService),
+  __param(3, IEnvironmentService)
 ], ChangeProfileAction);
 let WorkspaceUriActionsColumnRenderer = class WorkspaceUriActionsColumnRenderer2 {
   static {
@@ -1935,11 +1941,12 @@ let WorkspaceUriActionsColumnRenderer = class WorkspaceUriActionsColumnRenderer2
   static {
     this.TEMPLATE_ID = "actions";
   }
-  constructor(userDataProfilesService, userDataProfileManagementService, contextMenuService, uriIdentityService) {
+  constructor(userDataProfilesService, userDataProfileManagementService, contextMenuService, uriIdentityService, environmentService) {
     this.userDataProfilesService = userDataProfilesService;
     this.userDataProfileManagementService = userDataProfileManagementService;
     this.contextMenuService = contextMenuService;
     this.uriIdentityService = uriIdentityService;
+    this.environmentService = environmentService;
     this.templateId = WorkspaceUriActionsColumnRenderer_1.TEMPLATE_ID;
   }
   renderTemplate(container) {
@@ -1964,7 +1971,7 @@ let WorkspaceUriActionsColumnRenderer = class WorkspaceUriActionsColumnRenderer2
     templateData.actionBar.clear();
     const actions = [];
     actions.push(this.createOpenAction(item));
-    actions.push(new ChangeProfileAction(item, this.userDataProfilesService));
+    actions.push(new ChangeProfileAction(item, this.userDataProfilesService, this.uriIdentityService, this.environmentService));
     actions.push(this.createDeleteAction(item));
     templateData.actionBar.push(actions, { icon: true });
   }
@@ -1979,10 +1986,11 @@ let WorkspaceUriActionsColumnRenderer = class WorkspaceUriActionsColumnRenderer2
     };
   }
   createDeleteAction(item) {
+    const isAgentSessionsWorkspace = this.uriIdentityService.extUri.isEqual(item.workspace, this.environmentService.agentSessionsWorkspace);
     return {
       label: "",
       class: ThemeIcon.asClassName(removeIcon),
-      enabled: this.userDataProfileManagementService.getDefaultProfileToUse().id !== item.profileElement.profile.id,
+      enabled: this.userDataProfileManagementService.getDefaultProfileToUse().id !== item.profileElement.profile.id && !isAgentSessionsWorkspace,
       id: "deleteTrustedUri",
       tooltip: localize("deleteTrustedUri", "Delete Path"),
       run: /* @__PURE__ */ __name(() => item.profileElement.updateWorkspaces([], [item.workspace]), "run")
@@ -1996,7 +2004,8 @@ WorkspaceUriActionsColumnRenderer = WorkspaceUriActionsColumnRenderer_1 = __deco
   __param(0, IUserDataProfilesService),
   __param(1, IUserDataProfileManagementService),
   __param(2, IContextMenuService),
-  __param(3, IUriIdentityService)
+  __param(3, IUriIdentityService),
+  __param(4, IEnvironmentService)
 ], WorkspaceUriActionsColumnRenderer);
 function getHostLabel(labelService, workspaceUri) {
   return workspaceUri.authority ? labelService.getHostLabel(workspaceUri.scheme, workspaceUri.authority) : localize("localAuthority", "Local");

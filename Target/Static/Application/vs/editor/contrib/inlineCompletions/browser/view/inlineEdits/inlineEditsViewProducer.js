@@ -17,7 +17,6 @@ import { IInstantiationService } from "../../../../../../platform/instantiation/
 import { observableCodeEditor } from "../../../../../browser/observableCodeEditor.js";
 import { Range } from "../../../../../common/core/range.js";
 import { TextReplacement, TextEdit } from "../../../../../common/core/edits/textEdit.js";
-import { TextModelText } from "../../../../../common/model/textModelText.js";
 import { InlineEditWithChanges } from "./inlineEditWithChanges.js";
 import { ModelPerInlineEdit } from "./inlineEditsModel.js";
 import { InlineEditsView } from "./inlineEditsView.js";
@@ -46,19 +45,19 @@ let InlineEditsViewAndDiffProducer = class InlineEditsViewAndDiffProducer2 exten
         return void 0;
       }
       const action = state.inlineSuggestion.action;
-      const text = new TextModelText(textModel);
       let diffEdits;
       if (action?.kind === "edit") {
         const editOffset = action.stringEdit;
+        const t = state.inlineSuggestion.originalTextRef.getTransformer();
         const edits = editOffset.replacements.map((e) => {
-          const innerEditRange = Range.fromPositions(textModel.getPositionAt(e.replaceRange.start), textModel.getPositionAt(e.replaceRange.endExclusive));
+          const innerEditRange = Range.fromPositions(t.getPosition(e.replaceRange.start), t.getPosition(e.replaceRange.endExclusive));
           return new TextReplacement(innerEditRange, e.newText);
         });
         diffEdits = new TextEdit(edits);
       } else {
         diffEdits = void 0;
       }
-      return new InlineEditWithChanges(text, action, diffEdits, model.primaryPosition.read(void 0), model.allPositions.read(void 0), state.inlineSuggestion.source.inlineSuggestions.commands ?? [], state.inlineSuggestion);
+      return new InlineEditWithChanges(state.inlineSuggestion.originalTextRef, action, diffEdits, model.primaryPosition.read(void 0), model.allPositions.read(void 0), state.inlineSuggestion.source.inlineSuggestions.commands ?? [], state.inlineSuggestion);
     });
     this._inlineEditModel = derived(this, (reader) => {
       const model = this._model.read(reader);

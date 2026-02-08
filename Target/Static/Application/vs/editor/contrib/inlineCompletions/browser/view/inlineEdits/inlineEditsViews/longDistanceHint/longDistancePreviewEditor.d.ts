@@ -10,11 +10,17 @@ import { DetailedLineRangeMapping } from '../../../../../../../common/diff/range
 import { ITextModel } from '../../../../../../../common/model.js';
 import { InlineSuggestionGutterMenuData, SimpleInlineSuggestModel } from '../../components/gutterIndicatorView.js';
 import { InlineEditTabAction } from '../../inlineEditsViewInterface.js';
+import { TextModelValueReference } from '../../../../model/textModelValueReference.js';
 export interface ILongDistancePreviewProps {
     nextCursorPosition: Position | null;
     diff: DetailedLineRangeMapping[];
     model: SimpleInlineSuggestModel;
     inlineSuggestInfo: InlineSuggestionGutterMenuData;
+    /**
+     * The URI of the file the edit targets.
+     * When undefined (or same as the editor's model URI), the edit targets the current file.
+     */
+    target: TextModelValueReference;
 }
 export declare class LongDistancePreviewEditor extends Disposable {
     private readonly _previewTextModel;

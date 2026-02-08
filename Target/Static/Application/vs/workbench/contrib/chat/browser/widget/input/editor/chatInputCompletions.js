@@ -13,7 +13,6 @@ var __param = function(paramIndex, decorator) {
 };
 var BuiltinDynamicCompletions_1, ToolCompletions_1;
 import { coalesce } from "../../../../../../../base/common/arrays.js";
-import { raceTimeout } from "../../../../../../../base/common/async.js";
 import { decodeBase64 } from "../../../../../../../base/common/buffer.js";
 import { CancellationTokenSource } from "../../../../../../../base/common/cancellation.js";
 import { Codicon } from "../../../../../../../base/common/codicons.js";
@@ -53,12 +52,12 @@ import { McpPromptArgumentPick } from "../../../../../mcp/browser/mcpPromptArgum
 import { IMcpService, McpResourceURI } from "../../../../../mcp/common/mcpTypes.js";
 import { searchFilesAndFolders } from "../../../../../search/browser/searchChatContext.js";
 import { IChatAgentNameService, IChatAgentService, getFullyQualifiedId } from "../../../../common/participants/chatAgents.js";
-import { IChatEditingService } from "../../../../common/editing/chatEditingService.js";
 import { getAttachableImageExtension } from "../../../../common/model/chatModel.js";
 import { ChatRequestAgentPart, ChatRequestAgentSubcommandPart, ChatRequestSlashPromptPart, ChatRequestTextPart, ChatRequestToolPart, ChatRequestToolSetPart, chatAgentLeader, chatSubcommandLeader, chatVariableLeader } from "../../../../common/requestParser/chatParserTypes.js";
 import { IChatSlashCommandService } from "../../../../common/participants/chatSlashCommands.js";
 import { ChatAgentLocation, ChatModeKind, isSupportedChatFileScheme } from "../../../../common/constants.js";
-import { ToolSet } from "../../../../common/tools/languageModelToolsService.js";
+import { isToolSet } from "../../../../common/tools/languageModelToolsService.js";
+import { IChatSessionsService } from "../../../../common/chatSessionsService.js";
 import { IPromptsService } from "../../../../common/promptSyntax/service/promptsService.js";
 import { ChatSubmitAction } from "../../../actions/chatExecuteActions.js";
 import { IChatWidgetService } from "../../../chat.js";
@@ -256,12 +255,13 @@ let AgentCompletions = class AgentCompletions2 extends Disposable {
   static {
     __name(this, "AgentCompletions");
   }
-  constructor(languageFeaturesService, chatWidgetService, chatAgentService, chatAgentNameService) {
+  constructor(languageFeaturesService, chatWidgetService, chatAgentService, chatAgentNameService, chatSessionsService) {
     super();
     this.languageFeaturesService = languageFeaturesService;
     this.chatWidgetService = chatWidgetService;
     this.chatAgentService = chatAgentService;
     this.chatAgentNameService = chatAgentNameService;
+    this.chatSessionsService = chatSessionsService;
     const subCommandProvider = {
       _debugDisplayName: "chatAgentSubcommand",
       triggerCharacters: [chatSubcommandLeader],
@@ -314,6 +314,9 @@ let AgentCompletions = class AgentCompletions2 extends Disposable {
           return;
         }
         const agents = this.chatAgentService.getAgents().filter((a) => a.locations.includes(widget.location));
+        const chatSessionContributions = this.chatSessionsService.getAllChatSessionContributions();
+        const chatSessionAgentIds = new Set(chatSessionContributions.map((contribution) => contribution.type));
+        const agentsForSlashCommands = agents.filter((a) => !chatSessionAgentIds.has(a.id));
         const getFilterText = /* @__PURE__ */ __name((agent, command) => {
           const dummyPrefix = agent.id === "github.copilot.terminalPanel" ? `0000` : ``;
           return `${chatAgentLeader}${dummyPrefix}${agent.name}.${command}`;
@@ -333,7 +336,7 @@ let AgentCompletions = class AgentCompletions2 extends Disposable {
           };
         });
         return {
-          suggestions: justAgents.concat(coalesce(agents.flatMap((agent) => agent.slashCommands.map((c, i) => {
+          suggestions: justAgents.concat(coalesce(agentsForSlashCommands.flatMap((agent) => agent.slashCommands.map((c, i) => {
             if (agent.isDefault && this.chatAgentService.getDefaultAgent(widget.location, widget.input.currentModeKind)?.id !== agent.id) {
               return;
             }
@@ -381,7 +384,7 @@ let AgentCompletions = class AgentCompletions2 extends Disposable {
         if (!isEmptyUpToCompletionWord(model, range)) {
           return;
         }
-        const agents = this.chatAgentService.getAgents().filter((a) => a.locations.includes(widget.location) && a.modes.includes(widget.input.currentModeKind));
+        const agents = this.chatAgentService.getAgents().filter((a) => a.locations.includes(widget.location) && a.modes.includes(widget.input.currentModeKind)).filter((a) => !this.chatSessionsService.getChatSessionContribution(a.id));
         return {
           suggestions: coalesce(agents.flatMap((agent) => agent.slashCommands.map((c, i) => {
             if (agent.isDefault && this.chatAgentService.getDefaultAgent(widget.location, widget.input.currentModeKind)?.id !== agent.id) {
@@ -487,7 +490,8 @@ AgentCompletions = __decorate([
   __param(0, ILanguageFeaturesService),
   __param(1, IChatWidgetService),
   __param(2, IChatAgentService),
-  __param(3, IChatAgentNameService)
+  __param(3, IChatAgentNameService),
+  __param(4, IChatSessionsService)
 ], AgentCompletions);
 Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
   AgentCompletions,
@@ -699,7 +703,7 @@ let BuiltinDynamicCompletions = class BuiltinDynamicCompletions2 extends Disposa
     this.VariableNameDef = new RegExp(`${chatVariableLeader}[\\w:-]*`, "g");
   }
   // MUST be using `g`-flag
-  constructor(historyService, workspaceContextService, searchService, labelService, languageFeaturesService, chatWidgetService, _chatEditingService, outlineService, editorService, configurationService, codeEditorService, chatAgentService, instantiationService) {
+  constructor(historyService, workspaceContextService, searchService, labelService, languageFeaturesService, chatWidgetService, outlineService, editorService, configurationService, codeEditorService, chatAgentService, instantiationService) {
     super();
     this.historyService = historyService;
     this.workspaceContextService = workspaceContextService;
@@ -707,7 +711,6 @@ let BuiltinDynamicCompletions = class BuiltinDynamicCompletions2 extends Disposa
     this.labelService = labelService;
     this.languageFeaturesService = languageFeaturesService;
     this.chatWidgetService = chatWidgetService;
-    this._chatEditingService = _chatEditingService;
     this.outlineService = outlineService;
     this.editorService = editorService;
     this.configurationService = configurationService;
@@ -879,17 +882,6 @@ let BuiltinDynamicCompletions = class BuiltinDynamicCompletions2 extends Disposa
         break;
       }
     }
-    if (widget.input.currentModeKind !== ChatModeKind.Ask && widget.viewModel && widget.viewModel.model.editingSession) {
-      const relatedFiles = await raceTimeout(this._chatEditingService.getRelatedFiles(widget.viewModel.sessionResource, widget.getInput(), widget.attachmentModel.fileAttachments, token), 200) ?? [];
-      for (const relatedFileGroup of relatedFiles) {
-        for (const relatedFile of relatedFileGroup.files) {
-          if (!seen.has(relatedFile.uri)) {
-            seen.add(relatedFile.uri);
-            result.suggestions.push(makeCompletionItem(relatedFile.uri, FileKind.FILE, relatedFile.description));
-          }
-        }
-      }
-    }
     if (pattern) {
       const cacheKey = this.updateCacheKey();
       const workspaces = this.workspaceContextService.getWorkspace().folders.map((folder) => folder.uri);
@@ -985,13 +977,12 @@ BuiltinDynamicCompletions = BuiltinDynamicCompletions_1 = __decorate([
   __param(3, ILabelService),
   __param(4, ILanguageFeaturesService),
   __param(5, IChatWidgetService),
-  __param(6, IChatEditingService),
-  __param(7, IOutlineModelService),
-  __param(8, IEditorService),
-  __param(9, IConfigurationService),
-  __param(10, ICodeEditorService),
-  __param(11, IChatAgentService),
-  __param(12, IInstantiationService)
+  __param(6, IOutlineModelService),
+  __param(7, IEditorService),
+  __param(8, IConfigurationService),
+  __param(9, ICodeEditorService),
+  __param(10, IChatAgentService),
+  __param(11, IInstantiationService)
 ], BuiltinDynamicCompletions);
 Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
   BuiltinDynamicCompletions,
@@ -1082,7 +1073,7 @@ let ToolCompletions = class ToolCompletions2 extends Disposable {
           let detail;
           let documentation;
           let name;
-          if (item instanceof ToolSet) {
+          if (isToolSet(item)) {
             detail = item.description;
             name = item.referenceName;
           } else {
@@ -1101,8 +1092,7 @@ let ToolCompletions = class ToolCompletions2 extends Disposable {
             detail,
             documentation,
             insertText: withLeader + " ",
-            kind: 27,
-            sortText: "z"
+            kind: 27
           });
         }
         return { suggestions };

@@ -2798,6 +2798,15 @@ class ChatResponseMultiDiffPart {
     this.readOnly = readOnly;
   }
 }
+class McpToolInvocationContentData {
+  static {
+    __name(this, "McpToolInvocationContentData");
+  }
+  constructor(data, mimeType) {
+    this.data = data;
+    this.mimeType = mimeType;
+  }
+}
 class ChatResponseExternalEditPart {
   static {
     __name(this, "ChatResponseExternalEditPart");
@@ -2934,6 +2943,35 @@ class ChatResponsePullRequestPart {
     };
   }
 }
+var ChatQuestionType;
+(function(ChatQuestionType2) {
+  ChatQuestionType2[ChatQuestionType2["Text"] = 1] = "Text";
+  ChatQuestionType2[ChatQuestionType2["SingleSelect"] = 2] = "SingleSelect";
+  ChatQuestionType2[ChatQuestionType2["MultiSelect"] = 3] = "MultiSelect";
+})(ChatQuestionType || (ChatQuestionType = {}));
+class ChatQuestion {
+  static {
+    __name(this, "ChatQuestion");
+  }
+  constructor(id, type, title, options) {
+    this.id = id;
+    this.type = type;
+    this.title = title;
+    this.message = options?.message;
+    this.options = options?.options;
+    this.defaultValue = options?.defaultValue;
+    this.allowFreeformInput = options?.allowFreeformInput;
+  }
+}
+class ChatResponseQuestionCarouselPart {
+  static {
+    __name(this, "ChatResponseQuestionCarouselPart");
+  }
+  constructor(questions, allowSkip = true) {
+    this.questions = questions;
+    this.allowSkip = allowSkip;
+  }
+}
 class ChatResponseTextEditPart {
   static {
     __name(this, "ChatResponseTextEditPart");
@@ -2962,6 +3000,20 @@ class ChatResponseNotebookEditPart {
     }
   }
 }
+class ChatResponseWorkspaceEditPart {
+  static {
+    __name(this, "ChatResponseWorkspaceEditPart");
+  }
+  constructor(edits) {
+    this.edits = edits;
+  }
+}
+var ChatTodoStatus;
+(function(ChatTodoStatus2) {
+  ChatTodoStatus2[ChatTodoStatus2["NotStarted"] = 1] = "NotStarted";
+  ChatTodoStatus2[ChatTodoStatus2["InProgress"] = 2] = "InProgress";
+  ChatTodoStatus2[ChatTodoStatus2["Completed"] = 3] = "Completed";
+})(ChatTodoStatus || (ChatTodoStatus = {}));
 class ChatToolInvocationPart {
   static {
     __name(this, "ChatToolInvocationPart");
@@ -3030,6 +3082,18 @@ class ChatSessionChangedFile {
     this.insertions = insertions;
     this.deletions = deletions;
     this.originalUri = originalUri;
+  }
+}
+class ChatSessionChangedFile2 {
+  static {
+    __name(this, "ChatSessionChangedFile2");
+  }
+  constructor(uri, originalUri, modifiedUri, insertions, deletions) {
+    this.uri = uri;
+    this.originalUri = originalUri;
+    this.modifiedUri = modifiedUri;
+    this.insertions = insertions;
+    this.deletions = deletions;
   }
 }
 var ChatResponseReferencePartStatusKind;
@@ -3398,6 +3462,11 @@ var SettingsSearchResultKind;
   SettingsSearchResultKind2[SettingsSearchResultKind2["LLM_RANKED"] = 2] = "LLM_RANKED";
   SettingsSearchResultKind2[SettingsSearchResultKind2["CANCELED"] = 3] = "CANCELED";
 })(SettingsSearchResultKind || (SettingsSearchResultKind = {}));
+var ChatHookResultKind;
+(function(ChatHookResultKind2) {
+  ChatHookResultKind2[ChatHookResultKind2["Success"] = 1] = "Success";
+  ChatHookResultKind2[ChatHookResultKind2["Error"] = 2] = "Error";
+})(ChatHookResultKind || (ChatHookResultKind = {}));
 var SpeechToTextStatus;
 (function(SpeechToTextStatus2) {
   SpeechToTextStatus2[SpeechToTextStatus2["Started"] = 1] = "Started";
@@ -3448,50 +3517,6 @@ class McpHttpServerDefinition {
     this.authentication = authentication;
   }
 }
-let CustomAgentChatResource = class CustomAgentChatResource2 {
-  static {
-    __name(this, "CustomAgentChatResource");
-  }
-  constructor(resource) {
-    this.resource = resource;
-  }
-};
-CustomAgentChatResource = __decorate([
-  es5ClassCompat
-], CustomAgentChatResource);
-let InstructionsChatResource = class InstructionsChatResource2 {
-  static {
-    __name(this, "InstructionsChatResource");
-  }
-  constructor(resource) {
-    this.resource = resource;
-  }
-};
-InstructionsChatResource = __decorate([
-  es5ClassCompat
-], InstructionsChatResource);
-let PromptFileChatResource = class PromptFileChatResource2 {
-  static {
-    __name(this, "PromptFileChatResource");
-  }
-  constructor(resource) {
-    this.resource = resource;
-  }
-};
-PromptFileChatResource = __decorate([
-  es5ClassCompat
-], PromptFileChatResource);
-let SkillChatResource = class SkillChatResource2 {
-  static {
-    __name(this, "SkillChatResource");
-  }
-  constructor(resource) {
-    this.resource = resource;
-  }
-};
-SkillChatResource = __decorate([
-  es5ClassCompat
-], SkillChatResource);
 export {
   BranchCoverage,
   Breakpoint,
@@ -3504,8 +3529,11 @@ export {
   ChatEditingSessionActionOutcome,
   ChatEditorTabInput,
   ChatErrorLevel,
+  ChatHookResultKind,
   ChatImageMimeType,
   ChatLocation,
+  ChatQuestion,
+  ChatQuestionType,
   ChatReferenceBinaryData,
   ChatReferenceDiagnostic,
   ChatRequestEditedFileEventKind,
@@ -3529,6 +3557,7 @@ export {
   ChatResponseProgressPart,
   ChatResponseProgressPart2,
   ChatResponsePullRequestPart,
+  ChatResponseQuestionCarouselPart,
   ChatResponseReferencePart,
   ChatResponseReferencePartStatusKind,
   ChatResponseTextEditPart,
@@ -3536,9 +3565,12 @@ export {
   ChatResponseTurn,
   ChatResponseTurn2,
   ChatResponseWarningPart,
+  ChatResponseWorkspaceEditPart,
   ChatResultFeedbackKind,
   ChatSessionChangedFile,
+  ChatSessionChangedFile2,
   ChatSessionStatus,
+  ChatTodoStatus,
   ChatToolInvocationPart,
   ChatVariableLevel,
   CodeAction,
@@ -3563,7 +3595,6 @@ export {
   CompletionList,
   CompletionTriggerKind,
   ConfigurationTarget,
-  CustomAgentChatResource,
   CustomEditorTabInput,
   CustomExecution,
   DataBreakpoint,
@@ -3625,7 +3656,6 @@ export {
   InlineValueText,
   InlineValueVariableLookup,
   InputBoxValidationSeverity,
-  InstructionsChatResource,
   InteractiveEditorResponseFeedbackKind,
   InteractiveSessionVoteDirection,
   InteractiveWindowInput,
@@ -3659,6 +3689,7 @@ export {
   McpHttpServerDefinition,
   McpStdioServerDefinition,
   McpToolAvailability,
+  McpToolInvocationContentData,
   MultiDocumentHighlight,
   NewSymbolName,
   NewSymbolNameTag,
@@ -3688,7 +3719,6 @@ export {
   Position,
   ProcessExecution,
   ProgressLocation,
-  PromptFileChatResource,
   QuickInputButtonLocation,
   QuickInputButtons,
   QuickPickItemKind,
@@ -3710,7 +3740,6 @@ export {
   SignatureHelp,
   SignatureHelpTriggerKind,
   SignatureInformation,
-  SkillChatResource,
   SnippetString,
   SnippetTextEdit,
   SourceBreakpoint,

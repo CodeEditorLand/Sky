@@ -8,11 +8,11 @@ import { IProgressService } from '../../../../../platform/progress/common/progre
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
 import { IActivityService } from '../../../../services/activity/common/activity.js';
-import { IAuthenticationService } from '../../../../services/authentication/common/authentication.js';
 import { ILifecycleService } from '../../../../services/lifecycle/common/lifecycle.js';
 import { IExtensionsWorkbenchService } from '../../../extensions/common/extensions.js';
 import { ChatEntitlementContext, ChatEntitlementRequests } from '../../../../services/chat/common/chatEntitlementService.js';
 import { ChatSetupAnonymous, ChatSetupStep, ChatSetupResultValue } from './chatSetup.js';
+import { IDefaultAccountService } from '../../../../../platform/defaultAccount/common/defaultAccount.js';
 export interface IChatSetupControllerOptions {
     readonly forceSignIn?: boolean;
     readonly useSocialProvider?: string;
@@ -24,7 +24,6 @@ export declare class ChatSetupController extends Disposable {
     private readonly context;
     private readonly requests;
     private readonly telemetryService;
-    private readonly authenticationService;
     private readonly extensionsWorkbenchService;
     private readonly productService;
     private readonly logService;
@@ -35,11 +34,12 @@ export declare class ChatSetupController extends Disposable {
     private readonly configurationService;
     private readonly lifecycleService;
     private readonly quickInputService;
+    private readonly defaultAccountService;
     private readonly _onDidChange;
     readonly onDidChange: import("../../../../../base/common/event.js").Event<void>;
     private _step;
     get step(): ChatSetupStep;
-    constructor(context: ChatEntitlementContext, requests: ChatEntitlementRequests, telemetryService: ITelemetryService, authenticationService: IAuthenticationService, extensionsWorkbenchService: IExtensionsWorkbenchService, productService: IProductService, logService: ILogService, progressService: IProgressService, activityService: IActivityService, commandService: ICommandService, dialogService: IDialogService, configurationService: IConfigurationService, lifecycleService: ILifecycleService, quickInputService: IQuickInputService);
+    constructor(context: ChatEntitlementContext, requests: ChatEntitlementRequests, telemetryService: ITelemetryService, extensionsWorkbenchService: IExtensionsWorkbenchService, productService: IProductService, logService: ILogService, progressService: IProgressService, activityService: IActivityService, commandService: ICommandService, dialogService: IDialogService, configurationService: IConfigurationService, lifecycleService: ILifecycleService, quickInputService: IQuickInputService, defaultAccountService: IDefaultAccountService);
     private registerListeners;
     private setStep;
     setup(options?: IChatSetupControllerOptions): Promise<ChatSetupResultValue>;

@@ -7,7 +7,7 @@ import { StandardMouseEvent } from "./mouseEvent.js";
 import { AbstractIdleValue, IntervalTimer, TimeoutTimer, _runWhenIdle } from "../common/async.js";
 import { BugIndicatingError, onUnexpectedError } from "../common/errors.js";
 import * as event from "../common/event.js";
-import { Disposable, DisposableStore, toDisposable } from "../common/lifecycle.js";
+import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../common/lifecycle.js";
 import { RemoteAuthorities } from "../common/network.js";
 import * as platform from "../common/platform.js";
 import { URI } from "../common/uri.js";
@@ -82,6 +82,45 @@ const { registerWindow, getWindow, getDocument, getWindows, getWindowsCount, get
     }
   };
 })();
+const externalFocusCheckers = /* @__PURE__ */ new Set();
+function registerExternalFocusChecker(checker) {
+  externalFocusCheckers.add(checker);
+  return toDisposable(() => {
+    externalFocusCheckers.delete(checker);
+  });
+}
+__name(registerExternalFocusChecker, "registerExternalFocusChecker");
+function hasExternalFocus() {
+  for (const checker of externalFocusCheckers) {
+    if (checker().hasFocus) {
+      return true;
+    }
+  }
+  return false;
+}
+__name(hasExternalFocus, "hasExternalFocus");
+function getExternalFocusWindow() {
+  for (const checker of externalFocusCheckers) {
+    const info = checker();
+    if (info.hasFocus && info.window) {
+      return info.window;
+    }
+  }
+  return void 0;
+}
+__name(getExternalFocusWindow, "getExternalFocusWindow");
+function hasAppFocus() {
+  for (const { window } of getWindows()) {
+    if (window.document.hasFocus()) {
+      return true;
+    }
+  }
+  if (hasExternalFocus()) {
+    return true;
+  }
+  return false;
+}
+__name(hasAppFocus, "hasAppFocus");
 function clearNode(node) {
   while (node.firstChild) {
     node.firstChild.remove();
@@ -291,6 +330,45 @@ function modify(targetWindow, callback) {
   );
 }
 __name(modify, "modify");
+class AnimationFrameScheduler {
+  static {
+    __name(this, "AnimationFrameScheduler");
+  }
+  constructor(node, runner) {
+    this.pendingRunner = new MutableDisposable();
+    this.node = node;
+    this.runner = runner;
+  }
+  dispose() {
+    this.pendingRunner.dispose();
+  }
+  /**
+   * Cancel the currently scheduled runner (if any).
+   */
+  cancel() {
+    this.pendingRunner.clear();
+  }
+  /**
+   * Schedule the runner to execute at the next animation frame.
+   * If already scheduled, this is a no-op (the existing schedule is kept).
+   * If currently in an animation frame, the runner will execute immediately.
+   */
+  schedule() {
+    if (this.pendingRunner.value) {
+      return;
+    }
+    this.pendingRunner.value = runAtThisOrScheduleAtNextAnimationFrame(getWindow(this.node), () => {
+      this.pendingRunner.clear();
+      this.runner();
+    });
+  }
+  /**
+   * Returns true if a runner is scheduled.
+   */
+  isScheduled() {
+    return this.pendingRunner.value !== void 0;
+  }
+}
 const MINIMUM_TIME_MS = 8;
 function DEFAULT_EVENT_MERGER(_lastEvent, currentEvent) {
   return currentEvent;
@@ -672,7 +750,15 @@ function getActiveDocument() {
     return mainWindow.document;
   }
   const documents = Array.from(getWindows()).map(({ window }) => window.document);
-  return documents.find((doc) => doc.hasFocus()) ?? mainWindow.document;
+  const focusedDoc = documents.find((doc) => doc.hasFocus());
+  if (focusedDoc) {
+    return focusedDoc;
+  }
+  const externalWindow = getExternalFocusWindow();
+  if (externalWindow) {
+    return externalWindow.document;
+  }
+  return mainWindow.document;
 }
 __name(getActiveDocument, "getActiveDocument");
 function getActiveWindow() {
@@ -1169,30 +1255,6 @@ function triggerUpload() {
   });
 }
 __name(triggerUpload, "triggerUpload");
-function sanitizeNotificationText(text) {
-  return text.replace(/`/g, "'");
-}
-__name(sanitizeNotificationText, "sanitizeNotificationText");
-async function triggerNotification(message, options) {
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    return;
-  }
-  const disposables = new DisposableStore();
-  const notification = new Notification(sanitizeNotificationText(message), {
-    body: options?.detail ? sanitizeNotificationText(options.detail) : void 0,
-    requireInteraction: options?.sticky
-  });
-  const onClick = new event.Emitter();
-  disposables.add(addDisposableListener(notification, "click", () => onClick.fire()));
-  disposables.add(addDisposableListener(notification, "close", () => disposables.dispose()));
-  disposables.add(toDisposable(() => notification.close()));
-  return {
-    onClick: onClick.event,
-    dispose: /* @__PURE__ */ __name(() => disposables.dispose(), "dispose")
-  };
-}
-__name(triggerNotification, "triggerNotification");
 var DetectedFullscreenMode;
 (function(DetectedFullscreenMode2) {
   DetectedFullscreenMode2[DetectedFullscreenMode2["DOCUMENT"] = 1] = "DOCUMENT";
@@ -1406,9 +1468,7 @@ class DisposableResizeObserver extends Disposable {
   }
   observe(target, options) {
     this.observer.observe(target, options);
-  }
-  unobserve(target) {
-    this.observer.unobserve(target);
+    return toDisposable(() => this.observer.unobserve(target));
   }
 }
 const H_REGEX = /(?<tag>[\w\-]+)?(?:#(?<id>[\w\-]+))?(?<class>(?:\.(?:[\w\-]+))*)(?:@(?<name>(?:[\w\_])+))?/;
@@ -1898,8 +1958,24 @@ function setOrRemoveAttribute(element, key, value) {
   }
 }
 __name(setOrRemoveAttribute, "setOrRemoveAttribute");
+class ConnectionObserverElement extends HTMLElement {
+  static {
+    __name(this, "ConnectionObserverElement");
+  }
+  disconnectedCallback() {
+    this.onDidDisconnect?.();
+  }
+  connectedCallback() {
+    this.onDidConnect?.();
+  }
+}
+if (!customElements.get("connection-observer")) {
+  customElements.define("connection-observer", ConnectionObserverElement);
+}
 export {
   $,
+  AnimationFrameScheduler,
+  ConnectionObserverElement,
   DetectedFullscreenMode,
   Dimension,
   DisposableResizeObserver,
@@ -1946,6 +2022,7 @@ export {
   getDocument,
   getDomNodePagePosition,
   getDomNodeZoomLevel,
+  getExternalFocusWindow,
   getLargestChildWidth,
   getShadowRoot,
   getTopLeftOffset,
@@ -1958,6 +2035,8 @@ export {
   getWindows,
   getWindowsCount,
   h,
+  hasAppFocus,
+  hasExternalFocus,
   hasParentWithClass,
   hasWindow,
   hide,
@@ -1992,6 +2071,7 @@ export {
   onWillUnregisterWindow,
   position,
   prepend,
+  registerExternalFocusChecker,
   registerWindow,
   removeTabIndexAndUpdateFocus,
   reset,
@@ -2009,7 +2089,6 @@ export {
   trackAttributes,
   trackFocus,
   triggerDownload,
-  triggerNotification,
   triggerUpload,
   windowOpenNoOpener,
   windowOpenPopup,

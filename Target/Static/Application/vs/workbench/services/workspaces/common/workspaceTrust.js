@@ -31,6 +31,7 @@ import { isEqualAuthority } from "../../../../base/common/resources.js";
 import { isWeb } from "../../../../base/common/platform.js";
 import { IFileService } from "../../../../platform/files/common/files.js";
 import { promiseWithResolvers } from "../../../../base/common/async.js";
+import { ResourceMap } from "../../../../base/common/map.js";
 const WORKSPACE_TRUST_ENABLED = "security.workspace.trust.enabled";
 const WORKSPACE_TRUST_STARTUP_PROMPT = "security.workspace.trust.startupPrompt";
 const WORKSPACE_TRUST_BANNER = "security.workspace.trust.banner";
@@ -291,6 +292,9 @@ let WorkspaceTrustManagementService = class WorkspaceTrustManagementService2 ext
     if (!this.workspaceTrustEnablementService.isWorkspaceTrustEnabled()) {
       return { trusted: true, uri };
     }
+    if (this.uriIdentityService.extUri.isEqual(uri, this.environmentService.agentSessionsWorkspace)) {
+      return { trusted: true, uri };
+    }
     if (this.isTrustedVirtualResource(uri)) {
       return { trusted: true, uri };
     }
@@ -519,8 +523,12 @@ let WorkspaceTrustRequestService = class WorkspaceTrustRequestService2 extends D
     super();
     this.configurationService = configurationService;
     this.workspaceTrustManagementService = workspaceTrustManagementService;
+    this._resourcesTrustRequestPromises = new ResourceMap();
+    this._resourcesTrustRequestResolvers = new ResourceMap();
     this._onDidInitiateOpenFilesTrustRequest = this._register(new Emitter());
     this.onDidInitiateOpenFilesTrustRequest = this._onDidInitiateOpenFilesTrustRequest.event;
+    this._onDidInitiateResourcesTrustRequest = this._register(new Emitter());
+    this.onDidInitiateResourcesTrustRequest = this._onDidInitiateResourcesTrustRequest.event;
     this._onDidInitiateWorkspaceTrustRequest = this._register(new Emitter());
     this.onDidInitiateWorkspaceTrustRequest = this._onDidInitiateWorkspaceTrustRequest.event;
     this._onDidInitiateWorkspaceTrustRequestOnStartup = this._register(new Emitter());
@@ -580,6 +588,35 @@ let WorkspaceTrustRequestService = class WorkspaceTrustRequestService2 extends D
     }
     this._onDidInitiateOpenFilesTrustRequest.fire();
     return this._openFilesTrustRequestPromise;
+  }
+  //#endregion
+  //#region Resource(s) trust request
+  async completeResourcesTrustRequest(uri, result) {
+    const resolver = this._resourcesTrustRequestResolvers.get(uri);
+    if (!resolver) {
+      return;
+    }
+    const trusted = result === 1;
+    await this.workspaceTrustManagementService.setUrisTrust([uri], trusted);
+    resolver(trusted);
+    this._resourcesTrustRequestResolvers.delete(uri);
+    this._resourcesTrustRequestPromises.delete(uri);
+  }
+  async requestResourcesTrust(options) {
+    const resourcesTrustInfo = await this.workspaceTrustManagementService.getUriTrustInfo(options.uri);
+    if (resourcesTrustInfo.trusted) {
+      return true;
+    }
+    const existingPromise = this._resourcesTrustRequestPromises.get(options.uri);
+    if (existingPromise) {
+      return existingPromise;
+    }
+    const promise = new Promise((resolve) => {
+      this._resourcesTrustRequestResolvers.set(options.uri, resolve);
+    });
+    this._resourcesTrustRequestPromises.set(options.uri, promise);
+    this._onDidInitiateResourcesTrustRequest.fire(options);
+    return promise;
   }
   //#endregion
   //#region Workspace trust request

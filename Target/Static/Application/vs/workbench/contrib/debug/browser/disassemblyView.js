@@ -505,7 +505,18 @@ let DisassemblyView = class DisassemblyView2 extends EditorPane {
     this._instructionBpList = this._debugService.getModel().getInstructionBreakpoints();
     this.loadDisassembledInstructions(instructionReference, offset, -DisassemblyView_1.NUM_INSTRUCTIONS_TO_LOAD * 4, DisassemblyView_1.NUM_INSTRUCTIONS_TO_LOAD * 8).then(() => {
       if (this._disassembledInstructions.length > 0) {
-        const targetIndex = Math.floor(this._disassembledInstructions.length / 2);
+        let targetIndex = void 0;
+        const refBaseAddress = this._referenceToMemoryAddress.get(instructionReference);
+        if (refBaseAddress !== void 0) {
+          const da = this._disassembledInstructions;
+          targetIndex = binarySearch2(da.length, (i) => Number(da.row(i).address - refBaseAddress));
+          if (targetIndex < 0) {
+            targetIndex = ~targetIndex;
+          }
+        }
+        if (targetIndex === void 0) {
+          targetIndex = Math.floor(this._disassembledInstructions.length / 2);
+        }
         this._disassembledInstructions.reveal(targetIndex, 0.5);
         this._disassembledInstructions.domFocus();
         this._disassembledInstructions.setFocus([targetIndex]);

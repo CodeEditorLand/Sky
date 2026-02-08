@@ -15,6 +15,18 @@ import { Disposable } from "../../../base/common/lifecycle.js";
 import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
 import { ExtHostContext, MainContext } from "../common/extHost.protocol.js";
 import { IChatContextService } from "../../contrib/chat/browser/contextContrib/chatContextService.js";
+import { URI } from "../../../base/common/uri.js";
+function reviveContextItem(item) {
+  return {
+    ...item,
+    resourceUri: item.resourceUri ? URI.revive(item.resourceUri) : void 0
+  };
+}
+__name(reviveContextItem, "reviveContextItem");
+function reviveContextItems(items) {
+  return items.map(reviveContextItem);
+}
+__name(reviveContextItems, "reviveContextItems");
 let MainThreadChatContext = class MainThreadChatContext2 extends Disposable {
   static {
     __name(this, "MainThreadChatContext");
@@ -26,18 +38,39 @@ let MainThreadChatContext = class MainThreadChatContext2 extends Disposable {
     this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostChatContext);
     this._chatContextService.setExecuteCommandCallback((itemHandle) => this._proxy.$executeChatContextItemCommand(itemHandle));
   }
-  $registerChatContextProvider(handle, id, selector, _options, support) {
-    this._providers.set(handle, { selector, support, id });
-    this._chatContextService.registerChatContextProvider(id, selector, {
-      provideChatContext: /* @__PURE__ */ __name((_options2, token) => {
-        return this._proxy.$provideChatContext(handle, token);
+  $registerChatWorkspaceContextProvider(handle, id) {
+    this._providers.set(handle, { id });
+    this._chatContextService.registerChatWorkspaceContextProvider(id, {
+      provideWorkspaceChatContext: /* @__PURE__ */ __name(async (token) => {
+        const items = await this._proxy.$provideWorkspaceChatContext(handle, token);
+        return reviveContextItems(items);
+      }, "provideWorkspaceChatContext")
+    });
+  }
+  $registerChatExplicitContextProvider(handle, id) {
+    this._providers.set(handle, { id });
+    this._chatContextService.registerChatExplicitContextProvider(id, {
+      provideChatContext: /* @__PURE__ */ __name(async (token) => {
+        const items = await this._proxy.$provideExplicitChatContext(handle, token);
+        return reviveContextItems(items);
       }, "provideChatContext"),
-      resolveChatContext: support.supportsResolve ? (context, token) => {
-        return this._proxy.$resolveChatContext(handle, context, token);
-      } : void 0,
-      provideChatContextForResource: support.supportsResource ? (resource, withValue, token) => {
-        return this._proxy.$provideChatContextForResource(handle, { resource, withValue }, token);
-      } : void 0
+      resolveChatContext: /* @__PURE__ */ __name(async (context, token) => {
+        const result = await this._proxy.$resolveExplicitChatContext(handle, context, token);
+        return reviveContextItem(result);
+      }, "resolveChatContext")
+    });
+  }
+  $registerChatResourceContextProvider(handle, id, selector) {
+    this._providers.set(handle, { id, selector });
+    this._chatContextService.registerChatResourceContextProvider(id, selector, {
+      provideChatContext: /* @__PURE__ */ __name(async (resource, withValue, token) => {
+        const result = await this._proxy.$provideResourceChatContext(handle, { resource, withValue }, token);
+        return result ? reviveContextItem(result) : void 0;
+      }, "provideChatContext"),
+      resolveChatContext: /* @__PURE__ */ __name(async (context, token) => {
+        const result = await this._proxy.$resolveResourceChatContext(handle, context, token);
+        return reviveContextItem(result);
+      }, "resolveChatContext")
     });
   }
   $unregisterChatContextProvider(handle) {
@@ -53,7 +86,7 @@ let MainThreadChatContext = class MainThreadChatContext2 extends Disposable {
     if (!provider) {
       return;
     }
-    this._chatContextService.updateWorkspaceContextItems(provider.id, items);
+    this._chatContextService.updateWorkspaceContextItems(provider.id, reviveContextItems(items));
   }
   $executeChatContextItemCommand(itemHandle) {
     return this._proxy.$executeChatContextItemCommand(itemHandle);

@@ -29,5 +29,5 @@ export declare class PromptHeaderAutocompletion implements CompletionItemProvide
     private provideValueCompletions;
     private getValueSuggestions;
     private getModelNames;
-    private provideToolCompletions;
+    private provideArrayCompletions;
 }

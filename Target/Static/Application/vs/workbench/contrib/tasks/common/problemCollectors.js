@@ -355,7 +355,11 @@ class WatchingProblemCollector extends AbstractProblemCollector {
     });
     this.modelListeners.add(this.modelService.onModelRemoved((modelEvent) => {
       let markerChanged = Event.debounce(this.markerService.onMarkerChanged, (last, e) => (last ?? []).concat(e), 500, false, true)(async (markerEvent) => {
-        if (!markerEvent || !markerEvent.includes(modelEvent.uri) || this.markerService.read({ resource: modelEvent.uri }).length !== 0) {
+        if (markerEvent.length === 0) {
+          return;
+        }
+        const modelEventUriStr = modelEvent.uri.toString();
+        if (!markerEvent.some((uri) => uri.toString() === modelEventUriStr) || this.markerService.read({ resource: modelEvent.uri }).length !== 0) {
           return;
         }
         const oldLines = Array.from(this.lines);

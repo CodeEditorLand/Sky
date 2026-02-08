@@ -90,8 +90,10 @@ import { TunnelSource } from "../services/remote/common/tunnelModel.js";
 import { mainWindow } from "../../base/browser/window.js";
 import { INotificationService, Severity } from "../../platform/notification/common/notification.js";
 import { IDefaultAccountService } from "../../platform/defaultAccount/common/defaultAccount.js";
-import { DefaultAccountService } from "../services/accounts/common/defaultAccount.js";
+import { DefaultAccountService } from "../services/accounts/browser/defaultAccount.js";
 import { AccountPolicyService } from "../services/policies/common/accountPolicyService.js";
+import { WorkbenchModeService } from "../services/layout/browser/workbenchModeService.js";
+import { IWorkbenchModeService } from "../services/layout/common/workbenchModeService.js";
 class BrowserMain extends Disposable {
   static {
     __name(this, "BrowserMain");
@@ -259,7 +261,7 @@ class BrowserMain extends Disposable {
     const remoteAgentService = this._register(new RemoteAgentService(remoteSocketFactoryService, userDataProfileService, environmentService, productService, remoteAuthorityResolverService, signService, logService));
     serviceCollection.set(IRemoteAgentService, remoteAgentService);
     this._register(RemoteFileSystemProviderClient.register(remoteAgentService, fileService, logService));
-    const defaultAccountService = this._register(new DefaultAccountService());
+    const defaultAccountService = this._register(new DefaultAccountService(productService));
     serviceCollection.set(IDefaultAccountService, defaultAccountService);
     const policyService = new AccountPolicyService(logService, defaultAccountService);
     serviceCollection.set(IPolicyService, policyService);
@@ -274,6 +276,13 @@ class BrowserMain extends Disposable {
         return service;
       })
     ]);
+    const workbenchModeService = this._register(new WorkbenchModeService(configurationService, fileService, environmentService, uriIdentityService, logService, storageService));
+    serviceCollection.set(IWorkbenchModeService, workbenchModeService);
+    try {
+      await workbenchModeService.initialize();
+    } catch (error) {
+      logService.error("Error while initializing workbench mode service", error);
+    }
     const workspaceTrustEnablementService = new WorkspaceTrustEnablementService(configurationService, environmentService);
     serviceCollection.set(IWorkspaceTrustEnablementService, workspaceTrustEnablementService);
     const workspaceTrustManagementService = new WorkspaceTrustManagementService(configurationService, remoteAuthorityResolverService, storageService, uriIdentityService, environmentService, configurationService, workspaceTrustEnablementService, fileService);

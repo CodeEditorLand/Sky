@@ -41,7 +41,7 @@ function fromNow(date, appendAgoLabel, useFullTimeWords, disallowNow) {
     }
   }
   if (seconds < hour) {
-    value = Math.floor(seconds / minute);
+    value = Math.round(seconds / minute);
     if (appendAgoLabel) {
       if (value === 1) {
         return useFullTimeWords ? localize("date.fromNow.minutes.singular.ago.fullWord", "{0} minute ago", value) : localize("date.fromNow.minutes.singular.ago", "{0} min ago", value);
@@ -57,7 +57,7 @@ function fromNow(date, appendAgoLabel, useFullTimeWords, disallowNow) {
     }
   }
   if (seconds < day) {
-    value = Math.floor(seconds / hour);
+    value = Math.round(seconds / hour);
     if (appendAgoLabel) {
       if (value === 1) {
         return useFullTimeWords ? localize("date.fromNow.hours.singular.ago.fullWord", "{0} hour ago", value) : localize("date.fromNow.hours.singular.ago", "{0} hr ago", value);
@@ -73,7 +73,7 @@ function fromNow(date, appendAgoLabel, useFullTimeWords, disallowNow) {
     }
   }
   if (seconds < week) {
-    value = Math.floor(seconds / day);
+    value = Math.round(seconds / day);
     if (appendAgoLabel) {
       return value === 1 ? localize("date.fromNow.days.singular.ago", "{0} day ago", value) : localize("date.fromNow.days.plural.ago", "{0} days ago", value);
     } else {
@@ -81,7 +81,7 @@ function fromNow(date, appendAgoLabel, useFullTimeWords, disallowNow) {
     }
   }
   if (seconds < month) {
-    value = Math.floor(seconds / week);
+    value = Math.round(seconds / week);
     if (appendAgoLabel) {
       if (value === 1) {
         return useFullTimeWords ? localize("date.fromNow.weeks.singular.ago.fullWord", "{0} week ago", value) : localize("date.fromNow.weeks.singular.ago", "{0} wk ago", value);
@@ -97,7 +97,7 @@ function fromNow(date, appendAgoLabel, useFullTimeWords, disallowNow) {
     }
   }
   if (seconds < year) {
-    value = Math.floor(seconds / month);
+    value = Math.round(seconds / month);
     if (appendAgoLabel) {
       if (value === 1) {
         return useFullTimeWords ? localize("date.fromNow.months.singular.ago.fullWord", "{0} month ago", value) : localize("date.fromNow.months.singular.ago", "{0} mo ago", value);
@@ -112,7 +112,7 @@ function fromNow(date, appendAgoLabel, useFullTimeWords, disallowNow) {
       }
     }
   }
-  value = Math.floor(seconds / year);
+  value = Math.round(seconds / year);
   if (appendAgoLabel) {
     if (value === 1) {
       return useFullTimeWords ? localize("date.fromNow.years.singular.ago.fullWord", "{0} year ago", value) : localize("date.fromNow.years.singular.ago", "{0} yr ago", value);

@@ -12,11 +12,12 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import * as dom from "../../../base/browser/dom.js";
+import { ActionBar } from "../../../base/browser/ui/actionbar/actionbar.js";
 import { KeybindingLabel } from "../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
 import { List } from "../../../base/browser/ui/list/listWidget.js";
 import { CancellationTokenSource } from "../../../base/common/cancellation.js";
 import { Codicon } from "../../../base/common/codicons.js";
-import { Disposable } from "../../../base/common/lifecycle.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
 import { OS } from "../../../base/common/platform.js";
 import { ThemeIcon } from "../../../base/common/themables.js";
 import "./actionWidget.css";
@@ -26,6 +27,8 @@ import { IKeybindingService } from "../../keybinding/common/keybinding.js";
 import { defaultListStyles } from "../../theme/browser/defaultStyles.js";
 import { asCssVariable } from "../../theme/common/colorRegistry.js";
 import { ILayoutService } from "../../layout/browser/layoutService.js";
+import { IHoverService } from "../../hover/browser/hover.js";
+import { MarkdownString } from "../../../base/common/htmlContent.js";
 const acceptSelectedActionCommand = "acceptSelectedCodeAction";
 const previewSelectedActionCommand = "previewSelectedCodeAction";
 var ActionListItemKind;
@@ -95,9 +98,14 @@ let ActionItemRenderer = class ActionItemRenderer2 {
     description.className = "description";
     container.append(description);
     const keybinding = new KeybindingLabel(container, OS);
-    return { container, icon, text, description, keybinding };
+    const toolbar = document.createElement("div");
+    toolbar.className = "action-list-item-toolbar";
+    container.append(toolbar);
+    const elementDisposables = new DisposableStore();
+    return { container, icon, text, description, keybinding, toolbar, elementDisposables };
   }
   renderElement(element, _index, data) {
+    data.elementDisposables.clear();
     if (element.group?.icon) {
       data.icon.className = ThemeIcon.asClassName(element.group.icon);
       if (element.group.icon.color) {
@@ -126,7 +134,9 @@ let ActionItemRenderer = class ActionItemRenderer2 {
     const actionTitle = this._keybindingService.lookupKeybinding(acceptSelectedActionCommand)?.getLabel();
     const previewTitle = this._keybindingService.lookupKeybinding(previewSelectedActionCommand)?.getLabel();
     data.container.classList.toggle("option-disabled", element.disabled);
-    if (element.tooltip) {
+    if (element.hover !== void 0) {
+      data.container.title = "";
+    } else if (element.tooltip) {
       data.container.title = element.tooltip;
     } else if (element.disabled) {
       data.container.title = element.label;
@@ -139,9 +149,17 @@ let ActionItemRenderer = class ActionItemRenderer2 {
     } else {
       data.container.title = "";
     }
+    dom.clearNode(data.toolbar);
+    data.container.classList.toggle("has-toolbar", !!element.toolbarActions?.length);
+    if (element.toolbarActions?.length) {
+      const actionBar = new ActionBar(data.toolbar);
+      data.elementDisposables.add(actionBar);
+      actionBar.push(element.toolbarActions, { icon: true, label: false });
+    }
   }
   disposeTemplate(templateData) {
     templateData.keybinding.dispose();
+    templateData.elementDisposables.dispose();
   }
 };
 ActionItemRenderer = __decorate([
@@ -174,16 +192,18 @@ let ActionList = class ActionList2 extends Disposable {
   static {
     __name(this, "ActionList");
   }
-  constructor(user, preview, items, _delegate, accessibilityProvider, _contextViewService, _keybindingService, _layoutService) {
+  constructor(user, preview, items, _delegate, accessibilityProvider, _contextViewService, _keybindingService, _layoutService, _hoverService) {
     super();
     this._delegate = _delegate;
     this._contextViewService = _contextViewService;
     this._keybindingService = _keybindingService;
     this._layoutService = _layoutService;
+    this._hoverService = _hoverService;
     this._actionLineHeight = 28;
     this._headerLineHeight = 28;
     this._separatorLineHeight = 8;
     this.cts = this._register(new CancellationTokenSource());
+    this._hover = this._register(new MutableDisposable());
     this.domNode = document.createElement("div");
     this.domNode.classList.add("actionList");
     const virtualDelegate = {
@@ -253,6 +273,7 @@ let ActionList = class ActionList2 extends Disposable {
   hide(didCancel) {
     this._delegate.onHide(didCancel);
     this.cts.cancel();
+    this._hover.clear();
     this._contextViewService.hideContextView();
   }
   layout(minWidth) {
@@ -267,7 +288,7 @@ let ActionList = class ActionList2 extends Disposable {
       maxWidth = 380;
     } else {
       const itemWidths = this._allMenuItems.map((_, index) => {
-        const element = this.domNode.ownerDocument.getElementById(this._list.getElementID(index));
+        const element = this._getRowElement(index);
         if (element) {
           element.style.width = "auto";
           const width = element.getBoundingClientRect().width;
@@ -323,10 +344,42 @@ let ActionList = class ActionList2 extends Disposable {
     const focusIndex = focused[0];
     const element = this._list.element(focusIndex);
     this._delegate.onFocus?.(element.item);
+    this._showHoverForElement(element, focusIndex);
+  }
+  _getRowElement(index) {
+    return this.domNode.ownerDocument.getElementById(this._list.getElementID(index));
+  }
+  _showHoverForElement(element, index) {
+    let newHover;
+    if (element.hover?.content && this.focusCondition(element)) {
+      const rowElement = this._getRowElement(index);
+      if (rowElement) {
+        const markdown = element.hover.content ? new MarkdownString(element.hover.content) : void 0;
+        newHover = this._hoverService.showDelayedHover({
+          content: markdown ?? "",
+          target: rowElement,
+          additionalClasses: ["action-widget-hover"],
+          position: {
+            hoverPosition: 0,
+            forcePosition: false,
+            ...element.hover.position
+          },
+          appearance: {
+            showPointer: true
+          }
+        }, { groupId: `actionListHover` });
+      }
+    }
+    this._hover.value = newHover;
   }
   async onListHover(e) {
     const element = e.element;
     if (element && element.item && this.focusCondition(element)) {
+      const isHoveringToolbar = dom.isHTMLElement(e.browserEvent.target) && e.browserEvent.target.closest(".action-list-item-toolbar") !== null;
+      if (isHoveringToolbar) {
+        this._list.setFocus([]);
+        return;
+      }
       if (this._delegate.onHover && !element.disabled && element.kind === "action") {
         const result = await this._delegate.onHover(element.item, this.cts.token);
         element.canPreview = result ? result.canPreview : void 0;
@@ -334,8 +387,8 @@ let ActionList = class ActionList2 extends Disposable {
       if (e.index) {
         this._list.splice(e.index, 1, [element]);
       }
+      this._list.setFocus(typeof e.index === "number" ? [e.index] : []);
     }
-    this._list.setFocus(typeof e.index === "number" ? [e.index] : []);
   }
   onListClick(e) {
     if (e.element && this.focusCondition(e.element)) {
@@ -346,7 +399,8 @@ let ActionList = class ActionList2 extends Disposable {
 ActionList = __decorate([
   __param(5, IContextViewService),
   __param(6, IKeybindingService),
-  __param(7, ILayoutService)
+  __param(7, ILayoutService),
+  __param(8, IHoverService)
 ], ActionList);
 function stripNewlines(str) {
   return str.replace(/\r\n|\r|\n/g, " ");

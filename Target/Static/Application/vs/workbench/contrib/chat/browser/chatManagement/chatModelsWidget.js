@@ -67,9 +67,9 @@ function getModelHoverContent(model) {
     markdown.appendText(`
 `);
   }
-  if (model.metadata.detail) {
+  if (model.metadata.multiplier) {
     markdown.appendMarkdown(`${localize("models.cost", "Multiplier")}: `);
-    markdown.appendMarkdown(model.metadata.detail);
+    markdown.appendMarkdown(model.metadata.multiplier);
     markdown.appendText(`
 `);
   }
@@ -119,18 +119,27 @@ class ModelsFilterAction extends Action {
   async run() {
   }
 }
-function toggleFilter(currentQuery, query, alternativeQueries = []) {
-  const allQueries = [query, ...alternativeQueries];
-  const isChecked = allQueries.some((q) => currentQuery.includes(q));
-  if (!isChecked) {
-    const trimmedQuery = currentQuery.trim();
-    return trimmedQuery ? `${trimmedQuery} ${query}` : query;
-  } else {
+function toggleFilter(currentQuery, filter) {
+  const { query, synonyms = [], excludes = [] } = filter;
+  const allSynonyms = [query, ...synonyms];
+  const isChecked = allSynonyms.some((q) => currentQuery.includes(q));
+  const hasExcludedQuery = excludes.some((q) => currentQuery.includes(q));
+  if (isChecked) {
     let queryWithRemovedFilter = currentQuery;
-    for (const q of allQueries) {
+    for (const q of allSynonyms) {
       queryWithRemovedFilter = queryWithRemovedFilter.replace(q, "");
     }
     return queryWithRemovedFilter.replace(/\s+/g, " ").trim();
+  } else if (hasExcludedQuery) {
+    let newQuery = currentQuery;
+    for (const q of excludes) {
+      newQuery = newQuery.replace(q, "");
+    }
+    newQuery = newQuery.replace(/\s+/g, " ").trim();
+    return newQuery ? `${newQuery} ${query}` : query;
+  } else {
+    const trimmedQuery = currentQuery.trim();
+    return trimmedQuery ? `${trimmedQuery} ${query}` : query;
   }
 }
 __name(toggleFilter, "toggleFilter");
@@ -138,14 +147,14 @@ let ModelsSearchFilterDropdownMenuActionViewItem = class ModelsSearchFilterDropd
   static {
     __name(this, "ModelsSearchFilterDropdownMenuActionViewItem");
   }
-  constructor(action, options, searchWidget, viewModel, contextMenuService) {
+  constructor(action, options, search, viewModel, contextMenuService) {
     super(action, { getActions: /* @__PURE__ */ __name(() => this.getActions(), "getActions") }, contextMenuService, {
       ...options,
       classNames: action.class,
       anchorAlignmentProvider: /* @__PURE__ */ __name(() => 1, "anchorAlignmentProvider"),
       menuAsChild: true
     });
-    this.searchWidget = searchWidget;
+    this.search = search;
     this.viewModel = viewModel;
   }
   createGroupByAction(grouping, label) {
@@ -163,7 +172,7 @@ let ModelsSearchFilterDropdownMenuActionViewItem = class ModelsSearchFilterDropd
   }
   createProviderAction(vendor, displayName) {
     const query = `@provider:"${displayName}"`;
-    const currentQuery = this.searchWidget.getValue();
+    const currentQuery = this.search.getValue();
     const isChecked = currentQuery.includes(query) || currentQuery.includes(`@provider:${vendor}`);
     return {
       id: `provider-${vendor}`,
@@ -172,12 +181,12 @@ let ModelsSearchFilterDropdownMenuActionViewItem = class ModelsSearchFilterDropd
       class: void 0,
       enabled: true,
       checked: isChecked,
-      run: /* @__PURE__ */ __name(() => this.toggleFilterAndSearch(query, [`@provider:${vendor}`]), "run")
+      run: /* @__PURE__ */ __name(() => this.toggleFilterAndSearch({ query, synonyms: [`@provider:${vendor}`] }), "run")
     };
   }
   createCapabilityAction(capability, label) {
     const query = `@capability:${capability}`;
-    const currentQuery = this.searchWidget.getValue();
+    const currentQuery = this.search.getValue();
     const isChecked = currentQuery.includes(query);
     return {
       id: `capability-${capability}`,
@@ -186,13 +195,12 @@ let ModelsSearchFilterDropdownMenuActionViewItem = class ModelsSearchFilterDropd
       class: void 0,
       enabled: true,
       checked: isChecked,
-      run: /* @__PURE__ */ __name(() => this.toggleFilterAndSearch(query), "run")
+      run: /* @__PURE__ */ __name(() => this.toggleFilterAndSearch({ query }), "run")
     };
   }
   createVisibleAction(visible, label) {
     const query = `@visible:${visible}`;
-    const oppositeQuery = `@visible:${!visible}`;
-    const currentQuery = this.searchWidget.getValue();
+    const currentQuery = this.search.getValue();
     const isChecked = currentQuery.includes(query);
     return {
       id: `visible-${visible}`,
@@ -201,21 +209,20 @@ let ModelsSearchFilterDropdownMenuActionViewItem = class ModelsSearchFilterDropd
       class: void 0,
       enabled: true,
       checked: isChecked,
-      run: /* @__PURE__ */ __name(() => this.toggleFilterAndSearch(query, [oppositeQuery]), "run")
+      run: /* @__PURE__ */ __name(() => this.toggleFilterAndSearch({ query, excludes: [`@visible:${!visible}`] }), "run")
     };
   }
-  toggleFilterAndSearch(query, alternativeQueries = []) {
-    const currentQuery = this.searchWidget.getValue();
-    const newQuery = toggleFilter(currentQuery, query, alternativeQueries);
-    this.searchWidget.setValue(newQuery);
-    this.searchWidget.focus();
+  toggleFilterAndSearch(filter) {
+    const currentQuery = this.search.getValue();
+    const newQuery = toggleFilter(currentQuery, filter);
+    this.search.setValue(newQuery);
   }
   getActions() {
     const actions = [];
-    actions.push(this.createVisibleAction(true, localize("filter.visible", "Visible")));
-    actions.push(this.createVisibleAction(false, localize("filter.hidden", "Hidden")));
-    actions.push(new Separator());
     actions.push(this.createCapabilityAction("tools", localize("capability.tools", "Tools")), this.createCapabilityAction("vision", localize("capability.vision", "Vision")), this.createCapabilityAction("agent", localize("capability.agent", "Agent Mode")));
+    actions.push(new Separator());
+    actions.push(this.createVisibleAction(true, localize("filter.visible", "Visible in Chat Model Picker")));
+    actions.push(this.createVisibleAction(false, localize("filter.hidden", "Hidden in Chat Model Picker")));
     const configuredVendors = this.viewModel.getConfiguredVendors();
     if (configuredVendors.length > 1) {
       actions.push(new Separator());
@@ -224,7 +231,7 @@ let ModelsSearchFilterDropdownMenuActionViewItem = class ModelsSearchFilterDropd
     actions.push(new Separator());
     const groupByActions = [];
     groupByActions.push(this.createGroupByAction("vendor", localize("groupBy.provider", "Provider")));
-    groupByActions.push(this.createGroupByAction("visibility", localize("groupBy.visibility", "Visibility")));
+    groupByActions.push(this.createGroupByAction("visibility", localize("groupBy.visibility", "Visibility (Chat Model Picker)")));
     actions.push(new SubmenuAction("groupBy", localize("groupBy", "Group By"), groupByActions));
     return actions;
   }
@@ -256,7 +263,7 @@ class ModelsTableColumnRenderer {
     templateData.container.parentElement.classList.toggle("models-vendor-row", isVendor || isGroup);
     templateData.container.parentElement.classList.toggle("models-model-row", !isVendor && !isGroup);
     templateData.container.parentElement.classList.toggle("models-status-row", isStatus);
-    templateData.container.parentElement.classList.toggle("model-hidden", !isVendor && !isGroup && !isStatus && !element.model.metadata.isUserSelectable);
+    templateData.container.parentElement.classList.toggle("model-hidden", !isVendor && !isGroup && !isStatus && !element.model.visible);
     if (isVendor) {
       this.renderVendorElement(element, index, templateData);
     } else if (isGroup) {
@@ -326,7 +333,7 @@ class GutterColumnRenderer extends ModelsTableColumnRenderer {
   }
   renderModelElement(entry, index, templateData) {
     const { model: modelEntry } = entry;
-    const isVisible = modelEntry.metadata.isUserSelectable ?? false;
+    const isVisible = modelEntry.visible;
     const toggleVisibilityAction = toAction({
       id: "toggleVisibility",
       label: isVisible ? localize("models.hide", "Hide") : localize("models.show", "Show"),
@@ -411,7 +418,7 @@ let ModelNameColumnRenderer = class ModelNameColumnRenderer2 extends ModelsTable
       markdown.appendText(`
 `);
     }
-    if (!entry.model.metadata.isUserSelectable) {
+    if (!entry.model.visible) {
       markdown.appendMarkdown(`
 
 ${localize("models.userSelectable", "This model is hidden in the chat model picker")}`);
@@ -482,7 +489,7 @@ let MultiplierColumnRenderer = class MultiplierColumnRenderer2 extends ModelsTab
   renderVendorElement(element, index, templateData) {
   }
   renderModelElement(entry, index, templateData) {
-    const multiplierText = entry.model.metadata.detail && entry.model.metadata.detail.trim().toLowerCase() !== entry.model.provider.group.name.trim().toLowerCase() ? entry.model.metadata.detail : "-";
+    const multiplierText = entry.model.metadata.multiplier ?? "-";
     templateData.multiplierElement.textContent = multiplierText;
     if (multiplierText !== "-") {
       templateData.elementDisposables.add(this.hoverService.setupDelayedHoverAtMouse(templateData.container, () => ({
@@ -822,10 +829,7 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
       focusContextKey: this.searchFocusContextKey
     }));
     const filterAction = this._register(new ModelsFilterAction());
-    const clearSearchAction = this._register(new Action("workbench.models.clearSearch", localize("clearSearch", "Clear Search"), ThemeIcon.asClassName(preferencesClearInputIcon), false, () => {
-      this.searchWidget.setValue("");
-      this.searchWidget.focus();
-    }));
+    const clearSearchAction = this._register(new Action("workbench.models.clearSearch", localize("clearSearch", "Clear Search"), ThemeIcon.asClassName(preferencesClearInputIcon), false, () => this.clearSearch()));
     const collapseAllAction = this._register(new Action("workbench.models.collapseAll", localize("collapseAll", "Collapse All"), ThemeIcon.asClassName(Codicon.collapseAll), false, () => {
       this.viewModel.collapseAll();
     }));
@@ -840,7 +844,10 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
     const toolBar = this._register(new ToolBar(this.searchActionsContainer, this.contextMenuService, {
       actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
         if (action.id === filterAction.id) {
-          return this.instantiationService.createInstance(ModelsSearchFilterDropdownMenuActionViewItem, action, options, this.searchWidget, this.viewModel);
+          return this.instantiationService.createInstance(ModelsSearchFilterDropdownMenuActionViewItem, action, options, {
+            getValue: /* @__PURE__ */ __name(() => this.searchWidget.getValue(), "getValue"),
+            setValue: /* @__PURE__ */ __name((searchValue) => this.search(searchValue), "setValue")
+          }, this.viewModel);
         }
         return void 0;
       }, "actionViewItemProvider"),
@@ -856,7 +863,7 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
     this.addButton = this._register(new Button(this.addButtonContainer, buttonOptions));
     this.addButton.label = `$(${Codicon.add.id}) ${localize("models.enableModelProvider", "Add Models...")}`;
     this.addButton.element.classList.add("models-add-model-button");
-    this.addButton.enabled = false;
+    this.updateAddModelsButton();
     this._register(this.addButton.onDidClick((e) => {
       if (this.dropdownActions.length > 0) {
         this.contextMenuService.showContextMenu({
@@ -868,6 +875,8 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
     this.tableContainer = DOM.append(container, $(".models-table-container"));
     this.createTable();
     this._register(this.viewModel.onDidChangeGrouping(() => this.createTable()));
+    this._register(this.chatEntitlementService.onDidChangeEntitlement(() => this.updateAddModelsButton()));
+    this._register(this.languageModelsService.onDidChangeLanguageModelVendors(() => this.updateAddModelsButton()));
   }
   createTable() {
     this.tableDisposables.clear();
@@ -882,9 +891,8 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
     this.tableDisposables.add(capabilitiesColumnRenderer.onDidClickCapability((capability) => {
       const currentQuery = this.searchWidget.getValue();
       const query = `@capability:${capability}`;
-      const newQuery = toggleFilter(currentQuery, query);
-      this.searchWidget.setValue(newQuery);
-      this.searchWidget.focus();
+      const newQuery = toggleFilter(currentQuery, { query });
+      this.search(newQuery);
     }));
     const columns = [
       {
@@ -933,16 +941,16 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
     }, {
       label: localize("capabilities", "Capabilities"),
       tooltip: "",
-      weight: 0.25,
+      weight: 0.2,
       minimumWidth: 180,
       templateId: CapabilitiesColumnRenderer.TEMPLATE_ID,
       project(row) {
         return row;
       }
     }, {
-      label: localize("cost", "Multiplier"),
+      label: localize("cost", "Request Multiplier"),
       tooltip: "",
-      weight: 0.05,
+      weight: 0.1,
       minimumWidth: 60,
       templateId: MultiplierColumnRenderer.TEMPLATE_ID,
       project(row) {
@@ -987,11 +995,11 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
           if (e.model.metadata.capabilities) {
             ariaLabels.push(localize("model.capabilities", "Capabilities: {0}", Object.keys(e.model.metadata.capabilities).join(", ")));
           }
-          const multiplierText = e.model.metadata.detail && e.model.metadata.detail.trim().toLowerCase() !== e.model.provider.vendor.vendor.trim().toLowerCase() ? e.model.metadata.detail : "-";
+          const multiplierText = e.model.metadata.multiplier ?? "-";
           if (multiplierText !== "-") {
             ariaLabels.push(localize("multiplier.tooltip", "Every chat message counts {0} towards your premium model request quota", multiplierText));
           }
-          if (e.model.metadata.isUserSelectable) {
+          if (e.model.visible) {
             ariaLabels.push(localize("model.visible", "This model is visible in the chat model picker"));
           } else {
             ariaLabels.push(localize("model.hidden", "This model is hidden in the chat model picker"));
@@ -1000,7 +1008,7 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
         }, "getAriaLabel"),
         getWidgetAriaLabel: /* @__PURE__ */ __name(() => localize("modelsTable.ariaLabel", "Language Models"), "getWidgetAriaLabel")
       },
-      multipleSelectionSupport: false,
+      multipleSelectionSupport: true,
       setRowLineHeight: false,
       openOnSingleClick: true,
       alwaysConsumeMouseWheel: false
@@ -1009,18 +1017,76 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
       if (!e.element) {
         return;
       }
-      const entry = e.element;
-      if (isLanguageModelProviderEntry(entry) && entry.vendorEntry.vendor.managementCommand) {
-        const actions = [
-          toAction({
-            id: "manageVendor",
-            label: localize("models.manageProvider", "Manage {0}...", entry.vendorEntry.group.name),
-            run: /* @__PURE__ */ __name(async () => {
-              await this.commandService.executeCommand(entry.vendorEntry.vendor.managementCommand, entry.vendorEntry.vendor);
-              await this.viewModel.refresh();
-            }, "run")
-          })
-        ];
+      const selection = this.table.getSelection();
+      const selectedEntries = selection.every((i) => i !== e.index) ? [e.element] : selection.map((i) => this.viewModel.viewModelEntries[i]).filter((e2) => !!e2);
+      const selectedModelEntries = selectedEntries.filter((entry) => !isLanguageModelProviderEntry(entry) && !isLanguageModelGroupEntry(entry) && !isStatusEntry(entry));
+      const actions = [];
+      let configureGroup;
+      let configureVendor;
+      if (selectedModelEntries.length) {
+        const visibleModels = selectedModelEntries.filter((entry) => entry.model.visible);
+        const hiddenModels = selectedModelEntries.filter((entry) => !entry.model.visible);
+        actions.push(toAction({
+          id: "hideSelectedModels",
+          label: localize("models.hideSelected", "Hide in the Chat Model Picker"),
+          enabled: visibleModels.length > 0,
+          run: /* @__PURE__ */ __name(() => this.viewModel.setModelsVisibility(selectedModelEntries, false), "run")
+        }));
+        actions.push(toAction({
+          id: "showSelectedModels",
+          label: localize("models.showSelected", "Show in the Chat Model Picker"),
+          enabled: hiddenModels.length > 0,
+          run: /* @__PURE__ */ __name(() => this.viewModel.setModelsVisibility(selectedModelEntries, true), "run")
+        }));
+        configureGroup = selectedModelEntries[0].model.provider.group.name;
+        configureVendor = selectedModelEntries[0].model.provider.vendor;
+        if (selectedModelEntries.some((entry) => entry.model.provider.vendor.isDefault || entry.model.provider.group.name !== configureGroup)) {
+          configureGroup = void 0;
+          configureVendor = void 0;
+        }
+      } else if (selectedEntries.length === 1) {
+        const entry = e.element;
+        if (isLanguageModelProviderEntry(entry)) {
+          if (!entry.vendorEntry.vendor.isDefault) {
+            actions.push(toAction({
+              id: "hideAllModels",
+              label: localize("models.hideAll", "Hide in the Chat Model Picker"),
+              run: /* @__PURE__ */ __name(() => this.viewModel.setGroupVisibility(entry, false), "run")
+            }));
+            actions.push(toAction({
+              id: "showAllModels",
+              label: localize("models.showAll", "Show in the Chat Model Picker"),
+              run: /* @__PURE__ */ __name(() => this.viewModel.setGroupVisibility(entry, true), "run")
+            }));
+          }
+          configureGroup = entry.vendorEntry.group.name;
+          configureVendor = entry.vendorEntry.vendor;
+        }
+      }
+      if (configureGroup && configureVendor) {
+        if (configureVendor.managementCommand || configureVendor.configuration) {
+          if (actions.length) {
+            actions.push(new Separator());
+          }
+          if (configureVendor.managementCommand) {
+            actions.push(toAction({
+              id: "configureVendor",
+              label: localize("models.configureContextMenu", "Configure"),
+              run: /* @__PURE__ */ __name(async () => {
+                await this.commandService.executeCommand(configureVendor.managementCommand, configureVendor.vendor);
+                await this.viewModel.refresh();
+              }, "run")
+            }));
+          } else {
+            actions.push(toAction({
+              id: "configureVendor",
+              label: localize("models.configureContextMenu", "Configure"),
+              run: /* @__PURE__ */ __name(() => this.languageModelsService.configureLanguageModelsProviderGroup(configureVendor.vendor, configureGroup), "run")
+            }));
+          }
+        }
+      }
+      if (actions.length > 0) {
         this.contextMenuService.showContextMenu({
           getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
           getActions: /* @__PURE__ */ __name(() => actions, "getActions")
@@ -1035,16 +1101,6 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
         this.table.setFocus([selectedEntryIndex]);
         this.table.setSelection([selectedEntryIndex]);
       }
-      const configurableVendors = this.languageModelsService.getVendors().filter((vendor) => vendor.managementCommand || vendor.configuration);
-      const hasPlan = this.chatEntitlementService.entitlement !== ChatEntitlement.Unknown && this.chatEntitlementService.entitlement !== ChatEntitlement.Available;
-      this.addButton.enabled = hasPlan && configurableVendors.length > 0;
-      this.dropdownActions = configurableVendors.map((vendor) => toAction({
-        id: `enable-${vendor.vendor}`,
-        label: vendor.displayName,
-        run: /* @__PURE__ */ __name(async () => {
-          await this.addModelsForVendor(vendor);
-        }, "run")
-      }));
     }));
     this.tableDisposables.add(this.table.onDidOpen(async ({ element, browserEvent }) => {
       if (!element) {
@@ -1067,6 +1123,21 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
     }));
     this.layout(this.element.clientHeight, this.element.clientWidth);
   }
+  updateAddModelsButton() {
+    const configurableVendors = this.languageModelsService.getVendors().filter((vendor) => vendor.managementCommand || vendor.configuration);
+    const entitlement = this.chatEntitlementService.entitlement;
+    const isManagedEntitlement = entitlement === ChatEntitlement.Business || entitlement === ChatEntitlement.Enterprise;
+    const supportsAddingModels = this.chatEntitlementService.isInternal || entitlement !== ChatEntitlement.Unknown && entitlement !== ChatEntitlement.Available && !isManagedEntitlement;
+    this.addButton.enabled = supportsAddingModels && configurableVendors.length > 0;
+    this.addButton.setTitle(!supportsAddingModels && isManagedEntitlement ? localize("models.managedByOrganization", "Adding models is managed by your organization") : "");
+    this.dropdownActions = configurableVendors.map((vendor) => toAction({
+      id: `enable-${vendor.vendor}`,
+      label: vendor.displayName,
+      run: /* @__PURE__ */ __name(async () => {
+        await this.addModelsForVendor(vendor);
+      }, "run")
+    }));
+  }
   filterModels() {
     this.delayedFiltering.trigger(() => {
       this.viewModel.filter(this.searchWidget.getValue());
@@ -1088,8 +1159,10 @@ let ChatModelsWidget = class ChatModelsWidget2 extends Disposable {
   search(filter) {
     this.focusSearch();
     this.searchWidget.setValue(filter);
+    this.viewModel.filter(filter);
   }
   clearSearch() {
+    this.focusSearch();
     this.searchWidget.setValue("");
   }
   render() {

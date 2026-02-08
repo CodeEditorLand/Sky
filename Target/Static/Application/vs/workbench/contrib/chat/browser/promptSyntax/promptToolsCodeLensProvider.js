@@ -77,12 +77,12 @@ let PromptToolsCodeLensProvider = class PromptToolsCodeLensProvider2 extends Dis
     return { lenses: [codeLens] };
   }
   async updateTools(model, range, selectedTools, target) {
-    const selectedToolsNow = /* @__PURE__ */ __name(() => this.languageModelToolsService.toToolAndToolSetEnablementMap(selectedTools, target), "selectedToolsNow");
-    const newSelectedAfter = await this.instantiationService.invokeFunction(showToolsPicker, localize("placeholder", "Select tools"), void 0, selectedToolsNow);
+    const selectedToolsNow = /* @__PURE__ */ __name(() => this.languageModelToolsService.toToolAndToolSetEnablementMap(selectedTools, target, void 0), "selectedToolsNow");
+    const newSelectedAfter = await this.instantiationService.invokeFunction(showToolsPicker, localize("placeholder", "Select tools"), "codeLens", void 0, selectedToolsNow);
     if (!newSelectedAfter) {
       return;
     }
-    await this.instantiationService.createInstance(PromptFileRewriter).rewriteTools(model, newSelectedAfter, range);
+    this.instantiationService.createInstance(PromptFileRewriter).rewriteTools(model, newSelectedAfter, range);
   }
 };
 PromptToolsCodeLensProvider = __decorate([

@@ -14,6 +14,7 @@ class QuickInputBox extends Disposable {
   constructor(parent, inputBoxStyles, toggleStyles) {
     super();
     this.parent = parent;
+    this._listFocusMode = false;
     this.onDidChange = (handler) => {
       return this.findInput.onDidChange(handler);
     };
@@ -25,10 +26,6 @@ class QuickInputBox extends Disposable {
       actionViewItemProvider: createToggleActionViewItemProvider(toggleStyles),
       hideHoverOnValueChange: true
     }));
-    const input = this.findInput.inputBox.inputElement;
-    input.role = "textbox";
-    input.ariaHasPopup = "menu";
-    input.ariaAutoComplete = "list";
   }
   get onKeyDown() {
     return this.findInput.onKeyDown;
@@ -92,6 +89,27 @@ class QuickInputBox extends Disposable {
   }
   removeAttribute(name) {
     this.findInput.inputBox.inputElement.removeAttribute(name);
+  }
+  /**
+   * Controls the ARIA popup mode for screen readers.
+   * When enabled (hasActiveDescendant=true), indicates a list popup is active.
+   * When disabled, removes ARIA attributes to allow normal text input behavior.
+   * Only updates attributes when the state actually changes to avoid
+   * unnecessary screen reader re-announcements.
+   */
+  setListFocusMode(hasActiveDescendant) {
+    if (this._listFocusMode === hasActiveDescendant) {
+      return;
+    }
+    this._listFocusMode = hasActiveDescendant;
+    const input = this.findInput.inputBox.inputElement;
+    if (hasActiveDescendant) {
+      input.setAttribute("aria-haspopup", "listbox");
+      input.setAttribute("aria-autocomplete", "list");
+    } else {
+      input.removeAttribute("aria-haspopup");
+      input.removeAttribute("aria-autocomplete");
+    }
   }
   showDecoration(decoration) {
     if (decoration === Severity.Ignore) {

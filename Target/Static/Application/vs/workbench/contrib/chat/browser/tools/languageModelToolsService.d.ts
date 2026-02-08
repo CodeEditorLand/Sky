@@ -1,7 +1,7 @@
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { Event } from '../../../../../base/common/event.js';
 import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable } from '../../../../../base/common/observable.js';
+import { IObservable, IReader } from '../../../../../base/common/observable.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
 import { IAccessibilityService } from '../../../../../platform/accessibility/common/accessibility.js';
 import { IAccessibilitySignalService } from '../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
@@ -13,11 +13,13 @@ import { ILogService } from '../../../../../platform/log/common/log.js';
 import { IStorageService } from '../../../../../platform/storage/common/storage.js';
 import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
 import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
+import { ChatRequestToolReferenceEntry } from '../../common/attachments/chatVariableEntries.js';
 import { IVariableReference } from '../../common/chatModes.js';
 import { IChatService, IChatToolInvocation } from '../../common/chatService/chatService.js';
-import { ChatRequestToolReferenceEntry } from '../../common/attachments/chatVariableEntries.js';
+import { ILanguageModelChatMetadata } from '../../common/languageModels.js';
 import { ILanguageModelToolsConfirmationService } from '../../common/tools/languageModelToolsConfirmationService.js';
-import { CountTokensCallback, IBeginToolCallOptions, ILanguageModelToolsService, IToolAndToolSetEnablementMap, IToolData, IToolImpl, IToolInvocation, IToolResult, ToolDataSource, ToolSet } from '../../common/tools/languageModelToolsService.js';
+import { CountTokensCallback, IBeginToolCallOptions, ILanguageModelToolsService, IToolAndToolSetEnablementMap, IToolData, IToolImpl, IToolInvocation, IToolResult, ToolDataSource, ToolSet, IToolSet, IToolInvokedEvent } from '../../common/tools/languageModelToolsService.js';
+import { URI } from '../../../../../base/common/uri.js';
 export declare const globalAutoApproveDescription: import("../../../../../nls.js").ILocalizedString;
 export declare class LanguageModelToolsService extends Disposable implements ILanguageModelToolsService {
     private readonly _instantiationService;
@@ -36,13 +38,16 @@ export declare class LanguageModelToolsService extends Disposable implements ILa
     readonly vscodeToolSet: ToolSet;
     readonly executeToolSet: ToolSet;
     readonly readToolSet: ToolSet;
+    readonly agentToolSet: ToolSet;
     private readonly _onDidChangeTools;
     readonly onDidChangeTools: Event<void>;
     private readonly _onDidPrepareToolCallBecomeUnresponsive;
     readonly onDidPrepareToolCallBecomeUnresponsive: Event<{
-        sessionId: string;
+        sessionResource: URI;
         toolData: IToolData;
     }>;
+    private readonly _onDidInvokeTool;
+    readonly onDidInvokeTool: Event<IToolInvokedEvent>;
     /** Throttle tools updates because it sends all tools and runs on context key updates */
     private readonly _onDidChangeToolsScheduler;
     private readonly _tools;
@@ -65,11 +70,11 @@ export declare class LanguageModelToolsService extends Disposable implements ILa
     private _refreshAllToolContextKeys;
     registerToolImplementation(id: string, tool: IToolImpl): IDisposable;
     registerTool(toolData: IToolData, tool: IToolImpl): IDisposable;
-    getTools(includeDisabled?: boolean): Iterable<IToolData>;
-    readonly toolsObservable: IObservable<readonly IToolData[]>;
+    getTools(model: ILanguageModelChatMetadata | undefined): Iterable<IToolData>;
+    observeTools(model: ILanguageModelChatMetadata | undefined): IObservable<readonly IToolData[]>;
+    getAllToolsIncludingDisabled(): Iterable<IToolData>;
     getTool(id: string): IToolData | undefined;
-    private _getToolEntry;
-    getToolByName(name: string, includeDisabled?: boolean): IToolData | undefined;
+    getToolByName(name: string): IToolData | undefined;
     invokeTool(dto: IToolInvocation, countTokens: CountTokensCallback, token: CancellationToken): Promise<IToolResult>;
     private prepareToolInvocation;
     beginToolCall(options: IBeginToolCallOptions): IChatToolInvocation | undefined;
@@ -95,11 +100,12 @@ export declare class LanguageModelToolsService extends Disposable implements ILa
      * @param fullReferenceNames A list of tool or toolset by their full reference names that are enabled.
      * @returns A map of tool or toolset instances to their enablement state.
      */
-    toToolAndToolSetEnablementMap(fullReferenceNames: readonly string[], _target: string | undefined): IToolAndToolSetEnablementMap;
+    toToolAndToolSetEnablementMap(fullReferenceNames: readonly string[], _target: string | undefined, model: ILanguageModelChatMetadata | undefined): IToolAndToolSetEnablementMap;
     toFullReferenceNames(map: IToolAndToolSetEnablementMap): string[];
     toToolReferences(variableReferences: readonly IVariableReference[]): ChatRequestToolReferenceEntry[];
     private readonly _toolSets;
     readonly toolSets: IObservable<Iterable<ToolSet>>;
+    getToolSetsForModel(model: ILanguageModelChatMetadata | undefined, reader?: IReader): Iterable<IToolSet>;
     getToolSet(id: string): ToolSet | undefined;
     getToolSetByName(name: string): ToolSet | undefined;
     getSpecedToolSetName(referenceName: string): string;
@@ -108,9 +114,10 @@ export declare class LanguageModelToolsService extends Disposable implements ILa
         description?: string;
         legacyFullNames?: string[];
     }): ToolSet & IDisposable;
-    readonly toolsWithFullReferenceName: import("../../../../../base/common/observable.js").IObservableWithChange<[IToolData | ToolSet, string][], void>;
+    private readonly allToolsIncludingDisableObs;
+    private readonly toolsWithFullReferenceName;
     getFullReferenceNames(): Iterable<string>;
     getDeprecatedFullReferenceNames(): Map<string, Set<string>>;
     getToolByFullReferenceName(fullReferenceName: string): IToolData | ToolSet | undefined;
-    getFullReferenceName(tool: IToolData | ToolSet, toolSet?: ToolSet): string;
+    getFullReferenceName(tool: IToolData | IToolSet, toolSet?: IToolSet): string;
 }

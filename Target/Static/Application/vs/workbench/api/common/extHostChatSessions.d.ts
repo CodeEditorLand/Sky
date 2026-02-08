@@ -4,8 +4,8 @@ import { Disposable } from '../../../base/common/lifecycle.js';
 import { UriComponents } from '../../../base/common/uri.js';
 import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
 import { ILogService } from '../../../platform/log/common/log.js';
-import { IChatAgentRequest, IChatAgentResult } from '../../contrib/chat/common/participants/chatAgents.js';
 import { IChatSessionItem, IChatSessionProviderOptionItem } from '../../contrib/chat/common/chatSessionsService.js';
+import { IChatAgentRequest, IChatAgentResult } from '../../contrib/chat/common/participants/chatAgents.js';
 import { ChatSessionDto, ExtHostChatSessionsShape, IChatSessionProviderOptions } from './extHost.protocol.js';
 import { ExtHostCommands } from './extHostCommands.js';
 import { ExtHostLanguageModels } from './extHostLanguageModels.js';
@@ -17,12 +17,12 @@ export declare class ExtHostChatSessions extends Disposable implements ExtHostCh
     private readonly _logService;
     private static _sessionHandlePool;
     private readonly _proxy;
+    private _itemProviderHandlePool;
     private readonly _chatSessionItemProviders;
+    private _itemControllerHandlePool;
     private readonly _chatSessionItemControllers;
-    private _nextChatSessionItemProviderHandle;
+    private _contentProviderHandlePool;
     private readonly _chatSessionContentProviders;
-    private _nextChatSessionItemControllerHandle;
-    private _nextChatSessionContentProviderHandle;
     /**
      * Map of uri -> chat session items
      *
@@ -39,7 +39,7 @@ export declare class ExtHostChatSessions extends Disposable implements ExtHostCh
     private readonly _providerOptionGroups;
     constructor(commands: ExtHostCommands, _languageModels: ExtHostLanguageModels, _extHostRpc: IExtHostRpcService, _logService: ILogService);
     registerChatSessionItemProvider(extension: IExtensionDescription, chatSessionType: string, provider: vscode.ChatSessionItemProvider): vscode.Disposable;
-    createChatSessionItemController(extension: IExtensionDescription, id: string, refreshHandler: () => Thenable<void>): vscode.ChatSessionItemController;
+    createChatSessionItemController(extension: IExtensionDescription, id: string, refreshHandler: (token: vscode.CancellationToken) => Thenable<void>): vscode.ChatSessionItemController;
     registerChatSessionContentProvider(extension: IExtensionDescription, chatSessionScheme: string, chatParticipant: vscode.ChatParticipant, provider: vscode.ChatSessionContentProvider, capabilities?: vscode.ChatSessionCapabilities): vscode.Disposable;
     private convertChatSessionStatus;
     private convertChatSessionItem;
@@ -58,4 +58,5 @@ export declare class ExtHostChatSessions extends Disposable implements ExtHostCh
     private convertReferenceToVariable;
     private convertResponseTurn;
     $invokeOptionGroupSearch(providerHandle: number, optionGroupId: string, query: string, token: CancellationToken): Promise<IChatSessionProviderOptionItem[]>;
+    $onDidChangeChatSessionItemState(controllerHandle: number, sessionResourceComponents: UriComponents, archived: boolean): void;
 }

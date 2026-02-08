@@ -1,5 +1,4 @@
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { Disposable } from '../../../../../base/common/lifecycle.js';
 import { IObservable } from '../../../../../base/common/observable.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
@@ -16,7 +15,7 @@ import { IExtensionService } from '../../../../services/extensions/common/extens
 import { ILifecycleService } from '../../../../services/lifecycle/common/lifecycle.js';
 import { IMultiDiffSourceResolver, IMultiDiffSourceResolverService, IResolvedMultiDiffSource } from '../../../multiDiffEditor/browser/multiDiffSourceResolverService.js';
 import { INotebookService } from '../../../notebook/common/notebookService.js';
-import { IChatEditingService, IChatEditingSession, IChatRelatedFile, IChatRelatedFilesProvider } from '../../common/editing/chatEditingService.js';
+import { IChatEditingService, IChatEditingSession } from '../../common/editing/chatEditingService.js';
 import { ChatModel } from '../../common/model/chatModel.js';
 import { IChatService } from '../../common/chatService/chatService.js';
 export declare class ChatEditingService extends Disposable implements IChatEditingService {
@@ -30,7 +29,6 @@ export declare class ChatEditingService extends Disposable implements IChatEditi
     _serviceBrand: undefined;
     private readonly _sessionsObs;
     readonly editingSessionsObs: IObservable<readonly IChatEditingSession[]>;
-    private _chatRelatedFilesProviders;
     constructor(_instantiationService: IInstantiationService, multiDiffSourceResolverService: IMultiDiffSourceResolverService, textModelService: ITextModelService, contextKeyService: IContextKeyService, _chatService: IChatService, _editorService: IEditorService, decorationsService: IDecorationsService, _fileService: IFileService, lifecycleService: ILifecycleService, storageService: IStorageService, logService: ILogService, extensionService: IExtensionService, productService: IProductService, notebookService: INotebookService, _configurationService: IConfigurationService);
     dispose(): void;
     startOrContinueGlobalEditingSession(chatModel: ChatModel): IChatEditingSession;
@@ -41,12 +39,6 @@ export declare class ChatEditingService extends Disposable implements IChatEditi
     private _createEditingSession;
     private installAutoApplyObserver;
     private observerEditsInResponse;
-    hasRelatedFilesProviders(): boolean;
-    registerRelatedFilesProvider(handle: number, provider: IChatRelatedFilesProvider): IDisposable;
-    getRelatedFiles(chatSessionResource: URI, prompt: string, files: URI[], token: CancellationToken): Promise<{
-        group: string;
-        files: IChatRelatedFile[];
-    }[] | undefined>;
 }
 export declare class ChatEditingMultiDiffSourceResolver implements IMultiDiffSourceResolver {
     private readonly _editingSessionsObs;

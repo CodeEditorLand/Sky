@@ -35,6 +35,7 @@ export declare class ChatModelsWidget extends Disposable {
     constructor(languageModelsService: ILanguageModelsService, instantiationService: IInstantiationService, extensionService: IExtensionService, contextMenuService: IContextMenuService, chatEntitlementService: IChatEntitlementService, editorProgressService: IEditorProgressService, commandService: ICommandService, contextKeyService: IContextKeyService);
     private create;
     private createTable;
+    private updateAddModelsButton;
     private filterModels;
     private addModelsForVendor;
     layout(height: number, width: number): void;

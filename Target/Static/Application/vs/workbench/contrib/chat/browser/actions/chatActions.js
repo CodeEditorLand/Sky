@@ -1,35 +1,19 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var __decorate = function(decorators, target, key, desc) {
-  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __param = function(paramIndex, decorator) {
-  return function(target, key) {
-    decorator(target, key, paramIndex);
-  };
-};
 import { isAncestorOfActiveElement } from "../../../../../base/browser/dom.js";
-import { mainWindow } from "../../../../../base/browser/window.js";
-import { toAction } from "../../../../../base/common/actions.js";
 import { coalesce } from "../../../../../base/common/arrays.js";
 import { timeout } from "../../../../../base/common/async.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
 import { safeIntl } from "../../../../../base/common/date.js";
 import { Event } from "../../../../../base/common/event.js";
 import { MarkdownString } from "../../../../../base/common/htmlContent.js";
-import { Disposable, markAsSingleton } from "../../../../../base/common/lifecycle.js";
 import { language } from "../../../../../base/common/platform.js";
 import { basename } from "../../../../../base/common/resources.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { EditorAction2 } from "../../../../../editor/browser/editorExtensions.js";
 import { localize, localize2 } from "../../../../../nls.js";
-import { IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
-import { DropdownWithPrimaryActionViewItem } from "../../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";
-import { Action2, MenuId, MenuItemAction, MenuRegistry, registerAction2, SubmenuItemAction } from "../../../../../platform/actions/common/actions.js";
+import { Action2, MenuId, MenuRegistry, registerAction2 } from "../../../../../platform/actions/common/actions.js";
 import { ICommandService } from "../../../../../platform/commands/common/commands.js";
 import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
@@ -37,12 +21,12 @@ import { IsLinuxContext, IsWindowsContext } from "../../../../../platform/contex
 import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
 import { IFileService } from "../../../../../platform/files/common/files.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
 import { INotificationService } from "../../../../../platform/notification/common/notification.js";
 import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
 import product from "../../../../../platform/product/common/product.js";
 import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
-import { ToggleTitleBarConfigAction } from "../../../../browser/parts/titlebar/titlebarActions.js";
-import { ActiveEditorContext, IsCompactTitleBarContext } from "../../../../common/contextkeys.js";
+import { ActiveEditorContext } from "../../../../common/contextkeys.js";
 import { IViewDescriptorService } from "../../../../common/views.js";
 import { ChatEntitlement, IChatEntitlementService } from "../../../../services/chat/common/chatEntitlementService.js";
 import { AUX_WINDOW_GROUP } from "../../../../services/editor/common/editorService.js";
@@ -59,11 +43,11 @@ import { ChatMode, IChatModeService } from "../../common/chatModes.js";
 import { IChatService } from "../../common/chatService/chatService.js";
 import { isRequestVM } from "../../common/model/chatViewModel.js";
 import { IChatWidgetHistoryService } from "../../common/widget/chatWidgetHistoryService.js";
-import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../common/constants.js";
+import { AgentsControlClickBehavior, ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../common/constants.js";
 import { ILanguageModelsService } from "../../common/languageModels.js";
 import { CopilotUsageExtensionFeatureId } from "../../common/languageModelStats.js";
 import { ILanguageModelToolsConfirmationService } from "../../common/tools/languageModelToolsConfirmationService.js";
-import { ILanguageModelToolsService } from "../../common/tools/languageModelToolsService.js";
+import { ILanguageModelToolsService, isToolSet } from "../../common/tools/languageModelToolsService.js";
 import { ChatViewId, IChatWidgetService } from "../chat.js";
 import { ChatEditorInput, showClearEditingSessionConfirmation } from "../widgetHosts/editor/chatEditorInput.js";
 import { convertBufferToScreenshotVariable } from "../attachments/chatScreenshotContext.js";
@@ -75,6 +59,12 @@ const CHAT_OPEN_ACTION_ID = "workbench.action.chat.open";
 const CHAT_SETUP_ACTION_ID = "workbench.action.chat.triggerSetup";
 const CHAT_SETUP_SUPPORT_ANONYMOUS_ACTION_ID = "workbench.action.chat.triggerSetupSupportAnonymousAction";
 const TOGGLE_CHAT_ACTION_ID = "workbench.action.chat.toggle";
+const defaultChat = {
+  manageSettingsUrl: product.defaultChatAgent?.manageSettingsUrl ?? "",
+  provider: product.defaultChatAgent?.provider ?? { enterprise: { id: "" } },
+  completionsAdvancedSetting: product.defaultChatAgent?.completionsAdvancedSetting ?? "",
+  completionsMenuCommand: product.defaultChatAgent?.completionsMenuCommand ?? ""
+};
 const CHAT_CONFIG_MENU_ID = new MenuId("workbench.chat.menu.config");
 const OPEN_CHAT_QUOTA_EXCEEDED_DIALOG = "workbench.action.chat.openQuotaExceededDialog";
 class OpenChatGlobalAction extends Action2 {
@@ -104,6 +94,7 @@ class OpenChatGlobalAction extends Action2 {
     const fileService = accessor.get(IFileService);
     const languageModelService = accessor.get(ILanguageModelsService);
     const scmService = accessor.get(ISCMService);
+    const logService = accessor.get(ILogService);
     let chatWidget = widgetService.lastFocusedWidget;
     if (!this.mode || !chatWidget || !isAncestorOfActiveElement(chatWidget.domNode)) {
       chatWidget = await widgetService.revealWidget();
@@ -126,6 +117,21 @@ class OpenChatGlobalAction extends Action2 {
         throw new Error(`Language model not loaded: ${id}.`);
       }
       chatWidget.input.setCurrentLanguageModel({ metadata: model, identifier: id });
+    }
+    if (opts?.toolsInclude || opts?.toolsExclude) {
+      const model = chatWidget.input.selectedLanguageModel.get()?.metadata;
+      const allTools = Array.from(toolsService.getTools(model));
+      const allToolSets = Array.from(toolsService.getToolSetsForModel(model));
+      const result = computeToolEnablementMap({
+        allTools,
+        allToolSets,
+        toolsInclude: opts.toolsInclude,
+        toolsExclude: opts.toolsExclude
+      });
+      for (const identifier of result.unknownIdentifiers) {
+        logService.warn(`Tool filtering: Unknown identifier '${identifier}' - no matching tool or toolset found.`);
+      }
+      chatWidget.input.selectedToolsModel.set(result.enablementMap, true);
     }
     if (opts?.previousRequests?.length && chatWidget.viewModel) {
       for (const { request, response } of opts.previousRequests) {
@@ -365,12 +371,40 @@ function registerChatActions() {
       const viewsService = accessor.get(IViewsService);
       const viewDescriptorService = accessor.get(IViewDescriptorService);
       const widgetService = accessor.get(IChatWidgetService);
+      const configurationService = accessor.get(IConfigurationService);
       const chatLocation = viewDescriptorService.getViewLocationById(ChatViewId);
-      if (viewsService.isViewVisible(ChatViewId)) {
-        this.updatePartVisibility(layoutService, chatLocation, false);
-      } else {
-        this.updatePartVisibility(layoutService, chatLocation, true);
-        (await widgetService.revealWidget())?.focusInput();
+      const chatVisible = viewsService.isViewVisible(ChatViewId);
+      const clickBehavior = configurationService.getValue(ChatConfiguration.AgentsControlClickBehavior);
+      switch (clickBehavior) {
+        case AgentsControlClickBehavior.Focus:
+          if (chatLocation === 2) {
+            layoutService.setAuxiliaryBarMaximized(true);
+          } else {
+            this.updatePartVisibility(layoutService, chatLocation, true);
+          }
+          (await widgetService.revealWidget())?.focusInput();
+          break;
+        case AgentsControlClickBehavior.Cycle:
+          if (chatVisible) {
+            if (chatLocation === 2 && !layoutService.isAuxiliaryBarMaximized()) {
+              layoutService.setAuxiliaryBarMaximized(true);
+              (await widgetService.revealWidget())?.focusInput();
+            } else {
+              this.updatePartVisibility(layoutService, chatLocation, false);
+            }
+          } else {
+            this.updatePartVisibility(layoutService, chatLocation, true);
+            (await widgetService.revealWidget())?.focusInput();
+          }
+          break;
+        default:
+          if (chatVisible) {
+            this.updatePartVisibility(layoutService, chatLocation, false);
+          } else {
+            this.updatePartVisibility(layoutService, chatLocation, true);
+            (await widgetService.revealWidget())?.focusInput();
+          }
+          break;
       }
     }
     updatePartVisibility(layoutService, location, visible) {
@@ -817,93 +851,113 @@ function stringifyItem(item, includeName = true) {
   }
 }
 __name(stringifyItem, "stringifyItem");
-const defaultChat = {
-  manageSettingsUrl: product.defaultChatAgent?.manageSettingsUrl ?? "",
-  provider: product.defaultChatAgent?.provider ?? { enterprise: { id: "" } },
-  completionsAdvancedSetting: product.defaultChatAgent?.completionsAdvancedSetting ?? "",
-  completionsMenuCommand: product.defaultChatAgent?.completionsMenuCommand ?? ""
-};
-MenuRegistry.appendMenuItem(MenuId.CommandCenter, {
-  submenu: MenuId.ChatTitleBarMenu,
-  title: localize("title4", "Chat"),
-  icon: Codicon.chatSparkle,
-  when: ContextKeyExpr.and(ChatContextKeys.supported, ContextKeyExpr.and(ChatContextKeys.Setup.hidden.negate(), ChatContextKeys.Setup.disabled.negate()), ContextKeyExpr.has("config.chat.commandCenter.enabled"), ContextKeyExpr.or(
-    ContextKeyExpr.has(`config.${ChatConfiguration.AgentStatusEnabled}`).negate(),
-    // Show when agent status is disabled
-    ChatContextKeys.agentStatusHasNotifications.negate()
-    // Or when agent status has no notifications
-  )),
-  order: 10003
-  // to the right of agent controls
-});
-MenuRegistry.appendMenuItem(MenuId.TitleBar, {
-  submenu: MenuId.ChatTitleBarMenu,
-  title: localize("title4", "Chat"),
-  group: "navigation",
-  icon: Codicon.chatSparkle,
-  when: ContextKeyExpr.and(ChatContextKeys.supported, ContextKeyExpr.and(ChatContextKeys.Setup.hidden.negate(), ChatContextKeys.Setup.disabled.negate()), ContextKeyExpr.has("config.chat.commandCenter.enabled"), ContextKeyExpr.has("config.window.commandCenter").negate()),
-  order: 1
-});
-registerAction2(class ToggleCopilotControl extends ToggleTitleBarConfigAction {
-  static {
-    __name(this, "ToggleCopilotControl");
-  }
-  constructor() {
-    super("chat.commandCenter.enabled", localize("toggle.chatControl", "Chat Controls"), localize("toggle.chatControlsDescription", "Toggle visibility of the Chat Controls in title bar"), 5, ContextKeyExpr.and(ContextKeyExpr.and(ChatContextKeys.Setup.hidden.negate(), ChatContextKeys.Setup.disabled.negate()), IsCompactTitleBarContext.negate(), ChatContextKeys.supported));
-  }
-});
-let CopilotTitleBarMenuRendering = class CopilotTitleBarMenuRendering2 extends Disposable {
-  static {
-    __name(this, "CopilotTitleBarMenuRendering");
-  }
-  static {
-    this.ID = "workbench.contrib.copilotTitleBarMenuRendering";
-  }
-  constructor(actionViewItemService, chatEntitlementService) {
-    super();
-    const disposable = actionViewItemService.register(MenuId.CommandCenter, MenuId.ChatTitleBarMenu, (action, options, instantiationService, windowId) => {
-      if (!(action instanceof SubmenuItemAction)) {
-        return void 0;
-      }
-      const dropdownAction = toAction({
-        id: "copilot.titleBarMenuRendering.more",
-        label: localize("more", "More..."),
-        run() {
-        }
-      });
-      const chatSentiment = chatEntitlementService.sentiment;
-      const chatQuotaExceeded = chatEntitlementService.quotas.chat?.percentRemaining === 0;
-      const signedOut = chatEntitlementService.entitlement === ChatEntitlement.Unknown;
-      const anonymous = chatEntitlementService.anonymous;
-      const free = chatEntitlementService.entitlement === ChatEntitlement.Free;
-      const isAuxiliaryWindow = windowId !== mainWindow.vscodeWindowId;
-      let primaryActionId = isAuxiliaryWindow ? CHAT_OPEN_ACTION_ID : TOGGLE_CHAT_ACTION_ID;
-      let primaryActionTitle = isAuxiliaryWindow ? localize("openChat", "Open Chat") : localize("toggleChat", "Toggle Chat");
-      let primaryActionIcon = Codicon.chatSparkle;
-      if (chatSentiment.installed && !chatSentiment.disabled) {
-        if (signedOut && !anonymous) {
-          primaryActionId = CHAT_SETUP_ACTION_ID;
-          primaryActionTitle = localize("signInToChatSetup", "Sign in to use AI features...");
-          primaryActionIcon = Codicon.chatSparkleError;
-        } else if (chatQuotaExceeded && free) {
-          primaryActionId = OPEN_CHAT_QUOTA_EXCEEDED_DIALOG;
-          primaryActionTitle = localize("chatQuotaExceededButton", "GitHub Copilot Free plan chat messages quota reached. Click for details.");
-          primaryActionIcon = Codicon.chatSparkleWarning;
+function computeToolEnablementMap(options) {
+  const { allTools, allToolSets, toolsInclude, toolsExclude } = options;
+  const enablementMap = /* @__PURE__ */ new Map();
+  const matchedIdentifiers = /* @__PURE__ */ new Set();
+  const toolMatches = /* @__PURE__ */ __name((tool, identifiers) => {
+    if (identifiers.has(tool.id)) {
+      matchedIdentifiers.add(tool.id);
+      return true;
+    }
+    if (tool.toolReferenceName && identifiers.has(tool.toolReferenceName)) {
+      matchedIdentifiers.add(tool.toolReferenceName);
+      return true;
+    }
+    return false;
+  }, "toolMatches");
+  const toolSetMatches = /* @__PURE__ */ __name((toolSet, identifiers) => {
+    if (identifiers.has(toolSet.id)) {
+      matchedIdentifiers.add(toolSet.id);
+      return true;
+    }
+    if (identifiers.has(toolSet.referenceName)) {
+      matchedIdentifiers.add(toolSet.referenceName);
+      return true;
+    }
+    return false;
+  }, "toolSetMatches");
+  const explicitlyIncludedTools = /* @__PURE__ */ new Set();
+  if (toolsInclude) {
+    const includeSet = new Set(toolsInclude);
+    for (const toolSet of allToolSets) {
+      if (toolSetMatches(toolSet, includeSet)) {
+        for (const tool of toolSet.getTools()) {
+          enablementMap.set(tool, true);
         }
       }
-      return instantiationService.createInstance(DropdownWithPrimaryActionViewItem, instantiationService.createInstance(MenuItemAction, {
-        id: primaryActionId,
-        title: primaryActionTitle,
-        icon: primaryActionIcon
-      }, void 0, void 0, void 0, void 0), dropdownAction, action.actions, "", { ...options, skipTelemetry: true });
-    }, Event.any(chatEntitlementService.onDidChangeSentiment, chatEntitlementService.onDidChangeQuotaExceeded, chatEntitlementService.onDidChangeEntitlement, chatEntitlementService.onDidChangeAnonymous));
-    markAsSingleton(disposable);
+    }
+    for (const tool of allTools) {
+      if (toolMatches(tool, includeSet)) {
+        enablementMap.set(tool, true);
+        explicitlyIncludedTools.add(tool);
+      } else if (!enablementMap.has(tool)) {
+        enablementMap.set(tool, false);
+      }
+    }
+    for (const toolSet of allToolSets) {
+      for (const tool of toolSet.getTools()) {
+        if (toolMatches(tool, includeSet)) {
+          enablementMap.set(tool, true);
+          explicitlyIncludedTools.add(tool);
+        } else if (!enablementMap.has(tool)) {
+          enablementMap.set(tool, false);
+        }
+      }
+    }
+  } else {
+    for (const tool of allTools) {
+      enablementMap.set(tool, true);
+    }
+    for (const toolSet of allToolSets) {
+      for (const tool of toolSet.getTools()) {
+        enablementMap.set(tool, true);
+      }
+    }
   }
-};
-CopilotTitleBarMenuRendering = __decorate([
-  __param(0, IActionViewItemService),
-  __param(1, IChatEntitlementService)
-], CopilotTitleBarMenuRendering);
+  if (toolsExclude) {
+    const excludeSet = new Set(toolsExclude);
+    for (const toolSet of allToolSets) {
+      if (toolSetMatches(toolSet, excludeSet)) {
+        for (const tool of toolSet.getTools()) {
+          if (!explicitlyIncludedTools.has(tool)) {
+            enablementMap.set(tool, false);
+          }
+        }
+      }
+    }
+    for (const tool of allTools) {
+      if (toolMatches(tool, excludeSet)) {
+        enablementMap.set(tool, false);
+      }
+    }
+    for (const toolSet of allToolSets) {
+      for (const tool of toolSet.getTools()) {
+        if (toolMatches(tool, excludeSet)) {
+          enablementMap.set(tool, false);
+        }
+      }
+    }
+  }
+  const allIdentifiers = /* @__PURE__ */ new Set([...toolsInclude ?? [], ...toolsExclude ?? []]);
+  const unknownIdentifiers = [];
+  for (const identifier of allIdentifiers) {
+    if (!matchedIdentifiers.has(identifier)) {
+      unknownIdentifiers.push(identifier);
+    }
+  }
+  const enabledToolCount = Array.from(enablementMap.entries()).filter(([item, enabled]) => enabled && !isToolSet(item)).length;
+  if (enabledToolCount === 0) {
+    throw new Error("Tool filtering resulted in zero enabled tools. At least one tool must be enabled.");
+  }
+  for (const toolSet of allToolSets) {
+    const toolSetTools = Array.from(toolSet.getTools());
+    const allToolsEnabled = toolSetTools.length > 0 && toolSetTools.every((t) => enablementMap.get(t) === true);
+    enablementMap.set(toolSet, allToolsEnabled);
+  }
+  return { enablementMap, unknownIdentifiers };
+}
+__name(computeToolEnablementMap, "computeToolEnablementMap");
 async function handleCurrentEditingSession(model, phrase, dialogService) {
   return showClearEditingSessionConfirmation(model, dialogService, { messageOverride: phrase });
 }
@@ -996,30 +1050,7 @@ registerAction2(class EditToolApproval extends Action2 {
   async run(accessor, scope) {
     const confirmationService = accessor.get(ILanguageModelToolsConfirmationService);
     const toolsService = accessor.get(ILanguageModelToolsService);
-    confirmationService.manageConfirmationPreferences([...toolsService.getTools()], scope ? { defaultScope: scope } : void 0);
-  }
-});
-registerAction2(class ToggleChatViewTitleAction extends Action2 {
-  static {
-    __name(this, "ToggleChatViewTitleAction");
-  }
-  constructor() {
-    super({
-      id: "workbench.action.chat.toggleChatViewTitle",
-      title: localize2("chat.toggleChatViewTitle.label", "Show Chat Title"),
-      toggled: ContextKeyExpr.equals(`config.${ChatConfiguration.ChatViewTitleEnabled}`, true),
-      menu: {
-        id: MenuId.ChatWelcomeContext,
-        group: "1_modify",
-        order: 2,
-        when: ChatContextKeys.inChatEditor.negate()
-      }
-    });
-  }
-  async run(accessor) {
-    const configurationService = accessor.get(IConfigurationService);
-    const chatViewTitleEnabled = configurationService.getValue(ChatConfiguration.ChatViewTitleEnabled);
-    await configurationService.updateValue(ChatConfiguration.ChatViewTitleEnabled, !chatViewTitleEnabled);
+    confirmationService.manageConfirmationPreferences([...toolsService.getAllToolsIncludingDisabled()], scope ? { defaultScope: scope } : void 0);
   }
 });
 export {
@@ -1031,8 +1062,8 @@ export {
   CHAT_OPEN_ACTION_ID,
   CHAT_SETUP_ACTION_ID,
   CHAT_SETUP_SUPPORT_ANONYMOUS_ACTION_ID,
-  CopilotTitleBarMenuRendering,
   ModeOpenChatGlobalAction,
+  computeToolEnablementMap,
   getOpenChatActionIdForMode,
   handleCurrentEditingSession,
   handleModeSwitch,

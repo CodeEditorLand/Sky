@@ -194,8 +194,10 @@ let QuickInputController = class QuickInputController2 extends Disposable {
         const activeDescendant = list.getActiveDescendant();
         if (activeDescendant) {
           inputBox.setAttribute("aria-activedescendant", activeDescendant);
+          inputBox.setListFocusMode(true);
         } else {
           inputBox.removeAttribute("aria-activedescendant");
+          inputBox.setListFocusMode(false);
         }
       }
     }));
@@ -225,8 +227,10 @@ let QuickInputController = class QuickInputController2 extends Disposable {
         const activeDescendant = tree.getActiveDescendant();
         if (activeDescendant) {
           inputBox.setAttribute("aria-activedescendant", activeDescendant);
+          inputBox.setListFocusMode(true);
         } else {
           inputBox.removeAttribute("aria-activedescendant");
+          inputBox.setListFocusMode(false);
         }
       }
     }));
@@ -274,6 +278,7 @@ let QuickInputController = class QuickInputController2 extends Disposable {
       }
       if (!isModifierKey(e.keyCode)) {
         inputBox.removeAttribute("aria-activedescendant");
+        inputBox.setListFocusMode(false);
       }
     }));
     this._register(dom.addDisposableListener(container, dom.EventType.FOCUS, (e) => {

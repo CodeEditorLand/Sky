@@ -1,6 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { Codicon } from "../../../../../base/common/codicons.js";
+import { isUriComponents, URI } from "../../../../../base/common/uri.js";
 import { localize2 } from "../../../../../nls.js";
 import { Categories } from "../../../../../platform/action/common/actionCommonCategories.js";
 import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
@@ -8,6 +9,16 @@ import { IEditorService } from "../../../../services/editor/common/editorService
 import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { IChatService } from "../../common/chatService/chatService.js";
 import { IChatWidgetService } from "../chat.js";
+function uriReplacer(_key, value) {
+  if (URI.isUri(value)) {
+    return value.toString();
+  }
+  if (isUriComponents(value)) {
+    return URI.from(value).toString();
+  }
+  return value;
+}
+__name(uriReplacer, "uriReplacer");
 function registerChatDeveloperActions() {
   registerAction2(LogChatInputHistoryAction);
   registerAction2(LogChatIndexAction);
@@ -90,11 +101,11 @@ class InspectChatModelAction extends Action2 {
       const latestRequest = requests[requests.length - 1];
       if (latestRequest.response) {
         output += "## Latest Response\n\n";
-        output += "```json\n" + JSON.stringify(latestRequest.response, null, 2) + "\n```\n\n";
+        output += "```json\n" + JSON.stringify(latestRequest.response, uriReplacer, 2) + "\n```\n\n";
       }
     }
     output += "## Full Chat Model\n\n";
-    output += "```json\n" + JSON.stringify(modelData, null, 2) + "\n```\n";
+    output += "```json\n" + JSON.stringify(modelData, uriReplacer, 2) + "\n```\n";
     await editorService.openEditor({
       resource: void 0,
       contents: output,

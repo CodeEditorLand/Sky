@@ -177,6 +177,7 @@ const DEFAULT_COMMANDS_TO_SKIP_SHELL = [
   "workbench.action.terminal.focusHover",
   "editor.action.accessibilityHelp",
   "workbench.action.terminal.stopVoice",
+  "workbench.action.terminal.sendSignal",
   "workbench.action.tasks.rerunForActiveTerminal",
   "editor.action.toggleTabFocusMode",
   "notifications.hideList",

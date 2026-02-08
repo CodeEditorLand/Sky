@@ -2,7 +2,7 @@ import { URI } from '../../../../../../base/common/uri.js';
 import { IFileService } from '../../../../../../platform/files/common/files.js';
 import { IWorkspaceContextService } from '../../../../../../platform/workspace/common/workspace.js';
 import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IResolvedPromptFile } from '../config/promptFileLocations.js';
+import { IResolvedPromptFile, IResolvedPromptSourceFolder } from '../config/promptFileLocations.js';
 import { PromptsType } from '../promptTypes.js';
 import { IWorkbenchEnvironmentService } from '../../../../../services/environment/common/environmentService.js';
 import { ISearchService } from '../../../../../services/search/common/search.js';
@@ -33,6 +33,11 @@ export declare class PromptFilesLocator {
     listFiles(type: PromptsType, storage: PromptsStorage, token: CancellationToken): Promise<readonly URI[]>;
     private listFilesInUserData;
     /**
+     * Gets all user storage folders for the given prompt type.
+     * This includes configured tilde paths and the VS Code user data prompts folder.
+     */
+    private getUserStorageFolders;
+    /**
      * Gets all source folder URIs for a prompt type (both workspace and user home).
      * This is used for file watching to detect changes in all relevant locations.
      */
@@ -42,6 +47,11 @@ export declare class PromptFilesLocator {
         dispose: () => void;
     };
     getAgentSourceFolders(): Promise<readonly URI[]>;
+    /**
+     * Gets the hook source folders for creating new hooks.
+     * Returns only the Copilot hooks folder (.github/hooks) since Claude paths are read-only.
+     */
+    getHookSourceFolders(): Promise<readonly URI[]>;
     /**
      * Get all possible unambiguous prompt file source folders based on
      * the current workspace folder structure.
@@ -55,6 +65,24 @@ export declare class PromptFilesLocator {
      * @returns List of possible unambiguous prompt file folders.
      */
     getConfigBasedSourceFolders(type: PromptsType): Promise<readonly URI[]>;
+    /**
+     * Gets all resolved source folders for the given prompt type with metadata.
+     * This method merges configured locations with default locations and resolves them
+     * to absolute paths, including displayPath and isDefault information.
+     *
+     * @param type The type of prompt files.
+     * @returns List of resolved source folders with metadata.
+     */
+    getResolvedSourceFolders(type: PromptsType): Promise<readonly IResolvedPromptSourceFolder[]>;
+    /**
+     * Gets all local (workspace) storage folders for the given prompt type.
+     * This merges default folders with configured locations.
+     */
+    private getLocalStorageFolders;
+    /**
+     * Deduplicates source folders by URI.
+     */
+    private dedupeSourceFolders;
     /**
      * Finds all existent prompt files in the configured local source folders.
      *
@@ -71,23 +99,12 @@ export declare class PromptFilesLocator {
      */
     private toAbsoluteLocations;
     /**
-     * Converts skill locations to absolute filesystem path URIs with restricted validation.
-     * Unlike toAbsoluteLocations(), this method enforces stricter rules for skills:
-     * - No glob patterns (performance concerns)
-     * - No absolute paths (portability concerns)
-     * - Only relative paths, tilde paths, and parent relative paths
-     *
-     * @param configuredLocations - Source folder definitions from configuration
-     * @param userHome - User home URI for tilde expansion (optional for workspace-only resolution)
-     * @returns List of resolved absolute URIs with metadata
-     */
-    private toAbsoluteLocationsForSkills;
-    /**
      * Uses the file service to resolve the provided location and return either the file at the location of files in the directory.
      */
     private resolveFilesAtLocation;
     /**
-     * Uses the search service to find all files at the provided location
+     * Uses the search service to find all files at the provided location.
+     * Requires a FileSearchProvider to be available for the folder's scheme.
      */
     private searchFilesInLocation;
     findCopilotInstructionsMDsInWorkspace(token: CancellationToken): Promise<URI[]>;
@@ -96,6 +113,11 @@ export declare class PromptFilesLocator {
      */
     findAgentMDsInWorkspace(token: CancellationToken): Promise<URI[]>;
     private findAgentMDsInFolder;
+    /**
+     * Recursively traverses a folder using the file service to find AGENTS.md files.
+     * This is used as a fallback when no FileSearchProvider is available for the scheme.
+     */
+    private findAgentMDsUsingFileService;
     /**
      * Gets list of `AGENTS.md` files only at the root workspace folder(s).
      */
@@ -108,31 +130,42 @@ export declare class PromptFilesLocator {
     findAgentSkills(token: CancellationToken): Promise<IResolvedPromptFile[]>;
 }
 /**
+ * Checks if the provided path contains a glob pattern (* or **).
+ * Used to detect deprecated glob usage in prompt file locations.
+ *
+ * @param path - path to check
+ * @returns `true` if the path contains `*` or `**`, `false` otherwise
+ */
+export declare function hasGlobPattern(path: string): boolean;
+/**
  * Checks if the provided `pattern` could be a valid glob pattern.
  */
 export declare function isValidGlob(pattern: string): boolean;
 /**
- * Regex pattern string for validating skill paths.
- * Skills only support:
+ * Regex pattern string for validating paths for all prompt files.
+ * Paths only support:
  * - Relative paths: someFolder, ./someFolder
- * - User home paths: ~/folder or ~\folder
+ * - User home paths: ~/folder (only forward slash, not backslash for cross-platform sharing)
  * - Parent relative paths for monorepos: ../folder
  *
  * NOT supported:
  * - Absolute paths (portability issue)
  * - Glob patterns with * or ** (performance issue)
- * - Tilde without path separator (e.g., ~abc)
+ * - Backslashes (paths should be shareable in repos across platforms)
+ * - Tilde without forward slash (e.g., ~abc, ~\folder)
  * - Empty or whitespace-only paths
  *
  * The regex validates:
- * - Not a Windows absolute path (e.g., C:\)
+ * - Not a Windows absolute path (e.g., C:\, C:/)
  * - Not starting with / (Unix absolute path)
- * - If starts with ~, must be followed by / or \
+ * - No backslashes anywhere (use forward slashes only)
+ * - If starts with ~, must be followed by /
  * - No glob pattern characters: * ? [ ] { }
  * - At least one non-whitespace character
  */
-export declare const VALID_SKILL_PATH_PATTERN = "^(?![A-Za-z]:[\\\\/])(?![\\\\/])(?!~(?![\\\\/]))(?!.*[*?\\[\\]{}]).*\\S.*$";
+export declare const VALID_PROMPT_FOLDER_PATTERN = "^(?![A-Za-z]:[\\\\/])(?!/)(?!~(?!/))(?!.*\\\\)(?!.*[*?\\[\\]{}]).*\\S.*$";
 /**
- * Validates if a path is allowed for skills configuration.
+ * Validates if a path is allowed for simplified path configurations.
+ * Only forward slashes are supported to ensure paths are shareable across platforms.
  */
-export declare function isValidSkillPath(path: string): boolean;
+export declare function isValidPromptFolderPath(path: string): boolean;

@@ -22,6 +22,18 @@ export declare function computeMaxBufferColumnWidth(buffer: {
         } | undefined;
     } | undefined;
 }, cols: number): number;
+/**
+ * Checks if two VT strings match around a boundary where we would slice.
+ * This is an efficient O(1) check that verifies a small window of characters
+ * before the slice point to detect if the VT sequences have diverged (common on Windows).
+ *
+ * @param newVT The new VT text to compare.
+ * @param oldVT The old VT text to compare against.
+ * @param slicePoint The point where we would slice. Must be <= both string lengths.
+ * @param windowSize The number of characters before slicePoint to check (default 50).
+ * @returns True if the boundary matches, false if VT sequences have diverged.
+ */
+export declare function vtBoundaryMatches(newVT: string, oldVT: string, slicePoint: number, windowSize?: number): boolean;
 export interface IDetachedTerminalCommandMirrorRenderResult {
     lineCount?: number;
     maxColumnWidth?: number;
@@ -76,6 +88,10 @@ export declare class DetachedTerminalCommandMirror extends Disposable implements
     private _flushDirtyRange;
     private _doFlushDirtyRange;
     private _getAbsoluteCursorY;
+    /**
+     * Checks if the new VT text matches the old VT around the boundary where we would slice.
+     */
+    private _vtBoundaryMatches;
 }
 /**
  * Mirrors a terminal output snapshot into a detached terminal instance.

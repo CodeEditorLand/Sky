@@ -10,6 +10,7 @@ import { InlineCompletionsProvider } from '../../../../common/languages.js';
 import { ILanguageConfigurationService } from '../../../../common/languages/languageConfigurationRegistry.js';
 import { ITextModel } from '../../../../common/model.js';
 import { IFeatureDebounceInformation } from '../../../../common/services/languageFeatureDebounce.js';
+import { ITextModelService } from '../../../../common/services/resolverService.js';
 import { IModelContentChangedEvent } from '../../../../common/textModelEvents.js';
 import { InlineSuggestionIdentity, InlineSuggestionItem } from './inlineSuggestionItem.js';
 import { InlineCompletionContextWithoutUuid, InlineSuggestRequestInfo } from './provideInlineCompletions.js';
@@ -23,6 +24,7 @@ export declare class InlineCompletionsSource extends Disposable {
     private readonly _configurationService;
     private readonly _instantiationService;
     private readonly _contextKeyService;
+    private readonly _textModelService;
     private static _requestId;
     private readonly _updateOperation;
     private readonly _loggingEnabled;
@@ -33,7 +35,7 @@ export declare class InlineCompletionsSource extends Disposable {
     readonly suggestWidgetInlineCompletions: IObservable<InlineCompletionsState>;
     private readonly _renameProcessor;
     private _completionsEnabled;
-    constructor(_textModel: ITextModel, _versionId: IObservableWithChange<number | null, IModelContentChangedEvent | undefined>, _debounceValue: IFeatureDebounceInformation, _cursorPosition: IObservable<Position>, _languageConfigurationService: ILanguageConfigurationService, _logService: ILogService, _configurationService: IConfigurationService, _instantiationService: IInstantiationService, _contextKeyService: IContextKeyService);
+    constructor(_textModel: ITextModel, _versionId: IObservableWithChange<number | null, IModelContentChangedEvent | undefined>, _debounceValue: IFeatureDebounceInformation, _cursorPosition: IObservable<Position>, _languageConfigurationService: ILanguageConfigurationService, _logService: ILogService, _configurationService: IConfigurationService, _instantiationService: IInstantiationService, _contextKeyService: IContextKeyService, _textModelService: ITextModelService);
     private _updateCompletionsEnablement;
     readonly clearOperationOnTextModelChange: IObservableWithChange<undefined, void>;
     private _log;
@@ -42,7 +44,12 @@ export declare class InlineCompletionsSource extends Disposable {
     fetch(providers: InlineCompletionsProvider[], providersLabel: string | undefined, context: InlineCompletionContextWithoutUuid, activeInlineCompletion: InlineSuggestionIdentity | undefined, withDebounce: boolean, userJumpedToActiveCompletion: IObservable<boolean>, requestInfo: InlineSuggestRequestInfo): Promise<boolean>;
     clear(tx: ITransaction): void;
     seedInlineCompletionsWithSuggestWidget(): void;
-    private sendInlineCompletionsRequestTelemetry;
+    /**
+     * Seeds the inline completions with an external inline completion item.
+     * Used when transplanting a completion from one model to another (cross-file edits).
+     */
+    seedWithCompletion(item: InlineSuggestionItem, tx: ITransaction): void;
+    private _sendInlineCompletionsRequestTelemetry;
     clearSuggestWidgetInlineCompletions(tx: ITransaction): void;
     cancelUpdate(): void;
 }
@@ -55,7 +62,7 @@ declare class UpdateRequest {
     satisfies(other: UpdateRequest): boolean;
     get isExplicitRequest(): boolean;
 }
-declare class InlineCompletionsState extends Disposable {
+export declare class InlineCompletionsState extends Disposable {
     readonly inlineCompletions: readonly InlineSuggestionItem[];
     readonly request: UpdateRequest | undefined;
     static createEmpty(): InlineCompletionsState;

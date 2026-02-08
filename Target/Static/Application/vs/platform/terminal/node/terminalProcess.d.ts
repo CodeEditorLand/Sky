@@ -3,7 +3,7 @@ import { Disposable } from '../../../base/common/lifecycle.js';
 import { IProcessEnvironment } from '../../../base/common/platform.js';
 import { ILogService } from '../../log/common/log.js';
 import { IProductService } from '../../product/common/productService.js';
-import { IShellLaunchConfig, ITerminalChildProcess, ITerminalLaunchError, IProcessProperty, IProcessPropertyMap as IProcessPropertyMap, ProcessPropertyType, TerminalShellType, IProcessReadyEvent, ITerminalProcessOptions, IProcessReadyWindowsPty, ITerminalLaunchResult } from '../common/terminal.js';
+import { IShellLaunchConfig, ITerminalChildProcess, ITerminalLaunchError, IProcessProperty, IProcessPropertyMap, ProcessPropertyType, TerminalShellType, IProcessReadyEvent, ITerminalProcessOptions, IProcessReadyWindowsPty, ITerminalLaunchResult } from '../common/terminal.js';
 export declare class TerminalProcess extends Disposable implements ITerminalChildProcess {
     readonly shellLaunchConfig: IShellLaunchConfig;
     /**

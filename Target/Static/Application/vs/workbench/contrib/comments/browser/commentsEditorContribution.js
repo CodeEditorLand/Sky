@@ -433,6 +433,8 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
   handler: /* @__PURE__ */ __name(async (accessor, args) => {
     const activeCodeEditor = accessor.get(ICodeEditorService).getFocusedCodeEditor();
     const keybindingService = accessor.get(IKeybindingService);
+    const notificationService = accessor.get(INotificationService);
+    const commentService = accessor.get(ICommentService);
     await keybindingService.enableKeybindingHoldMode(
       "workbench.action.hideComment"
       /* CommentCommandId.Hide */
@@ -444,8 +446,6 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
       if (!controller) {
         return;
       }
-      const notificationService = accessor.get(INotificationService);
-      const commentService = accessor.get(ICommentService);
       let error = false;
       try {
         const activeComment = commentService.lastActiveCommentcontroller?.activeComment;
@@ -459,6 +459,30 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
       }
       if (error) {
         notificationService.error(nls.localize("comments.focusCommand.error", "The cursor must be on a line with a comment to focus the comment"));
+      }
+    }
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.action.hideComment",
+  weight: 100,
+  primary: 2048 | 9,
+  win: {
+    primary: 512 | 1
+    /* KeyCode.Backspace */
+  },
+  when: ContextKeyExpr.and(EditorContextKeys.focus, CommentContextKeys.commentWidgetVisible),
+  handler: /* @__PURE__ */ __name(async (accessor, args) => {
+    const activeCodeEditor = accessor.get(ICodeEditorService).getFocusedCodeEditor();
+    const keybindingService = accessor.get(IKeybindingService);
+    await keybindingService.enableKeybindingHoldMode(
+      "workbench.action.hideComment"
+      /* CommentCommandId.Hide */
+    );
+    if (activeCodeEditor) {
+      const controller = CommentController.get(activeCodeEditor);
+      if (controller) {
+        await controller.collapseVisibleComments();
       }
     }
   }, "handler")

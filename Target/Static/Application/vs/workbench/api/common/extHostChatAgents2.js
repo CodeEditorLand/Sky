@@ -1,8 +1,8 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { coalesce } from "../../../base/common/arrays.js";
-import { timeout } from "../../../base/common/async.js";
-import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { DeferredPromise, raceCancellation, timeout } from "../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../base/common/cancellation.js";
 import { toErrorMessage } from "../../../base/common/errorMessage.js";
 import { Emitter } from "../../../base/common/event.js";
 import { Iterable } from "../../../base/common/iterator.js";
@@ -22,17 +22,18 @@ import { MainContext } from "./extHost.protocol.js";
 import * as typeConvert from "./extHostTypeConverters.js";
 import * as extHostTypes from "./extHostTypes.js";
 import { PromptsType } from "../../contrib/chat/common/promptSyntax/promptTypes.js";
-import { Schemas } from "../../../base/common/network.js";
 class ChatAgentResponseStream {
   static {
     __name(this, "ChatAgentResponseStream");
   }
-  constructor(_extension, _request, _proxy, _commandsConverter, _sessionDisposables) {
+  constructor(_extension, _request, _proxy, _commandsConverter, _sessionDisposables, _pendingCarouselResolvers, _token) {
     this._extension = _extension;
     this._request = _request;
     this._proxy = _proxy;
     this._commandsConverter = _commandsConverter;
     this._sessionDisposables = _sessionDisposables;
+    this._pendingCarouselResolvers = _pendingCarouselResolvers;
+    this._token = _token;
     this._stopWatch = StopWatch.create(false);
     this._isClosed = false;
   }
@@ -234,6 +235,14 @@ class ChatAgentResponseStream {
           _report(dto);
           return this;
         },
+        workspaceEdit(edits) {
+          throwIfDone2(this.workspaceEdit);
+          checkProposedApiEnabled(that._extension, "chatParticipantAdditions");
+          const part = new extHostTypes.ChatResponseWorkspaceEditPart(edits);
+          const dto = typeConvert.ChatResponseWorkspaceEditPart.from(part);
+          _report(dto);
+          return this;
+        },
         async externalEdit(target, callback) {
           throwIfDone2(this.externalEdit);
           const resources = Array.isArray(target) ? target : [target];
@@ -254,6 +263,21 @@ class ChatAgentResponseStream {
           const dto = typeConvert.ChatResponseConfirmationPart.from(part);
           _report(dto);
           return this;
+        },
+        async questionCarousel(questions, allowSkip = true) {
+          throwIfDone2(this.questionCarousel);
+          checkProposedApiEnabled(that._extension, "chatParticipantAdditions");
+          const resolveId = generateUuid();
+          const part = new extHostTypes.ChatResponseQuestionCarouselPart(questions, allowSkip);
+          const dto = typeConvert.ChatResponseQuestionCarouselPart.from(part);
+          dto.resolveId = resolveId;
+          const deferred = new DeferredPromise();
+          if (!that._pendingCarouselResolvers.has(that._request.requestId)) {
+            that._pendingCarouselResolvers.set(that._request.requestId, /* @__PURE__ */ new Map());
+          }
+          that._pendingCarouselResolvers.get(that._request.requestId).set(resolveId, deferred);
+          _report(dto);
+          return raceCancellation(deferred.p, that._token);
         },
         beginToolInvocation(toolCallId, toolName, streamData) {
           throwIfDone2(this.beginToolInvocation);
@@ -285,7 +309,7 @@ class ChatAgentResponseStream {
         },
         push(part) {
           throwIfDone2(this.push);
-          if (part instanceof extHostTypes.ChatResponseTextEditPart || part instanceof extHostTypes.ChatResponseNotebookEditPart || part instanceof extHostTypes.ChatResponseMarkdownWithVulnerabilitiesPart || part instanceof extHostTypes.ChatResponseWarningPart || part instanceof extHostTypes.ChatResponseConfirmationPart || part instanceof extHostTypes.ChatResponseCodeCitationPart || part instanceof extHostTypes.ChatResponseMovePart || part instanceof extHostTypes.ChatResponseExtensionsPart || part instanceof extHostTypes.ChatResponseExternalEditPart || part instanceof extHostTypes.ChatResponseThinkingProgressPart || part instanceof extHostTypes.ChatResponsePullRequestPart || part instanceof extHostTypes.ChatResponseProgressPart2) {
+          if (part instanceof extHostTypes.ChatResponseTextEditPart || part instanceof extHostTypes.ChatResponseNotebookEditPart || part instanceof extHostTypes.ChatResponseMarkdownWithVulnerabilitiesPart || part instanceof extHostTypes.ChatResponseWarningPart || part instanceof extHostTypes.ChatResponseConfirmationPart || part instanceof extHostTypes.ChatResponseQuestionCarouselPart || part instanceof extHostTypes.ChatResponseCodeCitationPart || part instanceof extHostTypes.ChatResponseMovePart || part instanceof extHostTypes.ChatResponseExtensionsPart || part instanceof extHostTypes.ChatResponseExternalEditPart || part instanceof extHostTypes.ChatResponseThinkingProgressPart || part instanceof extHostTypes.ChatResponsePullRequestPart || part instanceof extHostTypes.ChatResponseProgressPart2) {
             checkProposedApiEnabled(that._extension, "chatParticipantAdditions");
           }
           if (part instanceof extHostTypes.ChatResponseReferencePart) {
@@ -318,6 +342,18 @@ class ChatAgentResponseStream {
             _report(dto);
           }
           return this;
+        },
+        usage(usage) {
+          throwIfDone2(this.usage);
+          checkProposedApiEnabled(that._extension, "chatParticipantAdditions");
+          const dto = {
+            kind: "usage",
+            promptTokens: usage.promptTokens,
+            completionTokens: usage.completionTokens,
+            promptTokenDetails: usage.promptTokenDetails
+          };
+          _report(dto);
+          return this;
         }
       });
     }
@@ -335,9 +371,6 @@ class ExtHostChatAgents2 extends Disposable {
     this._participantDetectionProviderIdPool = 0;
   }
   static {
-    this._relatedFilesProviderIdPool = 0;
-  }
-  static {
     this._contributionsProviderIdPool = 0;
   }
   constructor(mainContext, _logService, _commands, _documents, _editorsAndDocuments, _languageModels, _diagnostics, _tools) {
@@ -351,11 +384,11 @@ class ExtHostChatAgents2 extends Disposable {
     this._tools = _tools;
     this._agents = /* @__PURE__ */ new Map();
     this._participantDetectionProviders = /* @__PURE__ */ new Map();
-    this._relatedFilesProviders = /* @__PURE__ */ new Map();
     this._promptFileProviders = /* @__PURE__ */ new Map();
     this._sessionDisposables = this._register(new DisposableResourceMap());
     this._completionDisposables = this._register(new DisposableMap());
     this._inFlightRequests = /* @__PURE__ */ new Set();
+    this._pendingCarouselResolvers = /* @__PURE__ */ new Map();
     this._onDidChangeChatRequestTools = this._register(new Emitter());
     this.onDidChangeChatRequestTools = this._onDidChangeChatRequestTools.event;
     this._onDidDisposeChatSession = this._register(new Emitter());
@@ -396,15 +429,6 @@ class ExtHostChatAgents2 extends Disposable {
       this._proxy.$unregisterChatParticipantDetectionProvider(handle);
     });
   }
-  registerRelatedFilesProvider(extension, provider, metadata) {
-    const handle = ExtHostChatAgents2._relatedFilesProviderIdPool++;
-    this._relatedFilesProviders.set(handle, new ExtHostRelatedFilesProvider(extension, provider));
-    this._proxy.$registerRelatedFilesProvider(handle, metadata);
-    return toDisposable(() => {
-      this._relatedFilesProviders.delete(handle);
-      this._proxy.$unregisterRelatedFilesProvider(handle);
-    });
-  }
   /**
    * Internal method that handles all prompt file provider types.
    * Routes custom agents, instructions, prompt files, and skills to the unified internal implementation.
@@ -440,14 +464,6 @@ class ExtHostChatAgents2 extends Disposable {
     }));
     return disposables;
   }
-  async $provideRelatedFiles(handle, request, token) {
-    const provider = this._relatedFilesProviders.get(handle);
-    if (!provider) {
-      return Promise.resolve([]);
-    }
-    const extRequestDraft = typeConvert.ChatRequestDraft.to(request);
-    return await provider.provider.provideRelatedFiles(extRequestDraft, token) ?? void 0;
-  }
   async $providePromptFiles(handle, type, context, token) {
     const providerData = this._promptFileProviders.get(handle);
     if (!providerData) {
@@ -469,33 +485,7 @@ class ExtHostChatAgents2 extends Disposable {
         resources = await provider.provideSkills(context, token) ?? void 0;
         break;
     }
-    return resources?.map((r) => this.convertChatResourceDescriptorToPromptFileResource(r.resource, providerData.extension.identifier.value));
-  }
-  /**
-   * Creates a virtual URI for a prompt file.
-   */
-  createVirtualPromptUri(id, extensionId) {
-    return URI.from({
-      scheme: Schemas.vscodeChatPrompt,
-      path: `/${extensionId}/${id}`
-    });
-  }
-  convertChatResourceDescriptorToPromptFileResource(resource, extensionId) {
-    if (URI.isUri(resource)) {
-      return { uri: resource };
-    } else if ("id" in resource && "content" in resource) {
-      return {
-        content: resource.content,
-        uri: this.createVirtualPromptUri(resource.id, extensionId),
-        isEditable: void 0
-      };
-    } else if ("uri" in resource && URI.isUri(resource.uri)) {
-      return {
-        uri: URI.revive(resource.uri),
-        isEditable: resource.isEditable
-      };
-    }
-    throw new Error(`Invalid ChatResourceDescriptor: ${JSON.stringify(resource)}`);
+    return resources;
   }
   async $detectChatParticipant(handle, requestDto, context, options, token) {
     const detector = this._participantDetectionProviders.get(handle);
@@ -504,8 +494,9 @@ class ExtHostChatAgents2 extends Disposable {
     }
     const { request, location, history } = await this._createRequest(requestDto, context, detector.extension);
     const model = await this.getModelForRequest(request, detector.extension);
-    const extRequest = typeConvert.ChatAgentRequest.to(request, location, model, this.getDiagnosticsWhenEnabled(detector.extension), this.getToolsForRequest(detector.extension, request.userSelectedTools), detector.extension, this._logService);
-    return detector.provider.provideParticipantDetection(extRequest, { history }, { participants: options.participants, location: typeConvert.ChatLocation.to(options.location) }, token);
+    const tools = await this.getToolsForRequest(detector.extension, request.userSelectedTools, model.id, token);
+    const extRequest = typeConvert.ChatAgentRequest.to(request, location, model, this.getDiagnosticsWhenEnabled(detector.extension), tools, detector.extension, this._logService);
+    return detector.provider.provideParticipantDetection(extRequest, { history, yieldRequested: false }, { participants: options.participants, location: typeConvert.ChatLocation.to(options.location) }, token);
   }
   async _createRequest(requestDto, context, extension) {
     const request = revive(requestDto);
@@ -541,7 +532,8 @@ class ExtHostChatAgents2 extends Disposable {
       return;
     }
     request.extRequest.tools.clear();
-    for (const [k, v] of this.getToolsForRequest(request.extension, tools)) {
+    const toolsMap = await this.getToolsForRequest(request.extension, tools, request.extRequest.model.id, CancellationToken.None);
+    for (const [k, v] of toolsMap) {
       request.extRequest.tools.set(k, v);
     }
     this._onDidChangeChatRequestTools.fire(request.extRequest);
@@ -560,10 +552,11 @@ class ExtHostChatAgents2 extends Disposable {
         sessionDisposables = new DisposableStore();
         this._sessionDisposables.set(request.sessionResource, sessionDisposables);
       }
-      stream = new ChatAgentResponseStream(agent.extension, request, this._proxy, this._commands.converter, sessionDisposables);
+      stream = new ChatAgentResponseStream(agent.extension, request, this._proxy, this._commands.converter, sessionDisposables, this._pendingCarouselResolvers, token);
       const model = await this.getModelForRequest(request, agent.extension);
-      const extRequest = typeConvert.ChatAgentRequest.to(request, location, model, this.getDiagnosticsWhenEnabled(agent.extension), this.getToolsForRequest(agent.extension, request.userSelectedTools), agent.extension, this._logService);
-      inFlightRequest = { requestId: requestDto.requestId, extRequest, extension: agent.extension };
+      const tools = await this.getToolsForRequest(agent.extension, request.userSelectedTools, model.id, token);
+      const extRequest = typeConvert.ChatAgentRequest.to(request, location, model, this.getDiagnosticsWhenEnabled(agent.extension), tools, agent.extension, this._logService);
+      inFlightRequest = { requestId: requestDto.requestId, extRequest, extension: agent.extension, hooks: request.hooks };
       this._inFlightRequests.add(inFlightRequest);
       let chatSessionContext;
       if (context.chatSessionContext) {
@@ -575,7 +568,7 @@ class ExtHostChatAgents2 extends Disposable {
           isUntitled: context.chatSessionContext.isUntitled
         };
       }
-      const chatContext = { history, chatSessionContext };
+      const chatContext = { history, chatSessionContext, yieldRequested: request.yieldRequested ?? false };
       const task = agent.invoke(extRequest, chatContext, stream.apiObject, token);
       return await raceCancellationWithTimeout(1e3, Promise.resolve(task).then((result) => {
         if (result?.metadata) {
@@ -611,6 +604,13 @@ class ExtHostChatAgents2 extends Disposable {
       if (inFlightRequest) {
         this._inFlightRequests.delete(inFlightRequest);
       }
+      const pendingResolvers = this._pendingCarouselResolvers.get(requestDto.requestId);
+      if (pendingResolvers) {
+        for (const deferred of pendingResolvers.values()) {
+          deferred.complete(void 0);
+        }
+        this._pendingCarouselResolvers.delete(requestDto.requestId);
+      }
       stream?.close();
     }
   }
@@ -620,14 +620,14 @@ class ExtHostChatAgents2 extends Disposable {
     }
     return this._diagnostics.getDiagnostics();
   }
-  getToolsForRequest(extension, tools) {
+  async getToolsForRequest(extension, tools, modelId, token) {
     if (!tools) {
       return /* @__PURE__ */ new Map();
     }
     const result = /* @__PURE__ */ new Map();
     for (const tool of this._tools.getTools(extension)) {
       if (typeof tools[tool.name] === "boolean") {
-        result.set(tool.name, tools[tool.name]);
+        result.set(tool, tools[tool.name]);
       }
     }
     return result;
@@ -675,7 +675,7 @@ class ExtHostChatAgents2 extends Disposable {
     const request = revive(requestDto);
     const convertedHistory = await this.prepareHistoryTurns(agent.extension, agent.id, context);
     const ehResult = typeConvert.ChatAgentResult.to(result);
-    return (await agent.provideFollowups(ehResult, { history: convertedHistory }, token)).filter((f) => {
+    return (await agent.provideFollowups(ehResult, { history: convertedHistory, yieldRequested: false }, token)).filter((f) => {
       const isValid = !f.participant || Iterable.some(this._agents.values(), (a) => a.id === f.participant && ExtensionIdentifier.equals(a.extension.identifier, agent.extension.identifier));
       if (!isValid) {
         this._logService.warn(`[@${agent.id}] ChatFollowup refers to an unknown participant: ${f.participant}`);
@@ -704,6 +704,20 @@ class ExtHostChatAgents2 extends Disposable {
       unhelpfulReason: isProposedApiEnabled(agent.extension, "chatParticipantAdditions") ? voteAction.reason : void 0
     };
     agent.acceptFeedback(Object.freeze(feedback));
+  }
+  $handleQuestionCarouselAnswer(requestId, resolveId, answers) {
+    const requestResolvers = this._pendingCarouselResolvers.get(requestId);
+    if (!requestResolvers) {
+      return;
+    }
+    const deferred = requestResolvers.get(resolveId);
+    if (deferred) {
+      deferred.complete(answers);
+      requestResolvers.delete(resolveId);
+    }
+    if (requestResolvers.size === 0) {
+      this._pendingCarouselResolvers.delete(requestId);
+    }
   }
   $acceptAction(handle, result, event) {
     const agent = this._agents.get(handle);
@@ -739,7 +753,7 @@ class ExtHostChatAgents2 extends Disposable {
       return;
     }
     const history = await this.prepareHistoryTurns(agent.extension, agent.id, { history: context });
-    return await agent.provideTitle({ history }, token);
+    return await agent.provideTitle({ history, yieldRequested: false }, token);
   }
   async $provideChatSummary(handle, context, token) {
     const agent = this._agents.get(handle);
@@ -747,21 +761,12 @@ class ExtHostChatAgents2 extends Disposable {
       return;
     }
     const history = await this.prepareHistoryTurns(agent.extension, agent.id, { history: context });
-    return await agent.provideSummary({ history }, token);
+    return await agent.provideSummary({ history, yieldRequested: false }, token);
   }
 }
 class ExtHostParticipantDetector {
   static {
     __name(this, "ExtHostParticipantDetector");
-  }
-  constructor(extension, provider) {
-    this.extension = extension;
-    this.provider = provider;
-  }
-}
-class ExtHostRelatedFilesProvider {
-  static {
-    __name(this, "ExtHostRelatedFilesProvider");
   }
   constructor(extension, provider) {
     this.extension = extension;

@@ -12,11 +12,11 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import { mapFindFirst } from "../../../base/common/arraysFind.js";
-import { disposableTimeout } from "../../../base/common/async.js";
+import { disposableTimeout, RunOnceScheduler } from "../../../base/common/async.js";
 import { CancellationError } from "../../../base/common/errors.js";
 import { Emitter } from "../../../base/common/event.js";
 import { Disposable, DisposableMap, DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
-import { observableValue } from "../../../base/common/observable.js";
+import { autorun, observableValue } from "../../../base/common/observable.js";
 import Severity from "../../../base/common/severity.js";
 import { URI } from "../../../base/common/uri.js";
 import * as nls from "../../../nls.js";
@@ -92,6 +92,28 @@ let MainThreadMcp = class MainThreadMcp2 extends Disposable {
         return launch;
       }, "start")
     }));
+    const onDidChangeMcpServerDefinitionsTrigger = this._register(new RunOnceScheduler(() => this._publishServerDefinitions(), 500));
+    this._register(autorun((reader) => {
+      const collections = this._mcpRegistry.collections.read(reader);
+      for (const collection of collections) {
+        collection.serverDefinitions.read(reader);
+      }
+      if (!onDidChangeMcpServerDefinitionsTrigger.isScheduled()) {
+        onDidChangeMcpServerDefinitionsTrigger.schedule();
+      }
+    }));
+    onDidChangeMcpServerDefinitionsTrigger.schedule();
+  }
+  _publishServerDefinitions() {
+    const collections = this._mcpRegistry.collections.get();
+    const allServers = [];
+    for (const collection of collections) {
+      const servers = collection.serverDefinitions.get();
+      for (const server of servers) {
+        allServers.push(McpServerDefinition.toSerialized(server));
+      }
+    }
+    this._proxy.$onDidChangeMcpServerDefinitions(allServers);
   }
   $upsertMcpCollection(collection, serversDto) {
     const servers = serversDto.map(McpServerDefinition.fromSerialized);

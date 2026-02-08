@@ -5,7 +5,7 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { IRemoteAuthorityResolverService } from '../../../../platform/remote/common/remoteAuthorityResolver.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IWorkspace, IWorkspaceContextService, IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
-import { WorkspaceTrustRequestOptions, IWorkspaceTrustManagementService, IWorkspaceTrustUriInfo, IWorkspaceTrustRequestService, IWorkspaceTrustTransitionParticipant, WorkspaceTrustUriResponse, IWorkspaceTrustEnablementService } from '../../../../platform/workspace/common/workspaceTrust.js';
+import { WorkspaceTrustRequestOptions, IWorkspaceTrustManagementService, IWorkspaceTrustUriInfo, IWorkspaceTrustRequestService, IWorkspaceTrustTransitionParticipant, WorkspaceTrustUriResponse, IWorkspaceTrustEnablementService, ResourceTrustRequestOptions } from '../../../../platform/workspace/common/workspaceTrust.js';
 import { IWorkbenchEnvironmentService } from '../../environment/common/environmentService.js';
 import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
@@ -99,10 +99,14 @@ export declare class WorkspaceTrustRequestService extends Disposable implements 
     _serviceBrand: undefined;
     private _openFilesTrustRequestPromise?;
     private _openFilesTrustRequestResolver?;
+    private readonly _resourcesTrustRequestPromises;
+    private readonly _resourcesTrustRequestResolvers;
     private _workspaceTrustRequestPromise?;
     private _workspaceTrustRequestResolver?;
     private readonly _onDidInitiateOpenFilesTrustRequest;
     readonly onDidInitiateOpenFilesTrustRequest: Event<void>;
+    private readonly _onDidInitiateResourcesTrustRequest;
+    readonly onDidInitiateResourcesTrustRequest: Event<ResourceTrustRequestOptions>;
     private readonly _onDidInitiateWorkspaceTrustRequest;
     readonly onDidInitiateWorkspaceTrustRequest: Event<WorkspaceTrustRequestOptions | undefined>;
     private readonly _onDidInitiateWorkspaceTrustRequestOnStartup;
@@ -112,6 +116,8 @@ export declare class WorkspaceTrustRequestService extends Disposable implements 
     private set untrustedFilesSetting(value);
     completeOpenFilesTrustRequest(result: WorkspaceTrustUriResponse, saveResponse?: boolean): Promise<void>;
     requestOpenFilesTrust(uris: URI[]): Promise<WorkspaceTrustUriResponse>;
+    completeResourcesTrustRequest(uri: URI, result: WorkspaceTrustUriResponse): Promise<void>;
+    requestResourcesTrust(options: ResourceTrustRequestOptions): Promise<boolean | undefined>;
     private resolveWorkspaceTrustRequest;
     cancelWorkspaceTrustRequest(): void;
     completeWorkspaceTrustRequest(trusted?: boolean): Promise<void>;

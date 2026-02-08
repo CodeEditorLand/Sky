@@ -39,6 +39,10 @@ export declare class AddConfigurationAction extends Action2 {
     constructor();
     run(accessor: ServicesAccessor, configUri?: string): Promise<void>;
 }
+export declare class InstallFromManifestAction extends Action2 {
+    constructor();
+    run(accessor: ServicesAccessor): Promise<void>;
+}
 export declare class RemoveStoredInput extends Action2 {
     constructor();
     run(accessor: ServicesAccessor, scope: StorageScope, id?: string): void;

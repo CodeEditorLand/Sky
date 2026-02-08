@@ -220,7 +220,7 @@ suite("NodeCommandLinePresenter", () => {
   const presenter = new NodeCommandLinePresenter();
   test("should return JavaScript presentation for node -e command", () => {
     const result = presenter.present({
-      commandLine: `node -e "console.log('hello')"`,
+      commandLine: { forDisplay: `node -e "console.log('hello')"` },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -232,7 +232,7 @@ suite("NodeCommandLinePresenter", () => {
   });
   test("should return JavaScript presentation for nodejs -e command", () => {
     const result = presenter.present({
-      commandLine: `nodejs -e 'const x = 1; console.log(x)'`,
+      commandLine: { forDisplay: `nodejs -e 'const x = 1; console.log(x)'` },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -244,7 +244,7 @@ suite("NodeCommandLinePresenter", () => {
   });
   test("should return JavaScript presentation for node --eval command", () => {
     const result = presenter.present({
-      commandLine: `node --eval "console.log('hello')"`,
+      commandLine: { forDisplay: `node --eval "console.log('hello')"` },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -256,7 +256,7 @@ suite("NodeCommandLinePresenter", () => {
   });
   test("should return undefined for non-node commands", () => {
     const result = presenter.present({
-      commandLine: "echo hello",
+      commandLine: { forDisplay: "echo hello" },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -265,7 +265,7 @@ suite("NodeCommandLinePresenter", () => {
   });
   test("should return undefined for regular node script execution", () => {
     const result = presenter.present({
-      commandLine: "node script.js",
+      commandLine: { forDisplay: "node script.js" },
       shell: "bash",
       os: 3
       /* OperatingSystem.Linux */
@@ -274,7 +274,7 @@ suite("NodeCommandLinePresenter", () => {
   });
   test("should handle PowerShell backtick escaping", () => {
     const result = presenter.present({
-      commandLine: 'node -e "console.log(`"hello`")"',
+      commandLine: { forDisplay: 'node -e "console.log(`"hello`")"' },
       shell: "pwsh",
       os: 1
       /* OperatingSystem.Windows */

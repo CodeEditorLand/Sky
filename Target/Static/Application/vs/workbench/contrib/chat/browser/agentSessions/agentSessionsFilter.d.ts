@@ -4,11 +4,15 @@ import { IStorageService } from '../../../../../platform/storage/common/storage.
 import { IChatSessionsService } from '../../common/chatSessionsService.js';
 import { IAgentSession } from './agentSessionsModel.js';
 import { IAgentSessionsFilter, IAgentSessionsFilterExcludes } from './agentSessionsViewer.js';
+export declare enum AgentSessionsGrouping {
+    Capped = "capped",
+    Date = "date"
+}
 export interface IAgentSessionsFilterOptions extends Partial<IAgentSessionsFilter> {
-    readonly filterMenuId: MenuId;
+    readonly filterMenuId?: MenuId;
     readonly limitResults?: () => number | undefined;
     notifyResults?(count: number): void;
-    readonly groupResults?: () => boolean | undefined;
+    readonly groupResults?: () => AgentSessionsGrouping | undefined;
     overrideExclude?(session: IAgentSession): boolean | undefined;
 }
 export declare class AgentSessionsFilter extends Disposable implements Required<IAgentSessionsFilter> {
@@ -19,8 +23,9 @@ export declare class AgentSessionsFilter extends Disposable implements Required<
     private readonly _onDidChange;
     readonly onDidChange: import("../../../../../base/common/event.js").Event<void>;
     readonly limitResults: () => number | undefined;
-    readonly groupResults: () => boolean | undefined;
+    readonly groupResults: () => AgentSessionsGrouping | undefined;
     private excludes;
+    private isStoringExcludes;
     private readonly actionDisposables;
     constructor(options: IAgentSessionsFilterOptions, chatSessionsService: IChatSessionsService, storageService: IStorageService);
     private registerListeners;

@@ -23,7 +23,7 @@ import { IOpenerService } from "../../../../../../platform/opener/common/opener.
 import { IDialogService } from "../../../../../../platform/dialogs/common/dialogs.js";
 import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
 import { getCleanPromptName } from "../../../common/promptSyntax/config/promptFileLocations.js";
-import { PromptsType, INSTRUCTIONS_DOCUMENTATION_URL, AGENT_DOCUMENTATION_URL, PROMPT_DOCUMENTATION_URL, SKILL_DOCUMENTATION_URL } from "../../../common/promptSyntax/promptTypes.js";
+import { PromptsType, INSTRUCTIONS_DOCUMENTATION_URL, AGENT_DOCUMENTATION_URL, PROMPT_DOCUMENTATION_URL, SKILL_DOCUMENTATION_URL, HOOK_DOCUMENTATION_URL } from "../../../common/promptSyntax/promptTypes.js";
 import { NEW_PROMPT_COMMAND_ID, NEW_INSTRUCTIONS_COMMAND_ID, NEW_AGENT_COMMAND_ID, NEW_SKILL_COMMAND_ID } from "../newPromptFileActions.js";
 import { IQuickInputService } from "../../../../../../platform/quickinput/common/quickInput.js";
 import { askForPromptFileName } from "./askForPromptName.js";
@@ -33,7 +33,9 @@ import { askForPromptSourceFolder } from "./askForPromptSourceFolder.js";
 import { ILabelService } from "../../../../../../platform/label/common/label.js";
 import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { PromptsConfig } from "../../../common/promptSyntax/config/config.js";
+import { IProductService } from "../../../../../../platform/product/common/productService.js";
 import { PromptFileRewriter } from "../promptFileRewriter.js";
+import { isOrganizationPromptFile } from "../../../common/promptSyntax/utils/promptsServiceUtils.js";
 function newHelpButton(type) {
   const iconClass = ThemeIcon.asClassName(Codicon.question);
   switch (type) {
@@ -61,6 +63,12 @@ function newHelpButton(type) {
         helpURI: URI.parse(SKILL_DOCUMENTATION_URL),
         iconClass
       };
+    case PromptsType.hook:
+      return {
+        tooltip: localize("help.hook", "Show help on hook files"),
+        helpURI: URI.parse(HOOK_DOCUMENTATION_URL),
+        iconClass
+      };
   }
 }
 __name(newHelpButton, "newHelpButton");
@@ -72,6 +80,10 @@ function isPromptFileItem(item) {
   return item.type === "item" && !!item.promptFileUri;
 }
 __name(isPromptFileItem, "isPromptFileItem");
+function isExtensionPromptPath(prompt) {
+  return prompt.storage === PromptsStorage.extension && !!prompt.extension;
+}
+__name(isExtensionPromptPath, "isExtensionPromptPath");
 const NEW_PROMPT_FILE_OPTION = {
   type: "item",
   label: `$(plus) ${localize("commands.new-promptfile.select-dialog.label", "New prompt file...")}`,
@@ -141,7 +153,7 @@ let PromptFilePickers = class PromptFilePickers2 {
   static {
     __name(this, "PromptFilePickers");
   }
-  constructor(_quickInputService, _openerService, _fileService, _dialogService, _commandService, _instaService, _promptsService, _labelService, _configurationService) {
+  constructor(_quickInputService, _openerService, _fileService, _dialogService, _commandService, _instaService, _promptsService, _labelService, _configurationService, _productService) {
     this._quickInputService = _quickInputService;
     this._openerService = _openerService;
     this._fileService = _fileService;
@@ -151,6 +163,7 @@ let PromptFilePickers = class PromptFilePickers2 {
     this._promptsService = _promptsService;
     this._labelService = _labelService;
     this._configurationService = _configurationService;
+    this._productService = _productService;
   }
   /**
    * Shows the prompt file selection dialog to the user that allows to run a prompt file(s).
@@ -244,10 +257,11 @@ let PromptFilePickers = class PromptFilePickers2 {
       const disabled = this._promptsService.getDisabledPromptFiles(options.type);
       getVisibility = /* @__PURE__ */ __name((p) => !disabled.has(p.uri), "getVisibility");
     }
+    const sortByLabel = /* @__PURE__ */ __name((items) => items.sort((a, b) => a.label.localeCompare(b.label)), "sortByLabel");
     const locals = await this._promptsService.listPromptFilesForStorage(options.type, PromptsStorage.local, token);
     if (locals.length) {
       result.push({ type: "separator", label: localize("separator.workspace", "Workspace") });
-      result.push(...await Promise.all(locals.map((l) => this._createPromptPickItem(l, buttons, getVisibility(l), token))));
+      result.push(...sortByLabel(await Promise.all(locals.map((l) => this._createPromptPickItem(l, buttons, getVisibility(l), token)))));
     }
     let agentInstructionFiles = [];
     if (options.type === PromptsType.instructions) {
@@ -270,11 +284,10 @@ let PromptFilePickers = class PromptFilePickers2 {
     if (agentInstructionFiles.length) {
       const agentButtons = buttons.filter((b) => b !== RENAME_BUTTON);
       result.push({ type: "separator", label: localize("separator.workspace-agent-instructions", "Agent Instructions") });
-      result.push(...await Promise.all(agentInstructionFiles.map((l) => this._createPromptPickItem(l, agentButtons, getVisibility(l), token))));
+      result.push(...sortByLabel(await Promise.all(agentInstructionFiles.map((l) => this._createPromptPickItem(l, agentButtons, getVisibility(l), token)))));
     }
-    const exts = await this._promptsService.listPromptFilesForStorage(options.type, PromptsStorage.extension, token);
+    const exts = (await this._promptsService.listPromptFilesForStorage(options.type, PromptsStorage.extension, token)).filter(isExtensionPromptPath);
     if (exts.length) {
-      result.push({ type: "separator", label: localize("separator.extensions", "Extensions") });
       const extButtons = [];
       if (options.optionEdit !== false) {
         extButtons.push(EDIT_BUTTON);
@@ -282,14 +295,32 @@ let PromptFilePickers = class PromptFilePickers2 {
       if (options.optionCopy !== false) {
         extButtons.push(COPY_BUTTON);
       }
-      result.push(...await Promise.all(exts.map((e) => this._createPromptPickItem(e, extButtons, getVisibility(e), token))));
+      const groupedExts = /* @__PURE__ */ new Map();
+      for (const ext of exts) {
+        const groupLabel = this._getExtensionGroupLabel(ext);
+        if (!groupedExts.has(groupLabel)) {
+          groupedExts.set(groupLabel, []);
+        }
+        groupedExts.get(groupLabel).push(ext);
+      }
+      const sortedGroupedExts = Array.from(groupedExts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+      for (const [groupLabel, groupExts] of sortedGroupedExts) {
+        result.push({ type: "separator", label: groupLabel });
+        result.push(...sortByLabel(await Promise.all(groupExts.map((e) => this._createPromptPickItem(e, extButtons, getVisibility(e), token)))));
+      }
     }
     const users = await this._promptsService.listPromptFilesForStorage(options.type, PromptsStorage.user, token);
     if (users.length) {
       result.push({ type: "separator", label: localize("separator.user", "User Data") });
-      result.push(...await Promise.all(users.map((u) => this._createPromptPickItem(u, buttons, getVisibility(u), token))));
+      result.push(...sortByLabel(await Promise.all(users.map((u) => this._createPromptPickItem(u, buttons, getVisibility(u), token)))));
     }
     return result;
+  }
+  _getExtensionGroupLabel(extPath) {
+    if (isOrganizationPromptFile(extPath.uri, extPath.extension.identifier, this._productService)) {
+      return localize("separator.organization", "Organization");
+    }
+    return localize("separator.extensions", "Extensions");
   }
   _getNewItems(type) {
     switch (type) {
@@ -497,7 +528,8 @@ PromptFilePickers = __decorate([
   __param(5, IInstantiationService),
   __param(6, IPromptsService),
   __param(7, ILabelService),
-  __param(8, IConfigurationService)
+  __param(8, IConfigurationService),
+  __param(9, IProductService)
 ], PromptFilePickers);
 export {
   PromptFilePickers

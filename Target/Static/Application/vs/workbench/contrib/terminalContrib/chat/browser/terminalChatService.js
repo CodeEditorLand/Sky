@@ -43,7 +43,9 @@ let TerminalChatService = class TerminalChatService2 extends Disposable {
     this._chatSessionResourceByTerminalInstance = /* @__PURE__ */ new Map();
     this._terminalInstanceListenersByToolSessionId = this._register(new DisposableMap());
     this._chatSessionListenersByTerminalInstance = this._register(new DisposableMap());
-    this._onDidRegisterTerminalInstanceForToolSession = new Emitter();
+    this._onDidContinueInBackground = this._register(new Emitter());
+    this.onDidContinueInBackground = this._onDidContinueInBackground.event;
+    this._onDidRegisterTerminalInstanceForToolSession = this._register(new Emitter());
     this.onDidRegisterTerminalInstanceWithToolSession = this._onDidRegisterTerminalInstanceForToolSession.event;
     this._activeProgressParts = /* @__PURE__ */ new Set();
     this._pendingRestoredMappings = /* @__PURE__ */ new Map();
@@ -294,6 +296,9 @@ let TerminalChatService = class TerminalChatService2 extends Disposable {
   }
   getSessionAutoApproveRules(chatSessionResource) {
     return this._sessionAutoApproveRules.get(chatSessionResource) ?? {};
+  }
+  continueInBackground(terminalToolSessionId) {
+    this._onDidContinueInBackground.fire(terminalToolSessionId);
   }
 };
 TerminalChatService = __decorate([

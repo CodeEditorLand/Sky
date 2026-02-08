@@ -15,7 +15,6 @@ import * as dom from "../../../../../../base/browser/dom.js";
 import { $ } from "../../../../../../base/browser/dom.js";
 import { ButtonWithIcon } from "../../../../../../base/browser/ui/button/button.js";
 import { Codicon } from "../../../../../../base/common/codicons.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Iterable } from "../../../../../../base/common/iterator.js";
 import { Disposable, DisposableStore, toDisposable } from "../../../../../../base/common/lifecycle.js";
 import { autorun } from "../../../../../../base/common/observable.js";
@@ -50,8 +49,6 @@ let ChatCheckpointFileChangesSummaryContentPart = class ChatCheckpointFileChange
     this.instantiationService = instantiationService;
     this.ELEMENT_HEIGHT = 22;
     this.MAX_ITEMS_SHOWN = 6;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     this.diffsBetweenRequests = /* @__PURE__ */ new Map();
     this.isCollapsed = true;
     this.fileChangesDiffsObservable = this.computeFileChangesDiffs(content);
@@ -83,7 +80,6 @@ let ChatCheckpointFileChangesSummaryContentPart = class ChatCheckpointFileChange
     const setExpansionState = /* @__PURE__ */ __name(() => {
       viewListButton.icon = this.isCollapsed ? Codicon.chevronRight : Codicon.chevronDown;
       this.domNode.classList.toggle("chat-file-changes-collapsed", this.isCollapsed);
-      this._onDidChangeHeight.fire();
     }, "setExpansionState");
     setExpansionState();
     const disposables = new DisposableStore();

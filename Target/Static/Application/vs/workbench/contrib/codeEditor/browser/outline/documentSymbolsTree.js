@@ -227,7 +227,7 @@ let DocumentSymbolRenderer = class DocumentSymbolRenderer2 {
       /* OutlineConfigKeys.icons */
     )) {
       template.iconClass.className = "";
-      template.iconClass.classList.add("outline-element-icon", "inline", ...ThemeIcon.asClassNameArray(SymbolKinds.toIcon(element.symbol.kind)));
+      template.iconClass.classList.add("outline-element-icon", "inline", "codicon-colored", ...ThemeIcon.asClassNameArray(SymbolKinds.toIcon(element.symbol.kind)));
     }
     if (element.symbol.tags.indexOf(
       1

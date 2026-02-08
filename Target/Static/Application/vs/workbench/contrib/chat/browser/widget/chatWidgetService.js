@@ -12,7 +12,7 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import * as dom from "../../../../../base/browser/dom.js";
-import { raceCancellablePromises, timeout } from "../../../../../base/common/async.js";
+import { timeout } from "../../../../../base/common/async.js";
 import { Emitter, Event } from "../../../../../base/common/event.js";
 import { combinedDisposable, Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
 import { isEqual } from "../../../../../base/common/resources.js";
@@ -24,12 +24,11 @@ import { IChatService } from "../../common/chatService/chatService.js";
 import { ChatViewId, ChatViewPaneTarget, IQuickChatService, isIChatViewViewContext } from "../chat.js";
 import { ChatEditor } from "../widgetHosts/editor/chatEditor.js";
 import { ChatEditorInput } from "../widgetHosts/editor/chatEditorInput.js";
-import { IWorkbenchLayoutService } from "../../../../services/layout/browser/layoutService.js";
 let ChatWidgetService = class ChatWidgetService2 extends Disposable {
   static {
     __name(this, "ChatWidgetService");
   }
-  constructor(editorGroupsService, viewsService, quickChatService, layoutService, editorService, chatService, workbenchLayoutService) {
+  constructor(editorGroupsService, viewsService, quickChatService, layoutService, editorService, chatService) {
     super();
     this.editorGroupsService = editorGroupsService;
     this.viewsService = viewsService;
@@ -37,7 +36,6 @@ let ChatWidgetService = class ChatWidgetService2 extends Disposable {
     this.layoutService = layoutService;
     this.editorService = editorService;
     this.chatService = chatService;
-    this.workbenchLayoutService = workbenchLayoutService;
     this._widgets = [];
     this._lastFocusedWidget = void 0;
     this._onDidAddWidget = this._register(new Emitter());
@@ -92,15 +90,12 @@ let ChatWidgetService = class ChatWidgetService2 extends Disposable {
     } else {
       await this.prepareSessionForMove(sessionResource, target);
     }
-    if (target === ChatViewPaneTarget) {
+    if (target === ChatViewPaneTarget || typeof target === "undefined") {
       const chatView = await this.viewsService.openView(ChatViewId, !options?.preserveFocus);
       if (chatView) {
         await chatView.loadSession(sessionResource);
         if (!options?.preserveFocus) {
           chatView.focusInput();
-        }
-        if (options?.expanded) {
-          this.workbenchLayoutService.setAuxiliaryBarMaximized(true);
         }
       }
       return chatView?.widget;
@@ -129,11 +124,8 @@ let ChatWidgetService = class ChatWidgetService2 extends Disposable {
       const existingEditorWindowId = existingEditor.group.windowId;
       const isGroupActive = /* @__PURE__ */ __name(() => dom.getWindow(this.layoutService.activeContainer).vscodeWindowId === existingEditorWindowId, "isGroupActive");
       let ensureFocusTransfer;
-      if (!isGroupActive()) {
-        ensureFocusTransfer = raceCancellablePromises([
-          timeout(500),
-          Event.toPromise(Event.once(Event.filter(this.layoutService.onDidChangeActiveContainer, isGroupActive)))
-        ]);
+      if (!isGroupActive() && !options?.preserveFocus) {
+        ensureFocusTransfer = Event.toPromise(Event.once(Event.filter(this.layoutService.onDidChangeActiveContainer, isGroupActive)));
       }
       const pane = await existingEditor.group.openEditor(existingEditor.editor, options);
       await ensureFocusTransfer;
@@ -213,8 +205,7 @@ ChatWidgetService = __decorate([
   __param(2, IQuickChatService),
   __param(3, ILayoutService),
   __param(4, IEditorService),
-  __param(5, IChatService),
-  __param(6, IWorkbenchLayoutService)
+  __param(5, IChatService)
 ], ChatWidgetService);
 export {
   ChatWidgetService

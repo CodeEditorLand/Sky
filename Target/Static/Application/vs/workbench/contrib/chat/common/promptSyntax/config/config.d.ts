@@ -48,12 +48,21 @@ export declare namespace PromptsConfig {
     const INSTRUCTIONS_LOCATION_KEY = "chat.instructionsFilesLocations";
     /**
      * Configuration key for the locations of mode files.
+     * @deprecated Use {@link AGENTS_LOCATION_KEY} instead
      */
     const MODE_LOCATION_KEY = "chat.modeFilesLocations";
+    /**
+     * Configuration key for the locations of agent files (with simplified path support).
+     */
+    const AGENTS_LOCATION_KEY = "chat.agentFilesLocations";
     /**
      * Configuration key for the locations of skill folders.
      */
     const SKILLS_LOCATION_KEY = "chat.agentSkillsLocations";
+    /**
+     * Configuration key for the locations of hook files.
+     */
+    const HOOKS_LOCATION_KEY = "chat.hookFilesLocations";
     /**
      * Configuration key for prompt file suggestions.
      */
@@ -74,6 +83,22 @@ export declare namespace PromptsConfig {
      * Configuration key for agent skills usage.
      */
     const USE_AGENT_SKILLS = "chat.useAgentSkills";
+    /**
+     * Configuration key for chat hooks usage.
+     */
+    const USE_CHAT_HOOKS = "chat.useChatHooks";
+    /**
+     * Configuration key for enabling stronger skill adherence prompt (experimental).
+     */
+    const USE_SKILL_ADHERENCE_PROMPT = "chat.experimental.useSkillAdherencePrompt";
+    /**
+     * Configuration key for including applying instructions.
+     */
+    const INCLUDE_APPLYING_INSTRUCTIONS = "chat.includeApplyingInstructions";
+    /**
+     * Configuration key for including referenced instructions.
+     */
+    const INCLUDE_REFERENCED_INSTRUCTIONS = "chat.includeReferencedInstructions";
     /**
      * Get value of the `reusable prompt locations` configuration setting.
      * @see {@link PROMPT_LOCATIONS_CONFIG_KEY}, {@link INSTRUCTIONS_LOCATIONS_CONFIG_KEY}, {@link MODE_LOCATIONS_CONFIG_KEY}, {@link SKILLS_LOCATION_KEY}.
@@ -104,9 +129,10 @@ export declare function getPromptFileLocationsConfigKey(type: PromptsType): stri
 export declare function asBoolean(value: unknown): boolean | undefined;
 /**
  * Helper to check if a path starts with tilde (user home).
- * Supports both Unix-style (`~/`) and Windows-style (`~\`) paths.
+ * Only supports Unix-style (`~/`) paths for cross-platform sharing.
+ * Backslash paths (`~\`) are not supported to ensure paths are shareable in repos.
  *
  * @param path - path to check
- * @returns `true` if the path starts with `~/` or `~\`
+ * @returns `true` if the path starts with `~/`
  */
 export declare function isTildePath(path: string): boolean;

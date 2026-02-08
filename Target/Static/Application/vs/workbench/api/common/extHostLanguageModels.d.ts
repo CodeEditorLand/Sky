@@ -34,7 +34,8 @@ export declare class ExtHostLanguageModels implements ExtHostLanguageModelsShape
     constructor(extHostRpc: IExtHostRpcService, _logService: ILogService, _extHostAuthentication: IExtHostAuthentication);
     dispose(): void;
     registerLanguageModelChatProvider(extension: IExtensionDescription, vendor: string, provider: vscode.LanguageModelChatProvider): IDisposable;
-    private _clearModelCache;
+    private toModelIdentifier;
+    private getVendorFromModelIdentifier;
     $provideLanguageModelChatInfo(vendor: string, options: ILanguageModelChatInfoOptions, token: CancellationToken): Promise<ILanguageModelChatMetadataAndIdentifier[]>;
     $startChatRequest(modelId: string, requestId: number, from: ExtensionIdentifier, messages: SerializableObjectWithBuffers<IChatMessage[]>, options: vscode.LanguageModelChatRequestOptions, token: CancellationToken): Promise<void>;
     $provideTokenLength(modelId: string, value: string, token: CancellationToken): Promise<number>;

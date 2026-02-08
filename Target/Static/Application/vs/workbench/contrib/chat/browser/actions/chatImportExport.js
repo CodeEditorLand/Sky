@@ -13,6 +13,7 @@ import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { isExportableSessionData } from "../../common/model/chatModel.js";
 import { IChatService } from "../../common/chatService/chatService.js";
 import { revive } from "../../../../../base/common/marshalling.js";
+import { ACTIVE_GROUP } from "../../../../services/editor/common/editorService.js";
 const defaultFileName = "chat.json";
 const filters = [{ name: localize("chat.file.label", "Chat Session"), extensions: ["json"] }];
 function registerChatExportActions() {
@@ -107,7 +108,7 @@ function registerChatExportActions() {
           options = { pinned: true };
         } else {
           sessionResource = ChatEditorInput.getNewEditorUri();
-          resolvedTarget = void 0;
+          resolvedTarget = ACTIVE_GROUP;
           options = { target: { data }, pinned: true };
         }
         await widgetService.openSession(sessionResource, resolvedTarget, options);

@@ -51,6 +51,7 @@ import { OffsetRange } from "../../../../common/core/ranges/offsetRange.js";
 import { URI } from "../../../../../base/common/uri.js";
 import { IDefaultAccountService } from "../../../../../platform/defaultAccount/common/defaultAccount.js";
 import { Schemas } from "../../../../../base/common/network.js";
+import { getInlineCompletionsController } from "../controller/common.js";
 let InlineCompletionsModel = class InlineCompletionsModel2 extends Disposable {
   static {
     __name(this, "InlineCompletionsModel");
@@ -330,8 +331,11 @@ let InlineCompletionsModel = class InlineCompletionsModel2 extends Disposable {
         const cursorAtInlineEdit = this.primaryPosition.map((cursorPos) => LineRange.fromRangeInclusive(inlineEditResult.targetRange).addMargin(1, 1).contains(cursorPos.lineNumber));
         const stringEdit = inlineEditResult.action?.kind === "edit" ? inlineEditResult.action.stringEdit : void 0;
         const replacements = stringEdit ? TextEdit.fromStringEdit(stringEdit, new TextModelText(this.textModel)).replacements : [];
-        const nextEditUri = (item.inlineEdit?.command?.id === "vscode.open" || item.inlineEdit?.command?.id === "_workbench.open") && // eslint-disable-next-line local/code-no-any-casts
+        let nextEditUri = (item.inlineEdit?.command?.id === "vscode.open" || item.inlineEdit?.command?.id === "_workbench.open") && // eslint-disable-next-line local/code-no-any-casts
         item.inlineEdit?.command.arguments?.length ? URI.from(item.inlineEdit?.command.arguments[0]) : void 0;
+        if (!inlineEditResult.originalTextRef.targets(this.textModel)) {
+          nextEditUri = inlineEditResult.originalTextRef.uri;
+        }
         return { kind: "inlineEdit", inlineSuggestion: inlineEditResult, edits: replacements, cursorAtInlineEdit, nextEditUri };
       }
       const suggestItem = this._selectedSuggestItem.read(reader);
@@ -766,7 +770,16 @@ let InlineCompletionsModel = class InlineCompletionsModel2 extends Disposable {
     try {
       let followUpTrigger = false;
       editor.pushUndoStop();
-      if (isNextEditUri) {
+      if (!completion.originalTextRef.targets(this.textModel)) {
+        const targetEditor = await this._codeEditorService.openCodeEditor({ resource: completion.originalTextRef.uri }, this._editor);
+        if (targetEditor) {
+          const controller = getInlineCompletionsController(targetEditor);
+          const m = controller?.model.get();
+          targetEditor.focus();
+          m?.transplantCompletion(completion);
+          targetEditor.revealLineInCenter(completion.targetRange.startLineNumber);
+        }
+      } else if (isNextEditUri) {
       } else if (completion.action?.kind === "edit") {
         const action = completion.action;
         if (alternativeAction && action.alternativeAction) {
@@ -955,6 +968,10 @@ let InlineCompletionsModel = class InlineCompletionsModel2 extends Disposable {
       return;
     }
     const suggestion = s.inlineSuggestion;
+    if (!suggestion.originalTextRef.targets(this.textModel)) {
+      this.accept(this._editor);
+      return;
+    }
     suggestion.addRef();
     try {
       transaction((tx) => {
@@ -991,6 +1008,19 @@ let InlineCompletionsModel = class InlineCompletionsModel2 extends Disposable {
   }
   async handleInlineSuggestionShown(inlineCompletion, viewKind, viewData, timeWhenShown) {
     await inlineCompletion.reportInlineEditShown(this._commandService, viewKind, viewData, this.textModel, timeWhenShown);
+  }
+  /**
+   * Transplants an inline completion from another model to this one.
+   * Used for cross-file inline edits.
+   */
+  transplantCompletion(item) {
+    item.addRef();
+    transaction((tx) => {
+      this._source.seedWithCompletion(item, tx);
+      this._isActive.set(true, tx);
+      this._inAcceptFlow.set(true, tx);
+      this.dontRefetchSignal.trigger(tx);
+    });
   }
 };
 InlineCompletionsModel = __decorate([
@@ -1079,8 +1109,8 @@ function isSuggestionInViewport(editor, suggestion, reader = void 0) {
 }
 __name(isSuggestionInViewport, "isSuggestionInViewport");
 function skuFromAccount(account) {
-  if (account?.access_type_sku && account?.copilot_plan) {
-    return { type: account.access_type_sku, plan: account.copilot_plan };
+  if (account?.entitlementsData?.access_type_sku && account?.entitlementsData?.copilot_plan) {
+    return { type: account.entitlementsData.access_type_sku, plan: account.entitlementsData.copilot_plan };
   }
   return void 0;
 }

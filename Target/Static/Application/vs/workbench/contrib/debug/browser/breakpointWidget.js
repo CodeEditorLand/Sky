@@ -96,6 +96,7 @@ let BreakpointWidget = class BreakpointWidget2 extends ZoneWidget {
     this.conditionInput = "";
     this.hitCountInput = "";
     this.logMessageInput = "";
+    this.availableBreakpoints = [];
     this.store = new lifecycle.DisposableStore();
     const model = this.editor.getModel();
     if (model) {
@@ -119,6 +120,9 @@ let BreakpointWidget = class BreakpointWidget2 extends ZoneWidget {
     this.store.add(this.debugService.getModel().onDidChangeBreakpoints((e) => {
       if (this.breakpoint && e && e.removed && e.removed.indexOf(this.breakpoint) >= 0) {
         this.dispose();
+      }
+      if (this.context === 3 && this.selectBreakpointBox) {
+        this.updateTriggerBreakpointList();
       }
     }));
     this.store.add(this.codeEditorService.registerDecorationType("breakpoint-widget", DECORATION_KEY, {}));
@@ -223,32 +227,15 @@ let BreakpointWidget = class BreakpointWidget2 extends ZoneWidget {
     dom.append(container, modeWrapper);
   }
   createTriggerBreakpointInput(container) {
-    const breakpoints = this.debugService.getModel().getBreakpoints().filter((bp) => bp !== this.breakpoint && !bp.logMessage);
-    const breakpointOptions = [
-      { text: nls.localize("noTriggerByBreakpoint", "None"), isDisabled: true },
-      ...breakpoints.map((bp) => ({
-        text: `${this.labelService.getUriLabel(bp.uri, { relative: true })}: ${bp.lineNumber}`,
-        description: nls.localize("triggerByLoading", "Loading...")
-      }))
-    ];
-    const index = breakpoints.findIndex((bp) => this.breakpoint?.triggeredBy === bp.getId());
-    for (const [i, bp] of breakpoints.entries()) {
-      this.textModelService.createModelReference(bp.uri).then((ref) => {
-        try {
-          breakpointOptions[i + 1].description = ref.object.textEditorModel.getLineContent(bp.lineNumber).trim();
-        } finally {
-          ref.dispose();
-        }
-      }).catch(() => {
-        breakpointOptions[i + 1].description = nls.localize("noBpSource", "Could not load source.");
-      });
-    }
+    this.availableBreakpoints = this.debugService.getModel().getBreakpoints().filter((bp) => bp !== this.breakpoint && !bp.logMessage);
+    const breakpointOptions = this.buildBreakpointOptions();
+    const index = this.availableBreakpoints.findIndex((bp) => this.breakpoint?.triggeredBy === bp.getId());
     const selectBreakpointBox = this.selectBreakpointBox = this.store.add(new SelectBox(breakpointOptions, index + 1, this.contextViewService, defaultSelectBoxStyles, { ariaLabel: nls.localize("selectBreakpoint", "Select breakpoint"), useCustomDrawn: !hasNativeContextMenu(this._configurationService) }));
     this.store.add(selectBreakpointBox.onDidSelect((e) => {
       if (e.index === 0) {
         this.triggeredByBreakpointInput = void 0;
       } else {
-        this.triggeredByBreakpointInput = breakpoints[e.index - 1];
+        this.triggeredByBreakpointInput = this.availableBreakpoints[e.index - 1];
       }
     }));
     this.selectBreakpointContainer = $(".select-breakpoint-container");
@@ -270,10 +257,48 @@ let BreakpointWidget = class BreakpointWidget2 extends ZoneWidget {
     this.store.add(closeButton.onDidClick(() => this.close(true)));
     this.store.add(closeButton);
   }
+  buildBreakpointOptions() {
+    const breakpointOptions = [
+      { text: nls.localize("noTriggerByBreakpoint", "None"), isDisabled: true },
+      ...this.availableBreakpoints.map((bp) => ({
+        text: `${this.labelService.getUriLabel(bp.uri, { relative: true })}: ${bp.lineNumber}`,
+        description: nls.localize("triggerByLoading", "Loading...")
+      }))
+    ];
+    for (const [i, bp] of this.availableBreakpoints.entries()) {
+      this.textModelService.createModelReference(bp.uri).then((ref) => {
+        try {
+          breakpointOptions[i + 1].description = ref.object.textEditorModel.getLineContent(bp.lineNumber).trim();
+        } finally {
+          ref.dispose();
+        }
+      }).catch(() => {
+        breakpointOptions[i + 1].description = nls.localize("noBpSource", "Could not load source.");
+      });
+    }
+    return breakpointOptions;
+  }
+  updateTriggerBreakpointList() {
+    this.availableBreakpoints = this.debugService.getModel().getBreakpoints().filter((bp) => bp !== this.breakpoint && !bp.logMessage);
+    let selectedIndex = 0;
+    if (this.triggeredByBreakpointInput) {
+      const newIndex = this.availableBreakpoints.findIndex((bp) => bp.getId() === this.triggeredByBreakpointInput?.getId());
+      if (newIndex !== -1) {
+        selectedIndex = newIndex + 1;
+      } else {
+        this.triggeredByBreakpointInput = void 0;
+      }
+    }
+    const breakpointOptions = this.buildBreakpointOptions();
+    this.selectBreakpointBox.setOptions(breakpointOptions, selectedIndex);
+  }
   updateContextInput() {
     if (this.context === 3) {
       this.inputContainer.hidden = true;
       this.selectBreakpointContainer.hidden = false;
+      if (this.selectBreakpointBox) {
+        this.updateTriggerBreakpointList();
+      }
     } else {
       this.inputContainer.hidden = false;
       this.selectBreakpointContainer.hidden = true;

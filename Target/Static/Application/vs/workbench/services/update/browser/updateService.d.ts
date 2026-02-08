@@ -31,4 +31,5 @@ export declare class BrowserUpdateService extends Disposable implements IUpdateS
     applyUpdate(): Promise<void>;
     quitAndInstall(): Promise<void>;
     _applySpecificUpdate(packagePath: string): Promise<void>;
+    disableProgressiveReleases(): Promise<void>;
 }

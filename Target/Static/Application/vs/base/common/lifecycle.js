@@ -663,6 +663,77 @@ class DisposableMap {
     return this._store[Symbol.iterator]();
   }
 }
+class DisposableSet {
+  static {
+    __name(this, "DisposableSet");
+  }
+  constructor(store = /* @__PURE__ */ new Set()) {
+    this._isDisposed = false;
+    this._store = store;
+    trackDisposable(this);
+  }
+  /**
+   * Disposes of all stored values and mark this object as disposed.
+   *
+   * Trying to use this object after it has been disposed of is an error.
+   */
+  dispose() {
+    markAsDisposed(this);
+    this._isDisposed = true;
+    this.clearAndDisposeAll();
+  }
+  /**
+   * Disposes of all stored values and clear the set, but DO NOT mark this object as disposed.
+   */
+  clearAndDisposeAll() {
+    if (!this._store.size) {
+      return;
+    }
+    try {
+      dispose(this._store.values());
+    } finally {
+      this._store.clear();
+    }
+  }
+  has(value) {
+    return this._store.has(value);
+  }
+  get size() {
+    return this._store.size;
+  }
+  add(value) {
+    if (this._isDisposed) {
+      console.warn(new Error("Trying to add a disposable to a DisposableSet that has already been disposed of. The added object will be leaked!").stack);
+    }
+    this._store.add(value);
+    setParentOfDisposable(value, this);
+  }
+  /**
+   * Delete the value from this set and also dispose of it.
+   */
+  deleteAndDispose(value) {
+    if (this._store.delete(value)) {
+      value.dispose();
+    }
+  }
+  /**
+   * Delete the value from this set but return it. The caller is
+   * responsible for disposing of the value.
+   */
+  deleteAndLeak(value) {
+    if (this._store.delete(value)) {
+      setParentOfDisposable(value, null);
+      return value;
+    }
+    return void 0;
+  }
+  values() {
+    return this._store.values();
+  }
+  [Symbol.iterator]() {
+    return this._store[Symbol.iterator]();
+  }
+}
 function thenIfNotDisposed(promise, then) {
   let disposed = false;
   promise.then((result) => {
@@ -700,6 +771,7 @@ export {
   Disposable,
   DisposableMap,
   DisposableResourceMap,
+  DisposableSet,
   DisposableStore,
   DisposableTracker,
   GCBasedDisposableTracker,

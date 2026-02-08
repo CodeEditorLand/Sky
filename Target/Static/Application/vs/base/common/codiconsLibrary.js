@@ -640,7 +640,11 @@ const codiconsLibrary = {
   addSmall: register("add-small", 60539),
   removeSmall: register("remove-small", 60540),
   worktreeSmall: register("worktree-small", 60541),
-  worktree: register("worktree", 60542)
+  worktree: register("worktree", 60542),
+  screenCut: register("screen-cut", 60543),
+  ask: register("ask", 60544),
+  openai: register("openai", 60545),
+  claude: register("claude", 60546)
 };
 export {
   codiconsLibrary

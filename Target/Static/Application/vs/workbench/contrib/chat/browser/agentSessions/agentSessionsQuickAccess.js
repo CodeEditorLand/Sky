@@ -17,11 +17,12 @@ import { IInstantiationService } from "../../../../../platform/instantiation/com
 import { matchesFuzzy } from "../../../../../base/common/filters.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { IAgentSessionsService } from "./agentSessionsService.js";
-import { AgentSessionsSorter, groupAgentSessions } from "./agentSessionsViewer.js";
+import { AgentSessionsSorter, groupAgentSessionsByDate } from "./agentSessionsViewer.js";
 import { openSession } from "./agentSessionsOpener.js";
 import { ICommandService } from "../../../../../platform/commands/common/commands.js";
 import { AGENT_SESSION_DELETE_ACTION_ID, AGENT_SESSION_RENAME_ACTION_ID } from "./agentSessions.js";
 import { archiveButton, deleteButton, getSessionButtons, getSessionDescription, renameButton, unarchiveButton } from "./agentSessionsPicker.js";
+import { AgentSessionsFilter } from "./agentSessionsFilter.js";
 const AGENT_SESSIONS_QUICK_ACCESS_PREFIX = "agent ";
 let AgentSessionsQuickAccessProvider = class AgentSessionsQuickAccessProvider2 extends PickerQuickAccessProvider {
   static {
@@ -38,11 +39,12 @@ let AgentSessionsQuickAccessProvider = class AgentSessionsQuickAccessProvider2 e
     this.instantiationService = instantiationService;
     this.commandService = commandService;
     this.sorter = new AgentSessionsSorter();
+    this.filter = this._register(this.instantiationService.createInstance(AgentSessionsFilter, {}));
   }
   async _getPicks(filter) {
     const picks = [];
-    const sessions = this.agentSessionsService.model.sessions.sort(this.sorter.compare.bind(this.sorter));
-    const groupedSessions = groupAgentSessions(sessions);
+    const sessions = this.agentSessionsService.model.sessions.filter((session) => !this.filter.exclude(session)).sort(this.sorter.compare.bind(this.sorter));
+    const groupedSessions = groupAgentSessionsByDate(sessions);
     for (const group of groupedSessions.values()) {
       if (group.sessions.length > 0) {
         picks.push({ type: "separator", label: group.label });

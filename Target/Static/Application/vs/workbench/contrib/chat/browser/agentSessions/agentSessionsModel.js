@@ -18,15 +18,22 @@ import { Codicon } from "../../../../../base/common/codicons.js";
 import { Emitter } from "../../../../../base/common/event.js";
 import { Disposable } from "../../../../../base/common/lifecycle.js";
 import { ResourceMap } from "../../../../../base/common/map.js";
+import { safeStringify } from "../../../../../base/common/objects.js";
 import { ThemeIcon } from "../../../../../base/common/themables.js";
 import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
-import { ILogService } from "../../../../../platform/log/common/log.js";
+import { ILogService, LogLevel } from "../../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
 import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { IChatEntitlementService } from "../../../../services/chat/common/chatEntitlementService.js";
 import { ILifecycleService } from "../../../../services/lifecycle/common/lifecycle.js";
-import { IChatSessionsService, isSessionInProgressStatus } from "../../common/chatSessionsService.js";
-import { AgentSessionProviders, getAgentSessionProvider, getAgentSessionProviderIcon, getAgentSessionProviderName } from "./agentSessions.js";
-import { ChatSessionStatus, isSessionInProgressStatus as isSessionInProgressStatus2 } from "../../common/chatSessionsService.js";
+import { Extensions, IOutputService } from "../../../../services/output/common/output.js";
+import { IChatSessionsService } from "../../common/chatSessionsService.js";
+import { IChatWidgetService } from "../chat.js";
+import { AgentSessionProviders, getAgentSessionProvider, getAgentSessionProviderIcon, getAgentSessionProviderName, isBuiltInAgentSessionProvider } from "./agentSessions.js";
+import { ChatSessionStatus, isSessionInProgressStatus } from "../../common/chatSessionsService.js";
 function hasValidDiff(changes) {
   if (!changes) {
     return false;
@@ -75,6 +82,7 @@ var AgentSessionSection;
   AgentSessionSection2["Week"] = "week";
   AgentSessionSection2["Older"] = "older";
   AgentSessionSection2["Archived"] = "archived";
+  AgentSessionSection2["More"] = "more";
 })(AgentSessionSection || (AgentSessionSection = {}));
 function isAgentSessionSection(obj) {
   const candidate = obj;
@@ -89,6 +97,148 @@ function isMarshalledAgentSessionContext(thing) {
   return false;
 }
 __name(isMarshalledAgentSessionContext, "isMarshalledAgentSessionContext");
+const agentSessionsOutputChannelId = "agentSessionsOutput";
+const agentSessionsOutputChannelLabel = localize("agentSessionsOutput", "Agent Sessions");
+function statusToString(status) {
+  switch (status) {
+    case 0:
+      return "Failed";
+    case 1:
+      return "Completed";
+    case 2:
+      return "InProgress";
+    case 3:
+      return "NeedsInput";
+    default:
+      return `Unknown(${status})`;
+  }
+}
+__name(statusToString, "statusToString");
+let AgentSessionsLogger = class AgentSessionsLogger2 extends Disposable {
+  static {
+    __name(this, "AgentSessionsLogger");
+  }
+  constructor(getSessionsData, logService, outputService, chatEntitlementService) {
+    super();
+    this.getSessionsData = getSessionsData;
+    this.logService = logService;
+    this.outputService = outputService;
+    this.chatEntitlementService = chatEntitlementService;
+    this.isChannelRegistered = false;
+    this.updateChannelRegistration();
+    this.registerListeners();
+  }
+  updateChannelRegistration() {
+    const chatDisabled = this.chatEntitlementService.sentiment.hidden;
+    if (chatDisabled && this.isChannelRegistered) {
+      Registry.as(Extensions.OutputChannels).removeChannel(agentSessionsOutputChannelId);
+      this.isChannelRegistered = false;
+    } else if (!chatDisabled && !this.isChannelRegistered) {
+      Registry.as(Extensions.OutputChannels).registerChannel({
+        id: agentSessionsOutputChannelId,
+        label: agentSessionsOutputChannelLabel,
+        log: false
+      });
+      this.isChannelRegistered = true;
+    }
+  }
+  registerListeners() {
+    this._register(this.logService.onDidChangeLogLevel((level) => {
+      if (level === LogLevel.Trace) {
+        this.logAllStatsIfTrace("Log level changed to trace");
+      }
+    }));
+    this._register(this.chatEntitlementService.onDidChangeSentiment(() => {
+      this.updateChannelRegistration();
+    }));
+  }
+  logIfTrace(msg) {
+    if (this.logService.getLevel() !== LogLevel.Trace) {
+      return;
+    }
+    this.trace(`[Agent Sessions] ${msg}`);
+  }
+  logAllStatsIfTrace(reason) {
+    if (this.logService.getLevel() !== LogLevel.Trace) {
+      return;
+    }
+    this.logAllSessions(reason);
+    this.logSessionStates();
+  }
+  logAllSessions(reason) {
+    const { sessions, sessionStates } = this.getSessionsData();
+    const lines = [];
+    lines.push(`=== Agent Sessions (${reason}) ===`);
+    let count = 0;
+    for (const session of sessions) {
+      count++;
+      const state = sessionStates.get(session.resource);
+      lines.push(`--- Session: ${session.label} ---`);
+      lines.push(`  Resource: ${session.resource.toString()}`);
+      lines.push(`  Provider Type: ${session.providerType}`);
+      lines.push(`  Provider Label: ${session.providerLabel}`);
+      lines.push(`  Status: ${statusToString(session.status)}`);
+      lines.push(`  Icon: ${session.icon.id}`);
+      if (session.description) {
+        lines.push(`  Description: ${typeof session.description === "string" ? session.description : session.description.value}`);
+      }
+      if (session.badge) {
+        lines.push(`  Badge: ${typeof session.badge === "string" ? session.badge : session.badge.value}`);
+      }
+      if (session.tooltip) {
+        lines.push(`  Tooltip: ${typeof session.tooltip === "string" ? session.tooltip : session.tooltip.value}`);
+      }
+      lines.push(`  Timing:`);
+      lines.push(`    Created: ${session.timing.created ? new Date(session.timing.created).toISOString() : "N/A"}`);
+      lines.push(`    Last Request Started: ${session.timing.lastRequestStarted ? new Date(session.timing.lastRequestStarted).toISOString() : "N/A"}`);
+      lines.push(`    Last Request Ended: ${session.timing.lastRequestEnded ? new Date(session.timing.lastRequestEnded).toISOString() : "N/A"}`);
+      if (session.changes) {
+        const summary = getAgentChangesSummary(session.changes);
+        if (summary) {
+          lines.push(`  Changes: ${summary.files} files, +${summary.insertions} -${summary.deletions}`);
+        }
+      }
+      lines.push(`  State:`);
+      lines.push(`    Archived (provider): ${session.archived ?? "N/A"}`);
+      lines.push(`    Archived (computed): ${session.isArchived()}`);
+      lines.push(`    Archived (stored): ${state?.archived ?? "N/A"}`);
+      lines.push(`    Read: ${session.isRead()}`);
+      lines.push(`    Read date (stored): ${state?.read ? new Date(state.read).toISOString() : "N/A"}`);
+      lines.push("");
+    }
+    lines.unshift(`Total sessions: ${count}`, "");
+    lines.push(`=== End Agent Sessions ===`);
+    this.trace(lines.join("\n"));
+  }
+  logSessionStates() {
+    const { sessionStates } = this.getSessionsData();
+    const lines = [];
+    lines.push(`=== Session States ===`);
+    lines.push(`Total stored states: ${sessionStates.size}`);
+    lines.push("");
+    for (const [resource, state] of sessionStates) {
+      lines.push(`URI: ${resource.toString()}`);
+      lines.push(`  Archived: ${state.archived}`);
+      lines.push(`  Read: ${state.read ? new Date(state.read).toISOString() : "0 (unread)"}`);
+      lines.push("");
+    }
+    lines.push(`=== End Session States ===`);
+    this.trace(lines.join("\n"));
+  }
+  trace(msg) {
+    const channel = this.outputService.getChannel(agentSessionsOutputChannelId);
+    if (!channel) {
+      return;
+    }
+    channel.append(`${msg}
+`);
+  }
+};
+AgentSessionsLogger = __decorate([
+  __param(1, ILogService),
+  __param(2, IOutputService),
+  __param(3, IChatEntitlementService)
+], AgentSessionsLogger);
 let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
   static {
     __name(this, "AgentSessionsModel");
@@ -96,25 +246,31 @@ let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
   static {
     AgentSessionsModel_1 = this;
   }
+  get resolved() {
+    return this._resolved;
+  }
   get sessions() {
     return Array.from(this._sessions.values());
   }
-  constructor(chatSessionsService, lifecycleService, instantiationService, storageService, logService) {
+  constructor(chatSessionsService, lifecycleService, instantiationService, storageService, productService, chatWidgetService) {
     super();
     this.chatSessionsService = chatSessionsService;
     this.lifecycleService = lifecycleService;
     this.instantiationService = instantiationService;
     this.storageService = storageService;
-    this.logService = logService;
+    this.productService = productService;
+    this.chatWidgetService = chatWidgetService;
     this._onWillResolve = this._register(new Emitter());
     this.onWillResolve = this._onWillResolve.event;
     this._onDidResolve = this._register(new Emitter());
     this.onDidResolve = this._onDidResolve.event;
     this._onDidChangeSessions = this._register(new Emitter());
     this.onDidChangeSessions = this._onDidChangeSessions.event;
+    this._onDidChangeSessionArchivedState = this._register(new Emitter());
+    this.onDidChangeSessionArchivedState = this._onDidChangeSessionArchivedState.event;
+    this._resolved = false;
     this.resolver = this._register(new ThrottledDelayer(300));
     this.providersToResolve = /* @__PURE__ */ new Set();
-    this.mapSessionToState = new ResourceMap();
     this._sessions = new ResourceMap();
     this.cache = this.instantiationService.createInstance(AgentSessionsCache);
     for (const data of this.cache.loadCachedSessions()) {
@@ -122,12 +278,18 @@ let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
       this._sessions.set(session.resource, session);
     }
     this.sessionStates = this.cache.loadSessionStates();
+    this.logger = this._register(this.instantiationService.createInstance(AgentSessionsLogger, () => ({
+      sessions: this._sessions.values(),
+      sessionStates: this.sessionStates
+    })));
+    this.logger.logAllStatsIfTrace("Loaded cached sessions");
+    this.readDateBaseline = this.resolveReadDateBaseline();
     this.registerListeners();
   }
   registerListeners() {
-    this._register(this.chatSessionsService.onDidChangeItemsProviders(({ chatSessionType: provider }) => this.resolve(provider)));
+    this._register(this.chatSessionsService.onDidChangeItemsProviders(({ chatSessionType }) => this.resolve(chatSessionType)));
     this._register(this.chatSessionsService.onDidChangeAvailability(() => this.resolve(void 0)));
-    this._register(this.chatSessionsService.onDidChangeSessionItems((provider) => this.resolve(provider)));
+    this._register(this.chatSessionsService.onDidChangeSessionItems(({ chatSessionType }) => this.resolve(chatSessionType)));
     this._register(this.storageService.onWillSaveState(() => {
       this.cache.saveCachedSessions(Array.from(this._sessions.values()));
       this.cache.saveSessionStates(this.sessionStates);
@@ -159,7 +321,6 @@ let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
   async doResolve(token) {
     const providersToResolve = Array.from(this.providersToResolve);
     this.providersToResolve.clear();
-    this.logService.trace(`[agent sessions] Resolving agent sessions for providers: ${providersToResolve.map((p) => p ?? "all").join(", ")}`);
     const mapSessionContributionToType = /* @__PURE__ */ new Map();
     for (const contribution of this.chatSessionsService.getAllChatSessionContributions()) {
       mapSessionContributionToType.set(contribution.type, contribution);
@@ -169,7 +330,6 @@ let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
     const resolvedProviders = /* @__PURE__ */ new Set();
     const sessions = new ResourceMap();
     for (const { chatSessionType, items: providerSessions } of providerResults) {
-      this.logService.trace(`[agent sessions] Resolved ${providerSessions.length} agent sessions for provider ${chatSessionType}`);
       resolvedProviders.add(chatSessionType);
       if (token.isCancellationRequested) {
         return;
@@ -185,81 +345,34 @@ let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
           providerLabel = mapSessionContributionToType.get(chatSessionType)?.name ?? chatSessionType;
           icon = session.iconPath ?? Codicon.terminal;
         }
-        const status = session.status ?? 1;
-        const state = this.mapSessionToState.get(session.resource);
-        let inProgressTime = state?.inProgressTime;
-        let finishedOrFailedTime = state?.finishedOrFailedTime;
-        if (!state) {
-          this.mapSessionToState.set(session.resource, {
-            status,
-            inProgressTime: isSessionInProgressStatus(status) ? Date.now() : void 0
-            // this is not accurate but best effort
-          });
-        } else if (status !== state.status) {
-          inProgressTime = isSessionInProgressStatus(status) ? Date.now() : state.inProgressTime;
-          finishedOrFailedTime = !isSessionInProgressStatus(status) ? Date.now() : state.finishedOrFailedTime;
-          this.mapSessionToState.set(session.resource, {
-            status,
-            inProgressTime,
-            finishedOrFailedTime
-          });
-        }
         const changes = session.changes;
         const normalizedChanges = changes && !(changes instanceof Array) ? { files: changes.files, insertions: changes.insertions, deletions: changes.deletions } : changes;
-        let created = session.timing.created;
-        let lastRequestStarted = session.timing.lastRequestStarted;
-        let lastRequestEnded = session.timing.lastRequestEnded;
-        if (!created || !lastRequestEnded) {
-          const existing = this._sessions.get(session.resource);
-          if (!created && existing?.timing.created) {
-            created = existing.timing.created;
-          }
-          if (!lastRequestEnded && existing?.timing.lastRequestEnded) {
-            lastRequestEnded = existing.timing.lastRequestEnded;
-          }
-          if (!lastRequestStarted && existing?.timing.lastRequestStarted) {
-            lastRequestStarted = existing.timing.lastRequestStarted;
-          }
-        }
         sessions.set(session.resource, this.toAgentSession({
           providerType: chatSessionType,
           providerLabel,
           resource: session.resource,
-          label: session.label,
+          label: session.label.split("\n")[0],
+          // protect against weird multi-line labels that break our layout
           description: session.description,
           icon,
           badge: session.badge,
           tooltip: session.tooltip,
-          status,
+          status: session.status ?? 1,
           archived: session.archived,
-          timing: {
-            created,
-            lastRequestStarted,
-            lastRequestEnded,
-            inProgressTime,
-            finishedOrFailedTime
-          },
-          changes: normalizedChanges
+          timing: session.timing,
+          changes: normalizedChanges,
+          metadata: session.metadata
         }));
       }
     }
     for (const [, session] of this._sessions) {
-      if (!resolvedProviders.has(session.providerType)) {
+      if (!resolvedProviders.has(session.providerType) && (isBuiltInAgentSessionProvider(session.providerType) || mapSessionContributionToType.has(session.providerType))) {
         sessions.set(session.resource, session);
       }
     }
     this._sessions = sessions;
-    this.logService.trace(`[agent sessions] Total resolved agent sessions:`, Array.from(this._sessions.values()));
-    for (const [resource] of this.mapSessionToState) {
-      if (!sessions.has(resource)) {
-        this.mapSessionToState.delete(resource);
-      }
-    }
-    for (const [resource] of this.sessionStates) {
-      if (!sessions.has(resource)) {
-        this.sessionStates.delete(resource);
-      }
-    }
+    this._resolved = true;
+    this.logger.logAllStatsIfTrace("Sessions resolved from providers");
     this._onDidChangeSessions.fire();
   }
   toAgentSession(data) {
@@ -272,7 +385,7 @@ let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
     };
   }
   static {
-    this.READ_STATE_INITIAL_DATE = Date.UTC(2025, 11, 8);
+    this.UNREAD_MARKER = -1;
   }
   isArchived(session) {
     return this.sessionStates.get(session.resource)?.archived ?? Boolean(session.archived);
@@ -284,24 +397,71 @@ let AgentSessionsModel = class AgentSessionsModel2 extends Disposable {
     if (archived === this.isArchived(session)) {
       return;
     }
-    const state = this.sessionStates.get(session.resource) ?? { archived: false, read: 0 };
+    const state = this.sessionStates.get(session.resource) ?? {};
     this.sessionStates.set(session.resource, { ...state, archived });
+    const agentSession = this._sessions.get(session.resource);
+    if (agentSession) {
+      this._onDidChangeSessionArchivedState.fire(agentSession);
+    }
     this._onDidChangeSessions.fire();
   }
   isRead(session) {
     if (this.isArchived(session)) {
       return true;
     }
-    const readDate = this.sessionStates.get(session.resource)?.read;
-    return (readDate ?? AgentSessionsModel_1.READ_STATE_INITIAL_DATE) >= (session.timing.lastRequestEnded ?? session.timing.lastRequestStarted ?? session.timing.created);
-  }
-  setRead(session, read) {
-    if (read === this.isRead(session)) {
-      return;
+    const storedReadDate = this.sessionStates.get(session.resource)?.read;
+    if (storedReadDate === AgentSessionsModel_1.UNREAD_MARKER) {
+      return false;
     }
-    const state = this.sessionStates.get(session.resource) ?? { archived: false, read: 0 };
-    this.sessionStates.set(session.resource, { ...state, read: read ? Date.now() : 0 });
-    this._onDidChangeSessions.fire();
+    const readDate = Math.max(
+      storedReadDate ?? 0,
+      this.readDateBaseline
+      /* Use read date baseline when no read date is stored */
+    );
+    if (readDate >= this.sessionTimeForReadStateTracking(session) - 2e3) {
+      return true;
+    }
+    return !!this.chatWidgetService.getWidgetBySessionResource(session.resource);
+  }
+  sessionTimeForReadStateTracking(session) {
+    return session.timing.lastRequestEnded ?? session.timing.created;
+  }
+  setRead(session, read, skipEvent) {
+    const state = this.sessionStates.get(session.resource) ?? {};
+    let newRead;
+    if (read) {
+      newRead = Math.max(Date.now(), this.sessionTimeForReadStateTracking(session));
+      if (typeof state.read === "number" && state.read >= newRead) {
+        return;
+      }
+    } else {
+      newRead = AgentSessionsModel_1.UNREAD_MARKER;
+      if (state.read === AgentSessionsModel_1.UNREAD_MARKER) {
+        return;
+      }
+    }
+    this.sessionStates.set(session.resource, { ...state, read: newRead });
+    if (!skipEvent) {
+      this._onDidChangeSessions.fire();
+    }
+  }
+  static {
+    this.READ_DATE_BASELINE_KEY = "agentSessions.readDateBaseline2";
+  }
+  resolveReadDateBaseline() {
+    let readDateBaseline = this.storageService.getNumber(AgentSessionsModel_1.READ_DATE_BASELINE_KEY, 1, 0);
+    if (readDateBaseline > 0) {
+      return readDateBaseline;
+    }
+    readDateBaseline = this.productService.quality === "stable" ? Date.now() - 7 * 24 * 60 * 60 * 1e3 : Date.now();
+    this.storageService.store(
+      AgentSessionsModel_1.READ_DATE_BASELINE_KEY,
+      readDateBaseline,
+      1,
+      1
+      /* StorageTarget.MACHINE */
+    );
+    return readDateBaseline;
   }
 };
 AgentSessionsModel = AgentSessionsModel_1 = __decorate([
@@ -309,7 +469,8 @@ AgentSessionsModel = AgentSessionsModel_1 = __decorate([
   __param(1, ILifecycleService),
   __param(2, IInstantiationService),
   __param(3, IStorageService),
-  __param(4, ILogService)
+  __param(4, IProductService),
+  __param(5, IChatWidgetService)
 ], AgentSessionsModel);
 let AgentSessionsCache = class AgentSessionsCache2 {
   static {
@@ -340,16 +501,13 @@ let AgentSessionsCache = class AgentSessionsCache2 {
       tooltip: session.tooltip,
       status: session.status,
       archived: session.archived,
-      timing: {
-        created: session.timing.created,
-        lastRequestStarted: session.timing.lastRequestStarted,
-        lastRequestEnded: session.timing.lastRequestEnded
-      },
-      changes: session.changes
+      timing: session.timing,
+      changes: session.changes,
+      metadata: session.metadata
     }));
     this.storageService.store(
       AgentSessionsCache_1.SESSIONS_STORAGE_KEY,
-      JSON.stringify(serialized),
+      safeStringify(serialized),
       1,
       1
       /* StorageTarget.MACHINE */
@@ -388,7 +546,8 @@ let AgentSessionsCache = class AgentSessionsCache2 {
           originalUri: change.originalUri ? URI.revive(change.originalUri) : void 0,
           insertions: change.insertions,
           deletions: change.deletions
-        })) : session.changes
+        })) : session.changes,
+        metadata: session.metadata
       }));
     } catch {
       return [];
@@ -447,6 +606,6 @@ export {
   isAgentSessionsModel,
   isLocalAgentSessionItem,
   isMarshalledAgentSessionContext,
-  isSessionInProgressStatus2 as isSessionInProgressStatus
+  isSessionInProgressStatus
 };
 //# sourceMappingURL=agentSessionsModel.js.map

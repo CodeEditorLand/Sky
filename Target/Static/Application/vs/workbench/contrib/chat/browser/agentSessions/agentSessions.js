@@ -11,15 +11,21 @@ var AgentSessionProviders;
   AgentSessionProviders2["Local"] = "local";
   AgentSessionProviders2["Background"] = "copilotcli";
   AgentSessionProviders2["Cloud"] = "copilot-cloud-agent";
-  AgentSessionProviders2["ClaudeCode"] = "claude-code";
+  AgentSessionProviders2["Claude"] = "claude-code";
+  AgentSessionProviders2["Codex"] = "openai-codex";
 })(AgentSessionProviders || (AgentSessionProviders = {}));
+function isBuiltInAgentSessionProvider(provider) {
+  return provider === AgentSessionProviders.Local || provider === AgentSessionProviders.Background || provider === AgentSessionProviders.Cloud || provider === AgentSessionProviders.Claude;
+}
+__name(isBuiltInAgentSessionProvider, "isBuiltInAgentSessionProvider");
 function getAgentSessionProvider(sessionResource) {
   const type = URI.isUri(sessionResource) ? getChatSessionType(sessionResource) : sessionResource;
   switch (type) {
     case AgentSessionProviders.Local:
     case AgentSessionProviders.Background:
     case AgentSessionProviders.Cloud:
-    case AgentSessionProviders.ClaudeCode:
+    case AgentSessionProviders.Claude:
+    case AgentSessionProviders.Codex:
       return type;
     default:
       return void 0;
@@ -34,8 +40,10 @@ function getAgentSessionProviderName(provider) {
       return localize("chat.session.providerLabel.background", "Background");
     case AgentSessionProviders.Cloud:
       return localize("chat.session.providerLabel.cloud", "Cloud");
-    case AgentSessionProviders.ClaudeCode:
-      return localize("chat.session.providerLabel.claude", "Claude");
+    case AgentSessionProviders.Claude:
+      return "Claude";
+    case AgentSessionProviders.Codex:
+      return "Codex";
   }
 }
 __name(getAgentSessionProviderName, "getAgentSessionProviderName");
@@ -47,11 +55,52 @@ function getAgentSessionProviderIcon(provider) {
       return Codicon.worktree;
     case AgentSessionProviders.Cloud:
       return Codicon.cloud;
-    case AgentSessionProviders.ClaudeCode:
-      return Codicon.code;
+    case AgentSessionProviders.Codex:
+      return Codicon.openai;
+    case AgentSessionProviders.Claude:
+      return Codicon.claude;
   }
 }
 __name(getAgentSessionProviderIcon, "getAgentSessionProviderIcon");
+function isFirstPartyAgentSessionProvider(provider) {
+  switch (provider) {
+    case AgentSessionProviders.Local:
+    case AgentSessionProviders.Background:
+    case AgentSessionProviders.Cloud:
+      return true;
+    case AgentSessionProviders.Claude:
+    case AgentSessionProviders.Codex:
+      return false;
+  }
+}
+__name(isFirstPartyAgentSessionProvider, "isFirstPartyAgentSessionProvider");
+function getAgentCanContinueIn(provider) {
+  switch (provider) {
+    case AgentSessionProviders.Local:
+    case AgentSessionProviders.Background:
+    case AgentSessionProviders.Cloud:
+      return true;
+    case AgentSessionProviders.Claude:
+    case AgentSessionProviders.Codex:
+      return false;
+  }
+}
+__name(getAgentCanContinueIn, "getAgentCanContinueIn");
+function getAgentSessionProviderDescription(provider) {
+  switch (provider) {
+    case AgentSessionProviders.Local:
+      return localize("chat.session.providerDescription.local", "Run tasks within VS Code chat. The agent iterates via chat and works interactively to implement changes on your main workspace.");
+    case AgentSessionProviders.Background:
+      return localize("chat.session.providerDescription.background", "Delegate tasks to a background agent running locally on your machine. The agent iterates via chat and works asynchronously in a Git worktree to implement changes isolated from your main workspace using the GitHub Copilot CLI.");
+    case AgentSessionProviders.Cloud:
+      return localize("chat.session.providerDescription.cloud", "Delegate tasks to the GitHub Copilot coding agent. The agent iterates via chat and works asynchronously in the cloud to implement changes and pull requests as needed.");
+    case AgentSessionProviders.Claude:
+      return localize("chat.session.providerDescription.claude", "Delegate tasks to the Claude Agent SDK using the Claude models included in your GitHub Copilot subscription. The agent iterates via chat and works interactively to implement changes on your main workspace.");
+    case AgentSessionProviders.Codex:
+      return localize("chat.session.providerDescription.codex", "Opens a new Codex session in the editor. Codex sessions can be managed from the chat sessions view.");
+  }
+}
+__name(getAgentSessionProviderDescription, "getAgentSessionProviderDescription");
 var AgentSessionsViewerOrientation;
 (function(AgentSessionsViewerOrientation2) {
   AgentSessionsViewerOrientation2[AgentSessionsViewerOrientation2["Stacked"] = 1] = "Stacked";
@@ -67,6 +116,10 @@ const agentSessionSelectedBadgeBorder = registerColor("agentSessionSelectedBadge
 const agentSessionSelectedUnfocusedBadgeBorder = registerColor("agentSessionSelectedUnfocusedBadge.border", { dark: transparent(foreground, 0.3), light: transparent(foreground, 0.3), hcDark: foreground, hcLight: foreground }, localize("agentSessionSelectedUnfocusedBadgeBorder", "Border color for the badges in selected agent session items when the view is unfocused."));
 const AGENT_SESSION_RENAME_ACTION_ID = "agentSession.rename";
 const AGENT_SESSION_DELETE_ACTION_ID = "agentSession.delete";
+function getAgentSessionTime(timing) {
+  return timing.lastRequestEnded ?? timing.lastRequestStarted ?? timing.created;
+}
+__name(getAgentSessionTime, "getAgentSessionTime");
 export {
   AGENT_SESSION_DELETE_ACTION_ID,
   AGENT_SESSION_RENAME_ACTION_ID,
@@ -76,8 +129,13 @@ export {
   agentSessionReadIndicatorForeground,
   agentSessionSelectedBadgeBorder,
   agentSessionSelectedUnfocusedBadgeBorder,
+  getAgentCanContinueIn,
   getAgentSessionProvider,
+  getAgentSessionProviderDescription,
   getAgentSessionProviderIcon,
-  getAgentSessionProviderName
+  getAgentSessionProviderName,
+  getAgentSessionTime,
+  isBuiltInAgentSessionProvider,
+  isFirstPartyAgentSessionProvider
 };
 //# sourceMappingURL=agentSessions.js.map

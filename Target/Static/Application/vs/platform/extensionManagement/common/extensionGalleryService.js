@@ -198,6 +198,11 @@ function getEngine(version) {
   return values.length > 0 && values[0].value || "";
 }
 __name(getEngine, "getEngine");
+function setEngine(version, engine) {
+  version.properties = version.properties ?? [];
+  version.properties.push({ key: PropertyType.Engine, value: engine });
+}
+__name(setEngine, "setEngine");
 function isPreReleaseVersion(version) {
   const values = version.properties ? version.properties.filter((p) => p.key === PropertyType.PreRelease) : [];
   return values.length > 0 && values[0].value === "true";
@@ -306,14 +311,14 @@ function filterLatestExtensionVersionsForTargetPlatform(versions, targetPlatform
       if (preReleaseVersionIndex === -1) {
         preReleaseVersionIndex = latestVersions.length;
         latestVersions.push(version);
-      } else if (versionTargetPlatform === targetPlatform) {
+      } else if (versionTargetPlatform === targetPlatform && latestVersions[preReleaseVersionIndex].version === version.version) {
         latestVersions[preReleaseVersionIndex] = version;
       }
     } else {
       if (releaseVersionIndex === -1) {
         releaseVersionIndex = latestVersions.length;
         latestVersions.push(version);
-      } else if (versionTargetPlatform === targetPlatform) {
+      } else if (versionTargetPlatform === targetPlatform && latestVersions[releaseVersionIndex].version === version.version) {
         latestVersions[releaseVersionIndex] = version;
       }
     }
@@ -570,22 +575,62 @@ let AbstractExtensionGalleryService = class AbstractExtensionGalleryService2 {
     if (!rawGalleryExtension) {
       return "NOT_FOUND";
     }
-    const targetPlatform = options.targetPlatform ?? CURRENT_TARGET_PLATFORM;
     const allTargetPlatforms = getAllTargetPlatforms(rawGalleryExtension);
-    const rawGalleryExtensionVersion = await this.getValidRawGalleryExtensionVersion(rawGalleryExtension, filterLatestExtensionVersionsForTargetPlatform(rawGalleryExtension.versions, targetPlatform, allTargetPlatforms), {
+    const rawGalleryExtensionVersion = await this.getValidRawGalleryExtensionVersionFromLatestVersions(rawGalleryExtension, rawGalleryExtension.versions, extensionInfo, options, allTargetPlatforms);
+    if (!rawGalleryExtensionVersion) {
+      return "NOT_COMPATIBLE";
+    }
+    return toExtension(rawGalleryExtension, rawGalleryExtensionVersion, allTargetPlatforms, extensionGalleryManifest, this.productService);
+  }
+  async getValidRawGalleryExtensionVersionFromLatestVersions(rawGalleryExtension, latestVersions, extensionInfo, options, allTargetPlatforms) {
+    const targetPlatform = options.targetPlatform ?? CURRENT_TARGET_PLATFORM;
+    const latestExtensionVersionsForTargetPlatform = filterLatestExtensionVersionsForTargetPlatform(latestVersions, targetPlatform, allTargetPlatforms);
+    const result = await this.getValidRawGalleryExtensionVersion(rawGalleryExtension, latestExtensionVersionsForTargetPlatform, {
       targetPlatform,
       compatible: !!options.compatible,
       productVersion: options.productVersion ?? {
         version: this.productService.version,
         date: this.productService.date
       },
-      version: extensionInfo.preRelease ? 2 : 0
+      version: extensionInfo.preRelease ? 1 : 0
       /* VersionKind.Release */
     }, allTargetPlatforms);
-    if (rawGalleryExtensionVersion) {
-      return toExtension(rawGalleryExtension, rawGalleryExtensionVersion, allTargetPlatforms, extensionGalleryManifest, this.productService);
+    if (!extensionInfo.preRelease) {
+      return result;
     }
-    return "NOT_COMPATIBLE";
+    const prereleaseVersion = result;
+    const releaseVersion = await this.getValidRawGalleryExtensionVersion(rawGalleryExtension, latestExtensionVersionsForTargetPlatform, {
+      targetPlatform,
+      compatible: !!options.compatible,
+      productVersion: options.productVersion ?? {
+        version: this.productService.version,
+        date: this.productService.date
+      },
+      version: 0
+      /* VersionKind.Release */
+    }, allTargetPlatforms);
+    if (prereleaseVersion && releaseVersion) {
+      return semver.gt(releaseVersion.version, prereleaseVersion.version) ? releaseVersion : prereleaseVersion;
+    }
+    if (options.compatible) {
+      if (releaseVersion) {
+        const anyPrereleaseVersion = await this.getValidRawGalleryExtensionVersion(rawGalleryExtension, latestExtensionVersionsForTargetPlatform, {
+          targetPlatform,
+          compatible: false,
+          productVersion: options.productVersion ?? {
+            version: this.productService.version,
+            date: this.productService.date
+          },
+          version: 1
+          /* VersionKind.Prerelease */
+        }, allTargetPlatforms);
+        if (!anyPrereleaseVersion || semver.gt(releaseVersion.version, anyPrereleaseVersion.version)) {
+          return releaseVersion;
+        }
+      }
+      return prereleaseVersion;
+    }
+    return prereleaseVersion ?? releaseVersion ?? null;
   }
   async getCompatibleExtension(extension, includePreRelease, targetPlatform, productVersion = { version: this.productService.version, date: this.productService.date }) {
     if (isNotWebExtensionInWebTargetPlatform(extension.allTargetPlatforms, targetPlatform)) {
@@ -671,26 +716,38 @@ let AbstractExtensionGalleryService = class AbstractExtensionGalleryService2 {
   }
   async isEngineValid(extensionId, version, engine, manifestAsset, productVersion) {
     if (!engine) {
-      if (!manifestAsset) {
-        this.logService.error(`Missing engine and manifest asset for the extension ${extensionId} with version ${version}`);
-        return false;
-      }
       try {
-        this.telemetryService.publicLog2("galleryService:engineFallback", { extension: extensionId, extensionVersion: version });
-        const headers = { "Accept-Encoding": "gzip" };
-        const context = await this.getAsset(extensionId, manifestAsset, AssetType.Manifest, version, { headers });
-        const manifest = await asJson(context);
-        if (!manifest) {
-          this.logService.error(`Manifest was not found for the extension ${extensionId} with version ${version}`);
-          return false;
-        }
-        engine = manifest.engines.vscode;
+        engine = await this.getEngine(extensionId, version, manifestAsset);
       } catch (error) {
         this.logService.error(`Error while getting the engine for the version ${version}.`, getErrorMessage(error));
         return false;
       }
     }
+    if (!engine) {
+      this.logService.error(`Missing engine for the extension ${extensionId} with version ${version}`);
+      return false;
+    }
     return isEngineValid(engine, productVersion.version, productVersion.date);
+  }
+  async getEngine(extensionId, version, manifestAsset) {
+    if (!manifestAsset) {
+      this.logService.error(`Missing engine and manifest asset for the extension ${extensionId} with version ${version}`);
+      return void 0;
+    }
+    try {
+      this.telemetryService.publicLog2("galleryService:engineFallback", { extension: extensionId, extensionVersion: version });
+      const headers = { "Accept-Encoding": "gzip" };
+      const context = await this.getAsset(extensionId, manifestAsset, AssetType.Manifest, version, { headers });
+      const manifest = await asJson(context);
+      if (!manifest) {
+        this.logService.error(`Manifest was not found for the extension ${extensionId} with version ${version}`);
+        return void 0;
+      }
+      return manifest.engines.vscode;
+    } catch (error) {
+      this.logService.error(`Error while getting the engine for the version ${version}.`, getErrorMessage(error));
+      return void 0;
+    }
   }
   async query(options, token) {
     const extensionGalleryManifest = await this.extensionGalleryManifestService.getExtensionGalleryManifest();
@@ -752,8 +809,21 @@ let AbstractExtensionGalleryService = class AbstractExtensionGalleryService2 {
     }
     const runQuery = /* @__PURE__ */ __name(async (query2, token2) => {
       const { extensions: extensions2, total: total2 } = await this.queryGalleryExtensions(query2, { targetPlatform: CURRENT_TARGET_PLATFORM, compatible: false, includePreRelease: !!options.includePreRelease, productVersion: options.productVersion ?? { version: this.productService.version, date: this.productService.date } }, extensionGalleryManifest, token2);
-      extensions2.forEach((e, index) => setTelemetry(e, (query2.pageNumber - 1) * query2.pageSize + index, options.source));
-      return { extensions: extensions2, total: total2 };
+      const result = [];
+      let defaultChatAgentExtension;
+      for (let index = 0; index < extensions2.length; index++) {
+        const extension = extensions2[index];
+        setTelemetry(extension, (query2.pageNumber - 1) * query2.pageSize + index, options.source);
+        if (areSameExtensions(extension.identifier, { id: this.productService.defaultChatAgent.extensionId })) {
+          defaultChatAgentExtension = extension;
+        } else {
+          result.push(extension);
+        }
+      }
+      if (defaultChatAgentExtension) {
+        result.push(defaultChatAgentExtension);
+      }
+      return { extensions: result, total: total2 };
     }, "runQuery");
     const { extensions, total } = await runQuery(query, token);
     const getPage = /* @__PURE__ */ __name(async (pageIndex, ct) => {
@@ -893,6 +963,9 @@ let AbstractExtensionGalleryService = class AbstractExtensionGalleryService2 {
     const version = isString(criteria.version) ? criteria.version : void 0;
     for (let index = 0; index < rawGalleryExtensionVersions.length; index++) {
       const rawGalleryExtensionVersion = rawGalleryExtensionVersions[index];
+      if (criteria.compatible) {
+        await this.setEngineIfNotExists(extensionIdentifier.id, rawGalleryExtensionVersion);
+      }
       if (await this.isValidVersion({
         id: extensionIdentifier.id,
         version: rawGalleryExtensionVersion.version,
@@ -912,6 +985,19 @@ let AbstractExtensionGalleryService = class AbstractExtensionGalleryService2 {
       return null;
     }
     return rawGalleryExtension.versions[0];
+  }
+  async setEngineIfNotExists(extensionId, rawGalleryExtensionVersion) {
+    if (getEngine(rawGalleryExtensionVersion)) {
+      return;
+    }
+    try {
+      const engine = await this.getEngine(extensionId, rawGalleryExtensionVersion.version, getVersionAsset(rawGalleryExtensionVersion, AssetType.Manifest));
+      if (engine) {
+        setEngine(rawGalleryExtensionVersion, engine);
+      }
+    } catch (error) {
+      this.logService.error(`Error while getting the engine for the version ${rawGalleryExtensionVersion.version}.`, getErrorMessage(error));
+    }
   }
   async queryRawGalleryExtensions(query, extensionGalleryManifest, token) {
     const extensionsQueryApi = getExtensionGalleryManifestResourceUri(
@@ -1136,33 +1222,24 @@ let AbstractExtensionGalleryService = class AbstractExtensionGalleryService2 {
     }
   }
   async reportStatistic(publisher, name, version, type) {
+    if (isWeb) {
+      this.logService.info("ExtensionGalleryService#reportStatistic: Skipped in web");
+      return void 0;
+    }
     const manifest = await this.extensionGalleryManifestService.getExtensionGalleryManifest();
     if (!manifest) {
       return void 0;
     }
-    let url;
-    if (isWeb) {
-      const resource = getExtensionGalleryManifestResourceUri(
-        manifest,
-        "WebExtensionStatisticsUriTemplate"
-        /* ExtensionGalleryResourceType.WebExtensionStatisticsUri */
-      );
-      if (!resource) {
-        return;
-      }
-      url = format2(resource, { publisher, name, version, statTypeValue: type === "install" ? "1" : "3" });
-    } else {
-      const resource = getExtensionGalleryManifestResourceUri(
-        manifest,
-        "ExtensionStatisticsUriTemplate"
-        /* ExtensionGalleryResourceType.ExtensionStatisticsUri */
-      );
-      if (!resource) {
-        return;
-      }
-      url = format2(resource, { publisher, name, version, statTypeName: type });
+    const resource = getExtensionGalleryManifestResourceUri(
+      manifest,
+      "ExtensionStatisticsUriTemplate"
+      /* ExtensionGalleryResourceType.ExtensionStatisticsUri */
+    );
+    if (!resource) {
+      return;
     }
-    const Accept = isWeb ? "api-version=6.1-preview.1" : "*/*;api-version=4.0-preview.1";
+    const url = format2(resource, { publisher, name, version, statTypeName: type });
+    const Accept = "*/*;api-version=4.0-preview.1";
     const commonHeaders = await this.commonHeadersPromise;
     const headers = { ...commonHeaders, Accept };
     try {
@@ -1418,6 +1495,15 @@ ${message}`);
         }
       }
     }
+    deprecated[this.productService.defaultChatAgent.extensionId.toLowerCase()] = {
+      disallowInstall: true,
+      extension: {
+        id: this.productService.defaultChatAgent.chatExtensionId,
+        displayName: "GitHub Copilot Chat",
+        autoMigrate: { storage: false, donotDisable: true },
+        preRelease: this.productService.quality !== "stable"
+      }
+    };
     return { malicious, deprecated, search, autoUpdate };
   }
   getRequestTimeout() {

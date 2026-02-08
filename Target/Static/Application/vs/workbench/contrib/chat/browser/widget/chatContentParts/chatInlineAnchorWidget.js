@@ -36,11 +36,13 @@ import { FileKind, IFileService } from "../../../../../../platform/files/common/
 import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
 import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
 import { ILabelService } from "../../../../../../platform/label/common/label.js";
+import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
 import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
 import { FolderThemeIcon, IThemeService } from "../../../../../../platform/theme/common/themeService.js";
 import { fillEditorsDragData } from "../../../../../browser/dnd.js";
 import { StaticResourceContextKey } from "../../../../../common/contextkeys.js";
 import { IEditorService, SIDE_GROUP } from "../../../../../services/editor/common/editorService.js";
+import { globMatchesResource } from "../../../../../services/editor/common/editorResolverService.js";
 import { INotebookDocumentService } from "../../../../../services/notebook/common/notebookDocumentService.js";
 import { ExplorerFolderContext } from "../../../../files/common/files.js";
 import { IChatWidgetService } from "../../chat.js";
@@ -48,6 +50,17 @@ import { chatAttachmentResourceContextKey, hookUpSymbolAttachmentDragAndContextM
 import { IChatMarkdownAnchorService } from "./chatMarkdownAnchorService.js";
 import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 import { ChatConfiguration } from "../../../common/constants.js";
+function getEditorOverrideForChatResource(resource, configurationService) {
+  const associations = configurationService.getValue(ChatConfiguration.EditorAssociations) ?? {};
+  const sortedPatterns = Object.keys(associations).sort((a, b) => b.length - a.length);
+  for (const pattern of sortedPatterns) {
+    if (globMatchesResource(pattern, resource)) {
+      return associations[pattern];
+    }
+  }
+  return void 0;
+}
+__name(getEditorOverrideForChatResource, "getEditorOverrideForChatResource");
 function renderFileWidgets(element, instantiationService, chatMarkdownAnchorService, disposables) {
   const links = element.querySelectorAll("a");
   links.forEach((a) => {
@@ -93,13 +106,14 @@ let InlineAnchorWidget = class InlineAnchorWidget2 extends Disposable {
   static {
     this.className = "chat-inline-anchor-widget";
   }
-  constructor(element, inlineReference, metadata, configurationService, originalContextKeyService, contextMenuService, fileService, hoverService, instantiationService, labelService, languageService, menuService, modelService, telemetryService, themeService, notebookDocumentService) {
+  constructor(element, inlineReference, metadata, configurationService, originalContextKeyService, contextMenuService, fileService, hoverService, instantiationService, labelService, languageService, menuService, modelService, telemetryService, themeService, notebookDocumentService, openerService) {
     super();
     this.element = element;
     this.inlineReference = inlineReference;
     this.metadata = metadata;
     this.configurationService = configurationService;
     this.notebookDocumentService = notebookDocumentService;
+    this.openerService = openerService;
     this.data = "uri" in inlineReference.inlineReference ? inlineReference.inlineReference : "name" in inlineReference.inlineReference ? { kind: "symbol", symbol: inlineReference.inlineReference } : { uri: inlineReference.inlineReference };
     const contextKeyService = this._register(originalContextKeyService.createScoped(element));
     this._chatResourceContext = chatAttachmentResourceContextKey.bindTo(contextKeyService);
@@ -200,6 +214,20 @@ let InlineAnchorWidget = class InlineAnchorWidget2 extends Disposable {
         e.dataTransfer?.setDragImage(element, 0, 0);
       }));
     }
+    this._register(dom.addDisposableListener(element, "click", async (e) => {
+      dom.EventHelper.stop(e, true);
+      const editorOverride = getEditorOverrideForChatResource(location.uri, this.configurationService);
+      const editorOptions = {
+        override: editorOverride
+      };
+      if (location.range) {
+        editorOptions.selection = location.range;
+      }
+      await this.openerService.open(location.uri, {
+        fromUserGesture: true,
+        editorOptions
+      });
+    }));
   }
   getHTMLElement() {
     return this.element;
@@ -228,7 +256,8 @@ InlineAnchorWidget = InlineAnchorWidget_1 = __decorate([
   __param(12, IModelService),
   __param(13, ITelemetryService),
   __param(14, IThemeService),
-  __param(15, INotebookDocumentService)
+  __param(15, INotebookDocumentService),
+  __param(16, IOpenerService)
 ], InlineAnchorWidget);
 registerAction2(class AddFileToChatAction extends Action2 {
   static {
@@ -317,13 +346,17 @@ registerAction2(class OpenToSideResourceAction extends Action2 {
   }
   async run(accessor, arg) {
     const editorService = accessor.get(IEditorService);
+    const configurationService = accessor.get(IConfigurationService);
     const target = this.getTarget(accessor, arg);
     if (!target) {
       return;
     }
-    const input = URI.isUri(target) ? { resource: target } : {
+    const targetUri = URI.isUri(target) ? target : target.uri;
+    const editorOverride = getEditorOverrideForChatResource(targetUri, configurationService);
+    const input = URI.isUri(target) ? { resource: target, options: { override: editorOverride } } : {
       resource: target.uri,
       options: {
+        override: editorOverride,
         selection: {
           startColumn: target.range.startColumn,
           startLineNumber: target.range.startLineNumber

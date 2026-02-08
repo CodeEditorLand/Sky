@@ -11,8 +11,6 @@ import { IUriIdentityService } from '../../../platform/uriIdentity/common/uriIde
 import { IChatWidgetService } from '../../contrib/chat/browser/chat.js';
 import { IChatAgentService } from '../../contrib/chat/common/participants/chatAgents.js';
 import { IPromptsService } from '../../contrib/chat/common/promptSyntax/service/promptsService.js';
-import { IChatPromptContentStore } from '../../contrib/chat/common/promptSyntax/chatPromptContentStore.js';
-import { IChatEditingService, IChatRelatedFileProviderMetadata } from '../../contrib/chat/common/editing/chatEditingService.js';
 import { IChatContentInlineReference, IChatContentReference, IChatService, IChatTask, IChatTaskSerialized, IChatWarningMessage } from '../../contrib/chat/common/chatService/chatService.js';
 import { IChatSessionsService } from '../../contrib/chat/common/chatSessionsService.js';
 import { ILanguageModelToolsService } from '../../contrib/chat/common/tools/languageModelToolsService.js';
@@ -38,7 +36,6 @@ export declare class MainThreadChatAgents2 extends Disposable implements MainThr
     private readonly _chatAgentService;
     private readonly _chatSessionService;
     private readonly _chatService;
-    private readonly _chatEditingService;
     private readonly _languageFeaturesService;
     private readonly _chatWidgetService;
     private readonly _instantiationService;
@@ -46,13 +43,11 @@ export declare class MainThreadChatAgents2 extends Disposable implements MainThr
     private readonly _extensionService;
     private readonly _uriIdentityService;
     private readonly _promptsService;
-    private readonly _chatPromptContentStore;
     private readonly _languageModelToolsService;
     private readonly _agents;
     private readonly _agentCompletionProviders;
     private readonly _agentIdsToCompletionProviders;
     private readonly _chatParticipantDetectionProviders;
-    private readonly _chatRelatedFilesProviders;
     private readonly _promptFileProviders;
     private readonly _promptFileProviderEmitters;
     private readonly _promptFileContentRegistrations;
@@ -60,7 +55,7 @@ export declare class MainThreadChatAgents2 extends Disposable implements MainThr
     private readonly _proxy;
     private readonly _activeTasks;
     private readonly _unresolvedAnchors;
-    constructor(extHostContext: IExtHostContext, _chatAgentService: IChatAgentService, _chatSessionService: IChatSessionsService, _chatService: IChatService, _chatEditingService: IChatEditingService, _languageFeaturesService: ILanguageFeaturesService, _chatWidgetService: IChatWidgetService, _instantiationService: IInstantiationService, _logService: ILogService, _extensionService: IExtensionService, _uriIdentityService: IUriIdentityService, _promptsService: IPromptsService, _chatPromptContentStore: IChatPromptContentStore, _languageModelToolsService: ILanguageModelToolsService);
+    constructor(extHostContext: IExtHostContext, _chatAgentService: IChatAgentService, _chatSessionService: IChatSessionsService, _chatService: IChatService, _languageFeaturesService: ILanguageFeaturesService, _chatWidgetService: IChatWidgetService, _instantiationService: IInstantiationService, _logService: ILogService, _extensionService: IExtensionService, _uriIdentityService: IUriIdentityService, _promptsService: IPromptsService, _languageModelToolsService: ILanguageModelToolsService);
     $unregisterAgent(handle: number): void;
     $transferActiveChatSession(toWorkspace: UriComponents): Promise<void>;
     $registerAgent(handle: number, extension: ExtensionIdentifier, id: string, metadata: IExtensionChatAgentMetadata, dynamicProps: IDynamicChatAgentProps | undefined): Promise<void>;
@@ -71,8 +66,6 @@ export declare class MainThreadChatAgents2 extends Disposable implements MainThr
     $unregisterAgentCompletionsProvider(handle: number, id: string): void;
     $registerChatParticipantDetectionProvider(handle: number): void;
     $unregisterChatParticipantDetectionProvider(handle: number): void;
-    $registerRelatedFilesProvider(handle: number, metadata: IChatRelatedFileProviderMetadata): void;
-    $unregisterRelatedFilesProvider(handle: number): void;
     $registerPromptFileProvider(handle: number, type: string, extensionId: ExtensionIdentifier): Promise<void>;
     $unregisterPromptFileProvider(handle: number): void;
     $onDidChangePromptFiles(handle: number): void;

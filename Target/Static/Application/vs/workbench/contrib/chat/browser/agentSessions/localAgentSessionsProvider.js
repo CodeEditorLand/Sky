@@ -20,6 +20,7 @@ import { Schemas } from "../../../../../base/common/network.js";
 import { convertLegacyChatSessionTiming, IChatService } from "../../common/chatService/chatService.js";
 import { IChatSessionsService, localChatSessionType } from "../../common/chatSessionsService.js";
 import { getChatSessionType } from "../../common/model/chatUri.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
 let LocalAgentsSessionsProvider = class LocalAgentsSessionsProvider2 extends Disposable {
   static {
     __name(this, "LocalAgentsSessionsProvider");
@@ -27,10 +28,11 @@ let LocalAgentsSessionsProvider = class LocalAgentsSessionsProvider2 extends Dis
   static {
     this.ID = "workbench.contrib.localAgentsSessionsProvider";
   }
-  constructor(chatService, chatSessionsService) {
+  constructor(chatService, chatSessionsService, logService) {
     super();
     this.chatService = chatService;
     this.chatSessionsService = chatSessionsService;
+    this.logService = logService;
     this.chatSessionType = localChatSessionType;
     this._onDidChange = this._register(new Emitter());
     this.onDidChange = this._onDidChange.event;
@@ -41,8 +43,8 @@ let LocalAgentsSessionsProvider = class LocalAgentsSessionsProvider2 extends Dis
   }
   registerListeners() {
     this._register(this.chatSessionsService.registerChatModelChangeListeners(this.chatService, Schemas.vscodeLocalChatSession, () => this._onDidChangeChatSessionItems.fire()));
-    this._register(this.chatSessionsService.onDidChangeSessionItems((sessionType) => {
-      if (sessionType === this.chatSessionType) {
+    this._register(this.chatSessionsService.onDidChangeSessionItems(({ chatSessionType }) => {
+      if (chatSessionType === this.chatSessionType) {
         this._onDidChange.fire();
       }
     }));
@@ -104,9 +106,11 @@ let LocalAgentsSessionsProvider = class LocalAgentsSessionsProvider2 extends Dis
   }
   modelToStatus(model) {
     if (model.requestInProgress.get()) {
+      this.logService.trace(`[agent sessions] Session ${model.sessionResource.toString()} request is in progress.`);
       return 2;
     }
     const lastRequest = model.getRequests().at(-1);
+    this.logService.trace(`[agent sessions] Session ${model.sessionResource.toString()} last request response: state ${lastRequest?.response?.state}, isComplete ${lastRequest?.response?.isComplete}, isCanceled ${lastRequest?.response?.isCanceled}, error: ${lastRequest?.response?.result?.errorDetails?.message}.`);
     if (lastRequest?.response) {
       if (lastRequest.response.state === 4) {
         return 3;
@@ -138,7 +142,8 @@ let LocalAgentsSessionsProvider = class LocalAgentsSessionsProvider2 extends Dis
 };
 LocalAgentsSessionsProvider = __decorate([
   __param(0, IChatService),
-  __param(1, IChatSessionsService)
+  __param(1, IChatSessionsService),
+  __param(2, ILogService)
 ], LocalAgentsSessionsProvider);
 export {
   LocalAgentsSessionsProvider

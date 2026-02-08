@@ -9,6 +9,7 @@ export declare class QuickInputBox extends Disposable {
     private parent;
     private container;
     private findInput;
+    private _listFocusMode;
     constructor(parent: HTMLElement, inputBoxStyles: IInputBoxStyles, toggleStyles: IToggleStyles);
     get onKeyDown(): import("../../../workbench/workbench.web.main.internal.ts").Event<import("../../../base/browser/keyboardEvent.ts").IKeyboardEvent>;
     get onMouseDown(): import("../../../workbench/workbench.web.main.internal.ts").Event<import("../../../base/browser/mouseEvent.ts").IMouseEvent>;
@@ -32,6 +33,14 @@ export declare class QuickInputBox extends Disposable {
     hasFocus(): boolean;
     setAttribute(name: string, value: string): void;
     removeAttribute(name: string): void;
+    /**
+     * Controls the ARIA popup mode for screen readers.
+     * When enabled (hasActiveDescendant=true), indicates a list popup is active.
+     * When disabled, removes ARIA attributes to allow normal text input behavior.
+     * Only updates attributes when the state actually changes to avoid
+     * unnecessary screen reader re-announcements.
+     */
+    setListFocusMode(hasActiveDescendant: boolean): void;
     showDecoration(decoration: Severity): void;
     stylesForType(decoration: Severity): {
         border: string | undefined;

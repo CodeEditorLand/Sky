@@ -47,11 +47,6 @@ let ExtensionGalleryManifestService = class ExtensionGalleryManifestService2 ext
         id: `${extensionsGallery.serviceUrl}/publishers/{publisher}/extensions/{name}/{version}/stats?statType={statTypeName}`,
         type: "ExtensionStatisticsUriTemplate"
         /* ExtensionGalleryResourceType.ExtensionStatisticsUri */
-      },
-      {
-        id: `${extensionsGallery.serviceUrl}/itemName/{publisher}.{name}/version/{version}/statType/{statTypeValue}/vscodewebextension`,
-        type: "WebExtensionStatisticsUriTemplate"
-        /* ExtensionGalleryResourceType.WebExtensionStatisticsUri */
       }
     ];
     if (extensionsGallery.publisherUrl) {

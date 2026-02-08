@@ -3,23 +3,30 @@ import { ServicesAccessor } from '../../../../../editor/browser/editorExtensions
 import { Action2, IAction2Options } from '../../../../../platform/actions/common/actions.js';
 import { IChatEditingSession } from '../../common/editing/chatEditingService.js';
 import { IChatWidget } from '../chat.js';
+import { IAgentSession } from '../agentSessions/agentSessionsModel.js';
 export declare abstract class EditingSessionAction extends Action2 {
     constructor(opts: Readonly<IAction2Options>);
     run(accessor: ServicesAccessor, ...args: unknown[]): any;
     abstract runEditingSessionAction(accessor: ServicesAccessor, editingSession: IChatEditingSession, chatWidget: IChatWidget, ...args: unknown[]): any;
 }
+export type EditingSessionActionContext = {
+    editingSession?: IChatEditingSession;
+    chatWidget: IChatWidget;
+};
 /**
  * Resolve view title toolbar context. If none, return context from the lastFocusedWidget.
  */
-export declare function getEditingSessionContext(accessor: ServicesAccessor, args: any[]): {
-    editingSession?: IChatEditingSession;
-    chatWidget: IChatWidget;
-} | undefined;
+export declare function getEditingSessionContext(accessor: ServicesAccessor, args: any[]): EditingSessionActionContext | undefined;
 export declare class ChatEditingAcceptAllAction extends EditingSessionAction {
     constructor();
     runEditingSessionAction(accessor: ServicesAccessor, editingSession: IChatEditingSession, chatWidget: IChatWidget, ...args: unknown[]): Promise<void>;
 }
 export declare class ChatEditingDiscardAllAction extends EditingSessionAction {
+    constructor();
+    runEditingSessionAction(accessor: ServicesAccessor, editingSession: IChatEditingSession, chatWidget: IChatWidget, ...args: unknown[]): Promise<void>;
+}
+export declare class ToggleExplanationWidgetAction extends EditingSessionAction {
+    static readonly ID = "chatEditing.toggleExplanationWidget";
     constructor();
     runEditingSessionAction(accessor: ServicesAccessor, editingSession: IChatEditingSession, chatWidget: IChatWidget, ...args: unknown[]): Promise<void>;
 }
@@ -33,7 +40,7 @@ export declare class ChatEditingShowChangesAction extends EditingSessionAction {
 export declare class ViewAllSessionChangesAction extends Action2 {
     static readonly ID = "chatEditing.viewAllSessionChanges";
     constructor();
-    run(accessor: ServicesAccessor, sessionResource?: URI): Promise<void>;
+    run(accessor: ServicesAccessor, sessionOrSessionResource?: URI | IAgentSession): Promise<void>;
 }
 export interface ChatEditingActionContext {
     readonly sessionResource: URI;

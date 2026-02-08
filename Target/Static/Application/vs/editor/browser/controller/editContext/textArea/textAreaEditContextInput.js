@@ -23,7 +23,7 @@ import * as strings from "../../../../../base/common/strings.js";
 import { Selection } from "../../../../common/core/selection.js";
 import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
 import { ILogService } from "../../../../../platform/log/common/log.js";
-import { ClipboardEventUtils, ensureClipboardGetsEditorSelection, InMemoryClipboardMetadataManager } from "../clipboardUtils.js";
+import { CopyOptions, createClipboardCopyEvent, createClipboardPasteEvent, InMemoryClipboardMetadataManager } from "../clipboardUtils.js";
 import { _debugComposition, TextAreaState } from "./textAreaEditContextState.js";
 var TextAreaSyntethicEvents;
 (function(TextAreaSyntethicEvents2) {
@@ -75,6 +75,12 @@ let TextAreaInput = class TextAreaInput2 extends Disposable {
     this.onCut = this._onCut.event;
     this._onPaste = this._register(new Emitter());
     this.onPaste = this._onPaste.event;
+    this._onWillCopy = this._register(new Emitter());
+    this.onWillCopy = this._onWillCopy.event;
+    this._onWillCut = this._register(new Emitter());
+    this.onWillCut = this._onWillCut.event;
+    this._onWillPaste = this._register(new Emitter());
+    this.onWillPaste = this._onWillPaste.event;
     this._onType = this._register(new Emitter());
     this.onType = this._onType.event;
     this._onCompositionStart = this._register(new Emitter());
@@ -225,35 +231,56 @@ let TextAreaInput = class TextAreaInput2 extends Disposable {
     }));
     this._register(this._textArea.onCut((e) => {
       this._logService.trace(`TextAreaInput#onCut`, e);
-      this._textArea.setIgnoreSelectionChangeTime("received cut event");
-      if (this._host.context) {
-        ensureClipboardGetsEditorSelection(e, this._host.context, this._logService, this._browser.isFirefox);
+      const cutEvent = createClipboardCopyEvent(
+        e,
+        /* isCut */
+        true,
+        this._host.context,
+        this._logService,
+        this._browser.isFirefox
+      );
+      this._onWillCut.fire(cutEvent);
+      if (cutEvent.isHandled) {
+        return;
       }
+      this._textArea.setIgnoreSelectionChangeTime("received cut event");
+      cutEvent.ensureClipboardGetsEditorData();
       this._asyncTriggerCut.schedule();
     }));
     this._register(this._textArea.onCopy((e) => {
       this._logService.trace(`TextAreaInput#onCopy`, e);
-      if (this._host.context) {
-        ensureClipboardGetsEditorSelection(e, this._host.context, this._logService, this._browser.isFirefox);
+      CopyOptions.electronBugWorkaroundCopyEventHasFired = true;
+      const copyEvent = createClipboardCopyEvent(
+        e,
+        /* isCut */
+        false,
+        this._host.context,
+        this._logService,
+        this._browser.isFirefox
+      );
+      this._onWillCopy.fire(copyEvent);
+      if (copyEvent.isHandled) {
+        return;
       }
+      copyEvent.ensureClipboardGetsEditorData();
     }));
     this._register(this._textArea.onPaste((e) => {
       this._logService.trace(`TextAreaInput#onPaste`, e);
+      const pasteEvent = createClipboardPasteEvent(e);
+      this._onWillPaste.fire(pasteEvent);
+      if (pasteEvent.isHandled) {
+        return;
+      }
       this._textArea.setIgnoreSelectionChangeTime("received paste event");
       e.preventDefault();
-      if (!e.clipboardData) {
+      this._logService.trace(`TextAreaInput#onPaste with id : `, pasteEvent.metadata?.id, " with text.length: ", pasteEvent.text.length);
+      if (!pasteEvent.text) {
         return;
       }
-      let [text, metadata] = ClipboardEventUtils.getTextData(e.clipboardData);
-      this._logService.trace(`TextAreaInput#onPaste with id : `, metadata?.id, " with text.length: ", text.length);
-      if (!text) {
-        return;
-      }
-      metadata = metadata || InMemoryClipboardMetadataManager.INSTANCE.get(text);
       this._logService.trace(`TextAreaInput#onPaste (before onPaste)`);
       this._onPaste.fire({
-        text,
-        metadata
+        text: pasteEvent.text,
+        metadata: pasteEvent.metadata
       });
     }));
     this._register(this._textArea.onFocus(() => {

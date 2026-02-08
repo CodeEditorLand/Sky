@@ -13,10 +13,10 @@ export declare class ChatSetup {
     private readonly keybindingService;
     private readonly chatEntitlementService;
     private readonly logService;
-    private readonly configurationService;
     private readonly widgetService;
     private readonly workspaceTrustRequestService;
     private readonly markdownRendererService;
+    private readonly defaultAccountService;
     private static instance;
     static getInstance(instantiationService: IInstantiationService, context: ChatEntitlementContext, controller: Lazy<ChatSetupController>): ChatSetup;
     private pendingRun;

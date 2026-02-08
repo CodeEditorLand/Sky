@@ -21,16 +21,13 @@ import { indentOfLine } from "../../../../../../common/model/textModel.js";
 import { BugIndicatingError } from "../../../../../../../base/common/errors.js";
 import { Size2D } from "../../../../../../common/core/2d/size.js";
 function maxContentWidthInRange(editor, range, reader) {
-  editor.layoutInfo.read(reader);
-  editor.value.read(reader);
   const model = editor.model.read(reader);
   if (!model) {
     return 0;
   }
   let maxContentWidth = 0;
-  editor.scrollTop.read(reader);
   for (let i = range.startLineNumber; i < range.endLineNumberExclusive; i++) {
-    const lineContentWidth = editor.editor.getWidthOfLine(i);
+    const lineContentWidth = editor.getWidthOfLine(i, reader);
     maxContentWidth = Math.max(maxContentWidth, lineContentWidth);
   }
   const lines = range.mapToLineArray((l) => model.getLineContent(l));
@@ -41,17 +38,14 @@ function maxContentWidthInRange(editor, range, reader) {
 }
 __name(maxContentWidthInRange, "maxContentWidthInRange");
 function getContentSizeOfLines(editor, range, reader) {
-  editor.layoutInfo.read(reader);
-  editor.value.read(reader);
   observableSignalFromEvent(editor, editor.editor.onDidChangeLineHeight).read(reader);
   const model = editor.model.read(reader);
   if (!model) {
     throw new BugIndicatingError("Model is required");
   }
   const sizes = [];
-  editor.scrollTop.read(reader);
   for (let i = range.startLineNumber; i < range.endLineNumberExclusive; i++) {
-    let lineContentWidth = editor.editor.getWidthOfLine(i);
+    let lineContentWidth = editor.getWidthOfLine(i, reader);
     if (lineContentWidth === -1) {
       const column = model.getLineMaxColumn(i);
       const typicalHalfwidthCharacterWidth = editor.editor.getOption(

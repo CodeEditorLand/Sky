@@ -31,6 +31,7 @@ export interface IEnvironmentService {
     workspaceStorageHome: URI;
     localHistoryHome: URI;
     cacheHome: URI;
+    builtinWorkbenchModesHome: URI;
     userDataSyncHome: URI;
     sync: 'on' | 'off' | undefined;
     continueOn?: string;
@@ -50,6 +51,7 @@ export interface IEnvironmentService {
     disableTelemetry: boolean;
     disableExperiments: boolean;
     serviceMachineIdResource: URI;
+    agentSessionsWorkspace?: URI;
     policyFile?: URI;
 }
 /**

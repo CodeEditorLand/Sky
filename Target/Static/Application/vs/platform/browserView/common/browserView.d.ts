@@ -1,5 +1,6 @@
 import { Event } from '../../../base/common/event.js';
 import { VSBuffer } from '../../../base/common/buffer.js';
+import { URI } from '../../../base/common/uri.js';
 export interface IBrowserViewBounds {
     windowId: number;
     x: number;
@@ -23,6 +24,8 @@ export interface IBrowserViewState {
     canGoBack: boolean;
     canGoForward: boolean;
     loading: boolean;
+    focused: boolean;
+    visible: boolean;
     isDevToolsOpen: boolean;
     lastScreenshot: VSBuffer | undefined;
     lastFavicon: string | undefined;
@@ -46,6 +49,9 @@ export interface IBrowserViewLoadError {
 export interface IBrowserViewFocusEvent {
     focused: boolean;
 }
+export interface IBrowserViewVisibilityEvent {
+    visible: boolean;
+}
 export interface IBrowserViewDevToolsStateEvent {
     isDevToolsOpen: boolean;
 }
@@ -65,10 +71,36 @@ export interface IBrowserViewTitleChangeEvent {
 export interface IBrowserViewFaviconChangeEvent {
     favicon: string;
 }
+export declare enum BrowserNewPageLocation {
+    Foreground = "foreground",
+    Background = "background",
+    NewWindow = "newWindow"
+}
 export interface IBrowserViewNewPageRequest {
-    url: string;
-    name?: string;
-    background: boolean;
+    resource: URI;
+    location: BrowserNewPageLocation;
+    position?: {
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+    };
+}
+export interface IBrowserViewFindInPageOptions {
+    recompute?: boolean;
+    forward?: boolean;
+    matchCase?: boolean;
+}
+export interface IBrowserViewFindInPageResult {
+    activeMatchOrdinal: number;
+    matches: number;
+    selectionArea?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    finalUpdate: boolean;
 }
 export declare enum BrowserViewStorageScope {
     Global = "global",
@@ -76,6 +108,10 @@ export declare enum BrowserViewStorageScope {
     Ephemeral = "ephemeral"
 }
 export declare const ipcBrowserViewChannelName = "browserView";
+/**
+ * This should match the isolated world ID defined in `preload-browserView.ts`.
+ */
+export declare const browserViewIsolatedWorldId = 999;
 export interface IBrowserViewService {
     /**
      * Dynamic events that return an Event for a specific browser view ID.
@@ -83,11 +119,13 @@ export interface IBrowserViewService {
     onDynamicDidNavigate(id: string): Event<IBrowserViewNavigationEvent>;
     onDynamicDidChangeLoadingState(id: string): Event<IBrowserViewLoadingEvent>;
     onDynamicDidChangeFocus(id: string): Event<IBrowserViewFocusEvent>;
+    onDynamicDidChangeVisibility(id: string): Event<IBrowserViewVisibilityEvent>;
     onDynamicDidChangeDevToolsState(id: string): Event<IBrowserViewDevToolsStateEvent>;
     onDynamicDidKeyCommand(id: string): Event<IBrowserViewKeyDownEvent>;
     onDynamicDidChangeTitle(id: string): Event<IBrowserViewTitleChangeEvent>;
     onDynamicDidChangeFavicon(id: string): Event<IBrowserViewFaviconChangeEvent>;
     onDynamicDidRequestNewPage(id: string): Event<IBrowserViewNewPageRequest>;
+    onDynamicDidFindInPage(id: string): Event<IBrowserViewFindInPageResult>;
     onDynamicDidClose(id: string): Event<void>;
     /**
      * Get or create a browser view instance
@@ -173,6 +211,26 @@ export interface IBrowserViewService {
      */
     focus(id: string): Promise<void>;
     /**
+     * Find text in the browser view's page
+     * @param id The browser view identifier
+     * @param text The text to search for
+     * @param options Find options (forward direction, find next)
+     */
+    findInPage(id: string, text: string, options?: IBrowserViewFindInPageOptions): Promise<void>;
+    /**
+     * Stop the find in page session
+     * @param id The browser view identifier
+     * @param keepSelection Whether to keep the current selection
+     */
+    stopFindInPage(id: string, keepSelection?: boolean): Promise<void>;
+    /**
+     * Get the currently selected text in the browser view.
+     * Returns immediately with empty string if the page is still loading.
+     * @param id The browser view identifier
+     * @returns The selected text, or empty string if no selection or page is loading
+     */
+    getSelectedText(id: string): Promise<string>;
+    /**
      * Clear all storage data for the global browser session
      */
     clearGlobalStorage(): Promise<void>;
@@ -181,4 +239,9 @@ export interface IBrowserViewService {
      * @param workspaceId The workspace identifier
      */
     clearWorkspaceStorage(workspaceId: string): Promise<void>;
+    /**
+     * Clear storage data for a specific browser view
+     * @param id The browser view identifier
+     */
+    clearStorage(id: string): Promise<void>;
 }

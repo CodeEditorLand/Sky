@@ -34,7 +34,6 @@ export declare class ChatTeardownContribution extends Disposable implements IWor
     private readonly viewDescriptorService;
     private readonly layoutService;
     static readonly ID = "workbench.contrib.chatTeardown";
-    static readonly CHAT_DISABLED_CONFIGURATION_KEY = "chat.disableAIFeatures";
     constructor(chatEntitlementService: ChatEntitlementService, configurationService: IConfigurationService, extensionsWorkbenchService: IExtensionsWorkbenchService, extensionEnablementService: IWorkbenchExtensionEnablementService, viewDescriptorService: IViewDescriptorService, layoutService: IWorkbenchLayoutService);
     private handleChatDisabled;
     private registerListeners;

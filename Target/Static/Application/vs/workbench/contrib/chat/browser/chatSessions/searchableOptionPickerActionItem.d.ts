@@ -9,6 +9,8 @@ import { IDisposable } from '../../../../../base/common/lifecycle.js';
 import { IQuickInputService } from '../../../../../platform/quickinput/common/quickInput.js';
 import { ChatSessionPickerActionItem, IChatSessionPickerDelegate } from './chatSessionPickerActionItem.js';
 import { ILogService } from '../../../../../platform/log/common/log.js';
+import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
 /**
  * Action view item for searchable option groups with QuickPick.
  * Used when an option group has `searchable: true` (e.g., repository selection).
@@ -21,7 +23,7 @@ export declare class SearchableOptionPickerActionItem extends ChatSessionPickerA
     constructor(action: IAction, initialState: {
         group: IChatSessionProviderOptionGroup;
         item: IChatSessionProviderOptionItem | undefined;
-    }, delegate: IChatSessionPickerDelegate, actionWidgetService: IActionWidgetService, contextKeyService: IContextKeyService, keybindingService: IKeybindingService, quickInputService: IQuickInputService, logService: ILogService);
+    }, delegate: IChatSessionPickerDelegate, actionWidgetService: IActionWidgetService, contextKeyService: IContextKeyService, keybindingService: IKeybindingService, quickInputService: IQuickInputService, logService: ILogService, commandService: ICommandService, telemetryService: ITelemetryService);
     protected getDropdownActions(): IActionWidgetDropdownAction[];
     protected renderLabel(element: HTMLElement): IDisposable | null;
     protected getContainerClass(): string;

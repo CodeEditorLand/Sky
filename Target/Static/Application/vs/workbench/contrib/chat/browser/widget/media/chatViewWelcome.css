@@ -6,6 +6,15 @@
     display: flex;
   }
 }
+.interactive-session.chat-view-getting-started-disabled {
+  .chat-welcome-view .chat-welcome-view-icon,
+  .chat-welcome-view .chat-welcome-view-title,
+  .chat-welcome-view .chat-welcome-view-message,
+  .chat-welcome-view .chat-welcome-view-disclaimer,
+  .chat-welcome-view .chat-welcome-view-tips {
+    visibility: hidden;
+  }
+}
 .interactive-session .chat-welcome-view-container {
   display: flex;
   flex-direction: column;

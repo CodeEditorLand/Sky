@@ -78,20 +78,22 @@ class BaseStringEdit extends BaseEdit {
     let ourIdx = 0;
     let offset = 0;
     while (ourIdx < this.replacements.length || baseIdx < base.replacements.length) {
-      const baseEdit = base.replacements[baseIdx];
-      const ourEdit = this.replacements[ourIdx];
+      const baseEdit = base.replacements.at(baseIdx);
+      const ourEdit = this.replacements.at(ourIdx);
       if (!ourEdit) {
         break;
       } else if (!baseEdit) {
-        newEdits.push(new StringReplacement(ourEdit.replaceRange.delta(offset), ourEdit.newText));
+        const transformedRange = ourEdit.replaceRange.delta(offset);
+        newEdits.push(new StringReplacement(transformedRange, ourEdit.newText));
         ourIdx++;
-      } else if (ourEdit.replaceRange.intersectsOrTouches(baseEdit.replaceRange)) {
+      } else if (ourEdit.replaceRange.intersects(baseEdit.replaceRange) || areConcurrentInserts(ourEdit.replaceRange, baseEdit.replaceRange) || isInsertStrictlyInsideRange(ourEdit.replaceRange, baseEdit.replaceRange) || isInsertStrictlyInsideRange(baseEdit.replaceRange, ourEdit.replaceRange)) {
         ourIdx++;
         if (noOverlap) {
           return void 0;
         }
-      } else if (ourEdit.replaceRange.start < baseEdit.replaceRange.start) {
-        newEdits.push(new StringReplacement(ourEdit.replaceRange.delta(offset), ourEdit.newText));
+      } else if (ourEdit.replaceRange.start < baseEdit.replaceRange.start || ourEdit.replaceRange.isEmpty && ourEdit.replaceRange.start === baseEdit.replaceRange.start) {
+        const transformedRange = ourEdit.replaceRange.delta(offset);
+        newEdits.push(new StringReplacement(transformedRange, ourEdit.newText));
         ourIdx++;
       } else {
         baseIdx++;
@@ -209,6 +211,22 @@ class BaseStringReplacement extends BaseReplacement {
 class StringEdit extends BaseStringEdit {
   static {
     __name(this, "StringEdit");
+  }
+  /**
+   * Parses an edit from its string representation.
+   * E.g. [[2, 12) -> "fgh", [14, 20) -> "qrst", [22, 22) -> "de\n"]
+  */
+  static parse(toStringValue) {
+    const replacements = [];
+    const regex = /\[(\d+),\s*(\d+)\)\s*->\s*"([^"]*)"/g;
+    let match;
+    while ((match = regex.exec(toStringValue)) !== null) {
+      const start = parseInt(match[1], 10);
+      const endEx = parseInt(match[2], 10);
+      const text = match[3].replace(/\\n/g, "\n").replace(/\\r/g, "\r").replace(/\\\\/g, "\\");
+      replacements.push(new StringReplacement(new OffsetRange(start, endEx), text));
+    }
+    return new StringEdit(replacements);
   }
   static {
     this.empty = new StringEdit([]);
@@ -429,6 +447,14 @@ class AnnotatedStringReplacement extends BaseStringReplacement {
     return new AnnotatedStringReplacement(range, rangeInReplacement ? rangeInReplacement.substring(this.newText) : this.newText, this.data);
   }
 }
+function areConcurrentInserts(r1, r2) {
+  return r1.isEmpty && r2.isEmpty && r1.start === r2.start;
+}
+__name(areConcurrentInserts, "areConcurrentInserts");
+function isInsertStrictlyInsideRange(insert, range) {
+  return insert.isEmpty && range.start < insert.start && insert.start < range.endExclusive;
+}
+__name(isInsertStrictlyInsideRange, "isInsertStrictlyInsideRange");
 export {
   AnnotatedStringEdit,
   AnnotatedStringReplacement,

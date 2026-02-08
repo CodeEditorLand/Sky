@@ -105,7 +105,13 @@ let ActionWidgetService = class ActionWidgetService2 extends Disposable {
     const width = this._list.value?.layout(actionBarWidth);
     widget.style.width = `${width}px`;
     const focusTracker = renderDisposables.add(dom.trackFocus(element));
-    renderDisposables.add(focusTracker.onDidBlur(() => this.hide(true)));
+    renderDisposables.add(focusTracker.onDidBlur(() => {
+      const activeElement = dom.getActiveElement();
+      if (activeElement?.closest(".action-widget-hover")) {
+        return;
+      }
+      this.hide(true);
+    }));
     return renderDisposables;
   }
   _createActionBar(className, actions) {

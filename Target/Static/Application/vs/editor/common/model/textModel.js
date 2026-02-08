@@ -1394,15 +1394,15 @@ let TextModel = class TextModel2 extends Disposable {
     const endColumn = this.getLineMaxColumn(endLineNumber);
     const range = new Range(startLineNumber, 1, endLineNumber, endColumn);
     const decorations = this._getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations, onlyMarginDecorations);
-    pushMany(decorations, this._decorationProvider.getDecorationsInRange(range, ownerId, filterOutValidation));
-    pushMany(decorations, this._fontTokenDecorationsProvider.getDecorationsInRange(range, ownerId, filterOutValidation));
+    pushMany(decorations, this._decorationProvider.getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations));
+    pushMany(decorations, this._fontTokenDecorationsProvider.getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations));
     return decorations;
   }
   getDecorationsInRange(range, ownerId = 0, filterOutValidation = false, filterFontDecorations = false, onlyMinimapDecorations = false, onlyMarginDecorations = false) {
     const validatedRange = this.validateRange(range);
     const decorations = this._getDecorationsInRange(validatedRange, ownerId, filterOutValidation, filterFontDecorations, onlyMarginDecorations);
-    pushMany(decorations, this._decorationProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, onlyMinimapDecorations));
-    pushMany(decorations, this._fontTokenDecorationsProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, onlyMinimapDecorations));
+    pushMany(decorations, this._decorationProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations));
+    pushMany(decorations, this._fontTokenDecorationsProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations));
     return decorations;
   }
   getOverviewRulerDecorations(ownerId = 0, filterOutValidation = false, filterFontDecorations = false) {
@@ -1412,7 +1412,9 @@ let TextModel = class TextModel2 extends Disposable {
     return this._decorationsTree.getAllInjectedText(this, ownerId);
   }
   getCustomLineHeightsDecorations(ownerId = 0) {
-    return this._decorationsTree.getAllCustomLineHeights(this, ownerId);
+    const decs = this._decorationsTree.getAllCustomLineHeights(this, ownerId);
+    pushMany(decs, this._fontTokenDecorationsProvider.getAllDecorations(ownerId));
+    return decs;
   }
   _getInjectedTextInLine(lineNumber) {
     const startOffset = this._buffer.getOffsetAt(lineNumber, 1);

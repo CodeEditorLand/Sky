@@ -1,4 +1,5 @@
 import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { ServicesAccessor } from '../../../../../editor/browser/editorExtensions.js';
 import { ActionWidgetDropdownActionViewItem } from '../../../../../platform/actions/browser/actionWidgetDropdownActionViewItem.js';
 import { IActionViewItemService } from '../../../../../platform/actions/browser/actionViewItemService.js';
 import { Action2, MenuItemAction } from '../../../../../platform/actions/common/actions.js';
@@ -6,9 +7,11 @@ import { IActionWidgetService } from '../../../../../platform/actionWidget/brows
 import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
 import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
+import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
 import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
 import { IWorkbenchContribution } from '../../../../common/contributions.js';
-import { IChatSessionsService } from '../../common/chatSessionsService.js';
+import { IChatSessionsExtensionPoint, IChatSessionsService } from '../../common/chatSessionsService.js';
+import { IChatWidget } from '../chat.js';
 export declare const enum ActionLocation {
     ChatWidget = "chatWidget",
     Editor = "editor"
@@ -21,7 +24,7 @@ export declare class ContinueChatInSessionAction extends Action2 {
 export declare class ChatContinueInSessionActionItem extends ActionWidgetDropdownActionViewItem {
     private readonly location;
     private readonly contextKeyService;
-    constructor(action: MenuItemAction, location: ActionLocation, actionWidgetService: IActionWidgetService, contextKeyService: IContextKeyService, keybindingService: IKeybindingService, chatSessionsService: IChatSessionsService, instantiationService: IInstantiationService, openerService: IOpenerService);
+    constructor(action: MenuItemAction, location: ActionLocation, actionWidgetService: IActionWidgetService, contextKeyService: IContextKeyService, keybindingService: IKeybindingService, chatSessionsService: IChatSessionsService, instantiationService: IInstantiationService, openerService: IOpenerService, telemetryService: ITelemetryService);
     protected static getActionBarActions(openerService: IOpenerService): {
         id: string;
         label: string;
@@ -34,6 +37,11 @@ export declare class ChatContinueInSessionActionItem extends ActionWidgetDropdow
     private static toAction;
     private static toSetupAction;
     protected renderLabel(element: HTMLElement): IDisposable | null;
+}
+export declare class CreateRemoteAgentJobAction {
+    constructor();
+    private openUntitledEditor;
+    run(accessor: ServicesAccessor, continuationTarget: IChatSessionsExtensionPoint, _widget?: IChatWidget): Promise<void>;
 }
 export declare class ContinueChatInSessionActionRendering extends Disposable implements IWorkbenchContribution {
     static readonly ID = "chat.continueChatInSessionActionRendering";

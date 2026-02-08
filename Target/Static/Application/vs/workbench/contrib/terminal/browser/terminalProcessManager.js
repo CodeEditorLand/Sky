@@ -262,7 +262,6 @@ let TerminalProcessManager = class TerminalProcessManager2 extends Disposable {
               ),
               nonce: this.shellIntegrationNonce
             },
-            windowsEnableConpty: this._terminalConfigurationService.config.windowsEnableConpty,
             windowsUseConptyDll: this._terminalConfigurationService.config.windowsUseConptyDll ?? false,
             environmentVariableCollections: this._extEnvironmentVariableCollection?.collections ? serializeEnvironmentVariableCollections(this._extEnvironmentVariableCollection.collections) : void 0,
             workspaceFolder: this._cwdWorkspaceFolder,
@@ -439,7 +438,6 @@ ${measurements.map((e) => `${e.label}: ${e.latency.toFixed(2)}ms`).join("\n")}`)
         ),
         nonce: this.shellIntegrationNonce
       },
-      windowsEnableConpty: this._terminalConfigurationService.config.windowsEnableConpty,
       windowsUseConptyDll: this._terminalConfigurationService.config.windowsUseConptyDll ?? false,
       environmentVariableCollections: this._extEnvironmentVariableCollection ? serializeEnvironmentVariableCollections(this._extEnvironmentVariableCollection.collections) : void 0,
       workspaceFolder: this._cwdWorkspaceFolder,

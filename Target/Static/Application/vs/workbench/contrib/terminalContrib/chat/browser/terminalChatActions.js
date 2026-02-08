@@ -282,7 +282,7 @@ registerAction2(class ShowChatTerminalsAction extends Action2 {
       }]
     });
   }
-  run(accessor) {
+  async run(accessor) {
     const terminalService = accessor.get(ITerminalService);
     const groupService = accessor.get(ITerminalGroupService);
     const editorService = accessor.get(ITerminalEditorService);
@@ -300,6 +300,16 @@ registerAction2(class ShowChatTerminalsAction extends Action2 {
       if (!visible.has(i)) {
         all.set(i.instanceId, i);
       }
+    }
+    if (all.size === 0) {
+      return;
+    }
+    if (all.size === 1) {
+      const instance = Array.from(all.values())[0];
+      terminalService.setActiveInstance(instance);
+      await terminalService.revealTerminal(instance);
+      await terminalService.focusInstance(instance);
+      return;
     }
     const items = [];
     const lastCommandLocalized = /* @__PURE__ */ __name((command) => localize2("chatTerminal.lastCommand", "Last: {0}", command).value, "lastCommandLocalized");

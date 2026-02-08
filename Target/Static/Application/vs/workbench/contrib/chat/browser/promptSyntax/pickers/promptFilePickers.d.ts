@@ -9,6 +9,7 @@ import { IKeyMods, IQuickInputService } from '../../../../../../platform/quickin
 import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
 import { ILabelService } from '../../../../../../platform/label/common/label.js';
 import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
+import { IProductService } from '../../../../../../platform/product/common/productService.js';
 /**
  * Options for the {@link askToSelectInstructions} function.
  */
@@ -51,7 +52,8 @@ export declare class PromptFilePickers {
     private readonly _promptsService;
     private readonly _labelService;
     private readonly _configurationService;
-    constructor(_quickInputService: IQuickInputService, _openerService: IOpenerService, _fileService: IFileService, _dialogService: IDialogService, _commandService: ICommandService, _instaService: IInstantiationService, _promptsService: IPromptsService, _labelService: ILabelService, _configurationService: IConfigurationService);
+    private readonly _productService;
+    constructor(_quickInputService: IQuickInputService, _openerService: IOpenerService, _fileService: IFileService, _dialogService: IDialogService, _commandService: ICommandService, _instaService: IInstantiationService, _promptsService: IPromptsService, _labelService: ILabelService, _configurationService: IConfigurationService, _productService: IProductService);
     /**
      * Shows the prompt file selection dialog to the user that allows to run a prompt file(s).
      *
@@ -60,6 +62,7 @@ export declare class PromptFilePickers {
      */
     selectPromptFile(options: ISelectOptions): Promise<ISelectPromptResult | undefined>;
     private _createPromptPickItems;
+    private _getExtensionGroupLabel;
     private _getNewItems;
     private _createPromptPickItem;
     private keepQuickPickOpen;

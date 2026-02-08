@@ -17,23 +17,27 @@ import { ThemeIcon } from "../../../base/common/themables.js";
 import { Codicon } from "../../../base/common/codicons.js";
 import { getActiveElement, isHTMLElement } from "../../../base/browser/dom.js";
 import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
 let ActionWidgetDropdown = class ActionWidgetDropdown2 extends BaseDropdown {
   static {
     __name(this, "ActionWidgetDropdown");
   }
-  constructor(container, _options, actionWidgetService, keybindingService) {
+  constructor(container, _options, actionWidgetService, keybindingService, telemetryService) {
     super(container, _options);
     this._options = _options;
     this.actionWidgetService = actionWidgetService;
     this.keybindingService = keybindingService;
-    this.enabled = true;
+    this.telemetryService = telemetryService;
+    this._enabled = true;
   }
   show() {
-    if (!this.enabled) {
+    if (!this._enabled) {
       return;
     }
     let actionBarActions = this._options.actionBarActions ?? this._options.actionBarActionProvider?.getActions() ?? [];
     const actions = this._options.actions ?? this._options.actionProvider?.getActions() ?? [];
+    const optionBeforeOpen = actions.find((a) => a.checked);
+    let selectedOption = optionBeforeOpen;
     const actionWidgetItems = [];
     const actionsByCategory = /* @__PURE__ */ new Map();
     for (const action of actions) {
@@ -68,6 +72,8 @@ let ActionWidgetDropdown = class ActionWidgetDropdown2 extends BaseDropdown {
           item: action,
           tooltip: action.tooltip,
           description: action.description,
+          hover: action.hover,
+          toolbarActions: action.toolbarActions,
           kind: "action",
           canPreview: false,
           group: { title: "", icon: action.icon ?? ThemeIcon.fromId(action.checked ? Codicon.check.id : Codicon.blank.id) },
@@ -90,6 +96,7 @@ let ActionWidgetDropdown = class ActionWidgetDropdown2 extends BaseDropdown {
     const previouslyFocusedElement = getActiveElement();
     const actionWidgetDelegate = {
       onSelect: /* @__PURE__ */ __name((action, preview) => {
+        selectedOption = action;
         this.actionWidgetService.hide();
         action.run();
       }, "onSelect"),
@@ -97,6 +104,7 @@ let ActionWidgetDropdown = class ActionWidgetDropdown2 extends BaseDropdown {
         if (isHTMLElement(previouslyFocusedElement)) {
           previouslyFocusedElement.focus();
         }
+        this._emitCloseEvent(optionBeforeOpen, selectedOption);
       }, "onHide")
     };
     actionBarActions = actionBarActions.map((action) => ({
@@ -125,12 +133,28 @@ let ActionWidgetDropdown = class ActionWidgetDropdown2 extends BaseDropdown {
     this.actionWidgetService.show(this._options.label ?? "", false, actionWidgetItems, actionWidgetDelegate, this._options.getAnchor?.() ?? this.element, void 0, actionBarActions, accessibilityProvider);
   }
   setEnabled(enabled) {
-    this.enabled = enabled;
+    this._enabled = enabled;
+  }
+  _emitCloseEvent(optionBeforeOpen, selectedOption) {
+    const optionBefore = optionBeforeOpen;
+    const optionAfter = selectedOption;
+    if (this._options.reporter) {
+      this.telemetryService.publicLog2("actionWidgetDropdownClosed", {
+        id: this._options.reporter.id,
+        name: this._options.reporter.name,
+        selectionChanged: optionBefore?.id !== optionAfter?.id,
+        optionIdBefore: this._options.reporter.includeOptions ? optionBefore?.id : void 0,
+        optionIdAfter: this._options.reporter.includeOptions ? optionAfter?.id : void 0,
+        optionLabelBefore: this._options.reporter.includeOptions ? optionBefore?.label : void 0,
+        optionLabelAfter: this._options.reporter.includeOptions ? optionAfter?.label : void 0
+      });
+    }
   }
 };
 ActionWidgetDropdown = __decorate([
   __param(2, IActionWidgetService),
-  __param(3, IKeybindingService)
+  __param(3, IKeybindingService),
+  __param(4, ITelemetryService)
 ], ActionWidgetDropdown);
 export {
   ActionWidgetDropdown

@@ -845,8 +845,40 @@ let SettingsEditor2 = class SettingsEditor22 extends EditorPane {
           this.settingsTree.scrollTop = 0;
         }
       } else if (element && (!e.browserEvent || !e.browserEvent.fromScroll)) {
-        this.settingsTree.reveal(element, 0);
-        this.settingsTree.setFocus([element]);
+        let targetElement = element;
+        if (!this.settingsTree.hasElement(targetElement)) {
+          if (element instanceof SettingsTreeGroupElement) {
+            const targetId = element.id;
+            const findInViewNodes = /* @__PURE__ */ __name((nodes) => {
+              for (const node of nodes) {
+                if (node.element instanceof SettingsTreeGroupElement && node.element.id === targetId) {
+                  return node.element;
+                }
+                if (node.children && node.children.length > 0) {
+                  const found = findInViewNodes(node.children);
+                  if (found) {
+                    return found;
+                  }
+                }
+              }
+              return void 0;
+            }, "findInViewNodes");
+            try {
+              const rootNode = this.settingsTree.getNode(null);
+              if (rootNode && rootNode.children) {
+                const foundOldElement = findInViewNodes(rootNode.children);
+                if (foundOldElement) {
+                  targetElement = foundOldElement;
+                }
+              }
+            } catch (err) {
+            }
+          }
+        }
+        if (this.settingsTree.hasElement(targetElement)) {
+          this.settingsTree.reveal(targetElement, 0);
+          this.settingsTree.setFocus([targetElement]);
+        }
       }
     }));
     this._register(this.tocTree.onDidFocus(() => {
@@ -1244,7 +1276,7 @@ let SettingsEditor2 = class SettingsEditor22 extends EditorPane {
       }
     }
     resolvedSettingsRoot.children.push(await createTocTreeForExtensionSettings(this.extensionService, extensionSettingsGroups, filter));
-    resolvedSettingsRoot.children.unshift(getCommonlyUsedData(groups, toggleData?.commonlyUsed));
+    resolvedSettingsRoot.children.unshift(getCommonlyUsedData(groups));
     if (toggleData && setAdditionalGroups) {
       this.defaultSettingsEditorModel.setAdditionalGroups(additionalGroups);
     }
@@ -1259,6 +1291,13 @@ let SettingsEditor2 = class SettingsEditor22 extends EditorPane {
       }
     }
     this.searchResultModel?.updateChildren();
+    const firstVisibleElement = this.settingsTree.firstVisibleElement;
+    let anchorId;
+    if (firstVisibleElement instanceof SettingsTreeSettingElement) {
+      anchorId = firstVisibleElement.setting.key;
+    } else if (firstVisibleElement instanceof SettingsTreeGroupElement) {
+      anchorId = firstVisibleElement.id;
+    }
     if (this.settingsTreeModel.value) {
       this.refreshModels(resolvedSettingsRoot);
       if (triggerSearch && this.searchResultModel) {
@@ -1266,6 +1305,40 @@ let SettingsEditor2 = class SettingsEditor22 extends EditorPane {
       }
       this.refreshTOCTree();
       this.renderTree(void 0, forceRefresh);
+      if (anchorId) {
+        const newModel = this.settingsTreeModel.value;
+        let newElement;
+        const settings = newModel.getElementsByName(anchorId);
+        if (settings && settings.length > 0) {
+          newElement = settings[0];
+        } else {
+          const findGroup = /* @__PURE__ */ __name((roots) => {
+            for (const g of roots) {
+              if (g.id === anchorId) {
+                return g;
+              }
+              if (g.children) {
+                for (const child of g.children) {
+                  if (child instanceof SettingsTreeGroupElement) {
+                    const found = findGroup([child]);
+                    if (found) {
+                      return found;
+                    }
+                  }
+                }
+              }
+            }
+            return void 0;
+          }, "findGroup");
+          newElement = findGroup([newModel.root]);
+        }
+        if (newElement) {
+          try {
+            this.settingsTree.reveal(newElement, 0);
+          } catch (e) {
+          }
+        }
+      }
     } else {
       this.settingsTreeModel.value = this.instantiationService.createInstance(SettingsTreeModel, this.viewState, this.workspaceTrustManagementService.isWorkspaceTrusted());
       this.refreshModels(resolvedSettingsRoot);

@@ -39,7 +39,6 @@ var Schemas;
   Schemas2.vscodeChatEditor = "vscode-chat-editor";
   Schemas2.vscodeChatInput = "chatSessionInput";
   Schemas2.vscodeLocalChatSession = "vscode-chat-session";
-  Schemas2.vscodeChatPrompt = "vscode-chat-prompt";
   Schemas2.webviewPanel = "webview-panel";
   Schemas2.vscodeWebview = "vscode-webview";
   Schemas2.vscodeBrowser = "vscode-browser";

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/webContentExtractor/electron-browser/webContentExtractorService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { registerMainProcessRemoteService, registerSharedProcessRemoteService } from '../../ipc/electron-browser/services.js';\nimport { ISharedWebContentExtractorService, IWebContentExtractorService } from '../common/webContentExtractor.js';\n\nregisterMainProcessRemoteService(IWebContentExtractorService, 'webContentExtractor');\nregisterSharedProcessRemoteService(ISharedWebContentExtractorService, 'sharedWebContentExtractor');\n"],
-  "mappings": "AAKA,SAAS,kCAAkC,0CAA0C;AACrF,SAAS,mCAAmC,mCAAmC;AAE/E,iCAAiC,6BAA6B,qBAAqB;AACnF,mCAAmC,mCAAmC,2BAA2B;",
-  "names": []
-}

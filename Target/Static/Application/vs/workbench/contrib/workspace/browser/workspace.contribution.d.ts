@@ -24,11 +24,12 @@ export declare class WorkspaceTrustContextKeys extends Disposable implements IWo
 export declare class WorkspaceTrustRequestHandler extends Disposable implements IWorkbenchContribution {
     private readonly dialogService;
     private readonly commandService;
+    private readonly labelService;
     private readonly workspaceContextService;
     private readonly workspaceTrustManagementService;
     private readonly workspaceTrustRequestService;
     static readonly ID = "workbench.contrib.workspaceTrustRequestHandler";
-    constructor(dialogService: IDialogService, commandService: ICommandService, workspaceContextService: IWorkspaceContextService, workspaceTrustManagementService: IWorkspaceTrustManagementService, workspaceTrustRequestService: IWorkspaceTrustRequestService);
+    constructor(dialogService: IDialogService, commandService: ICommandService, labelService: ILabelService, workspaceContextService: IWorkspaceContextService, workspaceTrustManagementService: IWorkspaceTrustManagementService, workspaceTrustRequestService: IWorkspaceTrustRequestService);
     private get useWorkspaceLanguage();
     private registerListeners;
 }

@@ -22,6 +22,7 @@ import { IModelContentChangedEvent, IModelDecorationsChangedEvent, IModelLanguag
 import { IEditorWhitespace, IViewModel } from '../common/viewModel.js';
 import { OverviewRulerZone } from '../common/viewModel/overviewZoneManager.js';
 import { IEditorConstructionOptions } from './config/editorConfiguration.js';
+import { IClipboardCopyEvent, IClipboardPasteEvent } from './controller/editContext/clipboardUtils.js';
 /**
  * A view zone is a full horizontal rectangle that 'pushes' text down.
  * The editor reserves space for view zones when rendering.
@@ -684,6 +685,24 @@ export interface ICodeEditor extends editorCommon.IEditor {
      */
     readonly onDidPaste: Event<IPasteEvent>;
     /**
+     * An event emitted before clipboard copy operation starts.
+     * @internal
+     * @event
+     */
+    readonly onWillCopy: Event<IClipboardCopyEvent>;
+    /**
+     * An event emitted before clipboard cut operation starts.
+     * @internal
+     * @event
+     */
+    readonly onWillCut: Event<IClipboardCopyEvent>;
+    /**
+     * An event emitted before clipboard paste operation starts.
+     * @internal
+     * @event
+     */
+    readonly onWillPaste: Event<IClipboardPasteEvent>;
+    /**
      * An event emitted on a "mouseup".
      * @event
      */
@@ -1108,9 +1127,18 @@ export interface ICodeEditor extends editorCommon.IEditor {
     getOffsetForColumn(lineNumber: number, column: number): number;
     getWidthOfLine(lineNumber: number): number;
     /**
+     * Reset cached line widths. Call this when the editor becomes visible after being hidden.
+     * @internal
+     */
+    resetLineWidthCaches(): void;
+    /**
      * Force an editor render now.
      */
     render(forceRedraw?: boolean): void;
+    /**
+     * Render the editor at the next animation frame.
+     */
+    renderAsync(forceRedraw?: boolean): void;
     /**
      * Get the hit test target at coordinates `clientX` and `clientY`.
      * The coordinates are relative to the top-left of the viewport.
@@ -1324,3 +1352,7 @@ export declare function getCodeEditor(thing: unknown): ICodeEditor | null;
  *@internal
  */
 export declare function getIEditor(thing: unknown): editorCommon.IEditor | null;
+/**
+ *@internal
+ */
+export declare function isIOverlayWidgetPositionCoordinates(thing: unknown): thing is IOverlayWidgetPositionCoordinates;

@@ -12,7 +12,6 @@ var __param = function(paramIndex, decorator) {
   };
 };
 import * as dom from "../../../../../../base/browser/dom.js";
-import { Emitter } from "../../../../../../base/common/event.js";
 import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
 import { localize } from "../../../../../../nls.js";
 import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
@@ -32,8 +31,6 @@ let ChatTreeContentPart = class ChatTreeContentPart2 extends Disposable {
   constructor(data, treePool, openerService) {
     super();
     this.openerService = openerService;
-    this._onDidChangeHeight = this._register(new Emitter());
-    this.onDidChangeHeight = this._onDidChangeHeight.event;
     const ref = this._register(treePool.get());
     this.tree = ref.object;
     this.onDidFocus = this.tree.onDidFocus;
@@ -42,9 +39,6 @@ let ChatTreeContentPart = class ChatTreeContentPart2 extends Disposable {
         this.openerService.open(e.element.uri);
       }
     }));
-    this._register(this.tree.onDidChangeCollapseState(() => {
-      this._onDidChangeHeight.fire();
-    }));
     this._register(this.tree.onContextMenu((e) => {
       e.browserEvent.preventDefault();
       e.browserEvent.stopPropagation();
@@ -52,7 +46,6 @@ let ChatTreeContentPart = class ChatTreeContentPart2 extends Disposable {
     this.tree.setInput(data).then(() => {
       if (!ref.isStale()) {
         this.tree.layout();
-        this._onDidChangeHeight.fire();
       }
     });
     this.domNode = this.tree.getHTMLElement().parentElement;
@@ -86,9 +79,10 @@ let TreePool = class TreePool2 extends Disposable {
     this._pool = this._register(new ResourcePool(() => this.treeFactory()));
   }
   treeFactory() {
-    const resourceLabels = this._register(this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this._onDidChangeVisibility }));
+    const store = new DisposableStore();
+    const resourceLabels = store.add(this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this._onDidChangeVisibility }));
     const container = $(".interactive-response-progress-tree");
-    this._register(createFileIconThemableTreeContainerScope(container, this.themeService));
+    store.add(createFileIconThemableTreeContainerScope(container, this.themeService));
     const tree = this.instantiationService.createInstance(WorkbenchCompressibleAsyncDataTree, "ChatListRenderer", container, new ChatListTreeDelegate(), new ChatListTreeCompressionDelegate(), [new ChatListTreeRenderer(resourceLabels, this.configService.getValue("explorer.decorations"))], new ChatListTreeDataSource(), {
       collapseByDefault: /* @__PURE__ */ __name(() => false, "collapseByDefault"),
       expandOnlyOnTwistieClick: /* @__PURE__ */ __name(() => false, "expandOnlyOnTwistieClick"),
@@ -101,19 +95,25 @@ let TreePool = class TreePool2 extends Disposable {
       },
       alwaysConsumeMouseWheel: false
     });
-    return tree;
+    return {
+      tree,
+      dispose: /* @__PURE__ */ __name(() => store.dispose(), "dispose")
+    };
   }
   get() {
-    const object = this._pool.get();
+    const wrapper = this._pool.get();
     let stale = false;
     return {
-      object,
+      object: wrapper.tree,
       isStale: /* @__PURE__ */ __name(() => stale, "isStale"),
       dispose: /* @__PURE__ */ __name(() => {
         stale = true;
-        this._pool.release(object);
+        this._pool.release(wrapper);
       }, "dispose")
     };
+  }
+  clear() {
+    this._pool.clear();
   }
 };
 TreePool = __decorate([

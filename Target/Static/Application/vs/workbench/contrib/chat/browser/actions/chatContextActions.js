@@ -49,6 +49,7 @@ function registerChatContextActions() {
   registerAction2(AttachFolderToChatAction);
   registerAction2(AttachSelectionToChatAction);
   registerAction2(AttachSearchResultAction);
+  registerAction2(AttachPinnedEditorsToChatAction);
   registerPromptActions();
 }
 __name(registerChatContextActions, "registerChatContextActions");
@@ -133,6 +134,11 @@ class AttachFileToChatAction extends AttachResourceAction {
         group: "1_chat",
         order: 2,
         when: ContextKeyExpr.and(ChatContextKeys.enabled, ContextKeyExpr.or(ResourceContextKey.Scheme.isEqualTo(Schemas.file), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote), ResourceContextKey.Scheme.isEqualTo(Schemas.untitled), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeUserData)))
+      }, {
+        id: MenuId.ChatEditorInlineGutter,
+        group: "2_chat",
+        order: 2,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, EditorContextKeys.hasNonEmptySelection.negate())
       }]
     });
   }
@@ -183,6 +189,49 @@ class AttachFolderToChatAction extends AttachResourceAction {
     }
   }
 }
+class AttachPinnedEditorsToChatAction extends Action2 {
+  static {
+    __name(this, "AttachPinnedEditorsToChatAction");
+  }
+  static {
+    this.ID = "workbench.action.chat.attachPinnedEditors";
+  }
+  constructor() {
+    super({
+      id: AttachPinnedEditorsToChatAction.ID,
+      title: localize2("workbench.action.chat.attachPinnedEditors.label", "Add Pinned Editors to Chat"),
+      category: CHAT_CATEGORY,
+      precondition: ChatContextKeys.enabled,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const editorGroupsService = accessor.get(IEditorGroupsService);
+    const instaService = accessor.get(IInstantiationService);
+    const widget = await instaService.invokeFunction(withChatView);
+    if (!widget) {
+      return;
+    }
+    const files = [];
+    for (const group of editorGroupsService.groups) {
+      for (const editor of group.editors) {
+        if (group.isPinned(editor)) {
+          const uri = EditorResourceAccessor.getCanonicalUri(editor, { supportSideBySide: SideBySideEditor.PRIMARY });
+          if (uri && [Schemas.file, Schemas.vscodeRemote, Schemas.untitled].includes(uri.scheme)) {
+            files.push(uri);
+          }
+        }
+      }
+    }
+    if (!files.length) {
+      return;
+    }
+    widget.focusInput();
+    for (const file of files) {
+      widget.attachmentModel.addFile(file);
+    }
+  }
+}
 class AttachSelectionToChatAction extends Action2 {
   static {
     __name(this, "AttachSelectionToChatAction");
@@ -197,12 +246,17 @@ class AttachSelectionToChatAction extends Action2 {
       category: CHAT_CATEGORY,
       f1: true,
       precondition: ChatContextKeys.enabled,
-      menu: {
+      menu: [{
         id: MenuId.EditorContext,
         group: "1_chat",
         order: 1,
         when: ContextKeyExpr.and(ChatContextKeys.enabled, EditorContextKeys.hasNonEmptySelection, ContextKeyExpr.or(ResourceContextKey.Scheme.isEqualTo(Schemas.file), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeRemote), ResourceContextKey.Scheme.isEqualTo(Schemas.untitled), ResourceContextKey.Scheme.isEqualTo(Schemas.vscodeUserData)))
-      }
+      }, {
+        id: MenuId.ChatEditorInlineGutter,
+        group: "2_chat",
+        order: 1,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, EditorContextKeys.hasNonEmptySelection)
+      }]
     });
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

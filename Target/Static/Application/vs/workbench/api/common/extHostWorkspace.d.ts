@@ -33,6 +33,8 @@ export declare class ExtHostWorkspace implements ExtHostWorkspaceShape, IExtHost
     readonly onDidChangeWorkspace: Event<vscode.WorkspaceFoldersChangeEvent>;
     private readonly _onDidGrantWorkspaceTrust;
     readonly onDidGrantWorkspaceTrust: Event<void>;
+    private readonly _onDidChangeWorkspaceTrustedFolders;
+    readonly onDidChangeWorkspaceTrustedFolders: Event<void>;
     private readonly _logService;
     private readonly _requestIdProvider;
     private readonly _barrier;
@@ -50,6 +52,7 @@ export declare class ExtHostWorkspace implements ExtHostWorkspaceShape, IExtHost
     waitForInitializeCall(): Promise<boolean>;
     get workspace(): Workspace | undefined;
     get name(): string | undefined;
+    get isAgentSessionsWorkspace(): boolean;
     get workspaceFile(): vscode.Uri | undefined;
     private get _actualWorkspace();
     getWorkspaceFolders(): vscode.WorkspaceFolder[] | undefined;
@@ -86,8 +89,11 @@ export declare class ExtHostWorkspace implements ExtHostWorkspaceShape, IExtHost
     lookupKerberosAuthorization(url: string): Promise<string | undefined>;
     loadCertificates(): Promise<string[]>;
     get trusted(): boolean;
+    requestResourceTrust(options: vscode.ResourceTrustRequestOptions): Promise<boolean | undefined>;
     requestWorkspaceTrust(options?: vscode.WorkspaceTrustRequestOptions): Promise<boolean | undefined>;
     $onDidGrantWorkspaceTrust(): void;
+    $onDidChangeWorkspaceTrustedFolders(): void;
+    isResourceTrusted(resource: vscode.Uri): Promise<boolean>;
     private _providerHandlePool;
     registerEditSessionIdentityProvider(scheme: string, provider: vscode.EditSessionIdentityProvider): import("../../../base/common/lifecycle.js").IDisposable;
     $getEditSessionIdentifier(workspaceFolder: UriComponents, cancellationToken: CancellationToken): Promise<string | undefined>;

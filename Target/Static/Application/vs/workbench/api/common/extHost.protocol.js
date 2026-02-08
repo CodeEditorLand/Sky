@@ -214,6 +214,7 @@ const MainContext = {
   MainThreadChatStatus: createProxyIdentifier("MainThreadChatStatus"),
   MainThreadAiSettingsSearch: createProxyIdentifier("MainThreadAiSettingsSearch"),
   MainThreadDataChannels: createProxyIdentifier("MainThreadDataChannels"),
+  MainThreadHooks: createProxyIdentifier("MainThreadHooks"),
   MainThreadChatSessions: createProxyIdentifier("MainThreadChatSessions"),
   MainThreadChatOutputRenderer: createProxyIdentifier("MainThreadChatOutputRenderer"),
   MainThreadChatContext: createProxyIdentifier("MainThreadChatContext")
@@ -290,6 +291,7 @@ const ExtHostContext = {
   ExtHostTelemetry: createProxyIdentifier("ExtHostTelemetry"),
   ExtHostLocalization: createProxyIdentifier("ExtHostLocalization"),
   ExtHostMcp: createProxyIdentifier("ExtHostMcp"),
+  ExtHostHooks: createProxyIdentifier("ExtHostHooks"),
   ExtHostDataChannels: createProxyIdentifier("ExtHostDataChannels"),
   ExtHostChatSessions: createProxyIdentifier("ExtHostChatSessions")
 };

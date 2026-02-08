@@ -32,6 +32,7 @@ export declare class MainThreadMcp extends Disposable implements MainThreadMcpSh
     private readonly _proxy;
     private readonly _collectionDefinitions;
     constructor(_extHostContext: IExtHostContext, _mcpRegistry: IMcpRegistry, dialogService: IDialogService, _authenticationService: IAuthenticationService, authenticationMcpServersService: IAuthenticationMcpService, authenticationMCPServerAccessService: IAuthenticationMcpAccessService, authenticationMCPServerUsageService: IAuthenticationMcpUsageService, _dynamicAuthenticationProviderStorageService: IDynamicAuthenticationProviderStorageService, _extensionService: IExtensionService, _contextKeyService: IContextKeyService, _telemetryService: ITelemetryService);
+    private _publishServerDefinitions;
     $upsertMcpCollection(collection: McpCollectionDefinition.FromExtHost, serversDto: McpServerDefinition.Serialized[]): void;
     $deleteMcpCollection(collectionId: string): void;
     $onDidChangeState(id: number, update: McpConnectionState): void;

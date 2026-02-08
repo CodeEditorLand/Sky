@@ -27,8 +27,9 @@ import { IStorageService } from "../../../../platform/storage/common/storage.js"
 import { IChatAgentService } from "./participants/chatAgents.js";
 import { ChatContextKeys } from "./actions/chatContextKeys.js";
 import { ChatConfiguration, ChatModeKind } from "./constants.js";
-import { ExtensionAgentSourceType, IPromptsService, PromptsStorage } from "./promptSyntax/service/promptsService.js";
+import { ExtensionAgentSourceType, IPromptsService, isCustomAgentVisibility, PromptsStorage } from "./promptSyntax/service/promptsService.js";
 import { Codicon } from "../../../../base/common/codicons.js";
+import { isString } from "../../../../base/common/types.js";
 const IChatModeService = createDecorator("chatModeService");
 let ChatModeService = class ChatModeService2 extends Disposable {
   static {
@@ -101,12 +102,13 @@ let ChatModeService = class ChatModeService2 extends Disposable {
             name: cachedMode.name,
             description: cachedMode.description,
             tools: cachedMode.customTools,
-            model: cachedMode.model,
+            model: isString(cachedMode.model) ? [cachedMode.model] : cachedMode.model,
             argumentHint: cachedMode.argumentHint,
             agentInstructions: cachedMode.modeInstructions ?? { content: cachedMode.body ?? "", toolReferences: [] },
             handOffs: cachedMode.handOffs,
             target: cachedMode.target,
-            infer: cachedMode.infer,
+            visibility: cachedMode.visibility ?? { userInvokable: true, agentInvokable: cachedMode.infer !== false },
+            agents: cachedMode.agents,
             source: reviveChatModeSource(cachedMode.source) ?? { storage: PromptsStorage.local }
           };
           const instance = new CustomChatMode(customChatMode);
@@ -137,6 +139,9 @@ let ChatModeService = class ChatModeService2 extends Disposable {
       const customModes = await this.promptsService.getCustomAgents(CancellationToken.None);
       const seenUris = /* @__PURE__ */ new Set();
       for (const customMode of customModes) {
+        if (!customMode.visibility.userInvokable) {
+          continue;
+        }
         const uriString = customMode.uri.toString();
         seenUris.add(uriString);
         let modeInstance = this._customModeInstances.get(uriString);
@@ -207,7 +212,7 @@ function isCachedChatModeData(data) {
     return false;
   }
   const mode = data;
-  return typeof mode.id === "string" && typeof mode.name === "string" && typeof mode.kind === "string" && (mode.description === void 0 || typeof mode.description === "string") && (mode.customTools === void 0 || Array.isArray(mode.customTools)) && (mode.modeInstructions === void 0 || typeof mode.modeInstructions === "object" && mode.modeInstructions !== null) && (mode.model === void 0 || typeof mode.model === "string") && (mode.argumentHint === void 0 || typeof mode.argumentHint === "string") && (mode.handOffs === void 0 || Array.isArray(mode.handOffs)) && (mode.uri === void 0 || typeof mode.uri === "object" && mode.uri !== null) && (mode.source === void 0 || isChatModeSourceData(mode.source)) && (mode.target === void 0 || typeof mode.target === "string") && (mode.infer === void 0 || typeof mode.infer === "boolean");
+  return typeof mode.id === "string" && typeof mode.name === "string" && typeof mode.kind === "string" && (mode.description === void 0 || typeof mode.description === "string") && (mode.customTools === void 0 || Array.isArray(mode.customTools)) && (mode.modeInstructions === void 0 || typeof mode.modeInstructions === "object" && mode.modeInstructions !== null) && (mode.model === void 0 || typeof mode.model === "string" || Array.isArray(mode.model)) && (mode.argumentHint === void 0 || typeof mode.argumentHint === "string") && (mode.handOffs === void 0 || Array.isArray(mode.handOffs)) && (mode.uri === void 0 || typeof mode.uri === "object" && mode.uri !== null) && (mode.source === void 0 || isChatModeSourceData(mode.source)) && (mode.target === void 0 || typeof mode.target === "string") && (mode.visibility === void 0 || isCustomAgentVisibility(mode.visibility)) && (mode.agents === void 0 || Array.isArray(mode.agents));
 }
 __name(isCachedChatModeData, "isCachedChatModeData");
 class CustomChatMode {
@@ -253,8 +258,11 @@ class CustomChatMode {
   get target() {
     return this._targetObservable;
   }
-  get infer() {
-    return this._inferObservable;
+  get visibility() {
+    return this._visibilityObservable;
+  }
+  get agents() {
+    return this._agentsObservable;
   }
   constructor(customChatMode) {
     this.kind = ChatModeKind.Agent;
@@ -266,7 +274,8 @@ class CustomChatMode {
     this._argumentHintObservable = observableValue("argumentHint", customChatMode.argumentHint);
     this._handoffsObservable = observableValue("handOffs", customChatMode.handOffs);
     this._targetObservable = observableValue("target", customChatMode.target);
-    this._inferObservable = observableValue("infer", customChatMode.infer);
+    this._visibilityObservable = observableValue("visibility", customChatMode.visibility);
+    this._agentsObservable = observableValue("agents", customChatMode.agents);
     this._modeInstructions = observableValue("_modeInstructions", customChatMode.agentInstructions);
     this._uriObservable = observableValue("uri", customChatMode.uri);
     this._source = customChatMode.source;
@@ -283,7 +292,8 @@ class CustomChatMode {
       this._argumentHintObservable.set(newData.argumentHint, tx);
       this._handoffsObservable.set(newData.handOffs, tx);
       this._targetObservable.set(newData.target, tx);
-      this._inferObservable.set(newData.infer, tx);
+      this._visibilityObservable.set(newData.visibility, tx);
+      this._agentsObservable.set(newData.agents, tx);
       this._modeInstructions.set(newData.agentInstructions, tx);
       this._uriObservable.set(newData.uri, tx);
       this._source = newData.source;
@@ -303,7 +313,8 @@ class CustomChatMode {
       handOffs: this.handOffs.get(),
       source: serializeChatModeSource(this._source),
       target: this.target.get(),
-      infer: this.infer.get()
+      visibility: this.visibility.get(),
+      agents: this.agents.get()
     };
   }
 }

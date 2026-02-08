@@ -26,10 +26,28 @@ export interface IRawGalleryExtensionVersion {
     readonly assetUri: string;
     readonly fallbackAssetUri: string;
     readonly files: IRawGalleryExtensionFile[];
-    readonly properties?: IRawGalleryExtensionProperty[];
+    properties?: IRawGalleryExtensionProperty[];
     readonly targetPlatform?: string;
 }
 export declare function sortExtensionVersions(versions: IRawGalleryExtensionVersion[], preferredTargetPlatform: TargetPlatform): IRawGalleryExtensionVersion[];
+/**
+ * Filters extension versions to return only the relevant versions for a given target platform.
+ *
+ * This function processes a list of extension versions (expected to be sorted by version descending)
+ * and returns a filtered list containing:
+ * 1. All versions that are NOT compatible with the target platform (for other platforms)
+ * 2. At most one compatible release version (the first/latest one encountered)
+ * 3. At most one compatible pre-release version (the first/latest one encountered)
+ *
+ * When a platform-specific version (exactly matching targetPlatform) is encountered with the same
+ * version number as a previously stored universal/undefined version, it replaces that version.
+ * This ensures platform-specific builds are preferred over universal builds for the same version.
+ *
+ * @param versions - Array of extension versions, expected to be sorted by version number descending
+ * @param targetPlatform - The target platform to filter for (e.g., LINUX_X64, WIN32_X64)
+ * @param allTargetPlatforms - All target platforms the extension supports
+ * @returns Filtered array of versions relevant for the target platform
+ */
 export declare function filterLatestExtensionVersionsForTargetPlatform(versions: IRawGalleryExtensionVersion[], targetPlatform: TargetPlatform, allTargetPlatforms: TargetPlatform[]): IRawGalleryExtensionVersion[];
 export declare abstract class AbstractExtensionGalleryService implements IExtensionGalleryService {
     private readonly requestService;
@@ -54,14 +72,17 @@ export declare abstract class AbstractExtensionGalleryService implements IExtens
     private getExtensionsUsingQueryApi;
     private getExtensionsUsingResourceApi;
     private getLatestGalleryExtension;
+    private getValidRawGalleryExtensionVersionFromLatestVersions;
     getCompatibleExtension(extension: IGalleryExtension, includePreRelease: boolean, targetPlatform: TargetPlatform, productVersion?: IProductVersion): Promise<IGalleryExtension | null>;
     isExtensionCompatible(extension: IGalleryExtension, includePreRelease: boolean, targetPlatform: TargetPlatform, productVersion?: IProductVersion): Promise<boolean>;
     private isValidVersion;
     private areApiProposalsCompatible;
     private isEngineValid;
+    private getEngine;
     query(options: IQueryOptions, token: CancellationToken): Promise<IPager<IGalleryExtension>>;
     private queryGalleryExtensions;
     private getValidRawGalleryExtensionVersion;
+    private setEngineIfNotExists;
     private queryRawGalleryExtensions;
     private getHeaderValue;
     private getLatestRawGalleryExtensionWithFallback;

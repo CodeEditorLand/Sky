@@ -1197,12 +1197,13 @@ class SettingObjectRenderer extends AbstractSettingObjectRenderer {
   }
   renderValue(dataElement, template, onChange) {
     const items = getObjectDisplayValue(dataElement);
-    const { key, objectProperties, objectPatternProperties, objectAdditionalProperties } = dataElement.setting;
+    const { key, objectProperties, objectPatternProperties, objectAdditionalProperties, propertyNames } = dataElement.setting;
     template.objectDropdownWidget.setValue(items, {
       settingKey: key,
       showAddButton: objectAdditionalProperties === false ? !areAllPropertiesDefined(Object.keys(objectProperties ?? {}), items) || isDefined(objectPatternProperties) : true,
       keySuggester: createObjectKeySuggester(dataElement),
-      valueSuggester: createObjectValueSuggester(dataElement)
+      valueSuggester: createObjectValueSuggester(dataElement),
+      propertyNames
     });
     template.context = dataElement;
     template.elementDisposables.add(toDisposable(() => {

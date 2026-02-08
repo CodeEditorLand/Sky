@@ -13,7 +13,7 @@ import { IFileQueryBuilderOptions, ITextQueryBuilderOptions } from '../../servic
 import { IEditorService } from '../../services/editor/common/editorService.js';
 import { IPatternInfo, ISearchService } from '../../services/search/common/search.js';
 import { IWorkspaceEditingService } from '../../services/workspaces/common/workspaceEditing.js';
-import { ITextSearchComplete, MainThreadWorkspaceShape } from '../common/extHost.protocol.js';
+import { ITextSearchComplete, MainThreadWorkspaceShape, ResourceTrustRequestOptionsDto } from '../common/extHost.protocol.js';
 import { IEditSessionIdentityService } from '../../../platform/workspace/common/editSessions.js';
 import { ICanonicalUriService } from '../../../platform/workspace/common/canonicalUri.js';
 import { ITextFileService } from '../../services/textfile/common/textfiles.js';
@@ -57,9 +57,12 @@ export declare class MainThreadWorkspace implements MainThreadWorkspaceShape {
     $lookupAuthorization(authInfo: AuthInfo): Promise<Credentials | undefined>;
     $lookupKerberosAuthorization(url: string): Promise<string | undefined>;
     $loadCertificates(): Promise<string[]>;
+    $requestResourceTrust(optionsDto: ResourceTrustRequestOptionsDto): Promise<boolean | undefined>;
     $requestWorkspaceTrust(options?: WorkspaceTrustRequestOptions): Promise<boolean | undefined>;
+    $isResourceTrusted(resource: UriComponents): Promise<boolean>;
     private isWorkspaceTrusted;
     private _onDidGrantWorkspaceTrust;
+    private _onDidChangeWorkspaceTrustedFolders;
     private registeredEditSessionProviders;
     $registerEditSessionIdentityProvider(handle: number, scheme: string): void;
     $unregisterEditSessionIdentityProvider(handle: number): void;

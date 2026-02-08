@@ -1,7 +1,7 @@
-import { UriComponents } from '../../../../../base/common/uri.js';
 import { IWorkbenchContribution } from '../../../../common/contributions.js';
 import { IPromptsService } from './service/promptsService.js';
 import { PromptsType } from './promptTypes.js';
+import { UriComponents } from '../../../../../base/common/uri.js';
 export declare class ChatPromptFilesExtensionPointHandler implements IWorkbenchContribution {
     private readonly promptsService;
     static readonly ID = "workbench.contrib.chatPromptFilesExtensionPointHandler";

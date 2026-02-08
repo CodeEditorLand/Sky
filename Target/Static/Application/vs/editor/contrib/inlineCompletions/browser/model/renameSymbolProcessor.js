@@ -17,7 +17,7 @@ import { LcsDiff, StringDiffSequence } from "../../../../../base/common/diff/dif
 import { Disposable } from "../../../../../base/common/lifecycle.js";
 import { localize } from "../../../../../nls.js";
 import { CommandsRegistry, ICommandService } from "../../../../../platform/commands/common/commands.js";
-import { IBulkEditService } from "../../../../browser/services/bulkEditService.js";
+import { IBulkEditService, ResourceTextEdit } from "../../../../browser/services/bulkEditService.js";
 import { TextReplacement } from "../../../../common/core/edits/textEdit.js";
 import { Position } from "../../../../common/core/position.js";
 import { Range } from "../../../../common/core/range.js";
@@ -28,6 +28,9 @@ import { hasProvider, rawRename } from "../../../rename/browser/rename.js";
 import { renameSymbolCommandId } from "../controller/commandIds.js";
 import { InlineSuggestionItem } from "./inlineSuggestionItem.js";
 import { Codicon } from "../../../../../base/common/codicons.js";
+import { IRenameSymbolTrackerService } from "../../../../browser/services/renameSymbolTrackerService.js";
+import { ICodeEditorService } from "../../../../browser/services/codeEditorService.js";
+import { TextModelValueReference } from "./textModelValueReference.js";
 var RenameKind;
 (function(RenameKind2) {
   RenameKind2["no"] = "no";
@@ -225,18 +228,54 @@ class RenameInferenceEngine {
     };
   }
 }
+class EditorState {
+  static {
+    __name(this, "EditorState");
+  }
+  static create(codeEditorService, textModel) {
+    const editor = codeEditorService.getFocusedCodeEditor();
+    if (editor === null) {
+      return void 0;
+    }
+    if (editor.getModel() !== textModel) {
+      return void 0;
+    }
+    return new EditorState(editor, textModel.getVersionId());
+  }
+  constructor(editor, versionId) {
+    this.editor = editor;
+    this.versionId = versionId;
+  }
+  equals(other) {
+    if (other === void 0) {
+      return false;
+    }
+    return this.editor === other.editor && this.versionId === other.versionId;
+  }
+}
 class RenameSymbolRunnable {
   static {
     __name(this, "RenameSymbolRunnable");
   }
-  constructor(languageFeaturesService, textModel, position, newName, requestUuid) {
+  constructor(languageFeaturesService, commandService, requestUuid, textModel, state, position, newName, lastSymbolRename, oldName) {
     this._result = void 0;
+    this._commandService = commandService;
+    this._textModel = textModel;
+    this._state = state;
     this._requestUuid = requestUuid;
     this._cancellationTokenSource = new CancellationTokenSource();
-    this._promise = rawRename(languageFeaturesService.renameProvider, textModel, position, newName, this._cancellationTokenSource.token);
+    if (lastSymbolRename === void 0 || oldName === void 0) {
+      this._promise = rawRename(languageFeaturesService.renameProvider, textModel, position, newName, this._cancellationTokenSource.token);
+      return;
+    } else {
+      this._promise = this.sendNesRenameRequest(textModel, position, oldName, newName, lastSymbolRename);
+    }
   }
   get requestUuid() {
     return this._requestUuid;
+  }
+  isValid(codeEditorService) {
+    return this._state.equals(EditorState.create(codeEditorService, this._textModel));
   }
   cancel() {
     this._cancellationTokenSource.cancel();
@@ -266,20 +305,41 @@ class RenameSymbolRunnable {
     }
     return this._result;
   }
+  async sendNesRenameRequest(textModel, position, oldName, newName, lastSymbolRename) {
+    try {
+      const result = await this._commandService.executeCommand("github.copilot.nes.postRename", textModel.uri, position, oldName, newName, lastSymbolRename);
+      if (result === void 0) {
+        return { rejectReason: "Rename failed", edits: [] };
+      }
+      const edits = [];
+      for (const item of result) {
+        for (const change of item.changes) {
+          const range = new Range(change.range.start.line + 1, change.range.start.character + 1, change.range.end.line + 1, change.range.end.character + 1);
+          const edit = new ResourceTextEdit(item.file, new TextReplacement(range, change.newText ?? newName));
+          edits.push(edit);
+        }
+      }
+      return { edits };
+    } catch (error) {
+      return { rejectReason: "Rename failed", edits: [] };
+    }
+  }
 }
 let RenameSymbolProcessor = class RenameSymbolProcessor2 extends Disposable {
   static {
     __name(this, "RenameSymbolProcessor");
   }
-  constructor(_commandService, _languageFeaturesService, _languageConfigurationService, bulkEditService) {
+  constructor(_commandService, _languageFeaturesService, _languageConfigurationService, bulkEditService, _renameSymbolTrackerService, _codeEditorService) {
     super();
     this._commandService = _commandService;
     this._languageFeaturesService = _languageFeaturesService;
     this._languageConfigurationService = _languageConfigurationService;
+    this._renameSymbolTrackerService = _renameSymbolTrackerService;
+    this._codeEditorService = _codeEditorService;
     this._renameInferenceEngine = new RenameInferenceEngine();
     this._renameRunnable = void 0;
     this._register(CommandsRegistry.registerCommand(renameSymbolCommandId, async (_, source, renameRunnable) => {
-      if (renameRunnable === void 0) {
+      if (renameRunnable === void 0 || !renameRunnable.isValid(this._codeEditorService)) {
         return;
       }
       try {
@@ -302,6 +362,10 @@ let RenameSymbolProcessor = class RenameSymbolProcessor2 extends Disposable {
     if (!hasProvider(this._languageFeaturesService.renameProvider, textModel)) {
       return suggestItem;
     }
+    const state = EditorState.create(this._codeEditorService, textModel);
+    if (state === void 0) {
+      return suggestItem;
+    }
     const start = Date.now();
     const edit = suggestItem.action.textReplacement;
     const languageConfiguration = this._languageConfigurationService.getLanguageConfiguration(textModel.getLanguageId());
@@ -310,11 +374,16 @@ let RenameSymbolProcessor = class RenameSymbolProcessor2 extends Disposable {
       return suggestItem;
     }
     const { oldName, newName, position, edits: renameEdits } = edits.renames;
+    const trackedWord = this._renameSymbolTrackerService.trackedWord.get();
+    let lastSymbolRename = void 0;
+    if (trackedWord !== void 0 && trackedWord.model === textModel && trackedWord.originalWord === oldName && trackedWord.currentWord === newName) {
+      lastSymbolRename = trackedWord.currentRange;
+    }
     let timedOut = false;
-    const check = await raceTimeout(this.checkRenamePrecondition(suggestItem, textModel, position, oldName, newName), 100, () => {
+    const check = await raceTimeout(this.checkRenamePrecondition(suggestItem, textModel, position, oldName, newName, lastSymbolRename), 100, () => {
       timedOut = true;
     });
-    const renamePossible = this.isRenamePossible(suggestItem, check);
+    const renamePossible = this.isRenamePossible(suggestItem, check, state, textModel);
     suggestItem.setRenameProcessingInfo({
       createdRename: renamePossible,
       duration: Date.now() - start,
@@ -326,7 +395,7 @@ let RenameSymbolProcessor = class RenameSymbolProcessor2 extends Disposable {
       return suggestItem;
     }
     if (this._renameRunnable === void 0) {
-      this._renameRunnable = new RenameSymbolRunnable(this._languageFeaturesService, textModel, position, newName, suggestItem.requestUuid);
+      this._renameRunnable = new RenameSymbolRunnable(this._languageFeaturesService, this._commandService, suggestItem.requestUuid, textModel, state, position, newName, lastSymbolRename, lastSymbolRename !== void 0 ? oldName : void 0);
     }
     const source = EditSources.inlineCompletionAccept({
       nes: suggestItem.isInlineEdit,
@@ -354,22 +423,41 @@ let RenameSymbolProcessor = class RenameSymbolProcessor2 extends Disposable {
       alternativeAction,
       uri: textModel.uri
     };
-    return InlineSuggestionItem.create(suggestItem.withAction(renameAction), textModel, false);
+    const ref = TextModelValueReference.snapshot(textModel);
+    return InlineSuggestionItem.create(suggestItem.withAction(renameAction), ref, false);
   }
-  async checkRenamePrecondition(suggestItem, textModel, position, oldName, newName) {
+  async checkRenamePrecondition(suggestItem, textModel, position, oldName, newName, lastSymbolRename) {
+    const no = { canRename: RenameKind.no, timedOut: false };
     try {
-      const result = await this._commandService.executeCommand("github.copilot.nes.prepareRename", textModel.uri, position, oldName, newName, suggestItem.requestUuid);
+      const result = await this._commandService.executeCommand("github.copilot.nes.prepareRename", textModel.uri, position, oldName, newName, suggestItem.requestUuid, lastSymbolRename);
       if (result === void 0) {
-        return RenameKind.no;
+        return no;
+      } else if (typeof result === "string") {
+        const canRename = RenameKind.fromString(result);
+        if (canRename === RenameKind.yes || canRename === RenameKind.maybe) {
+          return {
+            canRename,
+            oldName,
+            onOldState: false
+          };
+        } else {
+          return {
+            canRename,
+            timedOut: false
+          };
+        }
       } else {
-        return RenameKind.fromString(result);
+        return result;
       }
     } catch (error) {
-      return RenameKind.no;
+      return no;
     }
   }
-  isRenamePossible(suggestItem, check) {
-    if (check === void 0 || check === RenameKind.no) {
+  isRenamePossible(suggestItem, check, state, textModel) {
+    if (check === void 0 || check.canRename === RenameKind.no) {
+      return false;
+    }
+    if (!state.equals(EditorState.create(this._codeEditorService, textModel))) {
       return false;
     }
     if (this._renameRunnable === void 0) {
@@ -388,7 +476,9 @@ RenameSymbolProcessor = __decorate([
   __param(0, ICommandService),
   __param(1, ILanguageFeaturesService),
   __param(2, ILanguageConfigurationService),
-  __param(3, IBulkEditService)
+  __param(3, IBulkEditService),
+  __param(4, IRenameSymbolTrackerService),
+  __param(5, ICodeEditorService)
 ], RenameSymbolProcessor);
 export {
   RenameInferenceEngine,

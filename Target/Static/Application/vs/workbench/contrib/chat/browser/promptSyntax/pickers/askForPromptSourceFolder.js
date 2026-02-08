@@ -73,6 +73,8 @@ function getPlaceholderStringforNew(type) {
       return localize("workbench.command.agent.create.location.placeholder", "Select a location to create the agent file");
     case PromptsType.skill:
       return localize("workbench.command.skill.create.location.placeholder", "Select a location to create the skill");
+    case PromptsType.hook:
+      return localize("workbench.command.hook.create.location.placeholder", "Select a location to create the hook file");
     default:
       throw new Error("Unknown prompt type");
   }
@@ -89,6 +91,8 @@ function getPlaceholderStringforMove(type, isMove) {
         return localize("agent.move.location.placeholder", "Select a location to move the agent file to");
       case PromptsType.skill:
         return localize("skill.move.location.placeholder", "Select a location to move the skill to");
+      case PromptsType.hook:
+        throw new Error("Hooks cannot be moved");
       default:
         throw new Error("Unknown prompt type");
     }
@@ -102,6 +106,8 @@ function getPlaceholderStringforMove(type, isMove) {
       return localize("agent.copy.location.placeholder", "Select a location to copy the agent file to");
     case PromptsType.skill:
       return localize("skill.copy.location.placeholder", "Select a location to copy the skill to");
+    case PromptsType.hook:
+      throw new Error("Hooks cannot be copied");
     default:
       throw new Error("Unknown prompt type");
   }
@@ -136,6 +142,8 @@ function getLearnLabel(type) {
       return localize("commands.agent.create.ask-folder.empty.docs-label", "Learn how to configure custom agents");
     case PromptsType.skill:
       return localize("commands.skill.create.ask-folder.empty.docs-label", "Learn how to configure skills");
+    case PromptsType.hook:
+      return localize("commands.hook.create.ask-folder.empty.docs-label", "Learn how to configure hooks");
     default:
       throw new Error("Unknown prompt type");
   }
@@ -151,6 +159,8 @@ function getMissingSourceFolderString(type) {
       return localize("commands.agent.create.ask-folder.empty.placeholder", "No agent source folders found.");
     case PromptsType.skill:
       return localize("commands.skill.create.ask-folder.empty.placeholder", "No skill source folders found.");
+    case PromptsType.hook:
+      return localize("commands.hook.create.ask-folder.empty.placeholder", "No hook source folders found.");
     default:
       throw new Error("Unknown prompt type");
   }

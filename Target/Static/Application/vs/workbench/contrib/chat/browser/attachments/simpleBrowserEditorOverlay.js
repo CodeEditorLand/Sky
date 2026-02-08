@@ -40,11 +40,14 @@ import { IBrowserElementsService } from "../../../../services/browserElements/br
 import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
 import { toAction } from "../../../../../base/common/actions.js";
 import { getDisplayNameFromOuterHTML } from "../../../../../platform/browserElements/common/browserElements.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
+import { observableConfigValue, observableContextKey } from "../../../../../platform/observable/common/platformObservableUtils.js";
 let SimpleBrowserOverlayWidget = class SimpleBrowserOverlayWidget2 {
   static {
     __name(this, "SimpleBrowserOverlayWidget");
   }
-  constructor(_editor, _container, _hostService, _chatWidgetService, fileService, environmentService, logService, configurationService, _preferencesService, _browserElementsService, contextMenuService) {
+  constructor(_editor, _container, _hostService, _chatWidgetService, fileService, environmentService, logService, configurationService, _preferencesService, _browserElementsService, contextMenuService, telemetryService) {
     this._editor = _editor;
     this._container = _container;
     this._hostService = _hostService;
@@ -56,9 +59,11 @@ let SimpleBrowserOverlayWidget = class SimpleBrowserOverlayWidget2 {
     this._preferencesService = _preferencesService;
     this._browserElementsService = _browserElementsService;
     this.contextMenuService = contextMenuService;
+    this.telemetryService = telemetryService;
     this._showStore = new DisposableStore();
     this._timeout = void 0;
     this._activeLocator = void 0;
+    this._browserType = void 0;
     this._showStore.add(this.configurationService.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("chat.sendElementsToChat.enabled")) {
         if (this.configurationService.getValue("chat.sendElementsToChat.enabled")) {
@@ -189,8 +194,9 @@ let SimpleBrowserOverlayWidget = class SimpleBrowserOverlayWidget2 {
       this._preferencesService.openSettings({ jsonEditor: false, query: "@id:chat.sendElementsToChat.enabled,chat.sendElementsToChat.attachCSS,chat.sendElementsToChat.attachImages" });
     }));
   }
-  setActiveLocator(locator) {
+  setActiveLocator(locator, browserType) {
     this._activeLocator = locator;
+    this._browserType = browserType;
   }
   hideElement(element) {
     if (element.classList.contains("hidden")) {
@@ -205,6 +211,9 @@ let SimpleBrowserOverlayWidget = class SimpleBrowserOverlayWidget2 {
     element.classList.remove("hidden");
   }
   async addElementToChat(cts) {
+    this.telemetryService.publicLog2("simpleBrowser.addElementToChat.start", {
+      browserType: this._browserType
+    });
     const editorContainer = this._container.querySelector(".editor-container");
     const editorContainerPosition = editorContainer ? editorContainer.getBoundingClientRect() : this._container.getBoundingClientRect();
     const elementData = await this._browserElementsService.getElementData({
@@ -253,6 +262,11 @@ let SimpleBrowserOverlayWidget = class SimpleBrowserOverlayWidget2 {
       this._domNode.style.display = "";
     }
     widget?.attachmentModel?.addContext(...toAttach);
+    this.telemetryService.publicLog2("simpleBrowser.addElementToChat.added", {
+      browserType: this._browserType,
+      attachCss,
+      attachImages: this.configurationService.getValue("chat.sendElementsToChat.attachImages") ?? false
+    });
   }
   dispose() {
     this._showStore.dispose();
@@ -270,20 +284,19 @@ SimpleBrowserOverlayWidget = __decorate([
   __param(7, IConfigurationService),
   __param(8, IPreferencesService),
   __param(9, IBrowserElementsService),
-  __param(10, IContextMenuService)
+  __param(10, IContextMenuService),
+  __param(11, ITelemetryService)
 ], SimpleBrowserOverlayWidget);
 let SimpleBrowserOverlayController = class SimpleBrowserOverlayController2 {
   static {
     __name(this, "SimpleBrowserOverlayController");
   }
-  constructor(container, group, instaService, configurationService, _browserElementsService) {
+  constructor(container, group, instaService, configurationService, _browserElementsService, contextKeyService) {
     this.configurationService = configurationService;
     this._browserElementsService = _browserElementsService;
+    this.contextKeyService = contextKeyService;
     this._store = new DisposableStore();
     this._domNode = document.createElement("div");
-    if (!this.configurationService.getValue("chat.sendElementsToChat.enabled")) {
-      return;
-    }
     this._domNode.classList.add("chat-simple-browser-overlay");
     this._domNode.style.position = "absolute";
     this._domNode.style.bottom = `5px`;
@@ -296,17 +309,21 @@ let SimpleBrowserOverlayController = class SimpleBrowserOverlayController2 {
     const connectingWebviewElement = document.createElement("div");
     connectingWebviewElement.className = "connecting-webview-element";
     let cts = new CancellationTokenSource();
-    const show = /* @__PURE__ */ __name(async (locator) => {
-      widget.setActiveLocator(locator);
+    const show = /* @__PURE__ */ __name(async (locator, browserType) => {
+      widget.setActiveLocator(locator, browserType);
       connectingWebviewElement.textContent = localize("connectingWebviewElement", "Connecting to webview...");
       if (!container.contains(connectingWebviewElement)) {
         container.appendChild(connectingWebviewElement);
       }
+      cts.cancel();
       cts = new CancellationTokenSource();
       try {
         await this._browserElementsService.startDebugSession(cts.token, locator);
       } catch (error) {
         connectingWebviewElement.textContent = localize("reopenErrorWebviewElement", "Please reopen the preview.");
+        return;
+      }
+      if (cts.token.isCancellationRequested) {
         return;
       }
       if (!container.contains(this._domNode)) {
@@ -315,9 +332,9 @@ let SimpleBrowserOverlayController = class SimpleBrowserOverlayController2 {
       connectingWebviewElement.remove();
     }, "show");
     const hide = /* @__PURE__ */ __name(() => {
-      widget.setActiveLocator(void 0);
+      widget.setActiveLocator(void 0, void 0);
+      cts.cancel();
       if (container.contains(this._domNode)) {
-        cts.cancel();
         this._domNode.remove();
       }
       connectingWebviewElement.remove();
@@ -330,17 +347,22 @@ let SimpleBrowserOverlayController = class SimpleBrowserOverlayController2 {
       const isLiveServer = editor?.input.editorId === "mainThreadWebview-browserPreview";
       if (isSimpleBrowser || isLiveServer) {
         const webviewInput = editor.input;
-        return webviewInput.webview.container.id;
+        const browserType = isSimpleBrowser ? "simpleBrowser" : "livePreview";
+        return { webviewId: webviewInput.webview.container.id, browserType };
       }
       return void 0;
     });
+    const chatEnabledObs = observableContextKey(ChatContextKeys.enabled.key, this.contextKeyService);
+    const sendElementsEnabledObs = observableConfigValue("chat.sendElementsToChat.enabled", true, this.configurationService);
     this._store.add(autorun((r) => {
-      const webviewId = activeIdObs.read(r);
-      if (!webviewId) {
+      const activeEditor = activeIdObs.read(r);
+      const isChatEnabled = chatEnabledObs.read(r);
+      const isSendElementsEnabled = sendElementsEnabledObs.read(r);
+      if (!isChatEnabled || !isSendElementsEnabled || !activeEditor) {
         hide();
         return;
       }
-      show({ webviewId });
+      show({ webviewId: activeEditor.webviewId }, activeEditor.browserType);
     }));
   }
   dispose() {
@@ -350,7 +372,8 @@ let SimpleBrowserOverlayController = class SimpleBrowserOverlayController2 {
 SimpleBrowserOverlayController = __decorate([
   __param(2, IInstantiationService),
   __param(3, IConfigurationService),
-  __param(4, IBrowserElementsService)
+  __param(4, IBrowserElementsService),
+  __param(5, IContextKeyService)
 ], SimpleBrowserOverlayController);
 let SimpleBrowserOverlay = class SimpleBrowserOverlay2 {
   static {
@@ -362,7 +385,7 @@ let SimpleBrowserOverlay = class SimpleBrowserOverlay2 {
   constructor(editorGroupsService, instantiationService) {
     this._store = new DisposableStore();
     const editorGroups = observableFromEvent(this, Event.any(editorGroupsService.onDidAddGroup, editorGroupsService.onDidRemoveGroup), () => editorGroupsService.groups);
-    const overlayWidgets = new DisposableMap();
+    const overlayWidgets = this._store.add(new DisposableMap());
     this._store.add(autorun((r) => {
       const toDelete = new Set(overlayWidgets.keys());
       const groups = editorGroups.read(r);

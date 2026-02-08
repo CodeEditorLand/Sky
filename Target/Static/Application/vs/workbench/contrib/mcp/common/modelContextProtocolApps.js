@@ -1,6 +1,6 @@
 var McpApps;
 (function(McpApps2) {
-  McpApps2.LATEST_PROTOCOL_VERSION = "2025-11-21";
+  McpApps2.LATEST_PROTOCOL_VERSION = "2026-01-26";
   McpApps2.OPEN_LINK_METHOD = "ui/open-link";
   McpApps2.MESSAGE_METHOD = "ui/message";
   McpApps2.SANDBOX_PROXY_READY_METHOD = "ui/notifications/sandbox-proxy-ready";
@@ -15,6 +15,7 @@ var McpApps;
   McpApps2.INITIALIZE_METHOD = "ui/initialize";
   McpApps2.INITIALIZED_METHOD = "ui/notifications/initialized";
   McpApps2.REQUEST_DISPLAY_MODE_METHOD = "ui/request-display-mode";
+  McpApps2.UPDATE_MODEL_CONTEXT_METHOD = "ui/update-model-context";
 })(McpApps || (McpApps = {}));
 export {
   McpApps

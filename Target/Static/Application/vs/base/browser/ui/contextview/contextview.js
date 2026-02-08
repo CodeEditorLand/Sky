@@ -57,7 +57,7 @@ function layout(viewportSize, viewSize, anchor) {
     if (viewSize <= layoutBeforeAnchorBoundary) {
       return layoutBeforeAnchorBoundary - viewSize;
     }
-    if (viewSize <= viewportSize - layoutAfterAnchorBoundary) {
+    if (viewSize <= viewportSize - layoutAfterAnchorBoundary && layoutBeforeAnchorBoundary < viewSize / 2) {
       return layoutAfterAnchorBoundary;
     }
     return 0;

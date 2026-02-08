@@ -220,6 +220,9 @@ class ViewLine {
     }
     return this._renderedViewLine.getColumnOfNodeOffset(spanNode, offset);
   }
+  resetCachedWidth() {
+    this._renderedViewLine?.resetCachedWidth();
+  }
 }
 var Constants;
 (function(Constants2) {
@@ -261,6 +264,9 @@ class FastRenderedViewLine {
   }
   getWidthIsFast() {
     return this.input.lineContent.length < 300 || this._cachedWidth !== -1;
+  }
+  resetCachedWidth() {
+    this._cachedWidth = -1;
   }
   monospaceAssumptionsAreValid() {
     if (!this.domNode) {
@@ -375,6 +381,14 @@ class RenderedViewLine {
       return false;
     }
     return true;
+  }
+  resetCachedWidth() {
+    this._cachedWidth = -1;
+    if (this._pixelOffsetCache !== null) {
+      for (let column = 0, len = this._pixelOffsetCache.length; column < len; column++) {
+        this._pixelOffsetCache[column] = -1;
+      }
+    }
   }
   /**
    * Visible ranges for a model range

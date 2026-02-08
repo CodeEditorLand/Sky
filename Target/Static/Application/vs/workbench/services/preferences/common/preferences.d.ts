@@ -67,6 +67,7 @@ export interface ISetting {
     objectProperties?: IJSONSchemaMap;
     objectPatternProperties?: IJSONSchemaMap;
     objectAdditionalProperties?: boolean | IJSONSchema;
+    propertyNames?: IJSONSchema;
     enum?: string[];
     enumDescriptions?: string[];
     enumDescriptionsAreMarkdown?: boolean;

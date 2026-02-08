@@ -25,16 +25,18 @@ import { createStringDataTransferItem, VSDataTransfer } from "../../../base/comm
 import { DataTransferFileCache } from "../common/shared/dataTransferCache.js";
 import * as typeConvert from "../common/extHostTypeConverters.js";
 import { IViewsService } from "../../services/views/common/viewsService.js";
+import { ITelemetryService } from "../../../platform/telemetry/common/telemetry.js";
 let MainThreadTreeViews = class MainThreadTreeViews2 extends Disposable {
   static {
     __name(this, "MainThreadTreeViews");
   }
-  constructor(extHostContext, viewsService, notificationService, extensionService, logService) {
+  constructor(extHostContext, viewsService, notificationService, extensionService, logService, telemetryService) {
     super();
     this.viewsService = viewsService;
     this.notificationService = notificationService;
     this.extensionService = extensionService;
     this.logService = logService;
+    this.telemetryService = telemetryService;
     this._dataProviders = this._register(new DisposableMap());
     this._dndControllers = /* @__PURE__ */ new Map();
     this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostTreeViews);
@@ -119,6 +121,11 @@ let MainThreadTreeViews = class MainThreadTreeViews2 extends Disposable {
     }
     this._dataProviders.deleteAndDispose(treeViewId);
   }
+  $logResolveTreeNodeFailure(extensionId) {
+    this.telemetryService.publicLog2("treeView.resolveFailure", {
+      extensionId
+    });
+  }
   async reveal(treeView, dataProvider, itemIn, parentChain, options) {
     options = options ? options : { select: false, focus: false };
     const select = isUndefinedOrNull(options.select) ? false : options.select;
@@ -189,7 +196,8 @@ MainThreadTreeViews = __decorate([
   __param(1, IViewsService),
   __param(2, INotificationService),
   __param(3, IExtensionService),
-  __param(4, ILogService)
+  __param(4, ILogService),
+  __param(5, ITelemetryService)
 ], MainThreadTreeViews);
 class TreeViewDragAndDropController {
   static {

@@ -2,11 +2,14 @@ import { URI } from '../../../base/common/uri.js';
 import { IExtensionGalleryService, IExtensionManagementService, InstallOptions } from './extensionManagement.js';
 import { IExtensionManifest } from '../../extensions/common/extensions.js';
 import { ILogger } from '../../log/common/log.js';
+import { IProductService } from '../../product/common/productService.js';
 export declare class ExtensionManagementCLI {
+    private readonly extensionsForceVersionByQuality;
     protected readonly logger: ILogger;
     private readonly extensionManagementService;
     private readonly extensionGalleryService;
-    constructor(logger: ILogger, extensionManagementService: IExtensionManagementService, extensionGalleryService: IExtensionGalleryService);
+    private readonly productService;
+    constructor(extensionsForceVersionByQuality: readonly string[], logger: ILogger, extensionManagementService: IExtensionManagementService, extensionGalleryService: IExtensionGalleryService, productService: IProductService);
     protected get location(): string | undefined;
     listExtensions(showVersions: boolean, category?: string, profileLocation?: URI): Promise<void>;
     installExtensions(extensions: (string | URI)[], builtinExtensions: (string | URI)[], installOptions: InstallOptions, force: boolean): Promise<void>;

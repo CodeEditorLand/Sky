@@ -81,7 +81,8 @@ let ToolConfirmationSubPart = class ToolConfirmationSubPart2 extends AbstractToo
       const confirmActions = this.confirmationService.getPreConfirmActions({
         toolId: this.toolInvocation.toolId,
         source: this.toolInvocation.source,
-        parameters: state.parameters
+        parameters: state.parameters,
+        chatSessionResource: this.context.element.sessionResource
       });
       for (const action of confirmActions) {
         if (action.divider) {
@@ -215,10 +216,6 @@ let ToolConfirmationSubPart = class ToolConfirmationSubPart2 extends AbstractToo
           uriPromise: Promise.resolve(model.uri),
           chatSessionResource: this.context.element.sessionResource
         });
-        this._register(editor.object.onDidChangeContentHeight(() => {
-          editor.object.layout(this.currentWidthDelegate());
-          this._onDidChangeHeight.fire();
-        }));
         this._register(model.onDidChangeContent((e) => {
           try {
             inputData.rawInput = JSON.parse(model.getValue());
@@ -248,12 +245,10 @@ let ToolConfirmationSubPart = class ToolConfirmationSubPart2 extends AbstractToo
         const show = messageSeeMoreObserver.getHeight() > SHOW_MORE_MESSAGE_HEIGHT_TRIGGER;
         if (elements.messageContainer.classList.contains("can-see-more") !== show) {
           elements.messageContainer.classList.toggle("can-see-more", show);
-          this._onDidChangeHeight.fire();
         }
       }, "updateSeeMoreDisplayed");
       this._register(dom.addDisposableListener(elements.showMore, "click", () => {
         elements.messageContainer.classList.toggle("can-see-more", false);
-        this._onDidChangeHeight.fire();
         messageSeeMoreObserver.dispose();
       }));
       this._register(messageSeeMoreObserver.onDidChange(updateSeeMoreDisplayed));
@@ -284,7 +279,6 @@ let ToolConfirmationSubPart = class ToolConfirmationSubPart2 extends AbstractToo
     }, this.context, this.editorPool, false, this.codeBlockStartIndex, this.renderer, void 0, this.currentWidthDelegate(), this.codeBlockModelCollection, { codeBlockRenderOptions }));
     renderFileWidgets(part.domNode, this.instantiationService, this.chatMarkdownAnchorService, this._store);
     container.append(part.domNode);
-    this._register(part.onDidChangeHeight(() => this._onDidChangeHeight.fire()));
     return part;
   }
 };

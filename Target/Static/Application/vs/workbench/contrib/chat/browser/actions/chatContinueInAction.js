@@ -29,6 +29,7 @@ import { ICommandService } from "../../../../../platform/commands/common/command
 import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
 import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
 import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
 import { ResourceContextKey } from "../../../../common/contextkeys.js";
 import { IEditorService } from "../../../../services/editor/common/editorService.js";
@@ -36,7 +37,7 @@ import { IChatAgentService } from "../../common/participants/chatAgents.js";
 import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
 import { chatEditingWidgetFileStateContextKey } from "../../common/editing/chatEditingService.js";
 import { ChatRequestParser } from "../../common/requestParser/chatRequestParser.js";
-import { IChatService } from "../../common/chatService/chatService.js";
+import { ChatSendResult, IChatService } from "../../common/chatService/chatService.js";
 import { IChatSessionsService } from "../../common/chatSessionsService.js";
 import { ChatAgentLocation } from "../../common/constants.js";
 import { PROMPT_LANGUAGE_ID } from "../../common/promptSyntax/promptTypes.js";
@@ -89,11 +90,12 @@ let ChatContinueInSessionActionItem = ChatContinueInSessionActionItem_1 = class 
   static {
     __name(this, "ChatContinueInSessionActionItem");
   }
-  constructor(action, location, actionWidgetService, contextKeyService, keybindingService, chatSessionsService, instantiationService, openerService) {
+  constructor(action, location, actionWidgetService, contextKeyService, keybindingService, chatSessionsService, instantiationService, openerService, telemetryService) {
     super(action, {
       actionProvider: ChatContinueInSessionActionItem_1.actionProvider(chatSessionsService, instantiationService, location),
-      actionBarActions: ChatContinueInSessionActionItem_1.getActionBarActions(openerService)
-    }, actionWidgetService, keybindingService, contextKeyService);
+      actionBarActions: ChatContinueInSessionActionItem_1.getActionBarActions(openerService),
+      reporter: { id: "ChatContinueInSession", name: "ChatContinueInSession", includeOptions: true }
+    }, actionWidgetService, keybindingService, contextKeyService, telemetryService);
     this.location = location;
     this.contextKeyService = contextKeyService;
   }
@@ -116,11 +118,11 @@ let ChatContinueInSessionActionItem = ChatContinueInSessionActionItem_1 = class 
         const actions = [];
         const contributions = chatSessionsService.getAllChatSessionContributions();
         const backgroundContrib = contributions.find((contrib) => contrib.type === AgentSessionProviders.Background);
-        if (backgroundContrib && backgroundContrib.canDelegate !== false) {
+        if (backgroundContrib && backgroundContrib.canDelegate) {
           actions.push(this.toAction(AgentSessionProviders.Background, backgroundContrib, instantiationService, location));
         }
         const cloudContrib = contributions.find((contrib) => contrib.type === AgentSessionProviders.Cloud);
-        if (cloudContrib && cloudContrib.canDelegate !== false) {
+        if (cloudContrib && cloudContrib.canDelegate) {
           actions.push(this.toAction(AgentSessionProviders.Cloud, cloudContrib, instantiationService, location));
         }
         if (actions.length === 0) {
@@ -185,7 +187,8 @@ ChatContinueInSessionActionItem = ChatContinueInSessionActionItem_1 = __decorate
   __param(4, IKeybindingService),
   __param(5, IChatSessionsService),
   __param(6, IInstantiationService),
-  __param(7, IOpenerService)
+  __param(7, IOpenerService),
+  __param(8, ITelemetryService)
 ], ChatContinueInSessionActionItem);
 const NEW_CHAT_SESSION_ACTION_ID = "workbench.action.chat.openNewSessionEditor";
 class CreateRemoteAgentJobAction {
@@ -197,7 +200,7 @@ class CreateRemoteAgentJobAction {
   openUntitledEditor(commandService, continuationTarget) {
     commandService.executeCommand(`${NEW_CHAT_SESSION_ACTION_ID}.${continuationTarget.type}`);
   }
-  async run(accessor, continuationTarget) {
+  async run(accessor, continuationTarget, _widget) {
     const contextKeyService = accessor.get(IContextKeyService);
     const commandService = accessor.get(ICommandService);
     const widgetService = accessor.get(IChatWidgetService);
@@ -207,7 +210,7 @@ class CreateRemoteAgentJobAction {
     const remoteJobCreatingKey = ChatContextKeys.remoteJobCreating.bindTo(contextKeyService);
     try {
       remoteJobCreatingKey.set(true);
-      const widget = widgetService.lastFocusedWidget;
+      const widget = _widget ?? widgetService.lastFocusedWidget;
       if (!widget || !widget.viewModel) {
         return this.openUntitledEditor(commandService, continuationTarget);
       }
@@ -255,14 +258,14 @@ class CreateRemoteAgentJobAction {
       const parsedRequest = requestParser.parseChatRequest(sessionResource, userPrompt, ChatAgentLocation.Chat);
       const addedRequest = chatModel.addRequest(parsedRequest, { variables: attachedContext.asArray() }, 0, void 0, defaultAgent);
       await chatService.removeRequest(sessionResource, addedRequest.id);
-      const requestData = await chatService.sendRequest(sessionResource, userPrompt, {
+      const sendResult = await chatService.sendRequest(sessionResource, userPrompt, {
         agentIdSilent: continuationTargetType,
         attachedContext: attachedContext.asArray(),
         userSelectedModelId: widget.input.currentLanguageModel,
         ...widget.getModeRequestOptions()
       });
-      if (requestData) {
-        await widget.handleDelegationExitIfNeeded(defaultAgent, requestData.agent);
+      if (ChatSendResult.isSent(sendResult)) {
+        await widget.handleDelegationExitIfNeeded(defaultAgent, sendResult.data.agent);
       }
     } catch (e) {
       console.error("Error creating remote coding agent job", e);
@@ -331,6 +334,7 @@ export {
   ActionLocation,
   ChatContinueInSessionActionItem,
   ContinueChatInSessionAction,
-  ContinueChatInSessionActionRendering
+  ContinueChatInSessionActionRendering,
+  CreateRemoteAgentJobAction
 };
 //# sourceMappingURL=chatContinueInAction.js.map

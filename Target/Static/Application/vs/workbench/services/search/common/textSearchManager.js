@@ -105,20 +105,22 @@ class TextSearchManager {
             throw Error("Text search result URI is undefined. Please check provider implementation.");
           }
           const folderQuery = folderMappings.findQueryFragmentAwareSubstr(result2.uri);
-          const hasSibling = folderQuery.folder.scheme === Schemas.file ? hasSiblingPromiseFn(() => {
-            return this.fileUtils.readdir(resources.dirname(result2.uri));
-          }) : void 0;
-          const relativePath = resources.relativePath(folderQuery.folder, result2.uri);
-          if (relativePath) {
-            const included = folderQuery.queryTester.includedInQuery(relativePath, path.basename(relativePath), hasSibling);
-            if (isThenable(included)) {
-              testingPs.push(included.then((isIncluded) => {
-                if (isIncluded) {
-                  onResult(result2, folderQuery.folderIdx);
-                }
-              }));
-            } else if (included) {
-              onResult(result2, folderQuery.folderIdx);
+          if (folderQuery?.folder?.scheme) {
+            const hasSibling = folderQuery.folder.scheme === Schemas.file ? hasSiblingPromiseFn(() => {
+              return this.fileUtils.readdir(resources.dirname(result2.uri));
+            }) : void 0;
+            const relativePath = resources.relativePath(folderQuery.folder, result2.uri);
+            if (relativePath) {
+              const included = folderQuery.queryTester.includedInQuery(relativePath, path.basename(relativePath), hasSibling);
+              if (isThenable(included)) {
+                testingPs.push(included.then((isIncluded) => {
+                  if (isIncluded) {
+                    onResult(result2, folderQuery.folderIdx);
+                  }
+                }));
+              } else if (included) {
+                onResult(result2, folderQuery.folderIdx);
+              }
             }
           }
         }

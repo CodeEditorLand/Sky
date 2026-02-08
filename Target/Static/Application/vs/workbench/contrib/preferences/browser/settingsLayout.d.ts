@@ -17,5 +17,5 @@ export interface ITOCEntry<T> {
     settings?: Array<T>;
     hide?: boolean;
 }
-export declare function getCommonlyUsedData(settingGroups: ISettingsGroup[], commonlyUsed?: string[]): ITOCEntry<ISetting>;
+export declare function getCommonlyUsedData(settingGroups: ISettingsGroup[]): ITOCEntry<ISetting>;
 export declare const tocData: ITOCEntry<string>;

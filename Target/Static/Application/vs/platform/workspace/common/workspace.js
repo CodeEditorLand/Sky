@@ -97,11 +97,12 @@ class Workspace {
     this._folders = folders;
     this.updateFoldersMap();
   }
-  constructor(_id, folders, _transient, _configuration, ignorePathCasing) {
+  constructor(_id, folders, _transient, _configuration, ignorePathCasing, _isAgentSessionsWorkspace) {
     this._id = _id;
     this._transient = _transient;
     this._configuration = _configuration;
     this.ignorePathCasing = ignorePathCasing;
+    this._isAgentSessionsWorkspace = _isAgentSessionsWorkspace;
     this.foldersMap = TernarySearchTree.forUris(this.ignorePathCasing, () => true);
     this.folders = folders;
   }
@@ -110,6 +111,7 @@ class Workspace {
     this._configuration = workspace.configuration;
     this._transient = workspace.transient;
     this.ignorePathCasing = workspace.ignorePathCasing;
+    this._isAgentSessionsWorkspace = workspace.isAgentSessionsWorkspace;
     this.folders = workspace.folders;
   }
   get id() {
@@ -124,6 +126,9 @@ class Workspace {
   set configuration(configuration) {
     this._configuration = configuration;
   }
+  get isAgentSessionsWorkspace() {
+    return this._isAgentSessionsWorkspace;
+  }
   getFolder(resource) {
     if (!resource) {
       return null;
@@ -137,7 +142,7 @@ class Workspace {
     }
   }
   toJSON() {
-    return { id: this.id, folders: this.folders, transient: this.transient, configuration: this.configuration };
+    return { id: this.id, folders: this.folders, transient: this.transient, configuration: this.configuration, isAgentSessionsWorkspace: this.isAgentSessionsWorkspace };
   }
 }
 class WorkspaceFolder {

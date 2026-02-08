@@ -2719,6 +2719,67 @@ var ChatResponseConfirmationPart;
   __name(from, "from");
   ChatResponseConfirmationPart2.from = from;
 })(ChatResponseConfirmationPart || (ChatResponseConfirmationPart = {}));
+var ChatResponseQuestionCarouselPart;
+(function(ChatResponseQuestionCarouselPart2) {
+  function questionTypeToString(type) {
+    switch (type) {
+      case types.ChatQuestionType.Text:
+        return "text";
+      case types.ChatQuestionType.SingleSelect:
+        return "singleSelect";
+      case types.ChatQuestionType.MultiSelect:
+        return "multiSelect";
+      default:
+        return "text";
+    }
+  }
+  __name(questionTypeToString, "questionTypeToString");
+  function stringToQuestionType(type) {
+    switch (type) {
+      case "text":
+        return types.ChatQuestionType.Text;
+      case "singleSelect":
+        return types.ChatQuestionType.SingleSelect;
+      case "multiSelect":
+        return types.ChatQuestionType.MultiSelect;
+      default:
+        return types.ChatQuestionType.Text;
+    }
+  }
+  __name(stringToQuestionType, "stringToQuestionType");
+  function from(part) {
+    return {
+      kind: "questionCarousel",
+      questions: part.questions.map((q) => ({
+        id: q.id,
+        type: questionTypeToString(q.type),
+        title: q.title,
+        message: q.message ? MarkdownString.from(q.message) : void 0,
+        options: q.options,
+        defaultValue: q.defaultValue,
+        allowFreeformInput: q.allowFreeformInput
+      })),
+      allowSkip: part.allowSkip
+    };
+  }
+  __name(from, "from");
+  ChatResponseQuestionCarouselPart2.from = from;
+  function to(part) {
+    const questions = part.questions.map((q) => new types.ChatQuestion(q.id, stringToQuestionType(q.type), q.title, {
+      message: q.message ? typeof q.message === "string" ? new types.MarkdownString(q.message) : MarkdownString.to(q.message) : void 0,
+      options: q.options?.map((opt) => ({
+        id: opt.id,
+        label: opt.label,
+        value: opt.value
+      })),
+      defaultValue: q.defaultValue,
+      allowFreeformInput: q.allowFreeformInput
+    }));
+    return new types.ChatResponseQuestionCarouselPart(questions, part.allowSkip);
+  }
+  __name(to, "to");
+  ChatResponseQuestionCarouselPart2.to = to;
+})(ChatResponseQuestionCarouselPart || (ChatResponseQuestionCarouselPart = {}));
 var ChatResponseFilesPart;
 (function(ChatResponseFilesPart2) {
   function from(part) {
@@ -2912,6 +2973,14 @@ var ChatResponseMovePart;
 var ChatToolInvocationPart;
 (function(ChatToolInvocationPart2) {
   function from(part) {
+    let resultDetails;
+    let toolSpecificData;
+    if (part.toolSpecificData && isChatMcpToolInvocationData(part.toolSpecificData)) {
+      resultDetails = convertMcpToResultDetails(part.toolSpecificData, part.isError);
+      toolSpecificData = void 0;
+    } else {
+      toolSpecificData = part.toolSpecificData ? convertToolSpecificData(part.toolSpecificData) : void 0;
+    }
     return {
       kind: "toolInvocationSerialized",
       toolCallId: part.toolCallId,
@@ -2923,13 +2992,34 @@ var ChatToolInvocationPart;
       isComplete: part.isComplete ?? true,
       source: ToolDataSource.External,
       // isError: part.isError ?? false,
-      toolSpecificData: part.toolSpecificData ? convertToolSpecificData(part.toolSpecificData) : void 0,
+      toolSpecificData,
+      resultDetails,
       presentation: part.presentation === "hidden" ? ToolInvocationPresentation.Hidden : part.presentation === "hiddenAfterComplete" ? ToolInvocationPresentation.HiddenAfterComplete : void 0,
       subAgentInvocationId: part.subAgentInvocationId
     };
   }
   __name(from, "from");
   ChatToolInvocationPart2.from = from;
+  function isChatMcpToolInvocationData(data) {
+    return data !== null && typeof data === "object" && "input" in data && typeof data.input === "string" && "output" in data && Array.isArray(data.output);
+  }
+  __name(isChatMcpToolInvocationData, "isChatMcpToolInvocationData");
+  function convertMcpToResultDetails(data, isError) {
+    return {
+      input: data.input,
+      output: data.output.map((o) => {
+        const isText = o.mimeType.startsWith("text/");
+        return {
+          type: "embed",
+          mimeType: o.mimeType,
+          value: isText ? VSBuffer.wrap(o.data).toString() : encodeBase64(VSBuffer.wrap(o.data)),
+          isText
+        };
+      }),
+      isError: isError ?? false
+    };
+  }
+  __name(convertMcpToResultDetails, "convertMcpToResultDetails");
   function convertToolSpecificData(data) {
     if ("command" in data && "language" in data) {
       return {
@@ -2938,15 +3028,58 @@ var ChatToolInvocationPart;
         language: data.language
       };
     } else if ("commandLine" in data && "language" in data) {
-      return {
+      const result = {
         kind: "terminal",
         commandLine: data.commandLine,
-        language: data.language
+        language: data.language,
+        terminalCommandOutput: typeof data.output?.text === "string" ? {
+          text: data.output.text
+        } : void 0,
+        terminalCommandState: data.state ? {
+          exitCode: data.state.exitCode,
+          duration: data.state.duration
+        } : void 0
+      };
+      return result;
+    } else if ("todoList" in data && Array.isArray(data.todoList)) {
+      return {
+        kind: "todoList",
+        todoList: data.todoList.map((todo) => ({
+          id: String(todo.id),
+          title: todo.title,
+          status: todoStatusEnumToString(todo.status)
+        }))
       };
     }
     return data;
   }
   __name(convertToolSpecificData, "convertToolSpecificData");
+  function todoStatusEnumToString(status) {
+    switch (status) {
+      case types.ChatTodoStatus.NotStarted:
+        return "not-started";
+      case types.ChatTodoStatus.InProgress:
+        return "in-progress";
+      case types.ChatTodoStatus.Completed:
+        return "completed";
+      default:
+        return "not-started";
+    }
+  }
+  __name(todoStatusEnumToString, "todoStatusEnumToString");
+  function todoStatusStringToEnum(status) {
+    switch (status) {
+      case "not-started":
+        return types.ChatTodoStatus.NotStarted;
+      case "in-progress":
+        return types.ChatTodoStatus.InProgress;
+      case "completed":
+        return types.ChatTodoStatus.Completed;
+      default:
+        return types.ChatTodoStatus.NotStarted;
+    }
+  }
+  __name(todoStatusStringToEnum, "todoStatusStringToEnum");
   function to(part) {
     const toolInvocation = new types.ChatToolInvocationPart(part.toolId || part.toolName, part.toolCallId, part.isError);
     if (part.invocationMessage) {
@@ -2968,20 +3101,54 @@ var ChatToolInvocationPart;
       toolInvocation.toolSpecificData = convertFromInternalToolSpecificData(part.toolSpecificData);
     }
     toolInvocation.subAgentInvocationId = part.subAgentInvocationId;
+    toolInvocation.subAgentName = part.subAgentName;
     return toolInvocation;
   }
   __name(to, "to");
   ChatToolInvocationPart2.to = to;
   function convertFromInternalToolSpecificData(data) {
     if (data.kind === "terminal") {
-      return {
-        command: data.command,
-        language: data.language
-      };
+      if (data.commandLine) {
+        const result = {
+          commandLine: data.commandLine,
+          language: data.language
+        };
+        if (data.terminalCommandOutput) {
+          result.output = {
+            text: data.terminalCommandOutput.text,
+            truncated: data.terminalCommandOutput.truncated,
+            lineCount: data.terminalCommandOutput.lineCount
+          };
+        }
+        if (data.terminalCommandState) {
+          result.state = {
+            exitCode: data.terminalCommandState.exitCode,
+            duration: data.terminalCommandState.duration
+          };
+        }
+        return result;
+      } else {
+        return {
+          command: data.command,
+          language: data.language
+        };
+      }
     } else if (data.kind === "terminal2") {
       return {
         commandLine: data.commandLine,
         language: data.language
+      };
+    } else if (data.kind === "todoList") {
+      return {
+        todoList: data.todoList.map((todo, index) => {
+          const parsed = Number(todo.id);
+          const id = Number.isFinite(parsed) ? parsed : index;
+          return {
+            id,
+            title: todo.title,
+            status: todoStatusStringToEnum(todo.status)
+          };
+        })
       };
     }
     return data;
@@ -3086,6 +3253,20 @@ var ChatResponseNotebookEditPart;
   __name(from, "from");
   ChatResponseNotebookEditPart2.from = from;
 })(ChatResponseNotebookEditPart || (ChatResponseNotebookEditPart = {}));
+var ChatResponseWorkspaceEditPart;
+(function(ChatResponseWorkspaceEditPart2) {
+  function from(part) {
+    return {
+      kind: "workspaceEdit",
+      edits: part.edits.map((e) => ({
+        oldResource: e.oldResource,
+        newResource: e.newResource
+      }))
+    };
+  }
+  __name(from, "from");
+  ChatResponseWorkspaceEditPart2.from = from;
+})(ChatResponseWorkspaceEditPart || (ChatResponseWorkspaceEditPart = {}));
 var ChatResponseReferencePart;
 (function(ChatResponseReferencePart2) {
   function from(part) {
@@ -3165,6 +3346,8 @@ var ChatResponsePart;
       return ChatResponseWarningPart.from(part);
     } else if (part instanceof types.ChatResponseConfirmationPart) {
       return ChatResponseConfirmationPart.from(part);
+    } else if (part instanceof types.ChatResponseQuestionCarouselPart) {
+      return ChatResponseQuestionCarouselPart.from(part);
     } else if (part instanceof types.ChatResponseCodeCitationPart) {
       return ChatResponseCodeCitationPart.from(part);
     } else if (part instanceof types.ChatResponseMovePart) {
@@ -3175,6 +3358,8 @@ var ChatResponsePart;
       return ChatResponsePullRequestPart.from(part);
     } else if (part instanceof types.ChatToolInvocationPart) {
       return ChatToolInvocationPart.from(part);
+    } else if (part instanceof types.ChatResponseWorkspaceEditPart) {
+      return ChatResponseWorkspaceEditPart.from(part);
     }
     return {
       kind: "markdownContent",
@@ -3239,6 +3424,7 @@ var ChatAgentRequest;
       enableCommandDetection: request.enableCommandDetection ?? true,
       isParticipantDetected: request.isParticipantDetected ?? false,
       sessionId,
+      sessionResource: request.sessionResource,
       references: variableReferences.map((v) => ChatPromptReference.to(v, diagnostics, logService)).filter(isDefined),
       toolReferences: toolReferences.map(ChatLanguageModelToolReference.to),
       location: ChatLocation.to(request.location),
@@ -3251,7 +3437,9 @@ var ChatAgentRequest;
       editedFileEvents: request.editedFileEvents,
       modeInstructions: request.modeInstructions?.content,
       modeInstructions2: ChatRequestModeInstructions.to(request.modeInstructions),
-      subAgentInvocationId: request.subAgentInvocationId
+      subAgentInvocationId: request.subAgentInvocationId,
+      subAgentName: request.subAgentName,
+      parentRequestId: request.parentRequestId
     };
     if (!isProposedApiEnabled(extension, "chatParticipantPrivate")) {
       delete requestWithAllProps.id;
@@ -3263,6 +3451,8 @@ var ChatAgentRequest;
       delete requestWithAllProps.editedFileEvents;
       delete requestWithAllProps.sessionId;
       delete requestWithAllProps.subAgentInvocationId;
+      delete requestWithAllProps.subAgentName;
+      delete requestWithAllProps.parentRequestId;
     }
     if (!isProposedApiEnabled(extension, "chatParticipantAdditions")) {
       delete requestWithAllProps.acceptedConfirmationData;
@@ -3274,17 +3464,6 @@ var ChatAgentRequest;
   __name(to, "to");
   ChatAgentRequest2.to = to;
 })(ChatAgentRequest || (ChatAgentRequest = {}));
-var ChatRequestDraft;
-(function(ChatRequestDraft2) {
-  function to(request) {
-    return {
-      prompt: request.prompt,
-      files: request.files.map((uri) => URI.revive(uri))
-    };
-  }
-  __name(to, "to");
-  ChatRequestDraft2.to = to;
-})(ChatRequestDraft || (ChatRequestDraft = {}));
 var ChatLocation;
 (function(ChatLocation2) {
   function to(loc) {
@@ -3694,7 +3873,7 @@ var LanguageModelToolSource;
 var LanguageModelToolResult;
 (function(LanguageModelToolResult2) {
   function to(result) {
-    return new types.LanguageModelToolResult(result.content.map((item) => {
+    const toolResult = new types.LanguageModelToolResult(result.content.map((item) => {
       if (item.kind === "text") {
         return new types.LanguageModelTextPart(item.value, item.audience);
       } else if (item.kind === "data") {
@@ -3703,6 +3882,10 @@ var LanguageModelToolResult;
         return new types.LanguageModelPromptTsxPart(item.value);
       }
     }));
+    if (result.toolMetadata !== void 0) {
+      toolResult.toolMetadata = result.toolMetadata;
+    }
+    return toolResult;
   }
   __name(to, "to");
   LanguageModelToolResult2.to = to;
@@ -3866,6 +4049,20 @@ var McpServerDefinition;
   }
   __name(from, "from");
   McpServerDefinition2.from = from;
+  function to(dto) {
+    const launch = McpServerLaunch.fromSerialized(dto.launch);
+    if (launch.type === 2) {
+      return new types.McpHttpServerDefinition(dto.label, launch.uri, Object.fromEntries(launch.headers), dto.cacheNonce === "$$NONE" ? void 0 : dto.cacheNonce);
+    } else {
+      const result = new types.McpStdioServerDefinition(dto.label, launch.command, [...launch.args], Object.fromEntries(Object.entries(launch.env).map(([key, value]) => [key, value === null ? null : String(value)])), dto.cacheNonce === "$$NONE" ? void 0 : dto.cacheNonce);
+      if (launch.cwd) {
+        result.cwd = URI.file(launch.cwd);
+      }
+      return result;
+    }
+  }
+  __name(to, "to");
+  McpServerDefinition2.to = to;
 })(McpServerDefinition || (McpServerDefinition = {}));
 var SourceControlInputBoxValidationType;
 (function(SourceControlInputBoxValidationType2) {
@@ -3884,6 +4081,17 @@ var SourceControlInputBoxValidationType;
   __name(from, "from");
   SourceControlInputBoxValidationType2.from = from;
 })(SourceControlInputBoxValidationType || (SourceControlInputBoxValidationType = {}));
+var ChatHookResult;
+(function(ChatHookResult2) {
+  function to(result) {
+    return {
+      kind: result.kind === 1 ? types.ChatHookResultKind.Success : types.ChatHookResultKind.Error,
+      result: result.result
+    };
+  }
+  __name(to, "to");
+  ChatHookResult2.to = to;
+})(ChatHookResult || (ChatHookResult = {}));
 export {
   AiSettingsSearch,
   CallHierarchyIncomingCall,
@@ -3894,10 +4102,10 @@ export {
   ChatAgentResult,
   ChatAgentUserActionEvent,
   ChatFollowup,
+  ChatHookResult,
   ChatLanguageModelToolReference,
   ChatLocation,
   ChatPromptReference,
-  ChatRequestDraft,
   ChatRequestModeInstructions,
   ChatResponseAnchorPart,
   ChatResponseCodeCitationPart,
@@ -3914,10 +4122,12 @@ export {
   ChatResponsePart,
   ChatResponseProgressPart,
   ChatResponsePullRequestPart,
+  ChatResponseQuestionCarouselPart,
   ChatResponseReferencePart,
   ChatResponseTextEditPart,
   ChatResponseThinkingProgressPart,
   ChatResponseWarningPart,
+  ChatResponseWorkspaceEditPart,
   ChatTask,
   ChatTaskResult,
   ChatToolInvocationPart,

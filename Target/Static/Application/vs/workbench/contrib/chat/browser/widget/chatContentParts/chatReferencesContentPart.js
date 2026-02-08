@@ -168,9 +168,10 @@ let CollapsibleListPool = class CollapsibleListPool2 extends Disposable {
     this._pool = this._register(new ResourcePool(() => this.listFactory()));
   }
   listFactory() {
-    const resourceLabels = this._register(this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this._onDidChangeVisibility }));
+    const store = new DisposableStore();
+    const resourceLabels = store.add(this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this._onDidChangeVisibility }));
     const container = $(".chat-used-context-list");
-    this._register(createFileIconThemableTreeContainerScope(container, this.themeService));
+    store.add(createFileIconThemableTreeContainerScope(container, this.themeService));
     const list = this.instantiationService.createInstance(WorkbenchList, "ChatListRenderer", container, new CollapsibleListDelegate(), [this.instantiationService.createInstance(CollapsibleListRenderer, resourceLabels, this.menuId)], {
       ...this.listOptions,
       alwaysConsumeMouseWheel: false,
@@ -219,19 +220,25 @@ let CollapsibleListPool = class CollapsibleListPool2 extends Disposable {
         }, "onDragStart")
       }
     });
-    return list;
+    return {
+      list,
+      dispose: /* @__PURE__ */ __name(() => store.dispose(), "dispose")
+    };
   }
   get() {
-    const object = this._pool.get();
+    const wrapper = this._pool.get();
     let stale = false;
     return {
-      object,
+      object: wrapper.list,
       isStale: /* @__PURE__ */ __name(() => stale, "isStale"),
       dispose: /* @__PURE__ */ __name(() => {
         stale = true;
-        this._pool.release(object);
+        this._pool.release(wrapper);
       }, "dispose")
     };
+  }
+  clear() {
+    this._pool.clear();
   }
 };
 CollapsibleListPool = __decorate([
@@ -321,7 +328,7 @@ let CollapsibleListRenderer = class CollapsibleListRenderer2 {
         const label = `Kernel variable`;
         templateData.label.setLabel(label, asVariableName, { title: data.options?.status?.description });
       } else {
-        templateData.label.setLabel("Unknown variable type");
+        templateData.label.setLabel("Unknown variable type: " + reference.variableName);
       }
     } else if (typeof reference === "string") {
       templateData.label.setLabel(reference, void 0, { iconPath: URI.isUri(icon) ? icon : void 0, title: data.options?.status?.description ?? data.title });

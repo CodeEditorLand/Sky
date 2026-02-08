@@ -59,6 +59,11 @@ export declare abstract class BaseStringReplacement<T extends BaseStringReplacem
  * All these replacements are applied at once.
 */
 export declare class StringEdit extends BaseStringEdit<StringReplacement, StringEdit> {
+    /**
+     * Parses an edit from its string representation.
+     * E.g. [[2, 12) -> "fgh", [14, 20) -> "qrst", [22, 22) -> "de\n"]
+    */
+    static parse(toStringValue: string): StringEdit;
     static readonly empty: StringEdit;
     static create(replacements: readonly StringReplacement[]): StringEdit;
     static single(replacement: StringReplacement): StringEdit;

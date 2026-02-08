@@ -16,10 +16,13 @@ import { IFilesConfigurationService } from '../../../../../services/filesConfigu
 import { IStorageService } from '../../../../../../platform/storage/common/storage.js';
 import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
 import { IUserDataProfileService } from '../../../../../services/userDataProfile/common/userDataProfile.js';
+import { IResolvedPromptSourceFolder } from '../config/promptFileLocations.js';
 import { PromptsType } from '../promptTypes.js';
 import { ParsedPromptFile } from '../promptFileParser.js';
-import { IChatPromptSlashCommand, ICustomAgent, IPromptPath, IPromptsService, IAgentSkill, PromptsStorage, IPromptFileContext, IPromptFileResource } from './promptsService.js';
-import { IChatPromptContentStore } from '../chatPromptContentStore.js';
+import { IChatPromptSlashCommand, ICustomAgent, IPromptPath, IPromptsService, IAgentSkill, PromptsStorage, IPromptFileContext, IPromptFileResource, IPromptDiscoveryInfo } from './promptsService.js';
+import { IChatRequestHooks } from '../hookSchema.js';
+import { IWorkspaceContextService } from '../../../../../../platform/workspace/common/workspace.js';
+import { IPathService } from '../../../../../services/path/common/pathService.js';
 /**
  * Error thrown when a skill file is missing the required name attribute.
  */
@@ -58,7 +61,8 @@ export declare class PromptsService extends Disposable implements IPromptsServic
     private readonly storageService;
     private readonly extensionService;
     private readonly telemetryService;
-    private readonly chatPromptContentStore;
+    private readonly workspaceService;
+    private readonly pathService;
     readonly _serviceBrand: undefined;
     /**
      * Prompt files locator utility.
@@ -72,6 +76,10 @@ export declare class PromptsService extends Disposable implements IPromptsServic
      * Cached slash commands. Caching only happens if the `onDidChangeSlashCommands` event is used.
      */
     private readonly cachedSlashCommands;
+    /**
+     * Cached hooks. Invalidated when hook files change.
+     */
+    private readonly cachedHooks;
     /**
      * Cache for parsed prompt files keyed by URI.
      * The number in the returned tuple is textModel.getVersionId(), which is an internal VS Code counter that increments every time the text model's content changes.
@@ -91,7 +99,7 @@ export declare class PromptsService extends Disposable implements IPromptsServic
      * Contributed files from extensions keyed by prompt type then name.
      */
     private readonly contributedFiles;
-    constructor(logger: ILogService, labelService: ILabelService, modelService: IModelService, instantiationService: IInstantiationService, userDataService: IUserDataProfileService, configurationService: IConfigurationService, fileService: IFileService, filesConfigService: IFilesConfigurationService, storageService: IStorageService, extensionService: IExtensionService, telemetryService: ITelemetryService, chatPromptContentStore: IChatPromptContentStore);
+    constructor(logger: ILogService, labelService: ILabelService, modelService: IModelService, instantiationService: IInstantiationService, userDataService: IUserDataProfileService, configurationService: IConfigurationService, fileService: IFileService, filesConfigService: IFilesConfigurationService, storageService: IStorageService, extensionService: IExtensionService, telemetryService: ITelemetryService, workspaceService: IWorkspaceContextService, pathService: IPathService);
     private getFileLocatorEvent;
     getParsedPromptFile(textModel: ITextModel): ParsedPromptFile;
     listPromptFiles(type: PromptsType, token: CancellationToken): Promise<readonly IPromptPath[]>;
@@ -119,6 +127,7 @@ export declare class PromptsService extends Disposable implements IPromptsServic
     private getExtensionPromptFiles;
     private getProviderActivationEvent;
     getSourceFolders(type: PromptsType): Promise<readonly IPromptPath[]>;
+    getResolvedSourceFolders(type: PromptsType): Promise<readonly IResolvedPromptSourceFolder[]>;
     /**
      * Emitter for slash commands change events.
      */
@@ -154,4 +163,16 @@ export declare class PromptsService extends Disposable implements IPromptsServic
     private truncateAgentSkillName;
     private truncateAgentSkillDescription;
     findAgentSkills(token: CancellationToken): Promise<IAgentSkill[] | undefined>;
+    getHooks(token: CancellationToken): Promise<IChatRequestHooks | undefined>;
+    private computeHooks;
+    getPromptDiscoveryInfo(type: PromptsType, token: CancellationToken): Promise<IPromptDiscoveryInfo>;
+    private getSkillDiscoveryInfo;
+    /**
+     * Shared implementation for skill discovery used by both findAgentSkills and getSkillDiscoveryInfo.
+     * Returns the discovery results and a map of skill counts by source type for telemetry.
+     */
+    private computeSkillDiscoveryInfo;
+    private getAgentDiscoveryInfo;
+    private getPromptSlashCommandDiscoveryInfo;
+    private getInstructionsDiscoveryInfo;
 }

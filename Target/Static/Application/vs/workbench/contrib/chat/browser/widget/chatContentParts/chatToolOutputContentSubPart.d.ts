@@ -1,4 +1,6 @@
 import { Disposable } from '../../../../../../base/common/lifecycle.js';
+import { ILanguageService } from '../../../../../../editor/common/languages/language.js';
+import { IModelService } from '../../../../../../editor/common/services/model.js';
 import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
 import { IContextMenuService } from '../../../../../../platform/contextview/browser/contextView.js';
 import { IFileService } from '../../../../../../platform/files/common/files.js';
@@ -19,16 +21,20 @@ export declare class ChatToolOutputContentSubPart extends Disposable {
     private readonly _contextMenuService;
     private readonly _fileService;
     private readonly _markdownRendererService;
-    private readonly _onDidChangeHeight;
-    readonly onDidChangeHeight: import("../../../../../../base/common/event.js").Event<void>;
-    private _currentWidth;
+    private readonly modelService;
+    private readonly languageService;
     private readonly _editorReferences;
     readonly domNode: HTMLElement;
     readonly codeblocks: IChatCodeBlockInfo[];
-    constructor(context: IChatContentPartRenderContext, parts: ChatCollapsibleIOPart[], _instantiationService: IInstantiationService, contextKeyService: IContextKeyService, _contextMenuService: IContextMenuService, _fileService: IFileService, _markdownRendererService: IMarkdownRendererService);
+    constructor(context: IChatContentPartRenderContext, parts: ChatCollapsibleIOPart[], _instantiationService: IInstantiationService, contextKeyService: IContextKeyService, _contextMenuService: IContextMenuService, _fileService: IFileService, _markdownRendererService: IMarkdownRendererService, modelService: IModelService, languageService: ILanguageService);
     private toMdString;
     private createOutputContents;
     private addResourceGroup;
+    /**
+     * Delay in milliseconds before decoding base64 image data.
+     * This avoids expensive decode operations during scrolling.
+     */
+    private static readonly IMAGE_DECODE_DELAY_MS;
     private fillInResourceGroup;
     private addCodeBlock;
     layout(width: number): void;

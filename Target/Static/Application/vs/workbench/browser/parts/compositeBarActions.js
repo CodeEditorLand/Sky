@@ -132,11 +132,10 @@ let CompositeBarActionViewItem = class CompositeBarActionViewItem2 extends BaseA
     if (this.options.icon) {
       this.container.classList.add("icon");
     }
+    const role = this.options.isTabList || !this.options.hasPopup ? "tab" : "button";
+    this.container.setAttribute("role", role);
     if (this.options.hasPopup) {
-      this.container.setAttribute("role", "button");
       this.container.setAttribute("aria-haspopup", "true");
-    } else {
-      this.container.setAttribute("role", "tab");
     }
     this._register(addDisposableListener(this.container, EventType.MOUSE_DOWN, () => {
       this.container.classList.add("clicked");
@@ -316,7 +315,7 @@ let CompositeOverflowActivityActionViewItem = class CompositeOverflowActivityAct
     __name(this, "CompositeOverflowActivityActionViewItem");
   }
   constructor(action, getOverflowingComposites, getActiveCompositeId, getBadge, getCompositeOpenAction, colors, hoverOptions, contextMenuService, themeService, hoverService, configurationService, keybindingService) {
-    super(action, { icon: true, colors, hasPopup: true, hoverOptions }, () => true, themeService, hoverService, configurationService, keybindingService);
+    super(action, { icon: true, colors, hasPopup: true, hoverOptions, isTabList: true }, () => true, themeService, hoverService, configurationService, keybindingService);
     this.getOverflowingComposites = getOverflowingComposites;
     this.getActiveCompositeId = getActiveCompositeId;
     this.getBadge = getBadge;

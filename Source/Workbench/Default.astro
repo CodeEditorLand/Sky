@@ -2,16 +2,37 @@
 <script is:inline type="module" defer>
 	import { Install } from "@codeeditorland/wind";
 
+	console.log("[Sky] Installing Wind preload...");
+
 	// Install the Wind preload polyfill (window.vscode globals)
 	// This must run before VSCode workbench.js which expects window.vscode
 	Install().then(() => {
-		console.log("[Sky] Wind preload installed successfully");
+		console.log("[Sky] ✓ Wind preload installed successfully");
+		
+		// Verify preloadGlobals is available
+		if (window.preloadGlobals && window.preloadGlobals.process) {
+			console.log("[Sky] ✓ preloadGlobals.process is available");
+		} else {
+			console.warn("[Sky] ⚠ preloadGlobals.process not available");
+		}
+		
+		// Verify window.vscode is available
+		if (window.vscode) {
+			console.log("[Sky] ✓ window.vscode is available");
+		} else {
+			console.error("[Sky] ✗ window.vscode not available");
+		}
 	}).catch((error) => {
-		console.error("[Sky] Wind preload install error:", error);
+		console.error("[Sky] ✗ Wind preload install error:", error);
 	});
 </script>
 
 <!-- VSCode Workbench Script -->
 <script>
-	import "@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js";
+	try {
+		import "@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js";
+		console.log("[Sky] VSCode workbench script loaded successfully");
+	} catch (error) {
+		console.error("[Sky] Failed to load VSCode workbench:", error);
+	}
 </script>

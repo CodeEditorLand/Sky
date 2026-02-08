@@ -189,6 +189,14 @@ export const Bust = (Base: string): string =>
 		window._WORKER = Worker;
 	</script>
 
+	<!-- UI Handler for QuickPick and InputBox -->
+	<script
+		is:inline
+		type="module"
+		src={Bust("/Function/UIHandler.ts")}
+		defer
+	/>
+
 	<!-- Bootstrap Configuration -->
 	<script is:inline type="module" slot="Head" define:vars={{ On }}>
 		// @ts-expect-error

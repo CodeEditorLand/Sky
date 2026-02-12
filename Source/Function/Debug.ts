@@ -75,7 +75,7 @@ export const Link = [
 
 	"@codeeditorland/output",
 
-	// "@codeeditorland/wind",
+	"@codeeditorland/wind",
 
 	"@codeeditorland/worker",
 ];

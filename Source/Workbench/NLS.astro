@@ -1,0 +1,8 @@
+---
+export const { Bust, On } = await import("Source/pages/Application.astro");
+---
+
+<script
+	is:inline
+	src={Bust(`/Static/Application/${On ? "vs/" : ""}nls.messages.js`)}
+></script>

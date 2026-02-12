@@ -1,68 +1,76 @@
 ---
-// Receive Bust as a component prop instead of importing circularly
-const { Bust } = Astro.props;
+import NLS from "./NLS.astro";
+
+export const { Bust } = await import("Source/pages/Application.astro");
 ---
 
-<!-- Wind Preload Script -->
-<script is:inline type="module" defer>
-	import { Install } from "@codeeditorland/wind";
+<Fragment>
+	<NLS />
 
-	Install();
-</script>
+	<!-- Wind Preload Script -->
+	<script is:inline type="module" defer>
+		import { Install } from "@codeeditorland/wind";
 
-<!-- Wind Effect-TS Bootstrap Script -->
-<script is:inline type="module" defer>
-	import { runBootstrap, TauriLiveLayer } from "@codeeditorland/wind/Effect";
-	import { Runtime } from "effect";
+		Install();
+	</script>
 
-	console.log("[Sky] Starting Effect-TS bootstrap...");
+	<!-- Wind Effect-TS Bootstrap Script -->
+	<script is:inline type="module" defer>
+		import {
+			runBootstrap,
+			TauriLiveLayer,
+		} from "@codeeditorland/wind/Effect";
+		import { Runtime } from "effect";
 
-	const debugMode =
-		typeof globalThis !== "undefined" &&
-		globalThis.__BOOTSTRAP_DEBUG__ === true;
+		console.log("[Sky] Starting Effect-TS bootstrap...");
 
-	// Run the bootstrap with Tauri layer
-	Runtime.runPromise(Runtime.defaultRuntime)(
-		runBootstrap({
-			debugMode,
-			verboseLogging: debugMode,
-			pauseBetweenStages: debugMode,
-		}).pipe(TauriLiveLayer),
-	)
-		.then((result) => {
-			console.log("[Sky] Bootstrap completed:", result.success);
+		const debugMode =
+			typeof globalThis !== "undefined" &&
+			globalThis.__BOOTSTRAP_DEBUG__ === true;
 
-			if (result.success) {
-				console.log("[Sky] All stages completed successfully");
-				console.log(
-					"[Sky] Total duration:",
-					result.totalDuration.toFixed(0),
-					"ms",
-				);
+		// Run the bootstrap with Tauri layer
+		Runtime.runPromise(Runtime.defaultRuntime)(
+			runBootstrap({
+				debugMode,
+				verboseLogging: debugMode,
+				pauseBetweenStages: debugMode,
+			}).pipe(TauriLiveLayer),
+		)
+			.then((result) => {
+				console.log("[Sky] Bootstrap completed:", result.success);
 
-				// Log each stage result
-				for (const stage of result.stages) {
+				if (result.success) {
+					console.log("[Sky] All stages completed successfully");
 					console.log(
-						`[Sky] Stage "${stage.stageName}":`,
-						stage.success
-							? `✓ (${stage.duration}ms)`
-							: `✗ ${stage.error?.message || "failed"}`,
+						"[Sky] Total duration:",
+						result.totalDuration.toFixed(0),
+						"ms",
 					);
-				}
-			} else {
-				console.error("[Sky] Bootstrap failed");
-			}
-		})
-		.catch((error) => {
-			console.error("[Sky] Fatal bootstrap error:", error);
-		});
-</script>
 
-<!-- VSCode Workbench Script -->
-<script
-	is:inline
-	type="module"
-	src={Bust(
-		"/Static/Application/vs/code/electron-browser/workbench/workbench.js",
-	)}
-	defer></script>
+					// Log each stage result
+					for (const stage of result.stages) {
+						console.log(
+							`[Sky] Stage "${stage.stageName}":`,
+							stage.success
+								? `✓ (${stage.duration}ms)`
+								: `✗ ${stage.error?.message || "failed"}`,
+						);
+					}
+				} else {
+					console.error("[Sky] Bootstrap failed");
+				}
+			})
+			.catch((error) => {
+				console.error("[Sky] Fatal bootstrap error:", error);
+			});
+	</script>
+
+	<!-- VSCode Workbench Script -->
+	<script
+		is:inline
+		type="module"
+		src={Bust(
+			"/Static/Application/vs/code/electron-browser/workbench/workbench.js",
+		)}
+		defer></script>
+</Fragment>

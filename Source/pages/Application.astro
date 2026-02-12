@@ -8,7 +8,7 @@ import DefaultWorkbench from "../Workbench/Default.astro";
 import WindWorkbench from "../Workbench/Wind.astro";
 
 // Environment detection
-const On =
+export const On =
 	process.env["NODE_ENV"] === "development" ||
 	process.env["TAURI_ENV_DEBUG"] === "true";
 
@@ -190,12 +190,8 @@ export const Bust = (Base: string): string =>
 	</script>
 
 	<!-- UI Handler for QuickPick and InputBox -->
-	<script
-		is:inline
-		type="module"
-		src={Bust("/Function/UIHandler.ts")}
-		defer
-	/>
+	<script is:inline type="module" src={Bust("/Function/UIHandler.ts")} defer
+	></script>
 
 	<!-- Bootstrap Configuration -->
 	<script is:inline type="module" slot="Head" define:vars={{ On }}>
@@ -214,14 +210,13 @@ export const Bust = (Base: string): string =>
 				</script>
 
 				<>
-					
-				<script
-					is:inline
-					type="module"
-					src={Bust(
-						`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
-					)}
-				/>
+					<script
+						is:inline
+						type="module"
+						src={Bust(
+							`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
+						)}
+					/>
 				</>
 
 				{Wind ? (
@@ -254,16 +249,6 @@ export const Bust = (Base: string): string =>
 					defer
 				/>
 
-				<>
-					<script
-						is:inline
-						type="module"
-						src={Bust(
-							`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
-						)}
-					/>
-				</>
-
 				{Wind ? (
 					<WindWorkbench Bust={Bust} />
 				) : Browser ? (
@@ -273,7 +258,6 @@ export const Bust = (Base: string): string =>
 						src={Bust(
 							"/Static/Application/vs/code/browser/workbench/workbench.js",
 						)}
-						defer
 					/>
 				) : (
 					<DefaultWorkbench />

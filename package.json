@@ -32,7 +32,7 @@
 		"@codeeditorland/output": "0.0.1",
 		"@codeeditorland/wind": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
-		"@playform/build": "0.2.6",
+		"@playform/build": "0.3.0",
 		"@playform/compress": "0.2.1",
 		"@playform/inline": "0.1.2",
 		"astro": "5.17.2",

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/cursor/cursorContext.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { ITextModel } from '../model.js';\nimport { CursorConfiguration, ICursorSimpleModel } from '../cursorCommon.js';\nimport { ICoordinatesConverter } from '../coordinatesConverter.js';\n\nexport class CursorContext {\n\t_cursorContextBrand: void = undefined;\n\n\tpublic readonly model: ITextModel;\n\tpublic readonly viewModel: ICursorSimpleModel;\n\tpublic readonly coordinatesConverter: ICoordinatesConverter;\n\tpublic readonly cursorConfig: CursorConfiguration;\n\n\tconstructor(model: ITextModel, viewModel: ICursorSimpleModel, coordinatesConverter: ICoordinatesConverter, cursorConfig: CursorConfiguration) {\n\t\tthis.model = model;\n\t\tthis.viewModel = viewModel;\n\t\tthis.coordinatesConverter = coordinatesConverter;\n\t\tthis.cursorConfig = cursorConfig;\n\t}\n}\n"],
-  "mappings": ";;AASM,MAAO,cAAa;EAT1B,OAS0B;;;EAQzB,YAAY,OAAmB,WAA+B,sBAA6C,cAAiC;AAP5I,SAAA,sBAA4B;AAQ3B,SAAK,QAAQ;AACb,SAAK,YAAY;AACjB,SAAK,uBAAuB;AAC5B,SAAK,eAAe;EACrB;;",
-  "names": []
-}

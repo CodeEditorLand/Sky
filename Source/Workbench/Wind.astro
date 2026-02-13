@@ -1,76 +1,18 @@
 ---
-import NLS from "./NLS.astro";
+/**
+ * Wind.astro - Native Wind-based Workbench Entry Point
+ * 
+ * This is the main entry point for the Wind workbench.
+ * It loads Wind services and initializes the native UI components.
+ * 
+ * Unlike Default.astro (which loads the Electron workbench),
+ * this loads a web-compatible native workbench using Wind services.
+ */
 
-export const { Bust } = await import("Source/pages/Application.astro");
+import NativeWorkbench from "./Native/WindWorkbench.astro";
 ---
 
 <Fragment>
-	<NLS />
-
-	<!-- Wind Preload Script -->
-	<script is:inline type="module" defer>
-		import { Install } from "@codeeditorland/wind";
-
-		Install();
-	</script>
-
-	<!-- Wind Effect-TS Bootstrap Script -->
-	<script is:inline type="module" defer>
-		import {
-			runBootstrap,
-			TauriLiveLayer,
-		} from "@codeeditorland/wind/Effect";
-		import { Runtime } from "effect";
-
-		console.log("[Sky] Starting Effect-TS bootstrap...");
-
-		const debugMode =
-			typeof globalThis !== "undefined" &&
-			globalThis.__BOOTSTRAP_DEBUG__ === true;
-
-		// Run the bootstrap with Tauri layer
-		Runtime.runPromise(Runtime.defaultRuntime)(
-			runBootstrap({
-				debugMode,
-				verboseLogging: debugMode,
-				pauseBetweenStages: debugMode,
-			}).pipe(TauriLiveLayer),
-		)
-			.then((result) => {
-				console.log("[Sky] Bootstrap completed:", result.success);
-
-				if (result.success) {
-					console.log("[Sky] All stages completed successfully");
-					console.log(
-						"[Sky] Total duration:",
-						result.totalDuration.toFixed(0),
-						"ms",
-					);
-
-					// Log each stage result
-					for (const stage of result.stages) {
-						console.log(
-							`[Sky] Stage "${stage.stageName}":`,
-							stage.success
-								? `✓ (${stage.duration}ms)`
-								: `✗ ${stage.error?.message || "failed"}`,
-						);
-					}
-				} else {
-					console.error("[Sky] Bootstrap failed");
-				}
-			})
-			.catch((error) => {
-				console.error("[Sky] Fatal bootstrap error:", error);
-			});
-	</script>
-
-	<!-- VSCode Workbench Script -->
-	<script
-		is:inline
-		type="module"
-		src={Bust(
-			"/Static/Application/vs/code/electron-browser/workbench/workbench.js",
-		)}
-		defer></script>
+	<!-- Load native Wind workbench -->
+	<NativeWorkbench />
 </Fragment>

@@ -6,12 +6,9 @@ import Layout from "../Function/Markup/Base.astro";
 import BrowserWorkbench from "../Workbench/Browser.astro";
 import DefaultWorkbench from "../Workbench/Default.astro";
 import WindWorkbench from "../Workbench/Wind.astro";
+import { On, Bust } from "../Function/Shared";
 
 // Environment detection
-export const On =
-	process.env["NODE_ENV"] === "development" ||
-	process.env["TAURI_ENV_DEBUG"] === "true";
-
 const Bundle = process.env["Bundle"] === "true";
 
 const Browser = process.env["Browser"] === "true";
@@ -19,9 +16,6 @@ const Browser = process.env["Browser"] === "true";
 const Wind = process.env["Wind"] === "true";
 
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
-
-export const Bust = (Base: string): string =>
-	`${Base}${Base.includes("?") ? "&" : "?"}Time=${encodeURIComponent(Date.now())}`;
 ---
 
 <Layout>
@@ -189,10 +183,6 @@ export const Bust = (Base: string): string =>
 		window._WORKER = Worker;
 	</script>
 
-	<!-- UI Handler for QuickPick and InputBox -->
-	<script is:inline type="module" src={Bust("/Function/UIHandler.ts")} defer
-	></script>
-
 	<!-- Bootstrap Configuration -->
 	<script is:inline type="module" slot="Head" define:vars={{ On }}>
 		// @ts-expect-error
@@ -208,16 +198,6 @@ export const Bust = (Base: string): string =>
 					import "@codeeditorland/worker/Target/Worker/Policy.js";
 					import "@codeeditorland/worker/Target/Worker/Register.js";
 				</script>
-
-				<>
-					<script
-						is:inline
-						type="module"
-						src={Bust(
-							`/Static/Application/${On ? "vs/" : ""}nls.messages.js`,
-						)}
-					/>
-				</>
 
 				{Wind ? (
 					<WindWorkbench Bust={Bust} />

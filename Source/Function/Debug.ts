@@ -141,7 +141,6 @@ if (Bundle) {
 		default:
 			break;
 	}
-
 	Static.targets.push(
 		...[
 			{
@@ -161,6 +160,70 @@ if (Bundle) {
 
 				dest: ".",
 			},
+
+			{
+				src: "node_modules/@codeeditorland/wind/Target/*.js",
+
+				dest: "Static/Wind/",
+			},
+
+			{
+				src: "node_modules/@codeeditorland/wind/Target/Bootstrap/*",
+
+				dest: "Static/Wind/Bootstrap/",
+			},
+
+			{
+				src: "node_modules/@codeeditorland/wind/Target/Configuration/*",
+
+				dest: "Static/Wind/Configuration/",
+			},
+
+			{
+				src: "node_modules/@codeeditorland/wind/Target/Effect/*",
+
+				dest: "Static/Wind/Effect/",
+			},
+
+			{
+				src: "node_modules/@codeeditorland/wind/Target/Function/*",
+
+				dest: "Static/Wind/Function/",
+			},
+
+			{
+				src: "node_modules/@codeeditorland/wind/Target/Types/*",
+	
+				dest: "Static/Wind/Types/",
+			},
+	
+			// Wind Polyfills - loaded as static scripts for approach A3 (Electron workbench)
+			{
+				src: "node_modules/@codeeditorland/wind/Target/Polyfills/*.js",
+	
+				dest: "Static/Wind/Polyfills/",
+			},
+	
+			// Browser Workbench - for approaches A1 (BrowserProxy) and A2 (Mountain)
+			{
+				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/browser/workbench/*",
+	
+				dest: "Static/VSCode/Browser/Workbench/",
+			},
+	
+			// Electron Workbench - for approach A3 (Electron)
+			{
+				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/electron-browser/workbench/*",
+	
+				dest: "Static/VSCode/Electron/Workbench/",
+			},
+	
+			// VSCode Core - ensure all VSCode code is available
+			{
+				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/*",
+	
+				dest: "Static/VSCode/",
+			},
 		],
 	);
 } else {
@@ -176,6 +239,40 @@ if (Bundle) {
 				src: "node_modules/@codeeditorland/worker/Target/*",
 
 				dest: ".",
+			},
+
+			{
+				src: "node_modules/@codeeditorland/wind/Target/*",
+
+				dest: "Static/Wind/",
+			},
+
+			// Wind Polyfills - loaded as static scripts
+			{
+				src: "node_modules/@codeeditorland/wind/Target/Polyfills/*.js",
+
+				dest: "Static/Wind/Polyfills/",
+			},
+
+			// VSCode Browser Workbench
+			{
+				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/browser/workbench/*",
+
+				dest: "Static/VSCode/Browser/Workbench/",
+			},
+
+			// VSCode Electron Workbench
+			{
+				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/electron-browser/workbench/*",
+
+				dest: "Static/VSCode/Electron/Workbench/",
+			},
+
+			// VSCode Core
+			{
+				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/*",
+
+				dest: "Static/VSCode/",
 			},
 		],
 	);

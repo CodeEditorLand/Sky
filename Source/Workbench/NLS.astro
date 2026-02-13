@@ -1,8 +1,9 @@
 ---
-export const { Bust, On } = await import("Source/pages/Application.astro");
+import { Bust, On } from "../Function/Shared";
 ---
 
 <script
 	is:inline
-	src={Bust(`/Static/Application/${On ? "vs/" : ""}nls.messages.js`)}
+	type="module"
+	src={Bust(`/Static/Application/${On ? "vs/" : ""}${On ? "nls.js" : "nls.messages.js"}`)}
 ></script>

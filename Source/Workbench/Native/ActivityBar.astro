@@ -1,0 +1,132 @@
+---
+/**
+ * ActivityBar - Left-side navigation icons
+ * 
+ * Provides activity bar items for switching between different views
+ * (Explorer, Search, Source Control, Extensions, etc.)
+ */
+---
+<div id="wind-activitybar" class="wind-activitybar">
+	<div class="wind-activitybar-container">
+		<!-- Explorer -->
+		<div class="wind-activitybar-item active" data-command="workbench.view.explorer" data-position="0" title="Explorer">
+			<span class="wind-activitybar-icon">📁</span>
+		</div>
+		
+		<!-- Search -->
+		<div class="wind-activitybar-item" data-command="workbench.view.search" data-position="1" title="Search">
+			<span class="wind-activitybar-icon">🔍</span>
+		</div>
+		
+		<!-- Source Control -->
+		<div class="wind-activitybar-item" data-command="workbench.view.scm" data-position="2" title="Source Control">
+			<span class="wind-activitybar-icon">⚡</span>
+		</div>
+		
+		<!-- Extensions -->
+		<div class="wind-activitybar-item" data-command="workbench.view.extensions" data-position="3" title="Extensions">
+			<span class="wind-activitybar-icon">🧩</span>
+		</div>
+		
+		<div class="wind-activitybar-bottom-spacer"></div>
+		
+		<!-- Settings -->
+		<div class="wind-activitybar-item" data-command="workbench.action.openSettings" data-position="10" title="Settings">
+			<span class="wind-activitybar-icon">⚙️</span>
+		</div>
+	</div>
+</div>
+
+<style>
+	.wind-activitybar {
+		width: 48px;
+		height: 100%;
+		background-color: var(--vscode-activityBar-background);
+		border-right: 1px solid var(--vscode-sideBar-border);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.wind-activitybar-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 4px 0;
+		gap: 0;
+		flex: 1;
+		overflow-y: auto;
+	}
+
+	.wind-activitybar-item {
+		width: 48px;
+		height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		position: relative;
+		color: var(--vscode-activityBar-foreground);
+		transition: color 0.15s ease;
+	}
+
+	.wind-activitybar-item:hover {
+		color: var(--vscode-activityBar-inactiveForeground);
+	}
+
+	.wind-activitybar-item.active {
+		color: var(--vscode-activityBar-activeBorder);
+	}
+
+	.wind-activitybar-item.active::before {
+		content: "";
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 2px;
+		background-color: var(--vscode-activityBar-activeBorder);
+	}
+
+	.wind-activitybar-icon {
+		width: 28px;
+		height: 28px;
+		font-size: 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.wind-activitybar-bottom-spacer {
+		flex: 1;
+	}
+</style>
+
+<script>
+	console.log("[ActivityBar] Component initializing...");
+
+	// Handle item clicks
+	document.addEventListener('click', (event: Event) => {
+		const target = event.target as HTMLElement;
+		const item = target.closest('.wind-activitybar-item') as HTMLElement;
+		
+		if (item && item.dataset['command']) {
+			// Remove active class from all items
+			document.querySelectorAll('.wind-activitybar-item').forEach(el => {
+				el.classList.remove('active');
+			});
+			
+			// Add active class to clicked item
+			item.classList.add('active');
+			
+			console.log("[ActivityBar] Item clicked:", item.dataset['command']);
+			
+			// Dispatch custom event for workbench to handle
+			window.dispatchEvent(new CustomEvent('activitybar-item-selected', {
+				detail: {
+					command: item.dataset['command'],
+					position: item.dataset['position'] ? parseInt(item.dataset['position']) : 0,
+				},
+			}));
+		}
+	});
+</script>

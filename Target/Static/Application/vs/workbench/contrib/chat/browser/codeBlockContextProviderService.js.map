@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/browser/codeBlockContextProviderService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';\nimport { ICodeBlockActionContextProvider, IChatCodeBlockContextProviderService } from './chat.js';\n\nexport class ChatCodeBlockContextProviderService implements IChatCodeBlockContextProviderService {\n\tdeclare _serviceBrand: undefined;\n\tprivate readonly _providers = new Map<string, ICodeBlockActionContextProvider>();\n\n\tget providers(): ICodeBlockActionContextProvider[] {\n\t\treturn [...this._providers.values()];\n\t}\n\tregisterProvider(provider: ICodeBlockActionContextProvider, id: string): IDisposable {\n\t\tthis._providers.set(id, provider);\n\t\treturn toDisposable(() => this._providers.delete(id));\n\t}\n}\n"],
-  "mappings": ";;AAKA,SAAsB,oBAAoB;AAGpC,MAAO,oCAAmC;EARhD,OAQgD;;;EAAhD,cAAA;AAEkB,SAAA,aAAa,oBAAI,IAAG;EAStC;EAPC,IAAI,YAAS;AACZ,WAAO,CAAC,GAAG,KAAK,WAAW,OAAM,CAAE;EACpC;EACA,iBAAiB,UAA2C,IAAU;AACrE,SAAK,WAAW,IAAI,IAAI,QAAQ;AAChC,WAAO,aAAa,MAAM,KAAK,WAAW,OAAO,EAAE,CAAC;EACrD;;",
-  "names": []
-}

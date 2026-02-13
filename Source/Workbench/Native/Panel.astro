@@ -1,0 +1,371 @@
+---
+/**
+ * Panel - Bottom panel for output, terminal, problems
+ * 
+ * Provides a bottom panel that can show terminal output,
+ * problems, or other information.
+ */
+---
+<div id="wind-panel" class="wind-panel">
+	<div class="wind-panel-header">
+		<!-- Panel Tabs -->
+		<div class="wind-panel-tabs">
+			<div class="wind-panel-tab active" data-panel="output">Output</div>
+			<div class="wind-panel-tab" data-panel="terminal">Terminal</div>
+			<div class="wind-panel-tab" data-panel="problems">Problems</div>
+			<div class="wind-panel-tab" data-panel="debug">Debug Console</div>
+		</div>
+		
+		<!-- Panel Actions -->
+		<div class="wind-panel-actions">
+			<button class="wind-panel-action" title="Clear" id="panel-clear">🗑️</button>
+			<button class="wind-panel-action" title="Close" id="panel-close">✕</button>
+		</div>
+	</div>
+	
+	<div class="wind-panel-content">
+		<!-- Output Panel -->
+		<div class="wind-panel-view active" id="panel-output">
+			<div class="wind-panel-output" id="wind-panel-output-content">
+				<div class="panel-output-line">[Panel] Output panel initialized</div>
+				<div class="panel-output-line">[Panel] System is ready</div>
+			</div>
+		</div>
+		
+		<!-- Terminal Panel -->
+		<div class="wind-panel-view" id="panel-terminal">
+			<div class="wind-terminal">
+				<div class="wind-terminal-line">$ Ready</div>
+				<div class="wind-terminal-input-line">
+					<span class="wind-terminal-prompt">$</span>
+					<input type="text" class="wind-terminal-input" placeholder="Type a command..." />
+				</div>
+			</div>
+		</div>
+		
+		<!-- Problems Panel -->
+		<div class="wind-panel-view" id="panel-problems">
+			<div class="wind-problems-empty">No problems detected</div>
+		</div>
+		
+		<!-- Debug Console Panel -->
+		<div class="wind-panel-view" id="panel-debug">
+			<div class="wind-debug-console">
+				<div class="debug-console-line">[Debug] Console ready</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Resize Handle -->
+	<div class="wind-panel-resize" id="panel-resize"></div>
+</div>
+
+<style>
+	.wind-panel {
+		display: flex;
+		flex-direction: column;
+		background-color: var(--vscode-panel-background);
+		border-top: 1px solid var(--vscode-panel-border);
+		min-height: 200px;
+		max-height: 60vh;
+		position: relative;
+	}
+
+	.wind-panel-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		background-color: var(--vscode-panelSectionHeader-background);
+		border-bottom: 1px solid var(--vscode-panel-border);
+		min-height: 32px;
+	}
+
+	.wind-panel-tabs {
+		display: flex;
+		overflow-x: auto;
+	}
+
+	.wind-panel-tab {
+		padding: 6px 12px;
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--vscode-panelTitle-activeForeground);
+		cursor: pointer;
+		transition: background-color 0.1s ease;
+		white-space: nowrap;
+	}
+
+	.wind-panel-tab:hover {
+		background-color: var(--vscode-panelTitle-activeBorder);
+	}
+
+	.wind-panel-tab.active {
+		color: var(--vscode-panelTitle-activeForeground);
+		border-bottom: 2px solid var(--vscode-panelTitle-activeBorder);
+	}
+
+	.wind-panel-actions {
+		display: flex;
+		gap: 4px;
+		padding: 4px;
+	}
+
+	.wind-panel-action {
+		border: none;
+		background: none;
+		cursor: pointer;
+		padding: 4px 8px;
+		color: var(--vscode-panelTitle-activeForeground);
+		border-radius: 4px;
+		transition: background-color 0.1s ease;
+	}
+
+	.wind-panel-action:hover {
+		background-color: var(--vscode-toolbar-hoverBackground);
+	}
+
+	.wind-panel-content {
+		flex: 1;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.wind-panel-view {
+		display: none;
+		height: 100%;
+		overflow-y: auto;
+	}
+
+	.wind-panel-view.active {
+		display: block;
+	}
+
+	/* Output Panel */
+	.wind-panel-output {
+		padding: 8px 12px;
+		font-family: 'Menlo, Monaco, "Courier New", monospace;
+		font-size: 12px;
+		line-height: 1.5;
+		overflow-y: auto;
+	}
+
+	.panel-output-line {
+		padding: 2px 0;
+		color: var(--vscode-panelOutput-foreground);
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	.panel-output-line.error {
+		color: var(--vscode-errorForeground);
+	}
+
+	.panel-output-line.warning {
+		color: var(--vscode-warningForeground);
+	}
+
+	.panel-output-line.info {
+		color: var(--vscode-infoForeground);
+	}
+
+	/* Terminal Panel */
+	.wind-terminal {
+		padding: 8px 12px;
+		font-family: 'Menlo, Monaco, "Courier New", monospace;
+		font-size: 13px;
+		line-height: 1.6;
+		overflow-y: auto;
+	}
+
+	.wind-terminal-line {
+		padding: 2px 0;
+		color: var(--vscode-terminal-foreground);
+	}
+
+	.wind-terminal-input-line {
+		display: flex;
+		align-items: center;
+		padding: 4px 0;
+	}
+
+	.wind-terminal-prompt {
+		margin-right: 8px;
+		color: var(--vscode-terminal-foreground);
+		user-select: none;
+	}
+
+	.wind-terminal-input {
+		flex: 1;
+		border: none;
+		background: transparent;
+		color: var(--vscode-terminal-foreground);
+		font-family: inherit;
+		font-size: inherit;
+		outline: none;
+	}
+
+	/* Problems Panel */
+	.wind-problems-empty {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		color: var(--vscode-descriptionForeground);
+		font-size: 13px;
+	}
+
+	/* Debug Console */
+	.wind-debug-console {
+		padding: 8px 12px;
+		font-family: 'Menlo, Monaco, "Courier New", monospace;
+		font-size: 12px;
+		line-height: 1.5;
+		overflow-y: auto;
+	}
+
+	.debug-console-line {
+		padding: 2px 0;
+		color: var(--vscode-debugConsole-foreground);
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	/* Resize Handle */
+	.wind-panel-resize {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 4px;
+		cursor: ns-resize;
+		z-index: 10;
+	}
+
+	.wind-panel-resize:hover {
+		background-color: var(--vscode-widget-border);
+	}
+</style>
+
+<script>
+	console.log("[Panel] Component initializing...");
+
+	let isResizing = false;
+	let startY = 0;
+	let startHeight = 0;
+
+	// Handle panel tab switching
+	document.addEventListener('click', (event: Event) => {
+		const target = event.target as HTMLElement;
+		const tab = target.closest('.wind-panel-tab') as HTMLElement;
+		
+		if (tab && tab.dataset.panel) {
+			// Remove active class from all tabs and views
+			document.querySelectorAll('.wind-panel-tab').forEach(el => {
+				el.classList.remove('active');
+			});
+			document.querySelectorAll('.wind-panel-view').forEach(el => {
+				el.classList.remove('active');
+			});
+			
+			// Add active class to clicked tab and corresponding view
+			tab.classList.add('active');
+			const viewId = `panel-${tab.dataset.panel}`;
+			const view = document.getElementById(viewId);
+			if (view) {
+				view.classList.add('active');
+			}
+			
+			console.log("[Panel] Switched to panel:", tab.dataset.panel);
+		}
+	});
+
+	// Handle clear button
+	document.getElementById('panel-clear')?.addEventListener('click', () => {
+		const activeView = document.querySelector('.wind-panel-view.active');
+		if (activeView) {
+			const output = activeView.querySelector('.wind-panel-output, .wind-debug-console');
+			if (output) {
+				output.innerHTML = '<div class="panel-output-line">[Panel] Cleared</div>';
+			}
+		}
+	});
+
+	// Handle close button
+	document.getElementById('panel-close')?.addEventListener('click', () => {
+		const panel = document.querySelector('.wind-panel');
+		if (panel) {
+			panel.style.display = 'none';
+		}
+	});
+
+	// Handle panel resizing
+	document.getElementById('panel-resize')?.addEventListener('mousedown', (event: MouseEvent) => {
+		isResizing = true;
+		startY = event.clientY;
+		startHeight = (document.querySelector('.wind-panel') as HTMLElement).offsetHeight;
+		event.preventDefault();
+	});
+
+	document.addEventListener('mousemove', (event: MouseEvent) => {
+		if (!isResizing) return;
+		
+		const panel = document.querySelector('.wind-panel') as HTMLElement;
+		const dy = startY - event.clientY;
+		const newHeight = Math.max(100, Math.min(window.innerHeight * 0.6, startHeight + dy));
+		panel.style.height = `${newHeight}px`;
+	});
+
+	document.addEventListener('mouseup', () => {
+		isResizing = false;
+	});
+
+	// Listen for log events from other components
+	window.addEventListener('console-log', ((event: Event) => {
+		const detail = (event as CustomEvent).detail;
+		addOutputLine(detail.message, detail.level || 'info');
+	}) as EventListener);
+
+	function addOutputLine(message: string, level: 'info' | 'warning' | 'error' = 'info') {
+		const output = document.getElementById('wind-panel-output-content');
+		if (!output) return;
+		
+		const line = document.createElement('div');
+		line.className = `panel-output-line ${level}`;
+		line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+		output.appendChild(line);
+		
+		// Auto-scroll to bottom
+		output.scrollTop = output.scrollHeight;
+		
+		// Limit number of lines
+		while (output.children.length > 1000) {
+			output.removeChild(output.firstChild!);
+		}
+	}
+
+	// Console override for debugging
+	const originalConsoleLog = console.log;
+	const originalConsoleError = console.error;
+	const originalConsoleWarn = console.warn;
+
+	console.log = (...args: any[]) => {
+		originalConsoleLog.apply(console, args);
+		if (args.length > 0) {
+			addOutputLine(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '), 'info');
+		}
+	};
+
+	console.error = (...args: any[]) => {
+		originalConsoleError.apply(console, args);
+		if (args.length > 0) {
+			addOutputLine(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '), 'error');
+		}
+	};
+
+	console.warn = (...args: any[]) => {
+		originalConsoleWarn.apply(console, args);
+		if (args.length > 0) {
+			addOutputLine(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '), 'warning');
+		}
+	};
+</script>

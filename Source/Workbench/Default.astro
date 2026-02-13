@@ -5,47 +5,47 @@ import NLS from "./NLS.astro";
 <Fragment>
 	<NLS />
 
-	<!-- Wind Preload Script - Required for VSCode workbench -->
-	<script is:inline type="module" defer>
-		import { Install } from "@codeeditorland/wind";
+	<!-- ======================================================== -->
+	<!-- Approach A3: Electron Workbench with Advanced Polyfills -->
+	<!-- ======================================================== -->
+	<!-- Loading comprehensive Electron API polyfills for Tauri   -->
+	<!-- ======================================================== -->
 
-		console.log("[Sky] Installing Wind preload...");
-
-		// Install the Wind preload polyfill (window.vscode globals)
-		// This must run before VSCode workbench.js which expects window.vscode
-		Install()
-			.then(() => {
-				console.log("[Sky] ✓ Wind preload installed successfully");
-
-				// Verify preloadGlobals is available
-				if (window.preloadGlobals && window.preloadGlobals.process) {
-					console.log("[Sky] ✓ preloadGlobals.process is available");
-				} else {
-					console.warn(
-						"[Sky] ⚠ preloadGlobals.process not available",
-					);
-				}
-
-				// Verify window.vscode is available
-				if (window.vscode) {
-					console.log("[Sky] ✓ window.vscode is available");
-				} else {
-					console.error("[Sky] ✗ window.vscode not available");
-				}
-			})
-			.catch((error) => {
-				console.error("[Sky] ✗ Wind preload install error:", error);
-			});
-	</script>
-
-	<!-- VSCode Workbench Script -->
-	<script is:inline type="module">
-		import "@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js";
-
-		try {
-			console.log("[Sky] VSCode workbench script loaded successfully");
-		} catch (error) {
-			console.error("[Sky] Failed to load VSCode workbench:", error);
-		}
-	</script>
+	<!-- ======================================================== -->
+	<!-- DEPRECATED: Use approach-specific workbench pages instead -->
+	<!-- ======================================================== -->
+	<!--
+	  This page is deprecated. Choose one of the following approaches:
+	  
+	  A1: BrowserProxy.astro
+	      - Browser workbench + Mountain services proxy
+	      - Complexity: Medium
+	      - Coverage: 70-80%
+	      
+	  A2: Mountain.astro (RECOMMENDED)
+	      - Browser workbench + Mountain providers
+	      - Complexity: Medium
+	      - Coverage: 80-90%
+	      
+	  A3: Electron.astro
+	      - Electron workbench + polyfills
+	      - Complexity: High
+	      - Coverage: 95%+
+	      
+	  A4: Native/WindWorkbench.astro
+	      - Native Wind implementation
+	      - Complexity: High
+	      - Coverage: 60-70%
+	-->
+	
+	<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: var(--vscode-editor-foreground); background: var(--vscode-editor-background);">
+		<h1>Workbench Entry Point</h1>
+		<p>This page is deprecated. Please use one of the approach-specific workbench pages:</p>
+		<ul style="text-align: left;">
+			<li><a href="/BrowserProxy.html" style="color: var(--vscode-textLink-foreground);">A1: BrowserProxy.astro</a> - Browser workbench + services proxy (70-80% features)</li>
+			<li><a href="/Mountain.html" style="color: var(--vscode-textLink-foreground);"><strong>A2: Mountain.astro (RECOMMENDED)</strong></a> - Browser workbench + Mountain providers (80-90% features)</li>
+			<li><a href="/Electron.html" style="color: var(--vscode-textLink-foreground);">A3: Electron.astro</a> - Electron workbench + polyfills (95%+ features)</li>
+			<li><a href="/Native/WindWorkbench.html" style="color: var(--vscode-textLink-foreground);">A4: Native/WindWorkbench.astro</a> - Native Wind implementation (60-70% features)</li>
+		</ul>
+	</div>
 </Fragment>

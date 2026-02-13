@@ -1,0 +1,72 @@
+---
+/**
+ * BrowserTest.astro - Browser VSCode Workbench Test Page
+ *
+ * This page tests the browser-compatible VSCode workbench in the Tauri environment.
+ * It's a diagnostic tool to verify if the browser workbench can load without
+ * the vscode-file:// CSP error that the Electron workbench causes.
+ *
+ * Key differences from Default.astro:
+ * - Uses browser workbench (vs/code/browser/workbench/workbench.js)
+ * - Not Electron workbench (vs/code/electron-browser/workbench/workbench.js)
+ *
+ * Expected outcome:
+ * - Browser workbench should load without vscode-file:// CSP errors
+ * - Identifies what additional setup is needed (providers, IPC handlers, etc.)
+ * - Informs whether to proceed with Approach A2 (browser workbench + Mountain providers)
+ */
+
+import NLS from "./NLS.astro";
+---
+
+<Fragment>
+	<NLS />
+
+	<!-- Wind Preload Script - Required for VSCode workbench -->
+	<script type="module">
+		import { Install } from "/Static/Wind/Function/Install.js";
+
+		console.log("[BrowserTest] ===== Starting Wind preload installation =====");
+
+		// Install the Wind preload polyfill (window.vscode globals)
+		// This must run before VSCode workbench.js which expects window.vscode
+		Install()
+			.then(() => {
+				console.log("[BrowserTest] ✓ Wind preload installed successfully");
+
+				// Verify preloadGlobals is available
+				if (window.preloadGlobals && window.preloadGlobals.process) {
+					console.log("[BrowserTest] ✓ preloadGlobals.process is available");
+				} else {
+					console.warn("[BrowserTest] ⚠ preloadGlobals.process not available");
+				}
+
+				// Verify window.vscode is available
+				if (window.vscode) {
+					console.log("[BrowserTest] ✓ window.vscode is available");
+					console.log("[BrowserTest] ✓ Window.vscode methods:", Object.keys(window.vscode || {}));
+				} else {
+					console.error("[BrowserTest] ✗ window.vscode not available");
+				}
+
+				console.log("[BrowserTest] ===== Wind preload installation complete =====");
+			})
+			.catch((error) => {
+				console.error("[BrowserTest] ✗ Wind preload install error:", error);
+			});
+	</script>
+
+	<!-- Browser Workbench Script -->
+	<script type="module">
+		console.log("[BrowserTest] ===== Loading browser VSCode workbench =====");
+
+		try {
+			import "@codeeditorland/output/vs/code/browser/workbench/workbench.js";
+			console.log("[BrowserTest] ✓ Browser workbench script loaded successfully");
+		} catch (error) {
+			console.error("[BrowserTest] ✗ Failed to load browser workbench:", error);
+		}
+
+		console.log("[BrowserTest] ===== Workbench load attempted =====");
+	</script>
+</Fragment>

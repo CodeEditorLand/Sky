@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/inlineChat/browser/media/inlineChatEditorAffordance.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.inline-chat-content-widget {\r\n\tbackground-color: var(--vscode-editor-background);\r\n\tpadding: 2px;\r\n\tborder-radius: 8px;\r\n\tdisplay: flex;\r\n\talign-items: center;\r\n\tbox-shadow: 0 4px 8px var(--vscode-widget-shadow);\r\n\tcursor: pointer;\r\n\tmin-width: var(--vscode-inline-chat-affordance-height);\r\n\tmin-height: var(--vscode-inline-chat-affordance-height);\r\n\tline-height: var(--vscode-inline-chat-affordance-height);\r\n}\r\n\r\n.inline-chat-content-widget .icon.codicon {\r\n\tmargin: 0;\r\n\tcolor: var(--vscode-editorLightBulb-foreground);\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,oBAAkB,IAAI;AACtB,WAAS;AACT,iBAAe;AACf,WAAS;AACT,eAAa;AACb,cAAY,EAAE,IAAI,IAAI,IAAI;AAC1B,UAAQ;AACR,aAAW,IAAI;AACf,cAAY,IAAI;AAChB,eAAa,IAAI;AAClB;AAEA,CAbC,2BAa2B,CAAC,IAAI,CAAC;AACjC,UAAQ;AACR,SAAO,IAAI;AACZ;",
-  "names": []
-}

@@ -1,0 +1,1 @@
+class o{constructor(t,r,s){this.hoverParts=t,this.isComplete=r,this.options=s}filter(t){const r=this.hoverParts.filter(s=>s.isValidForHoverAnchor(t));return r.length===this.hoverParts.length?this:new h(this,r,this.isComplete,this.options)}}class h extends o{constructor(t,r,s,i){super(r,s,i),this.a=t}filter(t){return this.a.filter(t)}}export{o as $dub,h as $eub};

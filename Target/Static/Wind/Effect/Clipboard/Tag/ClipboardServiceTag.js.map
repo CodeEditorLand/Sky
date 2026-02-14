@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Clipboard/Tag/ClipboardServiceTag.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Clipboard/Tag/ClipboardServiceTag\n * @description\n * Service tag for dependency injection of the Clipboard service.\n * @see {@link Effect/Clipboard/Interface/ClipboardService} Service interface\n * @see {@link Effect/Clipboard/Implementation/ClipboardImplementation} Implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { ClipboardService } from \"../Interface/ClipboardService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * Clipboard service tag for dependency injection\n */\nexport class ClipboardServiceTag extends Context.Tag(\n\t\"Application/ClipboardService\",\n)<ClipboardServiceTag, ClipboardService>() {}\n\n/**\n * Alias for the Clipboard service tag\n */\nexport const Clipboard = ClipboardServiceTag;\n\nexport default ClipboardServiceTag;\n"],
+  "mappings": ";;AASA,SAAS,eAAe;AAUjB,MAAM,4BAA4B,QAAQ;AAAA,EAChD;AACD,EAAyC,EAAE;AAAA,EArB3C,OAqB2C;AAAA;AAAA;AAAC;AAKrC,MAAM,YAAY;AAEzB,IAAO,8BAAQ;",
+  "names": []
+}

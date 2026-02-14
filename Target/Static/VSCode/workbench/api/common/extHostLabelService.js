@@ -1,0 +1,1 @@
+import{$Cd as t}from"../../../base/common/lifecycle.js";import{$X1 as o}from"./extHost.protocol.js";class c{constructor(r){this.b=0,this.a=r.getProxy(o.MainThreadLabelService)}$registerResourceLabelFormatter(r){const e=this.b++;return this.a.$registerResourceLabelFormatter(e,r),t(()=>{this.a.$unregisterResourceLabelFormatter(e)})}}export{c as $b1c};

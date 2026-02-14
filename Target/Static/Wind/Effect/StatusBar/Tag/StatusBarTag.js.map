@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/StatusBar/Tag/StatusBarTag.ts"],
+  "sourcesContent": ["/**\n * @module Effect/StatusBar/Tag/StatusBarTag\n * @description\n * Service tag for StatusBar dependency injection.\n * Provides the Context.Tag for accessing StatusBar service in Effect programs.\n * @see {@link Effect/StatusBar/Interface/StatusBarService} Service interface\n * @see {@link Effect/StatusBar/Layer/StatusBarLive} Live implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { StatusBarService } from \"../Interface/StatusBarService.js\";\n\n/**\n * Context.Tag for StatusBar service dependency injection.\n * Use this tag to access StatusBar in Effect programs.\n *\n * @example\n * ```ts\n * import { Effect } from \"effect\";\n * import { StatusBarTag } from \"./Effect/StatusBar/Tag/StatusBarTag.js\";\n *\n * const createItem = Effect.gen(function* () {\n *   const statusBar = yield* StatusBarTag;\n *   return yield* statusBar.createItem({ text: \"Ready\", alignment: \"right\", priority: 1 });\n * });\n * ```\n */\nexport default class StatusBarTag extends Context.Tag(\"StatusBar\")<StatusBarTag, StatusBarService>() {}\n\n/**\n * Alias for StatusBarTag for shorter import paths.\n */\nexport const StatusBar = StatusBarTag;\n"],
+  "mappings": ";;AAUA,SAAS,eAAe;AAkBxB,MAAO,qBAAmC,QAAQ,IAAI,WAAW,EAAkC,EAAE;AAAA,EA5BrG,OA4BqG;AAAA;AAAA;AAAC;AAK/F,MAAM,YAAY;",
+  "names": []
+}

@@ -1,0 +1,1 @@
+class s{static{this.Empty=new s(0,0,0,0)}constructor(t,i,a,r){this._rgba8Brand=void 0,this.r=s._clamp(t),this.g=s._clamp(i),this.b=s._clamp(a),this.a=s._clamp(r)}equals(t){return this.r===t.r&&this.g===t.g&&this.b===t.b&&this.a===t.a}static _clamp(t){return t<0?0:t>255?255:t|0}}export{s as $khb};

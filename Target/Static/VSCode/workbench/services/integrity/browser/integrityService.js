@@ -1,0 +1,1 @@
+import{$cNc as r}from"../common/integrity.js";import{$WC as o}from"../../../../platform/instantiation/common/extensions.js";class c{async isPure(){return{isPure:!0,proof:[]}}}o(r,c,1);export{c as $dNc};

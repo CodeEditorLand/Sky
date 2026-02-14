@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Function/Install/index.ts"],
+  "sourcesContent": ["/**\n * @module Function/Install\n * @description\n * Main re-export module for Wind polyfill installation functions.\n */\n\n// Main installation function\nexport { default } from \"./Function/Install.js\";\nexport { default as Install } from \"./Function/Install.js\";\n\n// Helper functions\nexport { CreateIPCRenderer } from \"./Function/CreateIPCRenderer.js\";\nexport { CreateProcess } from \"./Function/CreateProcess.js\";\nexport { ResolveConfiguration } from \"./Function/ResolveConfiguration.js\";\nexport { ValidateIPCChannel } from \"./Function/ValidateIPCChannel.js\";\nexport { Fallback } from \"./Function/Fallback.js\";\n"],
+  "mappings": "AAOA,SAAS,WAAAA,gBAAe;AACxB,SAAoB,WAAXA,gBAA0B;AAGnC,SAAS,yBAAyB;AAClC,SAAS,qBAAqB;AAC9B,SAAS,4BAA4B;AACrC,SAAS,0BAA0B;AACnC,SAAS,gBAAgB;",
+  "names": ["default"]
+}

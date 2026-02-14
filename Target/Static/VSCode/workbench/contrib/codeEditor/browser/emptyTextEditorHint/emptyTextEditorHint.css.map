@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/codeEditor/browser/emptyTextEditorHint/emptyTextEditorHint.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n.monaco-editor .contentWidgets .empty-editor-hint {\n\tcolor: var(--vscode-input-placeholderForeground);\n\tuser-select: none;\n\t-webkit-user-select: none;\n\tpointer-events: none;\n}\n\n.monaco-editor .contentWidgets .empty-editor-hint a {\n\tcolor: var(--vscode-textLink-foreground);\n\tpointer-events: auto;\n}\n"],
+  "mappings": "AAKA,CAAC,cAAc,CAAC,eAAe,CAAC;AAC/B,SAAO,IAAI;AACX,eAAa;AACb,uBAAqB;AACrB,kBAAgB;AACjB;AAEA,CAPC,cAOc,CAPC,eAOe,CAPC,kBAOkB;AACjD,SAAO,IAAI;AACX,kBAAgB;AACjB;",
+  "names": []
+}

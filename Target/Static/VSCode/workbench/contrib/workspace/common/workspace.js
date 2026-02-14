@@ -1,0 +1,1 @@
+import{localize as e}from"../../../../nls.js";import{$qo as s}from"../../../../platform/contextkey/common/contextkey.js";const t={IsEnabled:new s("isWorkspaceTrustEnabled",!1,e(15498,null)),IsTrusted:new s("isWorkspaceTrusted",!1,e(15499,null))},l="workbench.trust.manage";export{t as $Nyc,l as $Oyc};

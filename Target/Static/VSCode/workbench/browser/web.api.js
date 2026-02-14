@@ -1,0 +1,1 @@
+var a;(function(t){t[t.CommandPalette=0]="CommandPalette",t[t.StatusBarWindowIndicatorMenu=1]="StatusBarWindowIndicatorMenu"})(a||(a={}));var n;(function(t){t.DARK="dark",t.LIGHT="light",t.HIGH_CONTRAST_LIGHT="hcLight",t.HIGH_CONTRAST_DARK="hcDark"})(n||(n={}));export{n as ColorScheme,a as Menu};

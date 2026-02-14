@@ -1,0 +1,1 @@
+import{$xf as t}from"../../../../base/common/event.js";import{$Wfb as s}from"../../view/viewPart.js";class n extends s{constructor(){super(...arguments),this.a=this.D(new t),this.onWillCopy=this.a.event,this.b=this.D(new t),this.onWillCut=this.b.event,this.c=this.D(new t),this.onWillPaste=this.c.event}}export{n as $Bhb};

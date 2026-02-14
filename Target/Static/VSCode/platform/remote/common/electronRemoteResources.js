@@ -1,0 +1,1 @@
+const c="request",s="remoteResourceHandler";class a{async routeCall(o,r,t){if(r!==c)throw new Error(`Call not found: ${r}`);const n=Array.isArray(t)?t[0]:void 0;if(n?.authority){const e=o.connections.find(u=>u.ctx===n.authority);if(e)return e}throw new Error("Caller not found")}routeEvent(o,r){throw new Error(`Event not found: ${r}`)}}export{s as $AB,a as $BB,c as $zB};

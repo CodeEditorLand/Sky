@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/contrib/inlineCompletions/browser/controller/commandIds.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport const inlineSuggestCommitId = 'editor.action.inlineSuggest.commit';\n\nexport const inlineSuggestCommitAlternativeActionId = 'editor.action.inlineSuggest.commitAlternativeAction';\n\nexport const showPreviousInlineSuggestionActionId = 'editor.action.inlineSuggest.showPrevious';\n\nexport const showNextInlineSuggestionActionId = 'editor.action.inlineSuggest.showNext';\n\nexport const jumpToNextInlineEditId = 'editor.action.inlineSuggest.jump';\n\nexport const hideInlineCompletionId = 'editor.action.inlineSuggest.hide';\n\nexport const toggleShowCollapsedId = 'editor.action.inlineSuggest.toggleShowCollapsed';\n\nexport const renameSymbolCommandId = 'editor.action.inlineSuggest.renameSymbol';\n"],
+  "mappings": "AAKO,MAAM,wBAAwB;AAE9B,MAAM,yCAAyC;AAE/C,MAAM,uCAAuC;AAE7C,MAAM,mCAAmC;AAEzC,MAAM,yBAAyB;AAE/B,MAAM,yBAAyB;AAE/B,MAAM,wBAAwB;AAE9B,MAAM,wBAAwB;",
+  "names": []
+}

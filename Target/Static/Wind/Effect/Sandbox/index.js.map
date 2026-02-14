@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Effect/Sandbox/index.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Sandbox\n * @description\n * Main re-export module for Sandbox service.\n * Provides all exports for backward compatibility with existing imports.\n *\n * @see {@link Effect/Sandbox/Interface/SandboxService} Service interface\n * @see {@link Effect/Sandbox/Layer/SandboxLive} Live layer\n * @see {@link Effect/Sandbox/Layer/SandboxMock} Mock layer\n * @category Re-export\n */\n\n// Service interface\nexport type { SandboxService } from \"./Interface/SandboxService.js\";\n\n// Tag\nexport { Sandbox, default as SandboxTag } from \"./Tag/SandboxTag.js\";\n\n// Layers\nexport { default as SandboxLive } from \"./Layer/SandboxLive.js\";\nexport { default as SandboxMockLive } from \"./Layer/SandboxMock.js\";\n"],
+  "mappings": "AAgBA,SAAS,SAAoB,WAAXA,gBAA6B;AAG/C,SAAoB,WAAXA,gBAA8B;AACvC,SAAoB,WAAXA,gBAAkC;",
+  "names": ["default"]
+}

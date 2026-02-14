@@ -1,0 +1,1 @@
+import{PositionOffsetTransformerBase as s}from"./positionToOffset.js";function n(e){return new r(e)}class r extends s{constructor(t){super(),this.a=t}getOffset(t){return this.a.getOffsetAt(t)}getPosition(t){return this.a.getPositionAt(t)}}export{n as $Rnb};

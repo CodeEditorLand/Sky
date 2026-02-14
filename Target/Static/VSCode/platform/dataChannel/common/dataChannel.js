@@ -1,0 +1,1 @@
+import{Event as e}from"../../../base/common/event.js";import{$Nj as n}from"../../instantiation/common/instantiation.js";const d=n("dataChannelService");class i{get onDidSendData(){return e.None}getDataChannel(a){return{sendData:()=>{}}}}export{d as $hob,i as $iob};

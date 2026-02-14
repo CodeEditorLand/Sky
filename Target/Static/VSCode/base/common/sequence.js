@@ -1,0 +1,1 @@
+import{$xf as t}from"./event.js";class l{constructor(){this.elements=[],this.a=new t,this.onDidSplice=this.a.event}splice(i,s,e=[]){this.elements.splice(i,s,...e),this.a.fire({start:i,deleteCount:s,toInsert:e})}}export{l as $Ub};

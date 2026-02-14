@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Effect/Panel/index.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Panel\n * @description\n * Main re-export module for Panel service.\n * Provides all exports for backward compatibility with existing imports.\n *\n * @see {@link Effect/Panel/Interface/PanelService} Service interface\n * @see {@link Effect/Panel/Layer/PanelLive} Live layer\n * @see {@link Effect/Panel/Layer/PanelMock} Mock layer\n * @category Re-export\n */\n\n// Types\nexport type { PanelView, CreatePanelView, PanelViewType } from \"./Type/PanelType.js\";\n\n// Service interface\nexport type { PanelService } from \"./Interface/PanelService.js\";\n\n// Tag\nexport { default as PanelTag, Panel } from \"./Tag/PanelTag.js\";\n\n// Layers\nexport { default as PanelLive } from \"./Layer/PanelLive.js\";\nexport { default as PanelMockLive } from \"./Layer/PanelMock.js\";\n\n// Mock factory (for direct usage without Layer)\nexport { makeMockPanel } from \"./Layer/PanelMock.js\";\n\n// Errors\nexport { default as PanelViewNotFoundError } from \"./Error/PanelViewNotFoundError.js\";\nexport { default as PanelUpdateError } from \"./Error/PanelUpdateError.js\";\n"],
+  "mappings": "AAmBA,SAAoB,WAAXA,UAAqB,aAAa;AAG3C,SAAoB,WAAXA,gBAA4B;AACrC,SAAoB,WAAXA,gBAAgC;AAGzC,SAAS,qBAAqB;AAG9B,SAAoB,WAAXA,gBAAyC;AAClD,SAAoB,WAAXA,gBAAmC;",
+  "names": ["default"]
+}

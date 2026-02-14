@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Configuration/ESBuild/Config/CompileConfig.ts"],
+  "sourcesContent": ["/**\n * @module Configuration/ESBuild/Config/CompileConfig\n * @description\n * ESBuild configuration for the Compile build.\n * Extends target config with compilation-specific settings.\n * @category Config\n */\nimport type { BuildOptions } from \"esbuild\";\n\nimport TargetConfig from \"./TargetConfig.js\";\n\nconst Merge = (await import(\"deepmerge-ts\")).deepmergeCustom({\n\tmergeArrays: false,\n});\n\n/**\n * Compile ESBuild configuration\n */\nexport default async (Current: BuildOptions): Promise<BuildOptions> =>\n\tMerge<BuildOptions>(\n\t\tawait TargetConfig(Current),\n\t\t{\n\t\t\tbundle: true,\n\t\t\toutbase: \"Target\",\n\t\t\ttsconfig: \"Configuration/tsconfig/Target/Compile.json\",\n\t\t\tplugins: [],\n\t\t\tallowOverwrite: true,\n\t\t} as any,\n\t);\n"],
+  "mappings": ";;AASA,OAAO,kBAAkB;AAEzB,MAAM,SAAS,MAAM,OAAO,cAAc,GAAG,gBAAgB;AAAA,EAC5D,aAAa;AACd,CAAC;AAKD,IAAO,wBAAQ,8BAAO,YACrB;AAAA,EACC,MAAM,aAAa,OAAO;AAAA,EAC1B;AAAA,IACC,QAAQ;AAAA,IACR,SAAS;AAAA,IACT,UAAU;AAAA,IACV,SAAS,CAAC;AAAA,IACV,gBAAgB;AAAA,EACjB;AACD,GAVc;",
+  "names": []
+}

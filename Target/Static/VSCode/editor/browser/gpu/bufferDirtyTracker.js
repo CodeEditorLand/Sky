@@ -1,0 +1,1 @@
+class s{get dataOffset(){return this.a}get dirtySize(){if(!(this.a===void 0||this.b===void 0))return this.b-this.a+1}get isDirty(){return this.a!==void 0}flag(t,i=1){return this.c(t),i>1&&this.c(t+i-1),t}c(t){(this.a===void 0||t<this.a)&&(this.a=t),(this.b===void 0||t>this.b)&&(this.b=t)}clear(){this.a=void 0,this.b=void 0}}export{s as $ogb};

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Configuration/Error/ConfigApplyError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Configuration/Error/ConfigApplyError\n * @description\n * Error thrown when configuration application fails.\n * @see {@link Effect/Configuration/Interface/ConfigurationService} Service interface using this error\n * @see [Effect-TS Error Handling](https://effect.website/docs/guide/error-handling)\n * @category Error\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Error Definition\n// ============================================================================\n\nexport class ConfigApplyError extends Error {\n\treadonly _tag = \"ConfigApplyError\";\n\tconstructor(\n\t\treadonly key: string,\n\t\toverride readonly cause: unknown,\n\t) {\n\t\tsuper(`Failed to apply configuration for '${key}': ${String(cause)}`);\n\t}\n}\n\nexport default ConfigApplyError;\n"],
+  "mappings": ";;AASA,SAAS,SAAS,cAAc;AAMzB,MAAM,yBAAyB,MAAM;AAAA,EAE3C,YACU,KACS,OACjB;AACD,UAAM,sCAAsC,GAAG,MAAM,OAAO,KAAK,CAAC,EAAE;AAH3D;AACS;AAAA,EAGnB;AAAA,EAtBD,OAe4C;AAAA;AAAA;AAAA,EAClC,OAAO;AAOjB;AAEA,IAAO,2BAAQ;",
+  "names": []
+}

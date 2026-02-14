@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Mountain/Error/MountainConnectionError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Mountain/Error/MountainConnectionError\n * @description\n * Error thrown when connection to Mountain backend fails.\n * @see {@link Effect/Mountain/Interface/MountainService} Service interface using this error\n * @see [Effect-TS Error Handling](https://effect.website/docs/guide/error-handling)\n * @category Error\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Error Definition\n// ============================================================================\n\nexport class MountainConnectionError extends Error {\n\treadonly _tag = \"MountainConnectionError\";\n\toverride readonly cause: unknown;\n\tconstructor(cause: unknown) {\n\t\tsuper(`Failed to connect to Mountain backend: ${String(cause)}`);\n\t}\n}\n\nexport default MountainConnectionError;\n"],
+  "mappings": ";;AASA,SAAS,SAAS,cAAc;AAMzB,MAAM,gCAAgC,MAAM;AAAA,EAfnD,OAemD;AAAA;AAAA;AAAA,EACzC,OAAO;AAAA,EACE;AAAA,EAClB,YAAY,OAAgB;AAC3B,UAAM,0CAA0C,OAAO,KAAK,CAAC,EAAE;AAAA,EAChE;AACD;AAEA,IAAO,kCAAQ;",
+  "names": []
+}

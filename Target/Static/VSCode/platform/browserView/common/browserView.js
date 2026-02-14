@@ -1,0 +1,1 @@
+var r;(function(o){o.Foreground="foreground",o.Background="background",o.NewWindow="newWindow"})(r||(r={}));var n;(function(o){o.Global="global",o.Workspace="workspace",o.Ephemeral="ephemeral"})(n||(n={}));const e="browserView",a=999;export{e as $Ww,a as $Xw,r as BrowserNewPageLocation,n as BrowserViewStorageScope};

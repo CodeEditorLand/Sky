@@ -1,0 +1,1 @@
+import{$Acb as o}from"../editorTheme.js";class d{constructor(e,i,t){this.configuration=e,this.theme=new o(i),this.viewModel=t,this.viewLayout=t.viewLayout}addEventHandler(e){this.viewModel.addViewEventHandler(e)}removeEventHandler(e){this.viewModel.removeViewEventHandler(e)}}export{d as $gdb};

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/ActivityBar/Type/ActivityBarType.ts"],
+  "sourcesContent": ["/**\n * @module Effect/ActivityBar/Type/ActivityBarType\n * @description\n * Type definitions for activity bar items and badges.\n * @see {@link Effect/ActivityBar/Interface/ActivityBarService} Service interface using these types\n * @see [Effect-TS Types](https://effect.website/docs/guide/type-system)\n * @category Type\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Type Definitions\n// ============================================================================\n\n/**\n * Represents a badge displayed on an activity bar item.\n */\nexport interface ActivityBarBadge {\n\treadonly text: string;\n\treadonly color?: string;\n}\n\n/**\n * Represents a complete activity bar item with all properties.\n */\nexport interface ActivityBarItem {\n\treadonly id: string;\n\treadonly title: string;\n\treadonly icon: string;\n\treadonly command: string;\n\treadonly position: number;\n\treadonly badge?: ActivityBarBadge;\n}\n\n/**\n * Represents the data required to create a new activity bar item\n * (without the auto-generated id).\n */\nexport type CreateActivityBarItem = Omit<ActivityBarItem, \"id\">;\n"],
+  "mappings": "AASA,SAAS,SAAS,cAAc;",
+  "names": []
+}

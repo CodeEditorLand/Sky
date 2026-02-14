@@ -1,0 +1,1 @@
+class o{static toKey(t){return`${t.ownerId};${t.decorationId};${t.lineNumber}`}constructor(t,e,r,n){this.ownerId=t,this.decorationId=e,this.lineNumber=r,this.lineHeight=n}}class s{static toKey(t){return`${t.ownerId};${t.decorationId};${t.lineNumber}`}constructor(t,e,r){this.ownerId=t,this.decorationId=e,this.lineNumber=r}}export{o as $pI,s as $qI};

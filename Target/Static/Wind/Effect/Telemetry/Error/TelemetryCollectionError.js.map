@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Telemetry/Error/TelemetryCollectionError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Telemetry/Error/TelemetryCollectionError\n * @description\n * Error thrown when telemetry collection fails.\n * @see {@link Effect/Telemetry/Interface/TelemetryService} Usage context\n * @category Error\n */\n\n/**\n * Error thrown when telemetry data collection fails for a specific operation.\n * Includes the operation name and the underlying cause of the failure.\n */\nexport default class TelemetryCollectionError extends Error {\n\treadonly _tag = \"TelemetryCollectionError\";\n\treadonly operation: string;\n\toverride readonly cause: unknown;\n\n\tconstructor(operation: string, cause: unknown) {\n\t\tsuper(`Telemetry collection failed for '${operation}': ${String(cause)}`);\n\t\tthis.operation = operation;\n\t\tthis.cause = cause;\n\t\tObject.setPrototypeOf(this, TelemetryCollectionError.prototype);\n\t}\n\n\toverride get name() {\n\t\treturn \"TelemetryCollectionError\";\n\t}\n}\n"],
+  "mappings": ";;AAYA,MAAO,iCAA+C,MAAM;AAAA,EAZ5D,OAY4D;AAAA;AAAA;AAAA,EAClD,OAAO;AAAA,EACP;AAAA,EACS;AAAA,EAElB,YAAY,WAAmB,OAAgB;AAC9C,UAAM,oCAAoC,SAAS,MAAM,OAAO,KAAK,CAAC,EAAE;AACxE,SAAK,YAAY;AACjB,SAAK,QAAQ;AACb,WAAO,eAAe,MAAM,yBAAyB,SAAS;AAAA,EAC/D;AAAA,EAEA,IAAa,OAAO;AACnB,WAAO;AAAA,EACR;AACD;",
+  "names": []
+}

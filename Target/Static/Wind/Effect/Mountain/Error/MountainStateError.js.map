@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Mountain/Error/MountainStateError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Mountain/Error/MountainStateError\n * @description\n * Error thrown when Mountain state is invalid.\n * @see {@link Effect/Mountain/Interface/MountainService} Service interface using this error\n * @see [Effect-TS Error Handling](https://effect.website/docs/guide/error-handling)\n * @category Error\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Error Definition\n// ============================================================================\n\nexport class MountainStateError extends Error {\n\treadonly _tag = \"MountainStateError\";\n\treadonly expected: string;\n\treadonly actual: string;\n\tconstructor(expected: string, actual: string) {\n\t\tsuper(`Mountain state error: expected ${expected}, got ${actual}`);\n\t\tthis.expected = expected;\n\t\tthis.actual = actual;\n\t}\n}\n\nexport default MountainStateError;\n"],
+  "mappings": ";;AASA,SAAS,SAAS,cAAc;AAMzB,MAAM,2BAA2B,MAAM;AAAA,EAf9C,OAe8C;AAAA;AAAA;AAAA,EACpC,OAAO;AAAA,EACP;AAAA,EACA;AAAA,EACT,YAAY,UAAkB,QAAgB;AAC7C,UAAM,kCAAkC,QAAQ,SAAS,MAAM,EAAE;AACjE,SAAK,WAAW;AAChB,SAAK,SAAS;AAAA,EACf;AACD;AAEA,IAAO,6BAAQ;",
+  "names": []
+}

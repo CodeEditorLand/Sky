@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Sidebar/Error/SidebarPanelNotFoundError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Sidebar/Error/SidebarPanelNotFoundError\n * @description\n * Error thrown when a requested sidebar panel cannot be found.\n * @see {@link Effect/Sidebar/Interface/SidebarService} Usage context\n * @see {@link Effect/Sidebar/Error/SidebarUpdateError} Update error\n * @category Error\n */\n\n/**\n * Error thrown when attempting to access, update, or remove a sidebar panel that doesn't exist.\n * Includes the panel ID that was not found.\n */\nexport default class SidebarPanelNotFoundError extends Error {\n\treadonly _tag = \"SidebarPanelNotFoundError\";\n\n\tconstructor(panelId: string) {\n\t\tsuper(`Sidebar panel '${panelId}' not found`);\n\t\tObject.setPrototypeOf(this, SidebarPanelNotFoundError.prototype);\n\t}\n\n\toverride get name() {\n\t\treturn \"SidebarPanelNotFoundError\";\n\t}\n}\n"],
+  "mappings": ";;AAaA,MAAO,kCAAgD,MAAM;AAAA,EAb7D,OAa6D;AAAA;AAAA;AAAA,EACnD,OAAO;AAAA,EAEhB,YAAY,SAAiB;AAC5B,UAAM,kBAAkB,OAAO,aAAa;AAC5C,WAAO,eAAe,MAAM,0BAA0B,SAAS;AAAA,EAChE;AAAA,EAEA,IAAa,OAAO;AACnB,WAAO;AAAA,EACR;AACD;",
+  "names": []
+}

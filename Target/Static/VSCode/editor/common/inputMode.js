@@ -1,0 +1,1 @@
+import{$xf as e}from"../../base/common/event.js";class s{constructor(){this.a="insert",this.b=new e,this.onDidChangeInputMode=this.b.event}getInputMode(){return this.a}setInputMode(t){this.a=t,this.b.fire(this.a)}}const o=new s;export{o as $scb};

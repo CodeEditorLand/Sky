@@ -1,0 +1,1 @@
+import{$EOc as m}from"../common/workingCopyHistoryService.js";import{$WC as o}from"../../../../platform/instantiation/common/extensions.js";import{$fKc as r}from"../common/workingCopyHistory.js";o(r,m,1);

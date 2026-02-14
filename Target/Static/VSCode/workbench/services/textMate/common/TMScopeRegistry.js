@@ -1,0 +1,1 @@
+import*as i from"../../../../base/common/resources.js";class o{constructor(){this.a=Object.create(null)}reset(){this.a=Object.create(null)}register(e){if(this.a[e.scopeName]){const t=this.a[e.scopeName];i.$Bh(t.location,e.location)}this.a[e.scopeName]=e}getGrammarDefinition(e){return this.a[e]||null}}export{o as $ecc};

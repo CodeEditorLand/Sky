@@ -1,0 +1,1 @@
+import{$Nj as r}from"../../instantiation/common/instantiation.js";import{$WPc as e}from"../../ipc/electron-browser/services.js";const m=r("externalTerminal");e(m,"externalTerminal");export{m as $NUc};

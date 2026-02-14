@@ -1,0 +1,1 @@
+const n="Offline";function t(e){return e instanceof s?!0:e instanceof Error&&e.name===n&&e.message===n}class s extends Error{constructor(){super(n),this.name=this.message}}export{t as $To,s as $Uo};

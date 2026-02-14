@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Mountain/Tag/MountainTag.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Mountain/Tag/MountainTag\n * @description\n * Context Tag for Mountain service dependency injection.\n * Enables service composition and layering in Effect programs.\n * @see {@link Effect/Mountain/Interface/MountainService} Service interface\n * @see [Effect-TS Context](https://effect.website/docs/guide/context)\n * @category Tag\n */\n\nimport { Context } from \"effect\";\n\nimport type { MountainService } from \"../Interface/MountainService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * Context Tag for Mountain service.\n * Use this to inject the Mountain service into Effect programs.\n *\n * @example\n * ```ts\n * import { MountainTag } from \"./Tag/MountainTag.js\";\n *\n * const effect = Effect.gen(function* () {\n *   const mountain = yield* MountainTag;\n *   const version = yield* mountain.version;\n *   return version;\n * });\n * ```\n */\nexport class MountainTag extends Context.Tag(\"Mountain\")<\n\tMountainTag,\n\tMountainService\n>() {}\n\nexport default MountainTag;\n"],
+  "mappings": ";;AAUA,SAAS,eAAe;AAuBjB,MAAM,oBAAoB,QAAQ,IAAI,UAAU,EAGrD,EAAE;AAAA,EApCJ,OAoCI;AAAA;AAAA;AAAC;AAEL,IAAO,sBAAQ;",
+  "names": []
+}

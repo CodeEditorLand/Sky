@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Effect/Layers/index.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Layers\n * @description\n * Layer stack compositions for different runtime environments.\n */\n\nexport {\n\tTauriBaseLayer,\n\tTauriLiveLayer,\n\tTauriDevLayer,\n\tdefault as Tauri,\n} from \"./Tauri.js\";\n\nexport {\n\tElectronBaseLayer,\n\tElectronLiveLayer,\n\tElectronDevLayer,\n\tdefault as Electron,\n} from \"./Electron.js\";\n\nexport { TestLayer, TestWithTelemetryLayer, default as Test } from \"./Test.js\";\n"],
+  "mappings": "AAMA;AAAA,EACC;AAAA,EACA;AAAA,EACA;AAAA,EACW,WAAXA;AAAA,OACM;AAEP;AAAA,EACC;AAAA,EACA;AAAA,EACA;AAAA,EACW,WAAXA;AAAA,OACM;AAEP,SAAS,WAAW,wBAAmC,WAAXA,gBAAuB;",
+  "names": ["default"]
+}

@@ -1,0 +1,1 @@
+import{$2p as o}from"../../../../platform/theme/common/colorRegistry.js";import{localize as r}from"../../../../nls.js";import{$Up as l,$Rp as t}from"../../../../base/common/color.js";const n=o("walkThrough.embeddedEditorBackground",{dark:new l(new t(0,0,0,.4)),light:"#f4f4f4",hcDark:null,hcLight:null},r(15357,null));export{n as $uIc};

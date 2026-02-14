@@ -1,0 +1,1 @@
+import{$pE as n}from"../core/text/abstractText.js";import{$lE as r}from"../core/text/textLength.js";class o extends n{constructor(e){super(),this.b=e}getValueOfRange(e){return this.b.getValueInRange(e)}getLineLength(e){return this.b.getLineLength(e)}get length(){const e=this.b.getLineCount(),t=this.b.getLineLength(e);return new r(e-1,t)}}export{o as $mkb};

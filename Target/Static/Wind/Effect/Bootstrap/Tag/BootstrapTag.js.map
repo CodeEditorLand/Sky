@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Bootstrap/Tag/BootstrapTag.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Bootstrap/Tag/BootstrapTag\n * @description\n * Context Tag for Bootstrap service dependency injection.\n * Enables service composition and layering in Effect programs.\n * @see {@link Effect/Bootstrap/Interface/BootstrapService} Service interface\n * @see [Effect-TS Context](https://effect.website/docs/guide/context)\n * @category Tag\n */\n\nimport { Context } from \"effect\";\n\nimport type { BootstrapService } from \"../Interface/BootstrapService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * Context Tag for Bootstrap service.\n * Use this to inject the Bootstrap service into Effect programs.\n *\n * @example\n * ```ts\n * import { BootstrapTag } from \"./Tag/BootstrapTag.js\";\n *\n * const effect = Effect.gen(function* () {\n *   const bootstrap = yield* BootstrapTag;\n *   const result = yield* bootstrap.run({ debugMode: true });\n * });\n * ```\n */\nexport class BootstrapTag extends Context.Tag(\"Effect/BootstrapService\")<BootstrapTag, BootstrapService>() {}\n\nexport default BootstrapTag;\n"],
+  "mappings": ";;AAUA,SAAS,eAAe;AAsBjB,MAAM,qBAAqB,QAAQ,IAAI,yBAAyB,EAAkC,EAAE;AAAA,EAhC3G,OAgC2G;AAAA;AAAA;AAAC;AAE5G,IAAO,uBAAQ;",
+  "names": []
+}

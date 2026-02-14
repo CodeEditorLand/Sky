@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Health/Interface/HealthService.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Health/Interface/HealthService\n * @description\n * Service interface for health monitoring operations.\n * @category Interface\n */\n\nimport { Effect } from \"effect\";\nimport type { ServiceHealth, SystemHealth, HealthStatus } from \"../Type/HealthType.js\";\n\nexport interface HealthService {\n\treadonly checkService: (serviceName: string) => Effect.Effect<ServiceHealth, never>;\n\treadonly checkAllServices: () => Effect.Effect<SystemHealth, never>;\n\treadonly getOverallStatus: () => Effect.Effect<HealthStatus, never>;\n\treadonly monitorService: (\n\t\tserviceName: string,\n\t\tintervalMs: number,\n\t) => Effect.Effect<void, never>;\n}\n"],
+  "mappings": "AAOA,SAAS,cAAc;",
+  "names": []
+}

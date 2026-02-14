@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../Source/Effect/Health.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Health\n * @description\n * Health monitoring service for checking service availability and system health.\n * Replaces Bootstrap Stage6 - HealthCheck with Effect-based monitoring.\n * @category Service\n */\n\n// ============================================================================\n// Re-exports from atomic modules\n// ============================================================================\n\n// Types\nexport type { HealthStatus, ServiceHealth, SystemHealth } from \"./Health/index.js\";\n\n// Interface\nexport type { HealthService } from \"./Health/Interface/HealthService.js\";\n\n// Tag\nexport { HealthTag } from \"./Health/index.js\";\n\n// Implementation helpers\nexport {\n\tCreateServiceHealth,\n\tCreateServiceHealthWithNoResponseTime,\n} from \"./Health/index.js\";\n\n// Import and re-export layers\nimport { HealthLive as LiveLayer, HealthMock as MockLayer } from \"./Health/Implementation/HealthImplementation.js\";\nexport { LiveLayer, MockLayer };\n\n// Backward compatibility aliases\nexport const HealthLive = LiveLayer;\nexport const HealthMock = MockLayer;\n"],
+  "mappings": "AAmBA,SAAS,iBAAiB;AAG1B;AAAA,EACC;AAAA,EACA;AAAA,OACM;AAGP,SAAS,cAAc,WAAW,cAAc,iBAAiB;AAI1D,MAAM,aAAa;AACnB,MAAM,aAAa;",
+  "names": []
+}

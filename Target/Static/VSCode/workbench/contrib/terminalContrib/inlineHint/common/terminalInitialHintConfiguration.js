@@ -1,0 +1,1 @@
+import{localize as e}from"../../../../../nls.js";var t;(function(i){i.Enabled="terminal.integrated.initialHint"})(t||(t={}));const r={"terminal.integrated.initialHint":{restricted:!0,markdownDescription:e(13941,null,"`#terminal.integrated.sendKeybindingsToShell#`"),type:"boolean",default:!0}};export{r as $t6,t as TerminalInitialHintSettingId};

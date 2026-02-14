@@ -1,0 +1,1 @@
+function r(n){return Object.assign(n,{apply:function(...t){if(t.length===0)return Reflect.construct(n,[]);{const c=t.length===1?[]:t[1];return Reflect.construct(n,c,t[0].constructor)}},call:function(...t){if(t.length===0)return Reflect.construct(n,[]);{const[c,...e]=t;return Reflect.construct(n,e,c.constructor)}}})}export{r as $K1};

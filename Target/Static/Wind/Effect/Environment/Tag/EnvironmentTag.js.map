@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Environment/Tag/EnvironmentTag.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Environment/Tag/EnvironmentTag\n * @description\n * Service tag for dependency injection of the Environment service.\n * @see {@link Effect/Environment/Interface/EnvironmentService} Service interface\n * @see {@link Effect/Environment/Implementation/EnvironmentImplementation} Implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { EnvironmentService } from \"../Interface/EnvironmentService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * Environment service tag for dependency injection\n */\nexport class EnvironmentTag extends Context.Tag(\n\t\"Effect/EnvironmentService\",\n)<EnvironmentTag, EnvironmentService>() {}\n\nexport default EnvironmentTag;\n"],
+  "mappings": ";;AASA,SAAS,eAAe;AAUjB,MAAM,uBAAuB,QAAQ;AAAA,EAC3C;AACD,EAAsC,EAAE;AAAA,EArBxC,OAqBwC;AAAA;AAAA;AAAC;AAEzC,IAAO,yBAAQ;",
+  "names": []
+}

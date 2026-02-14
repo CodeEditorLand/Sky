@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/mcp/electron-browser/mcp.contribution.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\nimport { mcpDiscoveryRegistry } from '../common/discovery/mcpDiscovery.js';\nimport { IMcpDevModeDebugging } from '../common/mcpDevMode.js';\nimport { McpDevModeDebuggingNode } from './mcpDevModeDebuggingNode.js';\nimport { NativeMcpDiscovery } from './nativeMpcDiscovery.js';\n\nmcpDiscoveryRegistry.register(new SyncDescriptor(NativeMcpDiscovery));\nregisterSingleton(IMcpDevModeDebugging, McpDevModeDebuggingNode, InstantiationType.Delayed);\n"],
+  "mappings": "AAKA,SAAS,sBAAsB;AAC/B,SAA4B,yBAAyB;AACrD,SAAS,4BAA4B;AACrC,SAAS,4BAA4B;AACrC,SAAS,+BAA+B;AACxC,SAAS,0BAA0B;AAEnC,qBAAqB,SAAS,IAAI,eAAe,kBAAkB,CAAC;AACpE;EAAkB;EAAsB;EAAuB;;AAAA;",
+  "names": []
+}

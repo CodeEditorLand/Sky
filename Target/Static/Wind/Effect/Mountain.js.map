@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../Source/Effect/Mountain.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Mountain\n * @description\n * Atomic Mountain backend service using Effect-TS.\n * Consolidates MountainIntegrationService and MountainWindSync into a single,\n * unified backend integration layer with proper error handling and resilience.\n *\n * @deprecated This file is maintained for backward compatibility.\n * Please import from {@link ./Mountain/index.ts} instead.\n *\n * @example\n * ```ts\n * // Old (still works):\n * import { Mountain, MountainLive } from \"./Effect/Mountain.js\";\n *\n * // New (recommended):\n * import { Mountain, MountainLive } from \"./Effect/Mountain/index.js\";\n * ```\n */\n\n// Re-export from atomic modules for backward compatibility\nexport {\n\tMountainConnectionError,\n\tMountainRPCError,\n\tMountainSyncError,\n\tMountainStateError,\n\ttype MountainConnectionState,\n\ttype SyncResource,\n\ttype SyncResult,\n\ttype MountainService,\n\tMountainTag,\n\tMountainLive,\n\tMountainMockLive,\n\tMountain,\n} from \"./Mountain/index.js\";\n"],
+  "mappings": "AAqBA;AAAA,EACC;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EAKA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,OACM;",
+  "names": []
+}

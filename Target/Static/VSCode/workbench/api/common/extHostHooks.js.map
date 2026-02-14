@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/api/common/extHostHooks.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport type * as vscode from 'vscode';\r\nimport { CancellationToken } from '../../../base/common/cancellation.js';\r\nimport { createDecorator } from '../../../platform/instantiation/common/instantiation.js';\r\nimport { HookTypeValue } from '../../contrib/chat/common/promptSyntax/hookSchema.js';\r\nimport { ExtHostHooksShape } from './extHost.protocol.js';\r\n\r\nexport const IExtHostHooks = createDecorator<IExtHostHooks>('IExtHostHooks');\r\n\r\nexport interface IChatHookExecutionOptions {\r\n\treadonly input?: unknown;\r\n\treadonly toolInvocationToken: unknown;\r\n}\r\n\r\nexport interface IExtHostHooks extends ExtHostHooksShape {\r\n\texecuteHook(hookType: HookTypeValue, options: IChatHookExecutionOptions, token?: CancellationToken): Promise<vscode.ChatHookResult[]>;\r\n}\r\n"],
+  "mappings": "AAOA,SAAS,uBAAuB;AAIzB,MAAM,gBAAgB,gBAA+B,eAAe;",
+  "names": []
+}

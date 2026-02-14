@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/ActivityBar/Error/ActivityBarUpdateError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/ActivityBar/Error/ActivityBarUpdateError\n * @description\n * Error thrown when an activity bar item update fails.\n * @see {@link Effect/ActivityBar/Interface/ActivityBarService} Service interface using this error\n * @see [Effect-TS Error Handling](https://effect.website/docs/guide/error-handling)\n * @category Error\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Error Definition\n// ============================================================================\n\nexport class ActivityBarUpdateError extends Error {\n\treadonly _tag = \"ActivityBarUpdateError\";\n\tconstructor(itemId: string, cause: unknown) {\n\t\tsuper(`Failed to update activity bar item '${itemId}': ${String(cause)}`);\n\t\tthis.cause = cause;\n\t\tObject.setPrototypeOf(this, ActivityBarUpdateError.prototype);\n\t}\n\toverride get name() { return \"ActivityBarUpdateError\"; }\n}\n\nexport default ActivityBarUpdateError;\n"],
+  "mappings": ";;AASA,SAAS,SAAS,cAAc;AAMzB,MAAM,+BAA+B,MAAM;AAAA,EAflD,OAekD;AAAA;AAAA;AAAA,EACxC,OAAO;AAAA,EAChB,YAAY,QAAgB,OAAgB;AAC3C,UAAM,uCAAuC,MAAM,MAAM,OAAO,KAAK,CAAC,EAAE;AACxE,SAAK,QAAQ;AACb,WAAO,eAAe,MAAM,uBAAuB,SAAS;AAAA,EAC7D;AAAA,EACA,IAAa,OAAO;AAAE,WAAO;AAAA,EAA0B;AACxD;AAEA,IAAO,iCAAQ;",
+  "names": []
+}

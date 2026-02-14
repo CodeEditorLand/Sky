@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/chat/browser/widget/chatContentParts/media/chatExtensionsContent.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n.chat-extensions-content-part {\n\tborder: 1px solid var(--vscode-chat-requestBorder);\n\tborder-bottom: none;\n\tborder-radius: 4px;\n}\n\n.chat-extensions-content-part .extension-list-item {\n\tborder-bottom: 1px solid var(--vscode-chat-requestBorder);\n}\n\n.chat-extensions-content-part .loading-extensions-element {\n\tline-height: 18px;\n\tpadding: 4px;\n\tfont-size: 12px;\n\tcolor: var(--vscode-descriptionForeground);\n\tuser-select: none;\n\tborder-bottom: 1px solid var(--vscode-chat-requestBorder);\n}\n\n.chat-extensions-content-part .loading-extensions-element .loading-message {\n\tpadding-left: 4px;\n}\n"],
+  "mappings": "AAKA,CAAC;AACA,UAAQ,IAAI,MAAM,IAAI;AACtB,iBAAe;AACf,iBAAe;AAChB;AAEA,CANC,6BAM6B,CAAC;AAC9B,iBAAe,IAAI,MAAM,IAAI;AAC9B;AAEA,CAVC,6BAU6B,CAAC;AAC9B,eAAa;AACb,WAAS;AACT,aAAW;AACX,SAAO,IAAI;AACX,uBAAa;AAAb,eAAa;AACb,iBAAe,IAAI,MAAM,IAAI;AAC9B;AAEA,CAnBC,6BAmB6B,CATC,2BAS2B,CAAC;AAC1D,gBAAc;AACf;",
+  "names": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Effect/IPC/Live.ts"],
+  "sourcesContent": ["/**\n * @module Effect/IPC/Live\n * @description\n * Live layer for the IPC service using Tauri's IPC APIs.\n * @category Layer\n */\n\nimport { Layer } from \"effect\";\nimport { IPCTag } from \"./Tag/IPCTag.js\";\nimport { TauriIPCLive } from \"./Implementation/TauriIPC.js\";\n\n/**\n * Tauri IPC service layer\n */\nexport const IPCTauriLive = Layer.effect(IPCTag, TauriIPCLive);\n\nexport default IPCTauriLive;\n"],
+  "mappings": "AAOA,SAAS,aAAa;AACtB,SAAS,cAAc;AACvB,SAAS,oBAAoB;AAKtB,MAAM,eAAe,MAAM,OAAO,QAAQ,YAAY;AAE7D,IAAO,eAAQ;",
+  "names": []
+}

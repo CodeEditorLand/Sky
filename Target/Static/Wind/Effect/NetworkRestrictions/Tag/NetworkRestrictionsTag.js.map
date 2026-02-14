@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/NetworkRestrictions/Tag/NetworkRestrictionsTag.ts"],
+  "sourcesContent": ["/**\n * @module Effect/NetworkRestrictions/Tag/NetworkRestrictionsTag\n * @description\n * Service tag for dependency injection of the NetworkRestrictions service.\n * @see {@link Effect/NetworkRestrictions/Interface/NetworkRestrictionsService} Service interface\n * @see {@link Effect/NetworkRestrictions/Implementation/NetworkRestrictionsImplementation} Implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { NetworkRestrictionsService } from \"../Interface/NetworkRestrictionsService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * NetworkRestrictions service tag for dependency injection\n */\nexport class NetworkRestrictionsTag extends Context.Tag(\n\t\"NetworkRestrictions\",\n)<NetworkRestrictionsTag, NetworkRestrictionsService>() {}\n\n/**\n * Alias for the NetworkRestrictions tag\n */\nexport const NetworkRestrictions = NetworkRestrictionsTag;\n\nexport default NetworkRestrictionsTag;\n"],
+  "mappings": ";;AASA,SAAS,eAAe;AAUjB,MAAM,+BAA+B,QAAQ;AAAA,EACnD;AACD,EAAsD,EAAE;AAAA,EArBxD,OAqBwD;AAAA;AAAA;AAAC;AAKlD,MAAM,sBAAsB;AAEnC,IAAO,iCAAQ;",
+  "names": []
+}

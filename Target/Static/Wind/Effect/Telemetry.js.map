@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../Source/Effect/Telemetry.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Telemetry\n * @description\n * Atomic telemetry service using Effect-TS.\n * Consolidates performance monitoring from DialogService, MountainIntegrationService,\n * MountainWindSync, and StatusReporter into a single unified system.\n * @deprecated Use {@link Effect/Telemetry/index} instead.\n * This file remains for backward compatibility.\n */\n\n// Re-export all exports from the atomic structure\nexport * from \"./Telemetry/index.js\";\n"],
+  "mappings": "AAWA,cAAc;",
+  "names": []
+}

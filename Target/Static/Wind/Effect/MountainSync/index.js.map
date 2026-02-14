@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Effect/MountainSync/index.ts"],
+  "sourcesContent": ["/**\n * @module Effect/MountainSync\n * @description\n * Main re-export module for MountainSync service.\n * Provides all exports for backward compatibility with existing imports.\n *\n * @see {@link Effect/MountainSync/Interface/MountainSyncService} Service interface\n * @see {@link Effect/MountainSync/Layer/MountainSyncLive} Live layer\n * @see {@link Effect/MountainSync/Layer/MountainSyncMock} Mock layer\n * @category Re-export\n */\n\n// Types\nexport type { SyncStatus, SyncConfig, SyncStats, MountainSyncResult } from \"./Type/MountainSyncType.js\";\n\n// Service interface\nexport type { MountainSyncService } from \"./Interface/MountainSyncService.js\";\n\n// Tag\nexport { default as MountainSyncTag } from \"./Tag/MountainSyncTag.js\";\n\n// Layers\nexport { default as MountainSyncLive } from \"./Layer/MountainSyncLive.js\";\nexport { default as MountainSyncMock } from \"./Layer/MountainSyncMock.js\";\n\n// Mock factory (for direct usage without Layer)\nexport { makeMockMountainSync } from \"./Layer/MountainSyncMock.js\";\n"],
+  "mappings": "AAmBA,SAAoB,WAAXA,gBAAkC;AAG3C,SAAoB,WAAXA,gBAAmC;AAC5C,SAAoB,WAAXA,gBAAmC;AAG5C,SAAS,4BAA4B;",
+  "names": ["default"]
+}

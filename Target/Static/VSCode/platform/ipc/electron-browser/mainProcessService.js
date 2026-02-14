@@ -1,0 +1,1 @@
+import{$Ed as n}from"../../../base/common/lifecycle.js";import{$zbb as r}from"../../../base/parts/ipc/electron-browser/ipc.electron.js";class o extends n{constructor(e){super(),this.a=this.D(new r(`window:${e}`))}getChannel(e){return this.a.getChannel(e)}registerChannel(e,t){this.a.registerChannel(e,t)}}export{o as $$Pc};

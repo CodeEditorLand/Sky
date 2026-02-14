@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Panel/Error/PanelViewNotFoundError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Panel/Error/PanelViewNotFoundError\n * @description\n * Error thrown when a requested panel view cannot be found.\n * @see {@link Effect/Panel/Interface/PanelService} Usage context\n * @see {@link Effect/Panel/Error/PanelUpdateError} Update error\n * @category Error\n */\n\n/**\n * Error thrown when attempting to access, update, or remove a panel view that doesn't exist.\n * Includes the view ID that was not found.\n */\nexport default class PanelViewNotFoundError extends Error {\n\treadonly _tag = \"PanelViewNotFoundError\";\n\n\tconstructor(viewId: string) {\n\t\tsuper(`Panel view '${viewId}' not found`);\n\t\tObject.setPrototypeOf(this, PanelViewNotFoundError.prototype);\n\t}\n\n\toverride get name() {\n\t\treturn \"PanelViewNotFoundError\";\n\t}\n}\n"],
+  "mappings": ";;AAaA,MAAO,+BAA6C,MAAM;AAAA,EAb1D,OAa0D;AAAA;AAAA;AAAA,EAChD,OAAO;AAAA,EAEhB,YAAY,QAAgB;AAC3B,UAAM,eAAe,MAAM,aAAa;AACxC,WAAO,eAAe,MAAM,uBAAuB,SAAS;AAAA,EAC7D;AAAA,EAEA,IAAa,OAAO;AACnB,WAAO;AAAA,EACR;AACD;",
+  "names": []
+}

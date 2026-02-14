@@ -1,0 +1,1 @@
+class h{constructor(s,i,e){this.changes=s,this.moves=i,this.hitTimeout=e}}class t{constructor(s,i){this.lineRangeMapping=s,this.changes=i}flip(){return new t(this.lineRangeMapping.flip(),this.changes.map(s=>s.flip()))}}export{h as $NE,t as $OE};

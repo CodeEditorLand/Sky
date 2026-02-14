@@ -1,0 +1,1 @@
+import{$3Pc as l}from"../../../../platform/storage/common/storageService.js";class n extends l{constructor(r,e,t,i,o){super(r,{currentProfile:e.currentProfile,defaultProfile:t.defaultProfile},i,o),this.kb=e,this.lb()}lb(){this.D(this.kb.onDidChangeCurrentProfile(r=>r.join(this.R(r.profile))))}}export{n as $4Pc};

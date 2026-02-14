@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../Source/Effect/Sandbox.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Sandbox\n * @description\n * Sandbox globals service - the preload contract as Effect-TS.\n * Provides access to window.vscode with proper error handling.\n * @deprecated Use {@link Effect/Sandbox/index} instead.\n * This file remains for backward compatibility.\n */\n\n// Re-export all exports from the atomic structure\nexport * from \"./Sandbox/index.js\";\n"],
+  "mappings": "AAUA,cAAc;",
+  "names": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Configuration/Type/ConfigurationSchemaType.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Configuration/Type/ConfigurationSchemaType\n * @description\n * Type definitions for configuration schema validation.\n * @see {@link Effect/Configuration/Interface/ConfigurationService} Service interface using these types\n * @category Type\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Type Definitions\n// ============================================================================\n\n/**\n * Represents a configuration schema validation issue.\n */\nexport interface ConfigSchemaIssue {\n\t/** Path to the configuration property with the issue */\n\treadonly path: string;\n\t/** Description of the validation issue */\n\treadonly message: string;\n}\n"],
+  "mappings": "AAQA,SAAS,SAAS,cAAc;",
+  "names": []
+}

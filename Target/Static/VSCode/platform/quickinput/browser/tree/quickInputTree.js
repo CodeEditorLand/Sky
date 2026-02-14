@@ -1,0 +1,1 @@
+function r(n){let e=!1,a=!1,t=!1;for(const c of n){switch(c.element?.checked){case"mixed":t=!0;break;case!0:e=!0;break;default:a=!0;break}if(e&&a&&t)break}return a?t||e?"mixed":!1:t?"mixed":e}export{r as $uCb};

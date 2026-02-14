@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Effect/IPC/index.ts"],
+  "sourcesContent": ["/**\n * @module Effect/IPC\n * @description\n * Atomic IPC service using Effect-TS.\n * Wraps Tauri IPC with typed effects and streams.\n * \n * @category Service\n */\n\n// ============================================================================\n// Re-exports from atomic modules\n// ============================================================================\n\n// Types\nexport type { IPCInvokeError, IPCSendError, IPCSubscriptionError } from \"./Error/IPCError.js\";\n\n// Interface\nexport type { IPCService } from \"./Interface/IPCService.js\";\n\n// Tag\nexport { IPCTag, IPC } from \"./Tag/IPCTag.js\";\n\n// Implementations\nexport { TauriIPCLive } from \"./Implementation/TauriIPC.js\";\n\n// Layers\nexport { IPCTauriLive as default } from \"./Live.js\";\nexport { MockIPCLive } from \"./Mock.js\";\n\n// Error helpers\nexport {\n\tCreateIPCInvokeError,\n\tCreateIPCSendError,\n\tCreateIPCSubscriptionError,\n} from \"./Error/IPCError.js\";\n"],
+  "mappings": "AAoBA,SAAS,QAAQ,WAAW;AAG5B,SAAS,oBAAoB;AAG7B,SAAyB,oBAAe;AACxC,SAAS,mBAAmB;AAG5B;AAAA,EACC;AAAA,EACA;AAAA,EACA;AAAA,OACM;",
+  "names": []
+}

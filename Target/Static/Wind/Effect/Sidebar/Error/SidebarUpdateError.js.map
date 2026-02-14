@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Sidebar/Error/SidebarUpdateError.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Sidebar/Error/SidebarUpdateError\n * @description\n * Error thrown when updating a sidebar panel fails.\n * @see {@link Effect/Sidebar/Interface/SidebarService} Usage context\n * @see {@link Effect/Sidebar/Error/SidebarPanelNotFoundError} Panel not found error\n * @category Error\n */\n\n/**\n * Error thrown when attempting to update a sidebar panel and the operation fails.\n * Includes the panel ID and the underlying cause of the failure.\n */\nexport default class SidebarUpdateError extends Error {\n\treadonly _tag = \"SidebarUpdateError\";\n\toverride readonly cause: unknown;\n\n\tconstructor(panelId: string, cause: unknown) {\n\t\tsuper(`Failed to update sidebar panel '${panelId}': ${String(cause)}`);\n\t\tthis.cause = cause;\n\t\tObject.setPrototypeOf(this, SidebarUpdateError.prototype);\n\t}\n\n\toverride get name() {\n\t\treturn \"SidebarUpdateError\";\n\t}\n}\n"],
+  "mappings": ";;AAaA,MAAO,2BAAyC,MAAM;AAAA,EAbtD,OAasD;AAAA;AAAA;AAAA,EAC5C,OAAO;AAAA,EACE;AAAA,EAElB,YAAY,SAAiB,OAAgB;AAC5C,UAAM,mCAAmC,OAAO,MAAM,OAAO,KAAK,CAAC,EAAE;AACrE,SAAK,QAAQ;AACb,WAAO,eAAe,MAAM,mBAAmB,SAAS;AAAA,EACzD;AAAA,EAEA,IAAa,OAAO;AACnB,WAAO;AAAA,EACR;AACD;",
+  "names": []
+}

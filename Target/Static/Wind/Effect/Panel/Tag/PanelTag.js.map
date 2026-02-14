@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../Source/Effect/Panel/Tag/PanelTag.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Panel/Tag/PanelTag\n * @description\n * Service tag for Panel dependency injection.\n * Provides the Context.Tag for accessing Panel service in Effect programs.\n * @see {@link Effect/Panel/Interface/PanelService} Service interface\n * @see {@link Effect/Panel/Implementation/PanelImplementation} Implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { PanelService } from \"../Interface/PanelService.js\";\n\n/**\n * Context.Tag for Panel service dependency injection.\n * Use this tag to access Panel in Effect programs.\n *\n * @example\n * ```ts\n * import { Effect } from \"effect\";\n * import { PanelTag } from \"./Effect/Panel/Tag/PanelTag.js\";\n *\n * const createView = Effect.gen(function* () {\n *   const panel = yield* PanelTag;\n *   return yield* panel.createView({ title: \"Output\", type: \"output\", priority: 1, visible: false, maximized: false });\n * });\n * ```\n */\nexport default class PanelTag extends Context.Tag(\"Panel\")<PanelTag, PanelService>() {}\n\n/**\n * Alias for PanelTag for shorter import paths.\n */\nexport const Panel = PanelTag;\n"],
+  "mappings": ";;AAUA,SAAS,eAAe;AAkBxB,MAAO,iBAA+B,QAAQ,IAAI,OAAO,EAA0B,EAAE;AAAA,EA5BrF,OA4BqF;AAAA;AAAA;AAAC;AAK/E,MAAM,QAAQ;",
+  "names": []
+}

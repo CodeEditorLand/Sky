@@ -1,0 +1,2 @@
+class s{constructor(t,e){this.a=t,this.b=e}getElement(t){return this.a[t]}get length(){return this.a.length}getBoundaryScore(t){const e=t===0?0:i(this.b[t-1]),r=t===this.b.length?0:i(this.b[t]);return 1e3-(e+r)}getText(t){return this.b.slice(t.start,t.endExclusive).join(`
+`)}isStronglyEqual(t,e){return this.b[t]===this.b[e]}}function i(n){let t=0;for(;t<n.length&&(n.charCodeAt(t)===32||n.charCodeAt(t)===9);)t++;return t}export{s as $8eb};

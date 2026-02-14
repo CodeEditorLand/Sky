@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Types/Error/SandboxNotReadyError.ts"],
+  "sourcesContent": ["/**\n * @module Types/Error/SandboxNotReadyError\n * @description\n * Error thrown when the sandbox has not been initialized.\n * Occurs when code attempts to access window.vscode before preload script executes.\n * @category Error\n */\n\n/**\n * Sandbox not ready error\n */\nexport class SandboxNotReadyError extends Error {\n\treadonly _tag = \"SandboxNotReadyError\";\n\n\tconstructor() {\n\t\tsuper(\"window.vscode is not initialized. Preload script not executed.\");\n\t}\n}\n"],
+  "mappings": ";;AAWO,MAAM,6BAA6B,MAAM;AAAA,EAXhD,OAWgD;AAAA;AAAA;AAAA,EACtC,OAAO;AAAA,EAEhB,cAAc;AACb,UAAM,gEAAgE;AAAA,EACvE;AACD;",
+  "names": []
+}

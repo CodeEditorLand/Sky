@@ -1,0 +1,1 @@
+import{observableValue as e}from"../../../base/common/observable.js";import{$Nj as r}from"../../../platform/instantiation/common/instantiation.js";const s=r("renameSymbolTrackerService");class a{constructor(){this.a=e(this,void 0),this.trackedWord=this.a,this.a.set(void 0,void 0)}}export{s as $Oob,a as $Pob};

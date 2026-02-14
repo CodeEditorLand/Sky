@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/Effect/Clipboard/Live.ts"],
+  "sourcesContent": ["/**\n * @module Effect/Clipboard/Live\n * @description\n * Live layer for the Clipboard service using the browser's Clipboard API.\n * @see {@link Effect/Clipboard/Implementation/BrowserClipboard} Implementation\n * @category Layer\n */\n\nimport { Layer } from \"effect\";\nimport { ClipboardServiceTag } from \"./Tag/ClipboardServiceTag.js\";\nimport { LiveBrowserClipboardService } from \"./Implementation/BrowserClipboard.js\";\n\n// ============================================================================\n// Live Layer\n// ============================================================================\n\n/**\n * Live clipboard service layer\n * Uses the browser's Clipboard API\n */\nexport const LiveClipboardServiceLayer = Layer.succeed(\n\tClipboardServiceTag,\n\tLiveBrowserClipboardService,\n);\n\nexport default LiveClipboardServiceLayer;\n"],
+  "mappings": "AAQA,SAAS,aAAa;AACtB,SAAS,2BAA2B;AACpC,SAAS,mCAAmC;AAUrC,MAAM,4BAA4B,MAAM;AAAA,EAC9C;AAAA,EACA;AACD;AAEA,IAAO,eAAQ;",
+  "names": []
+}

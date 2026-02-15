@@ -30,7 +30,25 @@ export const { readFile } = await import("node:fs/promises");
 
 export const Bundle = process.env["Bundle"] === "true";
 
+// Workbench selection environment variables
 export const Browser = process.env["Browser"] === "true";
+export const Wind = process.env["Wind"] === "true";
+export const Mountain = process.env["Mountain"] === "true";
+export const Electron = process.env["Electron"] === "true";
+export const BrowserProxy = process.env["BrowserProxy"] === "true";
+
+// Determine active workbench type
+export const WorkbenchType = Electron
+	? "Electron"
+	: Mountain
+		? "Mountain"
+		: Wind
+			? "Wind"
+			: BrowserProxy
+				? "BrowserProxy"
+				: Browser
+					? "Browser"
+					: "Default";
 
 export const Dependency = process.env["Dependency"] ?? "CodeEditorLand/Editor";
 

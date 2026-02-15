@@ -1,53 +1,20 @@
 ---
 /**
- * Application.astro - Dynamic Workbench Entry Point
+ * BrowserProxy.astro - Direct BrowserProxy Workbench Entry Point
  *
- * This is the main application entry point that dynamically selects the
- * appropriate workbench based on environment variables.
+ * This page provides direct access to the BrowserProxy workbench without
+ * requiring environment variable configuration.
  *
- * Environment Variables:
- * - Browser=true → Browser workbench (web-based)
- * - Wind=true → Wind workbench (native UI)
- * - Mountain=true → Mountain workbench (browser + Mountain providers)
- * - Electron=true → Electron workbench (Electron + polyfills)
- *
- * If no workbench is specified, defaults to Browser workbench.
- *
- * Route: /Application
+ * Route: /BrowserProxy
+ * Workbench: BrowserProxy (Browser workbench with Mountain services proxy)
  */
 
 import Layout from "../Function/Markup/Base.astro";
-import BrowserWorkbench from "../Workbench/Browser.astro";
-import DefaultWorkbench from "../Workbench/Default.astro";
-import WindWorkbench from "../Workbench/Wind.astro";
-import MountainWorkbench from "../Workbench/Mountain.astro";
-import ElectronWorkbench from "../Workbench/Electron.astro";
 import BrowserProxyWorkbench from "../Workbench/BrowserProxy.astro";
 import { On, Bust } from "../Function/Shared";
 
 // Environment detection
 const Bundle = process.env["Bundle"] === "true";
-
-// Workbench selection from environment variables
-const Browser = process.env["Browser"] === "true";
-const Wind = process.env["Wind"] === "true";
-const Mountain = process.env["Mountain"] === "true";
-const Electron = process.env["Electron"] === "true";
-const BrowserProxy = process.env["BrowserProxy"] === "true";
-
-// Determine which workbench to render
-// Priority: Electron > Mountain > Wind > BrowserProxy > Browser > Default
-const WorkbenchType = Electron
-	? "Electron"
-	: Mountain
-		? "Mountain"
-		: Wind
-			? "Wind"
-			: BrowserProxy
-				? "BrowserProxy"
-				: Browser
-					? "Browser"
-					: "Default";
 
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 ---
@@ -181,7 +148,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 			enableWorkspaceTrust: true,
 			settingsSyncOptions: { enabled: false },
 			productConfiguration: {
-				embedderIdentifier: Browser ? "web" : "desktop",
+				embedderIdentifier: "web",
 				nameShort: "FIDDEE",
 				nameLong: "FIDDEE",
 				applicationName: "fiddee",
@@ -223,11 +190,6 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 		globalThis.__BOOTSTRAP_DEBUG__ = On;
 	</script>
 
-	<!-- Workbench Type Indicator (for debugging) -->
-	<script is:inline slot="Head" define:vars={{ WorkbenchType }}>
-		console.log("[Application] Workbench Type:", WorkbenchType);
-	</script>
-
 	<!-- Worker Scripts -->
 	{
 		Bundle ? (
@@ -238,19 +200,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					import "@codeeditorland/worker/Target/Worker/Register.js";
 				</script>
 
-				{WorkbenchType === "Electron" ? (
-					<ElectronWorkbench />
-				) : WorkbenchType === "Mountain" ? (
-					<MountainWorkbench />
-				) : WorkbenchType === "Wind" ? (
-					<WindWorkbench Bust={Bust} />
-				) : WorkbenchType === "BrowserProxy" ? (
-					<BrowserProxyWorkbench />
-				) : WorkbenchType === "Browser" ? (
-					<BrowserWorkbench />
-				) : (
-					<DefaultWorkbench />
-				)}
+				<BrowserProxyWorkbench />
 			</Fragment>
 		) : (
 			<Fragment>
@@ -274,25 +224,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					defer
 				/>
 
-				{WorkbenchType === "Electron" ? (
-					<ElectronWorkbench />
-				) : WorkbenchType === "Mountain" ? (
-					<MountainWorkbench />
-				) : WorkbenchType === "Wind" ? (
-					<WindWorkbench Bust={Bust} />
-				) : WorkbenchType === "BrowserProxy" ? (
-					<BrowserProxyWorkbench />
-				) : WorkbenchType === "Browser" ? (
-					<script
-						is:inline
-						type="module"
-						src={Bust(
-							"/Static/Application/vs/code/browser/workbench/workbench.js",
-						)}
-					/>
-				) : (
-					<DefaultWorkbench />
-				)}
+				<BrowserProxyWorkbench />
 			</Fragment>
 		)
 	}

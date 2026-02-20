@@ -6,7 +6,7 @@ declare global {
 	interface Window {
 		__TAURI_ISOLATION_HOOK__: (payload: any) => any;
 		NLS_LOADED?: boolean;
-		
+
 		// Wind preload globals
 		preloadGlobals?: {
 			ipcRenderer: any;
@@ -14,16 +14,25 @@ declare global {
 			configuration: any;
 		};
 		__WIND_PRELOAD_READY__?: boolean;
-		
+
 		// VSCode Electron API polyfills (window.vscode)
 		vscode?: {
 			process: any;
 			ipcRenderer: {
 				send: (channel: string, ...args: any[]) => void;
 				invoke: (channel: string, ...args: any[]) => Promise<any>;
-				on: (channel: string, listener: (...args: any[]) => void) => any;
-				once: (channel: string, listener: (...args: any[]) => void) => any;
-				removeListener: (channel: string, listener: (...args: any[]) => void) => void;
+				on: (
+					channel: string,
+					listener: (...args: any[]) => void,
+				) => any;
+				once: (
+					channel: string,
+					listener: (...args: any[]) => void,
+				) => any;
+				removeListener: (
+					channel: string,
+					listener: (...args: any[]) => void,
+				) => void;
 			};
 			context: {
 				configuration: () => any;
@@ -39,10 +48,10 @@ declare global {
 				acquire: () => any;
 			};
 		};
-		
+
 		// Monaco Editor
 		monaco?: any;
-		
+
 		// VSCode workbench
 		workbench?: any;
 	}

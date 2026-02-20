@@ -10,8 +10,8 @@
  */
 
 import Layout from "../Function/Markup/Base.astro";
-import BrowserProxyWorkbench from "../Workbench/BrowserProxy.astro";
-import { On, Bust } from "../Function/Shared";
+import { Bust, On } from "../Function/Shared";
+import BrowserProxyWorkbench from "../Workbench/BrowserProxy/Layout.astro";
 
 // Environment detection
 const Bundle = process.env["Bundle"] === "true";
@@ -143,19 +143,19 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 		id="vscode-workbench-web-configuration"
 		data-settings={JSON.stringify({
 			remoteAuthority: "",
-			serverBasePath: "",
-			connectionToken: "",
+			serverBasePath: "/",
+			connectionToken: "dummy-token",
 			enableWorkspaceTrust: true,
 			settingsSyncOptions: { enabled: false },
 			productConfiguration: {
-				embedderIdentifier: "web",
+				embedderIdentifier: "browser",
 				nameShort: "FIDDEE",
 				nameLong: "FIDDEE",
 				applicationName: "fiddee",
 			},
 			developmentOptions: {
-				logLevel: On ? 2 : 0,
-				enableSmokeTestDriver: On,
+				logLevel: 2,
+				enableSmokeTestDriver: true,
 			},
 		})}
 		slot="Meta"
@@ -169,7 +169,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 	/>
 
 	<!-- Global VSCode File Root -->
-	<script is:inline type="module" slot="Head">
+	<script is:inline slot="Head">
 		globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/Static/Application/`;
 	</script>
 

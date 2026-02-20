@@ -1,0 +1,57 @@
+---
+/**
+ * Electron.astro - Electron Workbench with Complete Polyfills (Approach A3)
+ *
+ * Approach A3 Implementation:
+ * - Uses Electron workbench (vs/code/electron-browser/workbench/workbench.js)
+ * - Loads all Electron API polyfills to make browser act like Electron
+ * - Loads Wind preload for VSCode-compatible globals
+ * - Loads Effect-TS bootstrap for Wind services
+ *
+ * Complexity: High
+ * Feature Coverage: 95%+
+ * Trade-offs:
+ * - Maximum VSCode functionality (if polyfills work correctly)
+ * - High complexity with 7+ polyfills to maintain
+ * - May have CSP issues with vscode-file:// protocol
+ * - High maintenance burden as VSCode evolves
+ *
+ * Polyfills Loaded:
+ * 1. ProcessPolyfill - Node.js process object
+ * 2. FileProtocolShim - vscode-file:// protocol handling
+ * 3. FileSystemPolyfill - fs module polyfill
+ * 4. IPCRendererShim - Electron IPC communication
+ * 5. ChildProcessPolyfill - child_process module
+ * 6. NativeModulePolyfill - native module loading
+ * 7. SharedProcessProxy - Shared process communication
+ *
+ * This approach attempts to use the full Electron workbench by providing
+ * comprehensive polyfills for all Electron APIs.
+ */
+
+import NLS from "../NLS.astro";
+---
+
+<Fragment>
+	<NLS />
+
+	<!-- Wind Preload Script - Required for VSCode workbench -->
+	<script type="module">
+		await import("./WindPreload.js");
+	</script>
+
+	<!-- Electron API Polyfills -->
+	<script type="module">
+		await import("./Polyfills.js");
+	</script>
+
+	<!-- Wind Effect-TS Bootstrap Script -->
+	<script type="module">
+		await import("./Bootstrap.js");
+	</script>
+
+	<!-- Electron VSCode Workbench Script -->
+	<script type="module">
+		await import("./Workbench.js");
+	</script>
+</Fragment>

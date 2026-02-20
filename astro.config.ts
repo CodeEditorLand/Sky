@@ -28,7 +28,6 @@ import {
 	On,
 	readFile,
 	Static,
-	// @ts-expect-error
 } from "./Source/Function/Debug";
 
 // -----------------------------------------------------------------------------
@@ -79,6 +78,10 @@ export default defineConfig({
 		build: {
 			rollupOptions: {
 				external: External,
+				output: {
+					// Preserve dynamic URL imports in VSCode worker files
+					hoistTransitiveImports: false,
+				},
 			},
 
 			sourcemap: On,
@@ -262,30 +265,38 @@ export default defineConfig({
 				// Wind packages - Target prefix imports need to map to static paths without Target
 				"@codeeditorland/wind": "/Static/Wind",
 				"@codeeditorland/wind/Bootstrap": "/Static/Wind/Bootstrap",
-				"@codeeditorland/wind/Configuration": "/Static/Wind/Configuration",
+				"@codeeditorland/wind/Configuration":
+					"/Static/Wind/Configuration",
 				"@codeeditorland/wind/Effect": "/Static/Wind/Effect",
 				"@codeeditorland/wind/Function": "/Static/Wind/Function",
 				"@codeeditorland/wind/Types": "/Static/Wind/Types",
-				
+
 				// Handle @codeeditorland/wind/Target/* imports by removing Target prefix
-				"@codeeditorland/wind/Target/Bootstrap": "/Static/Wind/Bootstrap",
-				"@codeeditorland/wind/Target/Configuration": "/Static/Wind/Configuration",
+				"@codeeditorland/wind/Target/Bootstrap":
+					"/Static/Wind/Bootstrap",
+				"@codeeditorland/wind/Target/Configuration":
+					"/Static/Wind/Configuration",
 				"@codeeditorland/wind/Target/Effect": "/Static/Wind/Effect",
 				"@codeeditorland/wind/Target/Function": "/Static/Wind/Function",
 				"@codeeditorland/wind/Target/Types": "/Static/Wind/Types",
-				"@codeeditorland/wind/Target/Polyfills": "/Static/Wind/Polyfills",
+				"@codeeditorland/wind/Target/Polyfills":
+					"/Static/Wind/Polyfills",
 
 				// Wind Polyfills for A3 Electron workbench - full paths
-				"@codeeditorland/wind/Target/Polyfills/ProcessPolyfill": "/Static/Wind/Polyfills/ProcessPolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/FileProtocolShim": "/Static/Wind/Polyfills/FileProtocolShim.js",
-				"@codeeditorland/wind/Target/Polyfills/FileSystemPolyfill": "/Static/Wind/Polyfills/FileSystemPolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/IPCRendererShim": "/Static/Wind/Polyfills/IPCRendererShim.js",
-				"@codeeditorland/wind/Target/Polyfills/ChildProcessPolyfill": "/Static/Wind/Polyfills/ChildProcessPolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/NativeModulePolyfill": "/Static/Wind/Polyfills/NativeModulePolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/SharedProcessProxy": "/Static/Wind/Polyfills/SharedProcessProxy.js",
-
-				// VSCode static assets
-				"@vscode": "/Static/VSCode",
+				"@codeeditorland/wind/Target/Polyfills/ProcessPolyfill":
+					"/Static/Wind/Polyfills/ProcessPolyfill.js",
+				"@codeeditorland/wind/Target/Polyfills/FileProtocolShim":
+					"/Static/Wind/Polyfills/FileProtocolShim.js",
+				"@codeeditorland/wind/Target/Polyfills/FileSystemPolyfill":
+					"/Static/Wind/Polyfills/FileSystemPolyfill.js",
+				"@codeeditorland/wind/Target/Polyfills/IPCRendererShim":
+					"/Static/Wind/Polyfills/IPCRendererShim.js",
+				"@codeeditorland/wind/Target/Polyfills/ChildProcessPolyfill":
+					"/Static/Wind/Polyfills/ChildProcessPolyfill.js",
+				"@codeeditorland/wind/Target/Polyfills/NativeModulePolyfill":
+					"/Static/Wind/Polyfills/NativeModulePolyfill.js",
+				"@codeeditorland/wind/Target/Polyfills/SharedProcessProxy":
+					"/Static/Wind/Polyfills/SharedProcessProxy.js",
 			},
 		},
 
@@ -327,14 +338,46 @@ export default defineConfig({
 				: false,
 		},
 
+		preview: {
+			host: Host,
+			port: 9999,
+		},
+
 		plugins: [
-			// @ts-expect-error
 			(await import("vite-plugin-static-copy")).viteStaticCopy(Static),
 
-			// @ts-expect-error
 			(await import("vite-plugin-top-level-await")).default(),
 
-			// @ts-expect-error
+			// Plugin to serve VSCode worker iframe file from Output directory during development
+			// This prevents Astro's SPA fallback from serving index.html instead of the actual iframe
+			{
+				name: "ServeWorkerIframe",
+				configureServer: (Server: ViteDevServer) => {
+					Server.middlewares.use((req, res, next) => {
+						if (
+							req.url?.includes(
+								"/Static/Application/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
+							)
+						) {
+							const fs = require("node:fs");
+							          const path = require("node:path");
+							          const iframePath = path.join(
+							            fileURLToPath(new URL("../..", import.meta.url)),
+							            "Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
+							          );
+							          if (fs.existsSync(iframePath)) {
+							            res.setHeader("Content-Type", "text/html");
+							            res.setHeader("Cache-Control", "no-cache");
+							            return fs
+							              .createReadStream(iframePath)
+							              .pipe(res);
+							          }
+						}
+						next();
+					});
+				},
+			},
+
 			((Module: string[]) => ({
 				name: "ExtendedWatcherIgnore",
 
@@ -366,6 +409,49 @@ export default defineConfig({
 					};
 				},
 			}))(Link),
-		],
+
+			// Plugin to add @vite-ignore comments to VSCode worker dynamic URL imports
+			{
+				name: "ViteIgnoreWorkerUrls",
+
+				transform(code: string, id: string) {
+					// Only process VSCode worker files
+					if (
+						id.includes(
+							"/vs/workbench/services/extensions/browser/",
+						) ||
+						id.includes("/vs/workbench/api/worker/")
+					) {
+						let modified = false;
+						let result = code;
+
+						// Add @vite-ignore to webWorkerExtensionHostIframe.html URL
+						if (
+							result.includes("webWorkerExtensionHostIframe.html")
+						) {
+							result = result.replace(
+								/new URL\(`([^`]*webWorkerExtensionHostIframe\.html[^`]*)`, import\.meta\.url\)/g,
+								"new URL(`$1`/* @vite-ignore */, import.meta.url)",
+							);
+							modified = true;
+						}
+
+						// Add @vite-ignore to extensionHostWorkerMain.ts URL
+						if (result.includes("extensionHostWorkerMain")) {
+							result = result.replace(
+								/new URL\(['"]([^'"]*extensionHostWorkerMain[^'"]*)['"], import\.meta\.url\)/g,
+								"new URL(/* @vite-ignore */ '$1', import.meta.url)",
+							);
+							modified = true;
+						}
+
+						if (modified) {
+							return { code: result, map: null };
+						}
+					}
+					return null;
+				},
+			},
+		] as any,
 	},
 }) as typeof defineConfig;

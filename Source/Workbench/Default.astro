@@ -32,20 +32,37 @@ import NLS from "./NLS.astro";
 	      - Complexity: High
 	      - Coverage: 95%+
 	      
-	  A4: Native/WindWorkbench.astro
-	      - Native Wind implementation
-	      - Complexity: High
-	      - Coverage: 60-70%
 	-->
-	
-	<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: var(--vscode-editor-foreground); background: var(--vscode-editor-background);">
+
+	<div
+		style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: var(--vscode-editor-foreground); background: var(--vscode-editor-background);">
 		<h1>Workbench Entry Point</h1>
-		<p>This page is deprecated. Please use one of the approach-specific workbench pages:</p>
+		<p>
+			This page is deprecated. Please use one of the approach-specific
+			workbench pages:
+		</p>
 		<ul style="text-align: left;">
-			<li><a href="/BrowserProxy.html" style="color: var(--vscode-textLink-foreground);">A1: BrowserProxy.astro</a> - Browser workbench + services proxy (70-80% features)</li>
-			<li><a href="/Mountain.html" style="color: var(--vscode-textLink-foreground);"><strong>A2: Mountain.astro (RECOMMENDED)</strong></a> - Browser workbench + Mountain providers (80-90% features)</li>
-			<li><a href="/Electron.html" style="color: var(--vscode-textLink-foreground);">A3: Electron.astro</a> - Electron workbench + polyfills (95%+ features)</li>
-			<li><a href="/Native/WindWorkbench.html" style="color: var(--vscode-textLink-foreground);">A4: Native/WindWorkbench.astro</a> - Native Wind implementation (60-70% features)</li>
+			<li>
+				<a
+					href="/BrowserProxy.html"
+					style="color: var(--vscode-textLink-foreground);"
+					>A1: BrowserProxy.astro</a
+				> - Browser workbench + services proxy (70-80% features)
+			</li>
+			<li>
+				<a
+					href="/Mountain.html"
+					style="color: var(--vscode-textLink-foreground);"
+					><strong>A2: Mountain.astro (RECOMMENDED)</strong></a
+				> - Browser workbench + Mountain providers (80-90% features)
+			</li>
+			<li>
+				<a
+					href="/Electron.html"
+					style="color: var(--vscode-textLink-foreground);"
+					>A3: Electron.astro</a
+				> - Electron workbench + polyfills (95%+ features)
+			</li>
 		</ul>
 	</div>
 </Fragment>

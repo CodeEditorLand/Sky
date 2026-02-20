@@ -21,7 +21,7 @@
 		"types": ["astro/client", "astro/env"]
 	},
 
-	"exclude": ["Target"],
+	"exclude": ["Target", "../Output"],
 
 	"extends": "@playform/build/jsconfig",
 

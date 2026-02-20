@@ -98,7 +98,14 @@ export const Link = [
 	"@codeeditorland/worker",
 ];
 
-export const External = ["@microsoft/1ds-core-js", "@microsoft/1ds-post-js"];
+export const External = [
+	"@microsoft/1ds-core-js",
+	"@microsoft/1ds-post-js",
+	// Exclude VSCode worker files from bundling - they are served as static assets
+	"**/vs/workbench/services/extensions/worker/**",
+	"**/vs/workbench/api/worker/**",
+	"**/vs/base/browser/iframe.js",
+];
 
 export const Host = process.env["TAURI_DEV_HOST"]
 	? `https://${process.env["TAURI_DEV_HOST"]}`
@@ -211,36 +218,29 @@ if (Bundle) {
 
 			{
 				src: "node_modules/@codeeditorland/wind/Target/Types/*",
-	
+
 				dest: "Static/Wind/Types/",
 			},
-	
+
 			// Wind Polyfills - loaded as static scripts for approach A3 (Electron workbench)
 			{
 				src: "node_modules/@codeeditorland/wind/Target/Polyfills/*.js",
-	
+
 				dest: "Static/Wind/Polyfills/",
 			},
-	
-			// Browser Workbench - for approaches A1 (BrowserProxy) and A2 (Mountain)
+
+			// VSCode Worker files - explicitly copy worker-related assets for web worker extension host
+			// Note: Worker files are located under Microsoft/VSCode path, not CodeEditorLand/Editor path
 			{
-				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/browser/workbench/*",
-	
-				dest: "Static/VSCode/Browser/Workbench/",
+				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/*",
+
+				dest: "Static/Application/vs/workbench/services/extensions/worker/",
 			},
-	
-			// Electron Workbench - for approach A3 (Electron)
+
 			{
-				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/electron-browser/workbench/*",
-	
-				dest: "Static/VSCode/Electron/Workbench/",
-			},
-	
-			// VSCode Core - ensure all VSCode code is available
-			{
-				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/*",
-	
-				dest: "Static/VSCode/",
+				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/api/worker/*",
+
+				dest: "Static/Application/vs/workbench/api/worker/",
 			},
 		],
 	);
@@ -272,25 +272,18 @@ if (Bundle) {
 				dest: "Static/Wind/Polyfills/",
 			},
 
-			// VSCode Browser Workbench
+			// VSCode Worker files - explicitly copy worker-related assets for web worker extension host
+			// Note: Worker files are located under Microsoft/VSCode path, not CodeEditorLand/Editor path
 			{
-				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/browser/workbench/*",
+				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/*",
 
-				dest: "Static/VSCode/Browser/Workbench/",
+				dest: "Static/Application/vs/workbench/services/extensions/worker/",
 			},
 
-			// VSCode Electron Workbench
 			{
-				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/code/electron-browser/workbench/*",
+				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/api/worker/*",
 
-				dest: "Static/VSCode/Electron/Workbench/",
-			},
-
-			// VSCode Core
-			{
-				src: "node_modules/@codeeditorland/output/Target/CodeEditorLand/Editor/vs/*",
-
-				dest: "Static/VSCode/",
+				dest: "Static/Application/vs/workbench/api/worker/",
 			},
 		],
 	);

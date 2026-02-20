@@ -21,6 +21,11 @@ import Meta from "../Meta.astro";
 			crossorigin="use-credentials"
 		/>
 
+		<!-- Global VSCode File Root - Must execute before module scripts -->
+		<script is:inline>
+			globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/Static/Application/`;
+		</script>
+
 		<slot name="Head" />
 
 		<!-- Favicon -->

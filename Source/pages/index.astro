@@ -1,272 +1,290 @@
 ---
 /**
- * Index.astro - Navigation Hub for Land Editor Workbenches
+ * Index.astro - Dynamic Workbench Entry Point
  *
- * This is the main landing page that provides navigation to all available
- * workbench configurations. Each workbench represents a different approach
- * to running the VSCode-based editor.
+ * This page renders a workbench based on environment variables.
+ * It does NOT show a navigation hub - it always renders a workbench.
  *
- * Route: /
+ * Environment Variables:
+ * - Browser=true → Browser workbench (web-based)
+ * - Mountain=true → Mountain workbench (browser + Mountain providers)
+ * - Electron=true → Electron workbench (Electron + polyfills)
+ * - BrowserProxy=true → Browser proxy workbench
+ *
+ * If no workbench is specified, defaults to Browser workbench.
+ *
+ * Routes: /, /Application
  */
 
 import Layout from "../Function/Markup/Base.astro";
+import { Bust, On } from "../Function/Shared";
+import BrowserWorkbench from "../Workbench/Browser.astro";
+import BrowserProxyWorkbench from "../Workbench/BrowserProxy/Layout.astro";
+import DefaultWorkbench from "../Workbench/Default.astro";
+import ElectronWorkbench from "../Workbench/Electron/Layout.astro";
+import MountainWorkbench from "../Workbench/Mountain.astro";
 
-// Workbench configurations
-const Workbenches = [
-	{
-		name: "Browser",
-		route: "/Browser",
-		description: "Standard web-based VSCode workbench",
-		coverage: "70-80%",
-		complexity: "Low",
-		features: ["No polyfills", "Web-optimized", "Fastest startup"],
-		recommended: false,
-	},
-	{
-		name: "BrowserProxy",
-		route: "/BrowserProxy",
-		description: "Browser workbench with Mountain services proxy",
-		coverage: "70-80%",
-		complexity: "Medium",
-		features: ["Mountain proxy", "Service delegation", "Moderate features"],
-		recommended: false,
-	},
-	{
-		name: "Mountain",
-		route: "/Mountain",
-		description: "Browser workbench with direct Mountain providers",
-		coverage: "80-90%",
-		complexity: "Medium",
-		features: [
-			"Direct Mountain IPC",
-			"Wind services",
-			"Effect-TS bootstrap",
-			"No CSP issues",
-		],
-		recommended: true,
-	},
-	{
-		name: "Wind",
-		route: "/Wind",
-		description: "Native Wind-based workbench with custom UI",
-		coverage: "60-70%",
-		complexity: "High",
-		features: ["Native components", "Custom workbench", "Wind services"],
-		recommended: false,
-	},
-	{
-		name: "Electron",
-		route: "/Electron",
-		description: "Full Electron workbench with complete polyfills",
-		coverage: "95%+",
-		complexity: "High",
-		features: [
-			"Full Electron APIs",
-			"Comprehensive polyfills",
-			"Maximum compatibility",
-		],
-		recommended: false,
-	},
-];
+// Environment detection ONLY
+const Bundle = process.env["Bundle"] === "true";
+const Browser = process.env["Browser"] === "true";
+const Mountain = process.env["Mountain"] === "true";
+const Electron = process.env["Electron"] === "true";
+const BrowserProxy = process.env["BrowserProxy"] === "true";
+
+// Determine workbench type (default to Browser if nothing specified)
+const WorkbenchType = Electron
+	? "Electron"
+	: Mountain
+		? "Mountain"
+		: BrowserProxy
+			? "BrowserProxy"
+			: "Browser"; // Default, not null
+
+// Determine embedder identifier
+const EmbedderId = Electron ? "desktop" : "browser";
+
+const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 ---
 
 <Layout>
-	<style>
-		.container {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			min-height: 100vh;
-			padding: 2rem;
-			font-family: system-ui, -apple-system, sans-serif;
-			background: var(--vscode-editor-background, #1e1e1e);
-			color: var(--vscode-editor-foreground, #cccccc);
-		}
+	<!-- Content Security Policy -->
+	<meta
+		http-equiv="Content-Security-Policy"
+		content={((): string => {
+			const Policy: string[] = [];
+			const Configuration: Record<
+				string,
+				string[] | boolean | null | undefined
+			> = {
+				"default-src": ["'none'"],
+				"img-src": [
+					"'self'",
+					"data:",
+					"blob:",
+					"vscode-remote-resource:",
+					"vscode-managed-remote-resource:",
+					"http://localhost:*",
+					"https://tauri.localhost",
+					"https:",
+				],
+				"manifest-src": [
+					"'self'",
+					"http://localhost:*",
+					"https://tauri.localhost",
+				],
+				"media-src": [
+					"'self'",
+					"http://localhost:*",
+					"https://tauri.localhost",
+				],
+				"frame-src": [
+					"'self'",
+					"vscode-webview:",
+					"vscode-webview.net",
+					"*.vscode-cdn.net",
+					"*.vscode-webview.net",
+					"http://localhost:*",
+					"https://tauri.localhost",
+				],
+				"script-src": [
+					"'self'",
+					"'unsafe-inline'",
+					"'unsafe-eval'",
+					"blob:",
+					"http://localhost:*",
+					"https://tauri.localhost",
+				],
+				"style-src": [
+					"'self'",
+					"'unsafe-inline'",
+					"http://localhost:*",
+					"https://tauri.localhost",
+				],
+				"connect-src": [
+					"'self'",
+					"http://localhost:*",
+					"https://tauri.localhost",
+					"wss://tauri.localhost",
+					"https:",
+				],
+				"font-src": [
+					"'self'",
+					"vscode-remote-resource:",
+					"vscode-managed-remote-resource:",
+					"http://localhost:*",
+					"https://tauri.localhost",
+				],
+				"require-trusted-types-for": ["'script'"],
+				"trusted-types": [
+					"WorkerApplication",
+					"amdLoader",
+					"cellRendererEditorText",
+					"defaultWorkerFactory",
+					"diffEditorWidget",
+					"diffReview",
+					"domLineBreaksComputer",
+					"dompurify",
+					"editorGhostText",
+					"editorViewLayer",
+					"notebookRenderer",
+					"stickyScrollViewLayer",
+					"tokenizeToString",
+					"notebookChatEditController",
+					"richScreenReaderContent",
+					"collapsedCellPreview",
+				],
+				"block-all-mixed-content": true,
+				"upgrade-insecure-requests": false,
+			};
 
-		.header {
-			text-align: center;
-			margin-bottom: 3rem;
-		}
+			for (const Directive in Configuration) {
+				if (
+					Object.prototype.hasOwnProperty.call(
+						Configuration,
+						Directive,
+					)
+				) {
+					const Value = Configuration[Directive];
 
-		.header h1 {
-			font-size: 2.5rem;
-			margin-bottom: 0.5rem;
-			background: linear-gradient(135deg, #007acc, #00d4ff);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
+					if (
+						Value === null ||
+						Value === undefined ||
+						Value === false
+					) {
+						continue;
+					}
 
-		.header p {
-			color: var(--vscode-descriptionForeground, #8b8b8b);
-			font-size: 1.1rem;
-		}
-
-		.grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-			gap: 1.5rem;
-			max-width: 1200px;
-			width: 100%;
-		}
-
-		.card {
-			background: var(--vscode-editorWidget-background, #252526);
-			border: 1px solid var(--vscode-editorWidget-border, #454545);
-			border-radius: 8px;
-			padding: 1.5rem;
-			text-decoration: none;
-			color: inherit;
-			transition: all 0.2s ease;
-			position: relative;
-		}
-
-		.card:hover {
-			border-color: var(--vscode-focusBorder, #007acc);
-			transform: translateY(-2px);
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		}
-
-		.card.recommended {
-			border-color: #00d4ff;
-			box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
-		}
-
-		.card.recommended::before {
-			content: "★ RECOMMENDED";
-			position: absolute;
-			top: -10px;
-			right: 10px;
-			background: linear-gradient(135deg, #007acc, #00d4ff);
-			color: white;
-			padding: 2px 8px;
-			border-radius: 4px;
-			font-size: 0.7rem;
-			font-weight: bold;
-		}
-
-		.card-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 1rem;
-		}
-
-		.card h2 {
-			font-size: 1.3rem;
-			margin: 0;
-			color: var(--vscode-textLink-foreground, #3794ff);
-		}
-
-		.badge {
-			font-size: 0.75rem;
-			padding: 2px 8px;
-			border-radius: 4px;
-			background: var(--vscode-badge-background, #4d4d4d);
-			color: var(--vscode-badge-foreground, #ffffff);
-		}
-
-		.card p {
-			color: var(--vscode-descriptionForeground, #8b8b8b);
-			margin-bottom: 1rem;
-			line-height: 1.5;
-		}
-
-		.stats {
-			display: flex;
-			gap: 1rem;
-			margin-bottom: 1rem;
-		}
-
-		.stat {
-			font-size: 0.8rem;
-		}
-
-		.stat-label {
-			color: var(--vscode-descriptionForeground, #8b8b8b);
-		}
-
-		.stat-value {
-			color: var(--vscode-textLink-foreground, #3794ff);
-			font-weight: 600;
-		}
-
-		.features {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 0.5rem;
-		}
-
-		.feature {
-			font-size: 0.75rem;
-			padding: 2px 6px;
-			border-radius: 3px;
-			background: var(--vscode-editor-inactiveSelectionBackground, #3a3d41);
-			color: var(--vscode-descriptionForeground, #8b8b8b);
-		}
-
-		.footer {
-			margin-top: 3rem;
-			text-align: center;
-			color: var(--vscode-descriptionForeground, #8b8b8b);
-			font-size: 0.9rem;
-		}
-
-		.footer a {
-			color: var(--vscode-textLink-foreground, #3794ff);
-			text-decoration: none;
-		}
-
-		.footer a:hover {
-			text-decoration: underline;
-		}
-	</style>
-
-	<div class="container">
-		<div class="header">
-			<h1>🏔️ Land Editor</h1>
-			<p>Select a workbench configuration to begin</p>
-		</div>
-
-		<div class="grid">
-			{
-				Workbenches.map((workbench) => (
-					<a
-						href={workbench.route}
-						class={`card ${workbench.recommended ? "recommended" : ""}`}
-					>
-						<div class="card-header">
-							<h2>{workbench.name}</h2>
-							<span class="badge">{workbench.complexity}</span>
-						</div>
-
-						<p>{workbench.description}</p>
-
-						<div class="stats">
-							<div class="stat">
-								<span class="stat-label">Coverage: </span>
-								<span class="stat-value">{workbench.coverage}</span>
-							</div>
-						</div>
-
-						<div class="features">
-							{workbench.features.map((feature) => (
-								<span class="feature">{feature}</span>
-							))}
-						</div>
-					</a>
-				))
+					if (Value === true) {
+						Policy.push(Directive);
+					} else if (Array.isArray(Value) && Value.length > 0) {
+						Policy.push(`${Directive} ${Value.join(" ")}`);
+					}
+				}
 			}
-		</div>
 
-		<div class="footer">
-			<p>
-				<a href="/Application">Open Application (auto-detect from environment)</a>
-			</p>
-			<p style="margin-top: 0.5rem; font-size: 0.8rem;">
-				Powered by VSCode • Tauri • Effect-TS
-			</p>
-		</div>
-	</div>
+			return Policy.join("; ");
+		})()}
+		slot="Meta"
+	/>
+
+	<!-- VSCode Workbench Configuration -->
+	<meta
+		id="vscode-workbench-web-configuration"
+		data-settings={JSON.stringify({
+			remoteAuthority: "",
+			serverBasePath: "/",
+			connectionToken: "dummy-token",
+			enableWorkspaceTrust: true,
+			settingsSyncOptions: { enabled: false },
+			productConfiguration: {
+				embedderIdentifier: EmbedderId,
+				nameShort: "FIDDEE",
+				nameLong: "FIDDEE",
+				applicationName: "fiddee",
+			},
+			developmentOptions: {
+				logLevel: On ? 2 : 0,
+				enableSmokeTestDriver: On,
+			},
+		})}
+		slot="Meta"
+	/>
+
+	<!-- VSCode Auth Session -->
+	<meta
+		id="vscode-workbench-auth-session"
+		data-settings={JSON.stringify({
+			authProvider: "github",
+			session: {},
+		})}
+		slot="Meta"
+	/>
+
+	<!-- Worker Configuration -->
+	<script
+		is:inline
+		type="module"
+		define:vars={{ Worker: Bust(Worker) }}
+		slot="Head"
+	>
+		// @ts-expect-error
+		window._WORKER = Worker;
+	</script>
+
+	<!-- Bootstrap Configuration -->
+	<script is:inline type="module" slot="Head" define:vars={{ On }}>
+		// @ts-expect-error
+		globalThis.__BOOTSTRAP_DEBUG__ = On;
+	</script>
+
+	<!-- Workbench Type Indicator (for debugging) -->
+	<script is:inline slot="Head" define:vars={{ WorkbenchType }}>
+		// @ts-expect-error
+		console.log("[Application] Workbench Type:", WorkbenchType);
+	</script>
+
+	<!-- Worker Scripts -->
+	{
+		Bundle ? (
+			<Fragment>
+				<script>
+					import "@codeeditorland/worker/Target/Worker/CSS/Load.js";
+					import "@codeeditorland/worker/Target/Worker/Policy.js";
+					import "@codeeditorland/worker/Target/Worker/Register.js";
+				</script>
+
+				{WorkbenchType === "Electron" ? (
+					<ElectronWorkbench />
+				) : WorkbenchType === "Mountain" ? (
+					<MountainWorkbench />
+				) : WorkbenchType === "BrowserProxy" ? (
+					<BrowserProxyWorkbench />
+				) : WorkbenchType === "Browser" ? (
+					<BrowserWorkbench />
+				) : (
+					<DefaultWorkbench />
+				)}
+			</Fragment>
+		) : (
+			<Fragment>
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/CSS/Load.js")}
+					defer
+				/>
+
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/Policy.js")}
+				/>
+
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/Register.js")}
+					defer
+				/>
+
+				{WorkbenchType === "Electron" ? (
+					<ElectronWorkbench />
+				) : WorkbenchType === "Mountain" ? (
+					<MountainWorkbench />
+				) : WorkbenchType === "BrowserProxy" ? (
+					<BrowserProxyWorkbench />
+				) : WorkbenchType === "Browser" ? (
+					<script
+						is:inline
+						type="module"
+						src={Bust(
+							"/Static/Application/vs/code/browser/workbench/workbench.js",
+						)}
+					/>
+				) : (
+					<DefaultWorkbench />
+				)}
+			</Fragment>
+		)
+	}
 </Layout>

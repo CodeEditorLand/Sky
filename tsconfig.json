@@ -1,19 +1,19 @@
 {
 	"$schema": "https://json.schemastore.org/tsconfig",
 
+	"extends": "@playform/build/tsconfig",
+
 	"compilerOptions": {
 		"baseUrl": "./",
 
-		"composite": true,
-
 		"emitDecoratorMetadata": true,
+
+		"exactOptionalPropertyTypes": false,
 
 		"experimentalDecorators": true,
 
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-
 		"moduleResolution": "Bundler",
-
 		"outDir": "Target",
 
 		"paths": {
@@ -28,12 +28,16 @@
 
 		"rootDir": ".",
 
-		"types": ["astro/client", "astro/env"]
+		"skipLibCheck": true,
+
+		"types": ["astro/client", "astro/env"],
+
+		"typeRoots": ["./node_modules/@types", "./node_modules"],
+
+		"module": "esnext"
 	},
 
-	"exclude": ["Target"],
+	"exclude": ["Target", "node_modules"],
 
-	"extends": "@playform/build/tsconfig",
-
-	"include": [".astro/types.d.ts", "Source"]
+	"include": [".astro/types.d.ts", "Source", "astro.config.ts"]
 }

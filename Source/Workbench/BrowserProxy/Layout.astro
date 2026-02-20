@@ -1,0 +1,50 @@
+---
+/**
+ * BrowserProxy.astro - Browser Workbench with Mountain Services Proxy (Approach A1)
+ *
+ * Approach A1 Implementation:
+ * - Uses browser workbench (vs/code/browser/workbench/workbench.js)
+ * - Uses Mountain services proxy layer for all VSCode APIs
+ * - Loads Wind preload for VSCode-compatible globals
+ * - Loads Effect-TS bootstrap for Wind services
+ *
+ * Complexity: Medium
+ * Feature Coverage: 70-80%
+ * Trade-offs:
+ * - Good for proof-of-concept
+ * - Remote agent overhead from proxy layer
+ * - Less direct integration than Mountain providers
+ * - Easier to implement than full Electron polyfills
+ *
+ * This approach uses a services proxy layer to intercept VSCode API calls
+ * and route them through Mountain. This is conceptually similar to the
+ * remote agent architecture but runs locally.
+ */
+
+import NLS from "../NLS.astro";
+import { Astro } from "astro:global";
+---
+
+<Fragment>
+	<NLS />
+
+	<!-- Wind Preload Script - Required for VSCode workbench -->
+	<script type="module">
+		await import("./WindPreload.js");
+	</script>
+
+	<!-- Services Proxy Initialization -->
+	<script type="module">
+		await import("./ServicesProxy.js");
+	</script>
+
+	<!-- Wind Effect-TS Bootstrap Script -->
+	<script type="module">
+		await import("./Bootstrap.js");
+	</script>
+
+	<!-- Browser VSCode Workbench Script -->
+	<script type="module">
+		await import("./Workbench.js");
+	</script>
+</Fragment>

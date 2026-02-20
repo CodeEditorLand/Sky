@@ -1,1 +1,0 @@
-import{$6f as s}from"../../../../base/common/strings.js";function t(i){return i.endsWith(".git")&&(i=i.substr(0,i.length-4)),i=s(i,"/"),i.endsWith("/new")&&(i=s(i,"/new")),i.endsWith("/issues")&&(i=s(i,"/issues")),i}export{t as $uPc};

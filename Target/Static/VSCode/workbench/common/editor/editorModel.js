@@ -1,1 +1,0 @@
-import{$xf as s}from"../../../base/common/event.js";import{$Ed as e}from"../../../base/common/lifecycle.js";class o extends e{constructor(){super(...arguments),this.f=this.D(new s),this.onWillDispose=this.f.event,this.h=!1}async resolve(){this.h=!0}isResolved(){return this.h}isDisposed(){return this.B.isDisposed}dispose(){this.f.fire(),super.dispose()}}export{o as $8H};

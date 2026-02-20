@@ -1,1 +1,0 @@
-import{$xf as t}from"../../../base/common/event.js";import{$Ed as e}from"../../../base/common/lifecycle.js";class o extends e{constructor(){super(...arguments),this.a=!1,this.b=this.D(new t),this.onDidChangeTabFocus=this.b.event}getTabFocusMode(){return this.a}setTabFocusMode(s){this.a=s,this.b.fire(this.a)}}const h=new o;export{h as $bdb};

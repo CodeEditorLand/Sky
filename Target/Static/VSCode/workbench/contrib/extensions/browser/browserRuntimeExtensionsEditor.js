@@ -1,1 +1,0 @@
-import{$1rc as e}from"./abstractRuntimeExtensionsEditor.js";import{$oPc as n}from"../common/reportExtensionIssueAction.js";class c extends e{nb(){return null}ob(r){}pb(r){return null}qb(r){return r.marketplaceInfo?this.y.createInstance(n,r.description):null}}export{c as $pPc};

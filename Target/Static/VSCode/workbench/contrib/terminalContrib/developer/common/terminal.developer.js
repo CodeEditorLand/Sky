@@ -1,1 +1,0 @@
-var r;(function(t){t.WriteDataToTerminal="workbench.action.terminal.writeDataToTerminal",t.RecordSession="workbench.action.terminal.recordSession",t.ShowTextureAtlas="workbench.action.terminal.showTextureAtlas",t.RestartPtyHost="workbench.action.terminal.restartPtyHost"})(r||(r={}));export{r as TerminalDeveloperCommandId};

@@ -1,1 +1,0 @@
-var c;(function(t){t[t.NotSet=0]="NotSet",t[t.ContentFlush=1]="ContentFlush",t[t.RecoverFromMarkers=2]="RecoverFromMarkers",t[t.Explicit=3]="Explicit",t[t.Paste=4]="Paste",t[t.Undo=5]="Undo",t[t.Redo=6]="Redo"})(c||(c={}));export{c as CursorChangeReason};

@@ -1,1 +1,0 @@
-import{$51 as n}from"./snippetString.js";import{$M1 as i}from"./range.js";class t{static isSnippetTextEdit(e){return e instanceof t?!0:e?i.isRange(e.range)&&n.isSnippetString(e.snippet):!1}static replace(e,r){return new t(e,r)}static insert(e,r){return t.replace(new i(e,e),r)}constructor(e,r){this.range=e,this.snippet=r}}export{t as $a2};

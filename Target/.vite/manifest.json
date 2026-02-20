@@ -1,36 +1,65 @@
 {
   "../Output/Target/Microsoft/VSCode/vs/base/browser/ui/codicons/codicon/codicon.ttf": {
-    "file": "_astro/codicon.CBCOnLxa.ttf",
+    "file": "_astro/codicon.BIXo88wc.ttf",
     "src": "../Output/Target/Microsoft/VSCode/vs/base/browser/ui/codicons/codicon/codicon.ttf"
   },
+  "../Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html": {
+    "file": "_astro/webWorkerExtensionHostIframe.DWTsNr7i.html",
+    "src": "../Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html"
+  },
   "Source/Workbench/Browser.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/Browser.astro_astro_type_script_index_0_lang.DJiP-bsj.js",
+    "file": "_astro/Browser.astro_astro_type_script_index_0_lang.D0HC4pAd.js",
     "name": "Browser.astro_astro_type_script_index_0_lang",
     "src": "Source/Workbench/Browser.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,
     "css": [
-      "_astro/Browser.4CLo5P9v.css"
+      "_astro/Browser.zH61OVbO.css"
     ],
     "assets": [
-      "_astro/codicon.CBCOnLxa.ttf"
+      "_astro/webWorkerExtensionHostIframe.DWTsNr7i.html",
+      "_astro/codicon.BIXo88wc.ttf"
     ]
   },
-  "Source/Workbench/Native/Editor.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/Editor.astro_astro_type_script_index_0_lang.BkDmuRop.js",
-    "name": "Editor.astro_astro_type_script_index_0_lang",
-    "src": "Source/Workbench/Native/Editor.astro?astro&type=script&index=0&lang.ts",
+  "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts": {
+    "file": "_astro/Browser.astro_astro_type_script_index_0_lang.f37yjgra.js",
+    "name": "Browser.astro_astro_type_script_index_0_lang",
+    "src": "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true
   },
-  "Source/Workbench/Native/Editor.astro?astro&type=script&index=1&lang.ts": {
-    "file": "_astro/Editor.astro_astro_type_script_index_1_lang.BU9bh82I.js",
-    "name": "Editor.astro_astro_type_script_index_1_lang",
-    "src": "Source/Workbench/Native/Editor.astro?astro&type=script&index=1&lang.ts",
-    "isEntry": true
+  "Source/pages/BrowserProxy.astro?astro&type=script&index=0&lang.ts": {
+    "file": "_astro/BrowserProxy.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "name": "BrowserProxy.astro_astro_type_script_index_0_lang",
+    "src": "Source/pages/BrowserProxy.astro?astro&type=script&index=0&lang.ts",
+    "isEntry": true,
+    "imports": [
+      "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts"
+    ]
   },
-  "Source/pages/Application.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/Application.astro_astro_type_script_index_0_lang.Do22Hewq.js",
-    "name": "Application.astro_astro_type_script_index_0_lang",
-    "src": "Source/pages/Application.astro?astro&type=script&index=0&lang.ts",
-    "isEntry": true
+  "Source/pages/Electron.astro?astro&type=script&index=0&lang.ts": {
+    "file": "_astro/Electron.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "name": "Electron.astro_astro_type_script_index_0_lang",
+    "src": "Source/pages/Electron.astro?astro&type=script&index=0&lang.ts",
+    "isEntry": true,
+    "imports": [
+      "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts"
+    ]
+  },
+  "Source/pages/Mountain.astro?astro&type=script&index=0&lang.ts": {
+    "file": "_astro/Mountain.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "name": "Mountain.astro_astro_type_script_index_0_lang",
+    "src": "Source/pages/Mountain.astro?astro&type=script&index=0&lang.ts",
+    "isEntry": true,
+    "imports": [
+      "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts"
+    ]
+  },
+  "Source/pages/index.astro?astro&type=script&index=0&lang.ts": {
+    "file": "_astro/index.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "name": "index.astro_astro_type_script_index_0_lang",
+    "src": "Source/pages/index.astro?astro&type=script&index=0&lang.ts",
+    "isEntry": true,
+    "imports": [
+      "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts"
+    ]
   }
 }

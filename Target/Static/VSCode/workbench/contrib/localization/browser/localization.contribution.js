@@ -1,1 +1,0 @@
-import{$aPc as o}from"../common/localization.contribution.js";import{$jm as r}from"../../../../platform/registry/common/platform.js";import{Extensions as e}from"../../../common/contributions.js";class n extends o{}const s=r.as(e.Workbench);s.registerWorkbenchContribution(n,4);export{n as $bPc};

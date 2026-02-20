@@ -1,1 +1,0 @@
-import{localize as r}from"../../nls.js";function n(e){switch(e){case 1:return r(119,null);case 2:return r(120,null);case 3:return r(121,null);case 4:return r(122,null);case 5:return r(123,null);case 6:return r(124,null);case 7:return r(125,null);case 8:return r(126,null);case 9:return r(127,null);default:return""}}export{n as $FA};

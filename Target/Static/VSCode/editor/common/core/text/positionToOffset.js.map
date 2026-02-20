@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/core/text/positionToOffset.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { StringEdit, StringReplacement } from '../edits/stringEdit.js';\nimport { TextEdit, TextReplacement } from '../edits/textEdit.js';\nimport { _setPositionOffsetTransformerDependencies } from './positionToOffsetImpl.js';\nimport { TextLength } from './textLength.js';\n\nexport { PositionOffsetTransformerBase, PositionOffsetTransformer } from './positionToOffsetImpl.js';\n\n_setPositionOffsetTransformerDependencies({\n\tStringEdit: StringEdit,\n\tStringReplacement: StringReplacement,\n\tTextReplacement: TextReplacement,\n\tTextEdit: TextEdit,\n\tTextLength: TextLength,\n});\n\n// TODO@hediet this is dept and needs to go. See https://github.com/microsoft/vscode/issues/251126.\nexport function ensureDependenciesAreSet(): void {\n\t// Noop\n}\n"],
-  "mappings": ";;AAKA,SAAS,YAAY,yBAAyB;AAC9C,SAAS,UAAU,uBAAuB;AAC1C,SAAS,iDAAiD;AAC1D,SAAS,kBAAkB;AAE3B,SAAS,+BAA+B,iCAAiC;AAEzE,0CAA0C;EACzC;EACA;EACA;EACA;EACA;CACA;AAGK,SAAU,2BAAwB;AAExC;AAFgB;",
-  "names": []
-}

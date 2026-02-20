@@ -1,1 +1,0 @@
-const e=globalThis.performance.now.bind(globalThis.performance);class s{static create(t){return new s(t)}constructor(t){this.c=t===!1?Date.now:e,this.a=this.c(),this.b=-1}stop(){this.b=this.c()}reset(){this.a=this.c(),this.b=-1}elapsed(){return this.b!==-1?this.b-this.a:this.c()-this.a}}export{s as $rf};

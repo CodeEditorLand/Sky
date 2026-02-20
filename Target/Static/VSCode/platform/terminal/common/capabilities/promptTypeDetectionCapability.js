@@ -1,1 +1,0 @@
-import{$xf as e}from"../../../../base/common/event.js";import{$Ed as r}from"../../../../base/common/lifecycle.js";class o extends r{constructor(){super(...arguments),this.type=6,this.b=this.D(new e),this.onPromptTypeChanged=this.b.event}get promptType(){return this.a}setPromptType(t){this.a=t,this.b.fire(t)}}export{o as $nYb};

@@ -1,1 +1,0 @@
-import*as t from"../../../../../../base/browser/dom.js";import{$UGb as r}from"../cellPart.js";class e extends r{constructor(o,s,i){super(),this.D(t.$u8(o,t.$r9.FOCUS,()=>{this.c&&i.focusElement(this.c)},!0)),s&&this.D(t.$u8(s,t.$r9.FOCUS,()=>{this.c&&this.c.outputsViewModels.length&&i.focusNotebookCell(this.c,"output")}))}}export{e as $iJb};

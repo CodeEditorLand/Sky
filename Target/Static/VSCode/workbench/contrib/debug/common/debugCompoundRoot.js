@@ -1,1 +1,0 @@
-import{$xf as s}from"../../../../base/common/event.js";class e{constructor(){this.a=!1,this.b=new s,this.onDidSessionStop=this.b.event}sessionStopped(){this.a||(this.a=!0,this.b.fire())}}export{e as $tW};

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/log/common/logConstants.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { localize } from '../../../../nls.js';\nimport { LoggerGroup } from '../../../../platform/log/common/log.js';\n\nexport const windowLogId = 'rendererLog';\nexport const windowLogGroup: LoggerGroup = { id: windowLogId, name: localize('window', \"Window\") };\nexport const showWindowLogActionId = 'workbench.action.showWindowLog';\n"],
-  "mappings": "AAKA,SAAS,gBAAgB;AAGlB,MAAM,cAAc;AACpB,MAAM,iBAA8B,EAAE,IAAI,aAAa,MAAM,SAAS,UAAU,QAAQ,EAAC;AACzF,MAAM,wBAAwB;",
-  "names": []
-}

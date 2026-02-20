@@ -1,1 +1,0 @@
-function a(f,s){const o=f.start,r=f.endExclusive;let t=Number.MAX_VALUE,e=0;for(const n of s){const i=e+n.width,c=Math.max(o,e),h=Math.min(r,i);c<h&&(t=Math.min(t,n.height)),e=i}return r>e||t===Number.MAX_VALUE?0:t}export{a as $Btb};

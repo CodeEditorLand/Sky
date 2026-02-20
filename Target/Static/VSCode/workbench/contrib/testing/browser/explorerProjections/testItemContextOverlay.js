@@ -1,1 +1,0 @@
-import{$o0b as m}from"../../common/testProfileService.js";import{$zX as i}from"../../common/testId.js";import{TestingContextKeys as r}from"../../common/testingContextKeys.js";const d=(t,o)=>{if(!t)return[];const e=i.fromString(t.item.extId);return[[r.testItemExtId.key,e.localId],[r.controllerId.key,t.controllerId],[r.testItemHasUri.key,!!t.item.uri],...m(o)]};export{d as $7vc};

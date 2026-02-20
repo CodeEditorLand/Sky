@@ -1,1 +1,0 @@
-async function i(t){let e="";const c=(async()=>{if(!(!t||!t.stream))for await(const r of t.stream)if(Array.isArray(r))for(const a of r)a.type==="text"&&(e+=a.value);else r.type==="text"&&(e+=r.value)})();try{return await Promise.all([t.result,c]),e}catch(r){return"Error occurred "+r}}export{i as $BDc};

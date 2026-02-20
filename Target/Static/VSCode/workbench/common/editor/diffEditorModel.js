@@ -1,1 +1,0 @@
-import{$8H as i}from"./editorModel.js";class r extends i{get originalModel(){return this.a}get modifiedModel(){return this.b}constructor(s,e){super(),this.a=s,this.b=e}async resolve(){await Promise.all([this.a?.resolve(),this.b?.resolve()])}isResolved(){return!!(this.a?.isResolved()&&this.b?.isResolved())}dispose(){super.dispose()}}export{r as $hO};

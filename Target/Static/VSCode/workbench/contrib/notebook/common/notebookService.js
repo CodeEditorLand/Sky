@@ -1,1 +1,0 @@
-import{$Nj as i}from"../../../../platform/instantiation/common/instantiation.js";const c=i("notebookService");class n{constructor(t,e,o){this.viewType=t,this.serializer=e,this.extensionData=o}}export{c as $CDb,n as $DDb};

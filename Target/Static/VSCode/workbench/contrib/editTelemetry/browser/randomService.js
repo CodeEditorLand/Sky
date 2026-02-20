@@ -1,1 +1,0 @@
-import{$ln as r}from"../../../../base/common/uuid.js";import{$Nj as t}from"../../../../platform/instantiation/common/instantiation.js";const $=t("randomService");class a{generateUuid(){return r()}generatePrefixedUuid(e){return`${e}-${this.generateUuid()}`}}export{$ as $iLc,a as $jLc};

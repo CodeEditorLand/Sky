@@ -1,1 +1,0 @@
-import{$Nj as o}from"../../../../platform/instantiation/common/instantiation.js";import{$zL as r}from"./editorGroupsService.js";const p=o("editorService"),i=-1,$=-2,L=-3;function d(t){return typeof t=="number"||r(t)}export{p as $BL,i as $CL,$ as $DL,L as $EL,d as $FL};

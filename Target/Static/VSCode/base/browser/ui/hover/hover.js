@@ -1,1 +1,0 @@
-var o;(function(n){n[n.Pointer=1]="Pointer",n[n.Mouse=2]="Mouse"})(o||(o={}));function e(n){const t=n;return typeof t=="object"&&"markdown"in t&&"markdownNotSupportedFallback"in t}function r(n){const t=n;return typeof t=="object"&&"element"in t}export{e as $r0,r as $s0,o as HoverStyle};

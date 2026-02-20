@@ -1,1 +1,0 @@
-import{$Tcb as i}from"../../../common/viewEventHandler.js";class c extends i{get glyphRasterizer(){return this.f.value}constructor(t,s,e,r){super(),this.a=t,this.b=s,this.c=e,this.f=r,this.a.addEventHandler(this)}}export{c as $ygb};

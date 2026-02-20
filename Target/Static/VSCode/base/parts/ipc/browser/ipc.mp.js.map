@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/base/parts/ipc/browser/ipc.mp.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IDisposable } from '../../../common/lifecycle.js';\nimport { Client as MessagePortClient } from '../common/ipc.mp.js';\n\n/**\n * An implementation of a `IPCClient` on top of DOM `MessagePort`.\n */\nexport class Client extends MessagePortClient implements IDisposable {\n\n\t/**\n\t * @param clientId a way to uniquely identify this client among\n\t * other clients. this is important for routing because every\n\t * client can also be a server\n\t */\n\tconstructor(port: MessagePort, clientId: string) {\n\t\tsuper(port, clientId);\n\t}\n}\n"],
-  "mappings": ";;AAMA,SAAS,UAAU,yBAAyB;AAKtC,MAAO,eAAe,kBAAiB;EAX7C,OAW6C;;;;;;;;EAO5C,YAAY,MAAmB,UAAgB;AAC9C,UAAM,MAAM,QAAQ;EACrB;;",
-  "names": []
-}

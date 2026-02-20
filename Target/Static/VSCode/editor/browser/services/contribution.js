@@ -1,1 +1,0 @@
-import{$WC as m}from"../../../platform/instantiation/common/extensions.js";import{$ofb as r}from"../../common/services/editorWorker.js";import{$1db as f}from"../editorExtensions.js";import{$vfb as i}from"./editorWorkerService.js";import{$yfb as o}from"./markerDecorations.js";m(r,i,0);f(o.ID,o,0);

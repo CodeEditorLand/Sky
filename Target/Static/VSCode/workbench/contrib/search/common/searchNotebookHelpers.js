@@ -1,3 +1,0 @@
-import{$gV as c}from"../../../services/search/common/search.js";import{$_D as p}from"../../../../editor/common/core/range.js";function g(r){return"cellResults"in r}const h="rawCell#";function x(r,u){let o=-1;const s=[];let t=[];return r.forEach(e=>{e.range.startLineNumber!==o&&t.length>0&&(s.push([...t]),t=[]),t.push(e),o=e.range.endLineNumber}),t.length>0&&s.push([...t]),s.map(e=>{const i=[],a=e[0].range.startLineNumber,l=e[e.length-1].range.endLineNumber;for(let n=a;n<=l;n++)i.push(u.getLineContent(n));return new c(i.join(`
-`)+`
-`,e.map(n=>new p(n.range.startLineNumber-1,n.range.startColumn-1,n.range.endLineNumber-1,n.range.endColumn-1)))})}export{g as $mZ,h as $nZ,x as $oZ};

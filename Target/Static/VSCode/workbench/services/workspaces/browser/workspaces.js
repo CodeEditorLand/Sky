@@ -1,1 +1,0 @@
-import{$Gn as r}from"../../../../base/common/hash.js";function i(t){return{id:n(t),configPath:t}}function u(t){return{id:n(t),uri:t}}function n(t){return r(t.toString()).toString(16)}export{i as $CMc,u as $DMc};

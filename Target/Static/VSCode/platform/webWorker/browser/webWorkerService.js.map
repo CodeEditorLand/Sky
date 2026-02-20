@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/webWorker/browser/webWorkerService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { createDecorator } from '../../instantiation/common/instantiation.js';\nimport { IWebWorkerClient } from '../../../base/common/worker/webWorker.js';\nimport { WebWorkerDescriptor } from './webWorkerDescriptor.js';\n\nexport const IWebWorkerService = createDecorator<IWebWorkerService>('IWebWorkerService');\n\nexport interface IWebWorkerService {\n\treadonly _serviceBrand: undefined;\n\n\tcreateWorkerClient<T extends object>(workerDescriptor: WebWorkerDescriptor | Worker | Promise<Worker>): IWebWorkerClient<T>;\n\n\tgetWorkerUrl(descriptor: WebWorkerDescriptor): string;\n}\n"],
-  "mappings": "AAKA,SAAS,uBAAuB;AAIzB,MAAM,oBAAoB,gBAAmC,mBAAmB;",
-  "names": []
-}

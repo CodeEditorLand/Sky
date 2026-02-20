@@ -1,1 +1,0 @@
-import{localize as l}from"../../../../nls.js";const n={showLanguagePackExtensions:l(9959,null),searchMarketplace:l(9960,null),installAndRestartMessage:l(9961,null),installAndRestart:l(9962,null)};export{n as $uWc};

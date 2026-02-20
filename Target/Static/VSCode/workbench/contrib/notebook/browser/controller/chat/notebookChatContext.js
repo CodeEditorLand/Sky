@@ -1,1 +1,0 @@
-import{localize as o}from"../../../../../../nls.js";import{$qo as e}from"../../../../../../platform/contextkey/common/contextkey.js";const r=new e("notebookChatAgentRegistered",!1,o(10838,null));export{r as $ilc};

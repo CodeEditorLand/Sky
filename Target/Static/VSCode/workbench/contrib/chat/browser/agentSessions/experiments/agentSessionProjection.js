@@ -1,1 +1,0 @@
-import{localize as o}from"../../../../../../nls.js";import{$qo as e}from"../../../../../../platform/contextkey/common/contextkey.js";const i=new e("chatInAgentSessionProjection",!1,{type:"boolean",description:o(5533,null)});export{i as $8oc};

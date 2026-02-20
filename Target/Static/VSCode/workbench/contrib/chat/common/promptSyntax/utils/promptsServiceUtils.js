@@ -1,1 +1,0 @@
-import{$Iz as a}from"../../../../../../platform/extensions/common/extensions.js";function h(n,i,o){const t=o.defaultChatAgent?.chatExtensionId;if(!t)return!1;const e=a.equals(i,t),s=n.path.includes("/github/");return e&&s}export{h as $0Yb};

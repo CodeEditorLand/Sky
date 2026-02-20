@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/tools/builtinTools/toolHelpers.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IToolResult } from '../languageModelToolsService.js';\n\n/**\n * Creates a tool result with a single text content part.\n */\nexport function createToolSimpleTextResult(value: string): IToolResult {\n\treturn {\n\t\tcontent: [{\n\t\t\tkind: 'text',\n\t\t\tvalue\n\t\t}]\n\t};\n}\n"],
-  "mappings": ";;AAUM,SAAU,2BAA2B,OAAa;AACvD,SAAO;IACN,SAAS,CAAC;MACT,MAAM;MACN;KACA;;AAEH;AAPgB;",
-  "names": []
-}

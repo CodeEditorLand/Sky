@@ -1,1 +1,0 @@
-import{Event as t}from"../commonFacade/deps.js";import{$ae as o}from"../observables/observableFromEvent.js";class n{constructor(e){this.observable=e}get onDidChange(){return t.fromObservableLight(this.observable)}get value(){return this.observable.get()}}function i(r,e){return e instanceof n?e.observable:o(r,e.onDidChange,()=>e.value)}export{n as $bf,i as $cf};

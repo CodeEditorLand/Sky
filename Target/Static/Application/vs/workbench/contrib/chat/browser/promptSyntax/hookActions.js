@@ -1,0 +1,559 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { parse as parseJSONC } from "../../../../../base/common/jsonc.js";
+import { setProperty, applyEdits } from "../../../../../base/common/jsonEdit.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ChatViewId } from "../chat.js";
+import { CHAT_CATEGORY, CHAT_CONFIG_MENU_ID } from "../actions/chatActions.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IPromptsService, PromptsStorage } from "../../common/promptSyntax/service/promptsService.js";
+import { PromptsType } from "../../common/promptSyntax/promptTypes.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { HOOK_TYPES, getEffectiveCommandFieldKey } from "../../common/promptSyntax/hookSchema.js";
+import { getCopilotCliHookTypeName, resolveCopilotCliHookType } from "../../common/promptSyntax/hookCopilotCliCompat.js";
+import { getHookSourceFormat, HookSourceFormat, buildNewHookEntry } from "../../common/promptSyntax/hookCompatibility.js";
+import { getClaudeHookTypeName, resolveClaudeHookType } from "../../common/promptSyntax/hookClaudeCompat.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { findHookCommandSelection, parseAllHookFiles } from "./hookUtils.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { IPathService } from "../../../../services/path/common/pathService.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { IBulkEditService, ResourceTextEdit } from "../../../../../editor/browser/services/bulkEditService.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { getCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { IRemoteAgentService } from "../../../../services/remote/common/remoteAgentService.js";
+import { OS } from "../../../../../base/common/platform.js";
+const CONFIGURE_HOOKS_ACTION_ID = "workbench.action.chat.configure.hooks";
+function usesCopilotCliNaming(hooksObj) {
+  for (const key of Object.keys(hooksObj)) {
+    if (resolveCopilotCliHookType(key) !== void 0) {
+      return true;
+    }
+  }
+  return false;
+}
+__name(usesCopilotCliNaming, "usesCopilotCliNaming");
+function getHookTypeKeyName(hookTypeId, useCopilotCliNamingConvention) {
+  if (useCopilotCliNamingConvention) {
+    const copilotCliName = getCopilotCliHookTypeName(hookTypeId);
+    if (copilotCliName) {
+      return copilotCliName;
+    }
+  }
+  return hookTypeId;
+}
+__name(getHookTypeKeyName, "getHookTypeKeyName");
+async function addHookToFile(hookFileUri, hookTypeId, fileService, editorService, notificationService, bulkEditService, openEditorOverride) {
+  let hooksContent;
+  const fileExists = await fileService.exists(hookFileUri);
+  if (fileExists) {
+    const existingContent = await fileService.readFile(hookFileUri);
+    try {
+      hooksContent = parseJSONC(existingContent.value.toString());
+      if (!hooksContent.hooks) {
+        hooksContent.hooks = {};
+      }
+    } catch {
+      notificationService.error(localize("commands.new.hook.parseError", "Failed to parse existing hooks file. Please fix the JSON syntax errors and try again."));
+      await editorService.openEditor({ resource: hookFileUri });
+      return;
+    }
+  } else {
+    hooksContent = { hooks: {} };
+  }
+  const sourceFormat = getHookSourceFormat(hookFileUri);
+  const isClaude = sourceFormat === HookSourceFormat.Claude;
+  const useCopilotCliNamingConvention = !isClaude && usesCopilotCliNaming(hooksContent.hooks);
+  const hookTypeKeyName = isClaude ? getClaudeHookTypeName(hookTypeId) ?? hookTypeId : getHookTypeKeyName(hookTypeId, useCopilotCliNamingConvention);
+  let existingKeyForType;
+  for (const key of Object.keys(hooksContent.hooks)) {
+    const resolvedType = isClaude ? resolveClaudeHookType(key) : resolveCopilotCliHookType(key);
+    if (resolvedType === hookTypeId || key === hookTypeId) {
+      existingKeyForType = key;
+      break;
+    }
+  }
+  const keyToUse = existingKeyForType ?? hookTypeKeyName;
+  const newHookEntry = buildNewHookEntry(sourceFormat);
+  const existingHooks = hooksContent.hooks[keyToUse];
+  const newHookIndex = Array.isArray(existingHooks) ? existingHooks.length : 0;
+  let jsonContent;
+  if (fileExists) {
+    const originalText = (await fileService.readFile(hookFileUri)).value.toString();
+    const detectedEol = originalText.includes("\r\n") ? "\r\n" : "\n";
+    const formattingOptions = { tabSize: 1, insertSpaces: false, eol: detectedEol };
+    const edits = setProperty(originalText, ["hooks", keyToUse, newHookIndex], newHookEntry, formattingOptions);
+    jsonContent = applyEdits(originalText, edits);
+  } else {
+    const newContent = { hooks: { [keyToUse]: [newHookEntry] } };
+    jsonContent = JSON.stringify(newContent, null, "	");
+  }
+  const existingEditor = editorService.editors.find((e) => isEqual(e.resource, hookFileUri));
+  if (existingEditor) {
+    await editorService.openEditor({
+      resource: hookFileUri,
+      options: {
+        pinned: false
+      }
+    });
+    const editor = getCodeEditor(editorService.activeTextEditorControl);
+    if (editor && editor.hasModel() && isEqual(editor.getModel().uri, hookFileUri)) {
+      const model = editor.getModel();
+      model.pushEditOperations([], [{
+        range: model.getFullModelRange(),
+        text: jsonContent
+      }], () => null);
+      const selection = findHookCommandSelection(jsonContent, keyToUse, newHookIndex, "command");
+      if (selection && selection.endLineNumber !== void 0 && selection.endColumn !== void 0) {
+        editor.setSelection({
+          startLineNumber: selection.startLineNumber,
+          startColumn: selection.startColumn,
+          endLineNumber: selection.endLineNumber,
+          endColumn: selection.endColumn
+        });
+        editor.revealLineInCenter(selection.startLineNumber);
+      }
+    } else {
+      await bulkEditService.apply([
+        new ResourceTextEdit(hookFileUri, { range: new Range(1, 1, Number.MAX_SAFE_INTEGER, 1), text: jsonContent })
+      ], { label: localize("addHook", "Add Hook") });
+      const selection = findHookCommandSelection(jsonContent, keyToUse, newHookIndex, "command");
+      await editorService.openEditor({
+        resource: hookFileUri,
+        options: {
+          selection,
+          pinned: false
+        }
+      });
+    }
+  } else {
+    if (!fileExists) {
+      await fileService.writeFile(hookFileUri, VSBuffer.fromString(jsonContent));
+    } else {
+      await editorService.openEditor({
+        resource: hookFileUri,
+        options: { pinned: false }
+      });
+      await bulkEditService.apply([
+        new ResourceTextEdit(hookFileUri, { range: new Range(1, 1, Number.MAX_SAFE_INTEGER, 1), text: jsonContent })
+      ], { label: localize("addHook", "Add Hook") });
+    }
+    const selection = findHookCommandSelection(jsonContent, keyToUse, newHookIndex, "command");
+    if (openEditorOverride) {
+      await openEditorOverride(hookFileUri, { selection });
+    } else {
+      await editorService.openEditor({
+        resource: hookFileUri,
+        options: {
+          selection,
+          pinned: false
+        }
+      });
+    }
+  }
+}
+__name(addHookToFile, "addHookToFile");
+function awaitPick(picker, backButton) {
+  return new Promise((resolve) => {
+    let resolved = false;
+    const done = /* @__PURE__ */ __name((value) => {
+      if (!resolved) {
+        resolved = true;
+        disposables.dispose();
+        resolve(value);
+      }
+    }, "done");
+    const disposables = new DisposableStore();
+    disposables.add(picker.onDidAccept(() => {
+      done(picker.activeItems[0]);
+    }));
+    disposables.add(picker.onDidTriggerButton((button) => {
+      if (button === backButton) {
+        done("back");
+      }
+    }));
+    disposables.add(picker.onDidHide(() => {
+      done(void 0);
+    }));
+  });
+}
+__name(awaitPick, "awaitPick");
+var Step;
+(function(Step2) {
+  Step2[Step2["SelectHookType"] = 1] = "SelectHookType";
+  Step2[Step2["SelectHook"] = 2] = "SelectHook";
+  Step2[Step2["SelectFile"] = 3] = "SelectFile";
+  Step2[Step2["SelectFolder"] = 4] = "SelectFolder";
+  Step2[Step2["EnterFilename"] = 5] = "EnterFilename";
+})(Step || (Step = {}));
+async function showConfigureHooksQuickPick(accessor, callbacks) {
+  const promptsService = accessor.get(IPromptsService);
+  const quickInputService = accessor.get(IQuickInputService);
+  const fileService = accessor.get(IFileService);
+  const labelService = accessor.get(ILabelService);
+  const editorService = accessor.get(IEditorService);
+  const workspaceService = accessor.get(IWorkspaceContextService);
+  const pathService = accessor.get(IPathService);
+  const notificationService = accessor.get(INotificationService);
+  const bulkEditService = accessor.get(IBulkEditService);
+  const remoteAgentService = accessor.get(IRemoteAgentService);
+  const remoteEnv = await remoteAgentService.getEnvironment();
+  const targetOS = remoteEnv?.os ?? OS;
+  const workspaceFolder = workspaceService.getWorkspace().folders[0];
+  const workspaceRootUri = workspaceFolder?.uri;
+  const userHomeUri = await pathService.userHome();
+  const userHome = userHomeUri.fsPath ?? userHomeUri.path;
+  const hookEntries = await parseAllHookFiles(promptsService, fileService, labelService, workspaceRootUri, userHome, targetOS, CancellationToken.None);
+  const hookCountByType = /* @__PURE__ */ new Map();
+  for (const entry of hookEntries) {
+    hookCountByType.set(entry.hookType, (hookCountByType.get(entry.hookType) ?? 0) + 1);
+  }
+  const store = new DisposableStore();
+  const picker = store.add(quickInputService.createQuickPick({ useSeparators: true }));
+  const backButton = quickInputService.backButton;
+  let suppressHideDispose = false;
+  store.add(picker.onDidHide(() => {
+    if (!suppressHideDispose) {
+      store.dispose();
+    }
+  }));
+  picker.show();
+  let step = 1;
+  let selectedHookType;
+  let selectedHook;
+  let selectedFile;
+  let selectedFolder;
+  const stepHistory = [];
+  const goBack = /* @__PURE__ */ __name(() => stepHistory.pop(), "goBack");
+  while (true) {
+    switch (step) {
+      case 1: {
+        const hookTypeItems = HOOK_TYPES.map((hookType) => {
+          const count = hookCountByType.get(hookType.id) ?? 0;
+          const countLabel = count > 0 ? ` (${count})` : "";
+          return {
+            label: `${hookType.label}${countLabel}`,
+            description: hookType.description,
+            hookType
+          };
+        });
+        picker.items = hookTypeItems;
+        picker.value = "";
+        picker.placeholder = localize("commands.hooks.selectEvent.placeholder", "Select a lifecycle event");
+        picker.title = localize("commands.hooks.title", "Hooks");
+        picker.buttons = [];
+        const result = await awaitPick(picker, backButton);
+        if (!result || result === "back") {
+          picker.hide();
+          return;
+        }
+        selectedHookType = result;
+        stepHistory.push(
+          1
+          /* Step.SelectHookType */
+        );
+        step = 2;
+        break;
+      }
+      case 2: {
+        const hooksOfType = hookEntries.filter((h) => h.hookType === selectedHookType.hookType.id);
+        const hookItems = [];
+        hookItems.push({
+          label: `$(plus) ${localize("commands.addNewHook.label", "Add new hook...")}`,
+          isAddNewHook: true,
+          alwaysShow: true
+        });
+        if (hooksOfType.length > 0) {
+          hookItems.push({
+            type: "separator",
+            label: localize("existingHooks", "Existing Hooks")
+          });
+          for (const entry of hooksOfType) {
+            const description = labelService.getUriLabel(entry.fileUri, { relative: true });
+            hookItems.push({
+              label: entry.commandLabel,
+              description,
+              hookEntry: entry
+            });
+          }
+        }
+        if (hooksOfType.length === 0) {
+          selectedHook = hookItems[0];
+        } else {
+          picker.items = hookItems;
+          picker.value = "";
+          picker.placeholder = localize("commands.hooks.selectHook.placeholder", "Select a hook to open or add a new one");
+          picker.title = selectedHookType.hookType.label;
+          picker.buttons = [backButton];
+          const result = await awaitPick(picker, backButton);
+          if (result === "back") {
+            step = goBack() ?? 1;
+            break;
+          }
+          if (!result) {
+            picker.hide();
+            return;
+          }
+          selectedHook = result;
+          stepHistory.push(
+            2
+            /* Step.SelectHook */
+          );
+        }
+        if (selectedHook.hookEntry) {
+          const entry = selectedHook.hookEntry;
+          let selection;
+          const commandFieldName = getEffectiveCommandFieldKey(entry.command, targetOS);
+          if (commandFieldName) {
+            try {
+              const content = await fileService.readFile(entry.fileUri);
+              selection = findHookCommandSelection(content.value.toString(), entry.originalHookTypeId, entry.index, commandFieldName);
+            } catch {
+            }
+          }
+          picker.hide();
+          if (callbacks?.openEditor) {
+            await callbacks.openEditor(entry.fileUri, { selection });
+          } else {
+            await editorService.openEditor({
+              resource: entry.fileUri,
+              options: {
+                selection,
+                pinned: false
+              }
+            });
+          }
+          return;
+        }
+        step = 3;
+        break;
+      }
+      case 3: {
+        const hookFiles = await promptsService.listPromptFilesForStorage(PromptsType.hook, PromptsStorage.local, CancellationToken.None);
+        const fileItems = [];
+        fileItems.push({
+          label: `$(new-file) ${localize("commands.createNewHookFile.label", "Create new hook config file...")}`,
+          isCreateNewFile: true,
+          alwaysShow: true
+        });
+        if (hookFiles.length > 0) {
+          fileItems.push({
+            type: "separator",
+            label: localize("existingHookFiles", "Existing Hook Files")
+          });
+          for (const hookFile of hookFiles) {
+            const relativePath = labelService.getUriLabel(hookFile.uri, { relative: true });
+            fileItems.push({
+              label: relativePath,
+              fileUri: hookFile.uri
+            });
+          }
+        }
+        if (hookFiles.length === 0) {
+          selectedFile = fileItems[0];
+        } else {
+          picker.items = fileItems;
+          picker.value = "";
+          picker.placeholder = localize("commands.hooks.selectFile.placeholder", "Select a hook file or create a new one");
+          picker.title = localize("commands.hooks.addHook.title", "Add Hook");
+          picker.buttons = [backButton];
+          const result = await awaitPick(picker, backButton);
+          if (result === "back") {
+            step = goBack() ?? 2;
+            break;
+          }
+          if (!result) {
+            picker.hide();
+            return;
+          }
+          selectedFile = result;
+          stepHistory.push(
+            3
+            /* Step.SelectFile */
+          );
+        }
+        if (selectedFile.fileUri) {
+          picker.hide();
+          await addHookToFile(selectedFile.fileUri, selectedHookType.hookType.id, fileService, editorService, notificationService, bulkEditService, callbacks?.openEditor);
+          return;
+        }
+        step = 4;
+        break;
+      }
+      case 4: {
+        const allFolders = await promptsService.getSourceFolders(PromptsType.hook);
+        const localFolders = allFolders.filter((f) => f.storage === PromptsStorage.local);
+        if (localFolders.length === 0) {
+          picker.hide();
+          notificationService.error(localize("commands.hook.noLocalFolders", "Please open a workspace folder to configure hooks."));
+          return;
+        }
+        selectedFolder = localFolders[0];
+        if (localFolders.length > 1) {
+          const folderItems = localFolders.map((folder) => ({
+            label: labelService.getUriLabel(folder.uri, { relative: true }),
+            folder
+          }));
+          picker.items = folderItems;
+          picker.value = "";
+          picker.placeholder = localize("commands.hook.selectFolder.placeholder", "Select a location for the hook file");
+          picker.title = localize("commands.hook.selectFolder.title", "Hook File Location");
+          picker.buttons = [backButton];
+          const result = await awaitPick(picker, backButton);
+          if (result === "back") {
+            step = goBack() ?? 3;
+            break;
+          }
+          if (!result) {
+            picker.hide();
+            return;
+          }
+          selectedFolder = result.folder;
+          stepHistory.push(
+            4
+            /* Step.SelectFolder */
+          );
+        }
+        step = 5;
+        break;
+      }
+      case 5: {
+        suppressHideDispose = true;
+        picker.hide();
+        suppressHideDispose = false;
+        const fileNameResult = await new Promise((resolve) => {
+          let resolved = false;
+          const done = /* @__PURE__ */ __name((value) => {
+            if (!resolved) {
+              resolved = true;
+              inputDisposables.dispose();
+              resolve(value);
+            }
+          }, "done");
+          const inputDisposables = new DisposableStore();
+          const inputBox = inputDisposables.add(quickInputService.createInputBox());
+          inputBox.prompt = localize("commands.hook.filename.prompt", "Enter hook file name");
+          inputBox.placeholder = localize("commands.hook.filename.placeholder", "e.g., hooks, diagnostics, security");
+          inputBox.title = localize("commands.hook.filename.title", "Hook File Name");
+          inputBox.buttons = [backButton];
+          inputBox.ignoreFocusOut = true;
+          inputDisposables.add(inputBox.onDidAccept(async () => {
+            const value = inputBox.value;
+            if (!value || !value.trim()) {
+              inputBox.validationMessage = localize("commands.hook.filename.required", "File name is required");
+              return;
+            }
+            const name = value.trim();
+            if (/[/\\:*?"<>|]/.test(name)) {
+              inputBox.validationMessage = localize("commands.hook.filename.invalidChars", "File name contains invalid characters");
+              return;
+            }
+            done(name);
+          }));
+          inputDisposables.add(inputBox.onDidChangeValue(() => {
+            inputBox.validationMessage = void 0;
+          }));
+          inputDisposables.add(inputBox.onDidTriggerButton((button) => {
+            if (button === backButton) {
+              done("back");
+            }
+          }));
+          inputDisposables.add(inputBox.onDidHide(() => {
+            done(void 0);
+          }));
+          inputBox.show();
+        });
+        if (fileNameResult === "back") {
+          picker.show();
+          step = goBack() ?? 4;
+          break;
+        }
+        if (!fileNameResult) {
+          store.dispose();
+          return;
+        }
+        await fileService.createFolder(selectedFolder.uri);
+        const hookFileName = fileNameResult.endsWith(".json") ? fileNameResult : `${fileNameResult}.json`;
+        const hookFileUri = URI.joinPath(selectedFolder.uri, hookFileName);
+        if (await fileService.exists(hookFileUri)) {
+          store.dispose();
+          await addHookToFile(hookFileUri, selectedHookType.hookType.id, fileService, editorService, notificationService, bulkEditService, callbacks?.openEditor);
+          return;
+        }
+        const newFileFormat = getHookSourceFormat(hookFileUri);
+        const isClaudeNewFile = newFileFormat === HookSourceFormat.Claude;
+        const hookTypeKey = isClaudeNewFile ? getClaudeHookTypeName(selectedHookType.hookType.id) ?? selectedHookType.hookType.id : selectedHookType.hookType.id;
+        const newFileHookEntry = buildNewHookEntry(newFileFormat);
+        const hooksContent = {
+          hooks: {
+            [hookTypeKey]: [
+              newFileHookEntry
+            ]
+          }
+        };
+        const jsonContent = JSON.stringify(hooksContent, null, "	");
+        await fileService.writeFile(hookFileUri, VSBuffer.fromString(jsonContent));
+        callbacks?.onHookFileCreated?.(hookFileUri);
+        const selection = findHookCommandSelection(jsonContent, hookTypeKey, 0, "command");
+        store.dispose();
+        if (callbacks?.openEditor) {
+          await callbacks.openEditor(hookFileUri, { selection });
+        } else {
+          await editorService.openEditor({
+            resource: hookFileUri,
+            options: {
+              selection,
+              pinned: false
+            }
+          });
+        }
+        return;
+      }
+    }
+  }
+}
+__name(showConfigureHooksQuickPick, "showConfigureHooksQuickPick");
+class ManageHooksAction extends Action2 {
+  static {
+    __name(this, "ManageHooksAction");
+  }
+  constructor() {
+    super({
+      id: CONFIGURE_HOOKS_ACTION_ID,
+      title: localize2("configure-hooks", "Configure Hooks..."),
+      shortTitle: localize2("configure-hooks.short", "Hooks"),
+      icon: Codicon.zap,
+      f1: true,
+      precondition: ChatContextKeys.enabled,
+      category: CHAT_CATEGORY,
+      menu: {
+        id: CHAT_CONFIG_MENU_ID,
+        when: ContextKeyExpr.and(ChatContextKeys.enabled, ContextKeyExpr.equals("view", ChatViewId)),
+        order: 12,
+        group: "1_level"
+      }
+    });
+  }
+  async run(accessor) {
+    return showConfigureHooksQuickPick(accessor);
+  }
+}
+function registerHookActions() {
+  registerAction2(ManageHooksAction);
+}
+__name(registerHookActions, "registerHookActions");
+export {
+  registerHookActions,
+  showConfigureHooksQuickPick
+};
+//# sourceMappingURL=hookActions.js.map

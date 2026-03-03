@@ -1,0 +1,1 @@
+{"version":3,"file":"ActivityBarItemNotFoundError.d.ts","sourceRoot":"","sources":["../../../../../Source/Effect/ActivityBar/Error/ActivityBarItemNotFoundError.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAQH,qBAAa,4BAA6B,SAAQ,KAAK;IACtD,QAAQ,CAAC,IAAI,kCAAkC;gBACnC,MAAM,EAAE,MAAM;IAI1B,IAAa,IAAI,WAA6C;CAC9D;AAED,eAAe,4BAA4B,CAAC"}

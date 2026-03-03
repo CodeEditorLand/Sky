@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/mcp/common/modelContextProtocolApps.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport { McpApps } from '../../../../platform/mcp/common/modelContextProtocolApps.js';\r\n"],
+  "mappings": "AAKA,SAAS,eAAe;",
+  "names": []
+}

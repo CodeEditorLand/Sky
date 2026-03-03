@@ -1,0 +1,16 @@
+.chat-markdown-part {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: normal;
+  }
+  .katex-display .katex {
+    margin: auto;
+    width: fit-content;
+    overflow: hidden;
+  }
+}
+/*# sourceMappingURL=chatMarkdownPart.css.map */

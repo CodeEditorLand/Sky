@@ -1,0 +1,11 @@
+.monaco-workbench .part.sidebar > .sidebar-footer .account-widget-account {
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+}
+.monaco-workbench .part.sidebar > .sidebar-footer .update-widget-action {
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+}
+/*# sourceMappingURL=accountWidget.css.map */

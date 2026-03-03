@@ -1,0 +1,9 @@
+export declare const sessionsSidebarBackground: string;
+export declare const sessionsSidebarBorder: string;
+export declare const sessionsSidebarHeaderBackground: string;
+export declare const sessionsSidebarHeaderForeground: string;
+export declare const chatBarTitleBackground: string;
+export declare const chatBarTitleForeground: string;
+export declare const agentFeedbackInputWidgetBorder: string;
+export declare const sessionsUpdateButtonDownloadingBackground: string;
+export declare const sessionsUpdateButtonDownloadedBackground: string;

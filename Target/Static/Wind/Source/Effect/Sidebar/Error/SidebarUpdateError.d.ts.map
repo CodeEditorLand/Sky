@@ -1,0 +1,1 @@
+{"version":3,"file":"SidebarUpdateError.d.ts","sourceRoot":"","sources":["../../../../../Source/Effect/Sidebar/Error/SidebarUpdateError.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAEH;;;GAGG;AACH,MAAM,CAAC,OAAO,OAAO,kBAAmB,SAAQ,KAAK;IACpD,QAAQ,CAAC,IAAI,wBAAwB;IACrC,SAAkB,KAAK,EAAE,OAAO,CAAC;gBAErB,OAAO,EAAE,MAAM,EAAE,KAAK,EAAE,OAAO;IAM3C,IAAa,IAAI,WAEhB;CACD"}

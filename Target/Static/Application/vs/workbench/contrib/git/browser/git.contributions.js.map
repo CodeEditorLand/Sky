@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/git/browser/git.contributions.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\r\nimport { IGitService } from '../common/gitService.js';\r\nimport { GitService } from './gitService.js';\r\n\r\nregisterSingleton(IGitService, GitService, InstantiationType.Delayed);\r\n"],
+  "mappings": "AAKA,SAA4B,yBAAyB;AACrD,SAAS,mBAAmB;AAC5B,SAAS,kBAAkB;AAE3B;EAAkB;EAAa;EAAU;;AAAA;",
+  "names": []
+}

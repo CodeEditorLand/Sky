@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/theme/common/sizeRegistry.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport * from './sizeUtils.js';\r\n\r\n// Make sure all size files are exported\r\nexport * from './sizes/baseSizes.js';\r\n"],
+  "mappings": "AAKA,cAAc;AAGd,cAAc;",
+  "names": []
+}

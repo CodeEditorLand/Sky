@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/triggerInlineEditCommandsRegistry.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n/**\r\n * Registry for commands that can trigger Inline Edits (NES) when invoked.\r\n */\r\nexport abstract class TriggerInlineEditCommandsRegistry {\r\n\r\n\tprivate static REGISTERED_COMMANDS = new Set<string>();\r\n\r\n\tpublic static getRegisteredCommands(): readonly string[] {\r\n\t\treturn [...TriggerInlineEditCommandsRegistry.REGISTERED_COMMANDS];\r\n\t}\r\n\r\n\tpublic static registerCommand(commandId: string): void {\r\n\t\tTriggerInlineEditCommandsRegistry.REGISTERED_COMMANDS.add(commandId);\r\n\t}\r\n}\r\n"],
+  "mappings": ";;AAQM,MAAgB,kCAAiC;EARvD,OAQuD;;;;AAEvC,SAAA,sBAAsB,oBAAI,IAAG;EAAW;EAEhD,OAAO,wBAAqB;AAClC,WAAO,CAAC,GAAG,kCAAkC,mBAAmB;EACjE;EAEO,OAAO,gBAAgB,WAAiB;AAC9C,sCAAkC,oBAAoB,IAAI,SAAS;EACpE;;",
+  "names": []
+}

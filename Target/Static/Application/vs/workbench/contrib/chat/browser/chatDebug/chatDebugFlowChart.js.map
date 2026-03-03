@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/browser/chatDebug/chatDebugFlowChart.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n// Barrel re-export \u2014 keeps existing imports stable.\r\n// Data model + graph building (stable):\r\nexport { buildFlowGraph, filterFlowNodes, sliceFlowNodes, mergeDiscoveryNodes, mergeToolCallNodes } from './chatDebugFlowGraph.js';\r\nexport type { FlowNode, FlowFilterOptions, FlowSliceResult, FlowLayout, FlowChartRenderResult, LayoutNode, LayoutEdge, SubgraphRect } from './chatDebugFlowGraph.js';\r\n// Layout + rendering\r\nexport { layoutFlowGraph, renderFlowChartSVG } from './chatDebugFlowLayout.js';\r\n\r\n"],
+  "mappings": "AAOA,SAAS,gBAAgB,iBAAiB,gBAAgB,qBAAqB,0BAA0B;AAGzG,SAAS,iBAAiB,0BAA0B;",
+  "names": []
+}

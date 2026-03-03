@@ -1,0 +1,1 @@
+{"version":3,"file":"IPCChannelError.d.ts","sourceRoot":"","sources":["../../../../Source/Types/Error/IPCChannelError.ts"],"names":[],"mappings":"AAAA;;;;;;GAMG;AAEH;;GAEG;AACH,qBAAa,eAAgB,SAAQ,KAAK;IAIxC,QAAQ,CAAC,OAAO,EAAE,MAAM;aACN,KAAK,EAAE,OAAO;IAJjC,QAAQ,CAAC,IAAI,qBAAqB;gBAGxB,OAAO,EAAE,MAAM,EACN,KAAK,EAAE,OAAO;CAIjC"}

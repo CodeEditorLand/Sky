@@ -1,0 +1,1 @@
+{"version":3,"file":"ActivityBarUpdateError.d.ts","sourceRoot":"","sources":["../../../../../Source/Effect/ActivityBar/Error/ActivityBarUpdateError.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAQH,qBAAa,sBAAuB,SAAQ,KAAK;IAChD,QAAQ,CAAC,IAAI,4BAA4B;gBAC7B,MAAM,EAAE,MAAM,EAAE,KAAK,EAAE,OAAO;IAK1C,IAAa,IAAI,WAAuC;CACxD;AAED,eAAe,sBAAsB,CAAC"}

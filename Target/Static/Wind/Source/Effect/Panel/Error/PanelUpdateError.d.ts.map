@@ -1,0 +1,1 @@
+{"version":3,"file":"PanelUpdateError.d.ts","sourceRoot":"","sources":["../../../../../Source/Effect/Panel/Error/PanelUpdateError.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAEH;;;GAGG;AACH,MAAM,CAAC,OAAO,OAAO,gBAAiB,SAAQ,KAAK;IAClD,QAAQ,CAAC,IAAI,sBAAsB;IACnC,SAAkB,KAAK,EAAE,OAAO,CAAC;gBAErB,MAAM,EAAE,MAAM,EAAE,KAAK,EAAE,OAAO;IAM1C,IAAa,IAAI,WAEhB;CACD"}

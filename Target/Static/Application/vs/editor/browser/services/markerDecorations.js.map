@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/services/markerDecorations.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IMarkerDecorationsService } from '../../common/services/markerDecorations.js';\r\nimport { ICodeEditor } from '../editorBrowser.js';\r\nimport { IEditorContribution } from '../../common/editorCommon.js';\r\n\r\nexport class MarkerDecorationsContribution implements IEditorContribution {\r\n\r\n\tpublic static readonly ID: string = 'editor.contrib.markerDecorations';\r\n\r\n\tconstructor(\r\n\t\t_editor: ICodeEditor,\r\n\t\t@IMarkerDecorationsService _markerDecorationsService: IMarkerDecorationsService\r\n\t) {\r\n\t\t// Doesn't do anything, just requires `IMarkerDecorationsService` to make sure it gets instantiated\r\n\t}\r\n\r\n\tdispose(): void {\r\n\t}\r\n}\r\n"],
+  "mappings": ";;;;;;;;;;;;;AAKA,SAAS,iCAAiC;AAInC,IAAM,gCAAN,MAAMA,+BAA6B;EAT1C,OAS0C;;;;AAElB,SAAA,KAAa;EAAmC;EAEvE,YACC,SAC2B,2BAAoD;EAGhF;EAEA,UAAO;EACP;;AAZY,gCAA6B,WAAA;EAMvC,QAAA,GAAA,yBAAyB;GANf,6BAA6B;",
+  "names": ["MarkerDecorationsContribution"]
+}

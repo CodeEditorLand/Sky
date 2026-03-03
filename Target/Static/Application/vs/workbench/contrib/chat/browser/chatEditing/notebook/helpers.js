@@ -1,0 +1,345 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { NotebookCellsChangeType } from "../../../../notebook/common/notebookCommon.js";
+import { sortCellChanges } from "./notebookCellChanges.js";
+function adjustCellDiffForKeepingADeletedCell(originalCellIndex, cellDiffInfo, applyEdits) {
+  const edit = { cells: [], count: 1, editType: 1, index: originalCellIndex };
+  applyEdits([edit], true, void 0, () => void 0, void 0, true);
+  const diffs = sortCellChanges(cellDiffInfo).filter((d) => !(d.type === "delete" && d.originalCellIndex === originalCellIndex)).map((diff) => {
+    if (diff.type !== "insert" && diff.originalCellIndex > originalCellIndex) {
+      return {
+        ...diff,
+        originalCellIndex: diff.originalCellIndex - 1
+      };
+    }
+    return diff;
+  });
+  return diffs;
+}
+__name(adjustCellDiffForKeepingADeletedCell, "adjustCellDiffForKeepingADeletedCell");
+function adjustCellDiffForRevertingADeletedCell(originalCellIndex, cellDiffInfo, cellToInsert, applyEdits, createModifiedCellDiffInfo) {
+  cellDiffInfo = sortCellChanges(cellDiffInfo);
+  const indexOfEntry = cellDiffInfo.findIndex((d) => d.originalCellIndex === originalCellIndex);
+  if (indexOfEntry === -1) {
+    return cellDiffInfo;
+  }
+  let modifiedCellIndex = -1;
+  for (let i = 0; i < cellDiffInfo.length; i++) {
+    const diff = cellDiffInfo[i];
+    if (i < indexOfEntry) {
+      modifiedCellIndex = Math.max(modifiedCellIndex, diff.modifiedCellIndex ?? modifiedCellIndex);
+      continue;
+    }
+    if (i === indexOfEntry) {
+      const edit = { cells: [cellToInsert], count: 0, editType: 1, index: modifiedCellIndex + 1 };
+      applyEdits([edit], true, void 0, () => void 0, void 0, true);
+      cellDiffInfo[i] = createModifiedCellDiffInfo(modifiedCellIndex + 1, originalCellIndex);
+      continue;
+    } else {
+      if (typeof diff.modifiedCellIndex === "number") {
+        diff.modifiedCellIndex++;
+        cellDiffInfo[i] = { ...diff };
+      }
+    }
+  }
+  return cellDiffInfo;
+}
+__name(adjustCellDiffForRevertingADeletedCell, "adjustCellDiffForRevertingADeletedCell");
+function adjustCellDiffForRevertingAnInsertedCell(modifiedCellIndex, cellDiffInfo, applyEdits) {
+  if (modifiedCellIndex === -1) {
+    return cellDiffInfo;
+  }
+  cellDiffInfo = sortCellChanges(cellDiffInfo).filter((d) => !(d.type === "insert" && d.modifiedCellIndex === modifiedCellIndex)).map((d) => {
+    if (d.type === "insert" && d.modifiedCellIndex === modifiedCellIndex) {
+      return d;
+    }
+    if (d.type !== "delete" && d.modifiedCellIndex > modifiedCellIndex) {
+      return {
+        ...d,
+        modifiedCellIndex: d.modifiedCellIndex - 1
+      };
+    }
+    return d;
+  });
+  const edit = { cells: [], count: 1, editType: 1, index: modifiedCellIndex };
+  applyEdits([edit], true, void 0, () => void 0, void 0, true);
+  return cellDiffInfo;
+}
+__name(adjustCellDiffForRevertingAnInsertedCell, "adjustCellDiffForRevertingAnInsertedCell");
+function adjustCellDiffForKeepingAnInsertedCell(modifiedCellIndex, cellDiffInfo, cellToInsert, applyEdits, createModifiedCellDiffInfo) {
+  cellDiffInfo = sortCellChanges(cellDiffInfo);
+  if (modifiedCellIndex === -1) {
+    return cellDiffInfo;
+  }
+  const indexOfEntry = cellDiffInfo.findIndex((d) => d.modifiedCellIndex === modifiedCellIndex);
+  if (indexOfEntry === -1) {
+    return cellDiffInfo;
+  }
+  let originalCellIndex = -1;
+  for (let i = 0; i < cellDiffInfo.length; i++) {
+    const diff = cellDiffInfo[i];
+    if (i < indexOfEntry) {
+      originalCellIndex = Math.max(originalCellIndex, diff.originalCellIndex ?? originalCellIndex);
+      continue;
+    }
+    if (i === indexOfEntry) {
+      const edit = { cells: [cellToInsert], count: 0, editType: 1, index: originalCellIndex + 1 };
+      applyEdits([edit], true, void 0, () => void 0, void 0, true);
+      cellDiffInfo[i] = createModifiedCellDiffInfo(modifiedCellIndex, originalCellIndex + 1);
+      continue;
+    } else {
+      if (typeof diff.originalCellIndex === "number") {
+        diff.originalCellIndex++;
+        cellDiffInfo[i] = { ...diff };
+      }
+    }
+  }
+  return cellDiffInfo;
+}
+__name(adjustCellDiffForKeepingAnInsertedCell, "adjustCellDiffForKeepingAnInsertedCell");
+function adjustCellDiffAndOriginalModelBasedOnCellAddDelete(change, cellDiffInfo, modifiedModelCellCount, originalModelCellCount, applyEdits, createModifiedCellDiffInfo) {
+  cellDiffInfo = sortCellChanges(cellDiffInfo);
+  const numberOfCellsInserted = change[2].length;
+  const numberOfCellsDeleted = change[1];
+  const cells = change[2].map((cell) => {
+    return {
+      cellKind: cell.cellKind,
+      language: cell.language,
+      metadata: cell.metadata,
+      outputs: cell.outputs,
+      source: cell.getValue(),
+      mime: void 0,
+      internalMetadata: cell.internalMetadata
+    };
+  });
+  let diffEntryIndex = -1;
+  let indexToInsertInOriginalModel = void 0;
+  if (cells.length) {
+    for (let i = 0; i < cellDiffInfo.length; i++) {
+      const diff = cellDiffInfo[i];
+      if (typeof diff.modifiedCellIndex === "number" && diff.modifiedCellIndex === change[0]) {
+        diffEntryIndex = i;
+        if (typeof diff.originalCellIndex === "number") {
+          indexToInsertInOriginalModel = diff.originalCellIndex;
+        }
+        break;
+      }
+      if (typeof diff.originalCellIndex === "number") {
+        indexToInsertInOriginalModel = diff.originalCellIndex + 1;
+      }
+    }
+    const edit = {
+      editType: 1,
+      cells,
+      index: indexToInsertInOriginalModel ?? 0,
+      count: change[1]
+    };
+    applyEdits([edit], true, void 0, () => void 0, void 0, true);
+  }
+  if (numberOfCellsDeleted) {
+    let numberOfOriginalCellsRemovedSoFar = 0;
+    let numberOfModifiedCellsRemovedSoFar = 0;
+    const modifiedIndexesToRemove = /* @__PURE__ */ new Set();
+    for (let i = 0; i < numberOfCellsDeleted; i++) {
+      modifiedIndexesToRemove.add(change[0] + i);
+    }
+    const itemsToRemove = /* @__PURE__ */ new Set();
+    for (let i = 0; i < cellDiffInfo.length; i++) {
+      const diff = cellDiffInfo[i];
+      if (i < diffEntryIndex) {
+        continue;
+      }
+      let changed = false;
+      if (typeof diff.modifiedCellIndex === "number" && modifiedIndexesToRemove.has(diff.modifiedCellIndex)) {
+        numberOfModifiedCellsRemovedSoFar++;
+        if (typeof diff.originalCellIndex === "number") {
+          numberOfOriginalCellsRemovedSoFar++;
+        }
+        itemsToRemove.add(diff);
+        continue;
+      }
+      if (typeof diff.modifiedCellIndex === "number" && numberOfModifiedCellsRemovedSoFar) {
+        diff.modifiedCellIndex -= numberOfModifiedCellsRemovedSoFar;
+        changed = true;
+      }
+      if (typeof diff.originalCellIndex === "number" && numberOfOriginalCellsRemovedSoFar) {
+        diff.originalCellIndex -= numberOfOriginalCellsRemovedSoFar;
+        changed = true;
+      }
+      if (changed) {
+        cellDiffInfo[i] = { ...diff };
+      }
+    }
+    if (itemsToRemove.size) {
+      Array.from(itemsToRemove).filter((diff) => typeof diff.originalCellIndex === "number").forEach((diff) => {
+        const edit = {
+          editType: 1,
+          cells: [],
+          index: diff.originalCellIndex,
+          count: 1
+        };
+        applyEdits([edit], true, void 0, () => void 0, void 0, true);
+      });
+    }
+    cellDiffInfo = cellDiffInfo.filter((d) => !itemsToRemove.has(d));
+  }
+  if (numberOfCellsInserted && diffEntryIndex >= 0) {
+    for (let i = 0; i < cellDiffInfo.length; i++) {
+      const diff = cellDiffInfo[i];
+      if (i < diffEntryIndex) {
+        continue;
+      }
+      let changed = false;
+      if (typeof diff.modifiedCellIndex === "number") {
+        diff.modifiedCellIndex += numberOfCellsInserted;
+        changed = true;
+      }
+      if (typeof diff.originalCellIndex === "number") {
+        diff.originalCellIndex += numberOfCellsInserted;
+        changed = true;
+      }
+      if (changed) {
+        cellDiffInfo[i] = { ...diff };
+      }
+    }
+  }
+  cells.forEach((_, i) => {
+    const originalCellIndex = i + (indexToInsertInOriginalModel ?? 0);
+    const modifiedCellIndex = change[0] + i;
+    const unchangedCell = createModifiedCellDiffInfo(modifiedCellIndex, originalCellIndex);
+    cellDiffInfo.splice((diffEntryIndex === -1 ? cellDiffInfo.length : diffEntryIndex) + i, 0, unchangedCell);
+  });
+  return cellDiffInfo;
+}
+__name(adjustCellDiffAndOriginalModelBasedOnCellAddDelete, "adjustCellDiffAndOriginalModelBasedOnCellAddDelete");
+function adjustCellDiffAndOriginalModelBasedOnCellMovements(event, cellDiffInfo) {
+  const minimumIndex = Math.min(event.index, event.newIdx);
+  const maximumIndex = Math.max(event.index, event.newIdx);
+  const cellDiffs = cellDiffInfo.slice();
+  const indexOfEntry = cellDiffs.findIndex((d) => d.modifiedCellIndex === event.index);
+  const indexOfEntryToPlaceBelow = cellDiffs.findIndex((d) => d.modifiedCellIndex === event.newIdx);
+  if (indexOfEntry === -1 || indexOfEntryToPlaceBelow === -1) {
+    return void 0;
+  }
+  const entryToBeMoved = { ...cellDiffs[indexOfEntry] };
+  const moveDirection = event.newIdx > event.index ? "down" : "up";
+  const startIndex = cellDiffs.findIndex((d) => d.modifiedCellIndex === minimumIndex);
+  const endIndex = cellDiffs.findIndex((d) => d.modifiedCellIndex === maximumIndex);
+  const movingExistingCell = typeof entryToBeMoved.originalCellIndex === "number";
+  let originalCellsWereEffected = false;
+  for (let i = 0; i < cellDiffs.length; i++) {
+    const diff = cellDiffs[i];
+    let changed = false;
+    if (moveDirection === "down") {
+      if (i > startIndex && i <= endIndex) {
+        if (typeof diff.modifiedCellIndex === "number") {
+          changed = true;
+          diff.modifiedCellIndex = diff.modifiedCellIndex - 1;
+        }
+        if (typeof diff.originalCellIndex === "number" && movingExistingCell) {
+          diff.originalCellIndex = diff.originalCellIndex - 1;
+          originalCellsWereEffected = true;
+          changed = true;
+        }
+      }
+    } else {
+      if (i >= startIndex && i < endIndex) {
+        if (typeof diff.modifiedCellIndex === "number") {
+          changed = true;
+          diff.modifiedCellIndex = diff.modifiedCellIndex + 1;
+        }
+        if (typeof diff.originalCellIndex === "number" && movingExistingCell) {
+          diff.originalCellIndex = diff.originalCellIndex + 1;
+          originalCellsWereEffected = true;
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      cellDiffs[i] = { ...diff };
+    }
+  }
+  entryToBeMoved.modifiedCellIndex = event.newIdx;
+  const originalCellIndex = entryToBeMoved.originalCellIndex;
+  if (moveDirection === "down") {
+    cellDiffs.splice(endIndex + 1, 0, entryToBeMoved);
+    cellDiffs.splice(startIndex, 1);
+    if (typeof entryToBeMoved.originalCellIndex === "number") {
+      entryToBeMoved.originalCellIndex = cellDiffs.slice(0, endIndex).reduce((lastOriginalIndex, diff) => typeof diff.originalCellIndex === "number" ? Math.max(lastOriginalIndex, diff.originalCellIndex) : lastOriginalIndex, -1) + 1;
+    }
+  } else {
+    cellDiffs.splice(endIndex, 1);
+    cellDiffs.splice(startIndex, 0, entryToBeMoved);
+    if (typeof entryToBeMoved.originalCellIndex === "number") {
+      entryToBeMoved.originalCellIndex = cellDiffs.slice(0, startIndex).reduce((lastOriginalIndex, diff) => typeof diff.originalCellIndex === "number" ? Math.max(lastOriginalIndex, diff.originalCellIndex) : lastOriginalIndex, -1) + 1;
+    }
+  }
+  if (typeof entryToBeMoved.originalCellIndex === "number" && originalCellsWereEffected && typeof originalCellIndex === "number" && entryToBeMoved.originalCellIndex !== originalCellIndex) {
+    const edit = {
+      editType: 6,
+      index: originalCellIndex,
+      length: event.length,
+      newIdx: entryToBeMoved.originalCellIndex
+    };
+    return [cellDiffs, [edit]];
+  }
+  return [cellDiffs, []];
+}
+__name(adjustCellDiffAndOriginalModelBasedOnCellMovements, "adjustCellDiffAndOriginalModelBasedOnCellMovements");
+function getCorrespondingOriginalCellIndex(modifiedCellIndex, cellDiffInfo) {
+  const entry = cellDiffInfo.find((d) => d.modifiedCellIndex === modifiedCellIndex);
+  return entry?.originalCellIndex;
+}
+__name(getCorrespondingOriginalCellIndex, "getCorrespondingOriginalCellIndex");
+function isTransientIPyNbExtensionEvent(notebookKind, e) {
+  if (notebookKind !== "jupyter-notebook") {
+    return false;
+  }
+  if (e.rawEvents.every((event) => {
+    if (event.kind !== NotebookCellsChangeType.ChangeCellMetadata) {
+      return false;
+    }
+    if (JSON.stringify(event.metadata || {}) === JSON.stringify({ execution_count: null, metadata: {} })) {
+      return true;
+    }
+    return true;
+  })) {
+    return true;
+  }
+  return false;
+}
+__name(isTransientIPyNbExtensionEvent, "isTransientIPyNbExtensionEvent");
+function calculateNotebookRewriteRatio(cellsDiff, originalModel, modifiedModel) {
+  const totalNumberOfUpdatedLines = cellsDiff.reduce((totalUpdatedLines, value) => {
+    const getUpadtedLineCount = /* @__PURE__ */ __name(() => {
+      if (value.type === "unchanged") {
+        return 0;
+      }
+      if (value.type === "delete") {
+        return originalModel.cells[value.originalCellIndex].textModel?.getLineCount() ?? 0;
+      }
+      if (value.type === "insert") {
+        return modifiedModel.cells[value.modifiedCellIndex].textModel?.getLineCount() ?? 0;
+      }
+      return value.diff.get().changes.reduce((maxLineNumber, change) => {
+        return Math.max(maxLineNumber, change.modified.endLineNumberExclusive);
+      }, 0);
+    }, "getUpadtedLineCount");
+    return totalUpdatedLines + getUpadtedLineCount();
+  }, 0);
+  const totalNumberOfLines = modifiedModel.cells.reduce((totalLines, cell) => totalLines + (cell.textModel?.getLineCount() ?? 0), 0);
+  return totalNumberOfLines === 0 ? 0 : Math.min(1, totalNumberOfUpdatedLines / totalNumberOfLines);
+}
+__name(calculateNotebookRewriteRatio, "calculateNotebookRewriteRatio");
+export {
+  adjustCellDiffAndOriginalModelBasedOnCellAddDelete,
+  adjustCellDiffAndOriginalModelBasedOnCellMovements,
+  adjustCellDiffForKeepingADeletedCell,
+  adjustCellDiffForKeepingAnInsertedCell,
+  adjustCellDiffForRevertingADeletedCell,
+  adjustCellDiffForRevertingAnInsertedCell,
+  calculateNotebookRewriteRatio,
+  getCorrespondingOriginalCellIndex,
+  isTransientIPyNbExtensionEvent
+};
+//# sourceMappingURL=helpers.js.map

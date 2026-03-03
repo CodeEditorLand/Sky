@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/browserView/electron-browser/playwrightWorkbenchService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IPlaywrightService } from '../../../../platform/browserView/common/playwrightService.js';\r\nimport { registerSharedProcessRemoteService } from '../../../../platform/ipc/electron-browser/services.js';\r\n\r\nregisterSharedProcessRemoteService(IPlaywrightService, 'playwright');\r\n"],
+  "mappings": "AAKA,SAAS,0BAA0B;AACnC,SAAS,0CAA0C;AAEnD,mCAAmC,oBAAoB,YAAY;",
+  "names": []
+}

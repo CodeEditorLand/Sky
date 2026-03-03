@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/output/common/outputLinkComputerMain.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { create } from './outputLinkComputer.js';\nimport { bootstrapWebWorker } from '../../../../base/common/worker/webWorkerBootstrap.js';\n\nbootstrapWebWorker(create);\n"],
+  "mappings": "AAKA,SAAS,cAAc;AACvB,SAAS,0BAA0B;AAEnC,mBAAmB,MAAM;",
+  "names": []
+}

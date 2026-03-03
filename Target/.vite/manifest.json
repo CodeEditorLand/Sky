@@ -1,6 +1,6 @@
 {
   "../Output/Target/Microsoft/VSCode/vs/base/browser/ui/codicons/codicon/codicon.ttf": {
-    "file": "_astro/codicon.BIXo88wc.ttf",
+    "file": "_astro/codicon.DFLyp8GX.ttf",
     "src": "../Output/Target/Microsoft/VSCode/vs/base/browser/ui/codicons/codicon/codicon.ttf"
   },
   "../Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html": {
@@ -8,26 +8,26 @@
     "src": "../Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html"
   },
   "Source/Workbench/Browser.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/Browser.astro_astro_type_script_index_0_lang.D0HC4pAd.js",
+    "file": "_astro/Browser.astro_astro_type_script_index_0_lang.DWy1PC7t.js",
     "name": "Browser.astro_astro_type_script_index_0_lang",
     "src": "Source/Workbench/Browser.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,
     "css": [
-      "_astro/Browser.zH61OVbO.css"
+      "_astro/Browser.2GAyQ6nw.css"
     ],
     "assets": [
       "_astro/webWorkerExtensionHostIframe.DWTsNr7i.html",
-      "_astro/codicon.BIXo88wc.ttf"
+      "_astro/codicon.DFLyp8GX.ttf"
     ]
   },
   "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/Browser.astro_astro_type_script_index_0_lang.f37yjgra.js",
+    "file": "_astro/Browser.astro_astro_type_script_index_0_lang.DGnNBQe4.js",
     "name": "Browser.astro_astro_type_script_index_0_lang",
     "src": "Source/pages/Browser.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true
   },
   "Source/pages/BrowserProxy.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/BrowserProxy.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "file": "_astro/BrowserProxy.astro_astro_type_script_index_0_lang.HaC-KB-Q.js",
     "name": "BrowserProxy.astro_astro_type_script_index_0_lang",
     "src": "Source/pages/BrowserProxy.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,
@@ -36,7 +36,7 @@
     ]
   },
   "Source/pages/Electron.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/Electron.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "file": "_astro/Electron.astro_astro_type_script_index_0_lang.HaC-KB-Q.js",
     "name": "Electron.astro_astro_type_script_index_0_lang",
     "src": "Source/pages/Electron.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,
@@ -45,7 +45,7 @@
     ]
   },
   "Source/pages/Mountain.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/Mountain.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "file": "_astro/Mountain.astro_astro_type_script_index_0_lang.HaC-KB-Q.js",
     "name": "Mountain.astro_astro_type_script_index_0_lang",
     "src": "Source/pages/Mountain.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,
@@ -54,7 +54,7 @@
     ]
   },
   "Source/pages/index.astro?astro&type=script&index=0&lang.ts": {
-    "file": "_astro/index.astro_astro_type_script_index_0_lang.BGvCAzEc.js",
+    "file": "_astro/index.astro_astro_type_script_index_0_lang.HaC-KB-Q.js",
     "name": "index.astro_astro_type_script_index_0_lang",
     "src": "Source/pages/index.astro?astro&type=script&index=0&lang.ts",
     "isEntry": true,

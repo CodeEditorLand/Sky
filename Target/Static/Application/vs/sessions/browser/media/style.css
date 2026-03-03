@@ -1,0 +1,28 @@
+.agent-sessions-workbench .part.sidebar {
+  background: var(--vscode-sideBar-background);
+  border-right: 1px solid var(--vscode-sideBar-border, transparent);
+}
+.agent-sessions-workbench .part.auxiliarybar {
+  margin: 8px 8px 8px 0;
+  background: var(--part-background);
+  border: 1px solid var(--part-border-color, transparent);
+  border-radius: 8px;
+}
+.agent-sessions-workbench .part.panel {
+  margin: 0 8px 8px 8px;
+  background: var(--part-background);
+  border: 1px solid var(--part-border-color, transparent);
+  border-radius: 8px;
+}
+.agent-sessions-workbench > .monaco-grid-view {
+  background-color: var(--vscode-sideBar-background);
+}
+.agent-sessions-workbench .interactive-session .chat-input-container {
+  border-radius: 8px !important;
+}
+.agent-sessions-workbench .interactive-session .interactive-input-part {
+  margin: 0 8px !important;
+  display: inherit !important;
+  padding: 4px 0 8px 0px !important;
+}
+/*# sourceMappingURL=style.css.map */

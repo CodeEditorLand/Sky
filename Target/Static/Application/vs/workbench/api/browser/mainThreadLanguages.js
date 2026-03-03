@@ -1,0 +1,84 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorate = function(decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+import { URI } from "../../../base/common/uri.js";
+import { ILanguageService } from "../../../editor/common/languages/language.js";
+import { IModelService } from "../../../editor/common/services/model.js";
+import { MainContext, ExtHostContext } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { Range } from "../../../editor/common/core/range.js";
+import { ITextModelService } from "../../../editor/common/services/resolverService.js";
+import { ILanguageStatusService } from "../../services/languageStatus/common/languageStatusService.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+let MainThreadLanguages = class MainThreadLanguages2 extends Disposable {
+  static {
+    __name(this, "MainThreadLanguages");
+  }
+  constructor(_extHostContext, _languageService, _modelService, _resolverService, _languageStatusService) {
+    super();
+    this._languageService = _languageService;
+    this._modelService = _modelService;
+    this._resolverService = _resolverService;
+    this._languageStatusService = _languageStatusService;
+    this._status = this._register(new DisposableMap());
+    this._proxy = _extHostContext.getProxy(ExtHostContext.ExtHostLanguages);
+    this._proxy.$acceptLanguageIds(_languageService.getRegisteredLanguageIds());
+    this._register(_languageService.onDidChange((_) => {
+      this._proxy.$acceptLanguageIds(_languageService.getRegisteredLanguageIds());
+    }));
+  }
+  async $changeLanguage(resource, languageId) {
+    if (!this._languageService.isRegisteredLanguageId(languageId)) {
+      return Promise.reject(new Error(`Unknown language id: ${languageId}`));
+    }
+    const uri = URI.revive(resource);
+    const ref = await this._resolverService.createModelReference(uri);
+    try {
+      ref.object.textEditorModel.setLanguage(this._languageService.createById(languageId));
+    } finally {
+      ref.dispose();
+    }
+  }
+  async $tokensAtPosition(resource, position) {
+    const uri = URI.revive(resource);
+    const model = this._modelService.getModel(uri);
+    if (!model) {
+      return void 0;
+    }
+    model.tokenization.tokenizeIfCheap(position.lineNumber);
+    const tokens = model.tokenization.getLineTokens(position.lineNumber);
+    const idx = tokens.findTokenIndexAtOffset(position.column - 1);
+    return {
+      type: tokens.getStandardTokenType(idx),
+      range: new Range(position.lineNumber, 1 + tokens.getStartOffset(idx), position.lineNumber, 1 + tokens.getEndOffset(idx))
+    };
+  }
+  // --- language status
+  $setLanguageStatus(handle, status) {
+    this._status.set(handle, this._languageStatusService.addStatus(status));
+  }
+  $removeLanguageStatus(handle) {
+    this._status.deleteAndDispose(handle);
+  }
+};
+MainThreadLanguages = __decorate([
+  extHostNamedCustomer(MainContext.MainThreadLanguages),
+  __param(1, ILanguageService),
+  __param(2, IModelService),
+  __param(3, ITextModelService),
+  __param(4, ILanguageStatusService)
+], MainThreadLanguages);
+export {
+  MainThreadLanguages
+};
+//# sourceMappingURL=mainThreadLanguages.js.map

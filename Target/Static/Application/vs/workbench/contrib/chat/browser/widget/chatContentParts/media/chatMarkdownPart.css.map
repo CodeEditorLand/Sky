@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/chat/browser/widget/chatContentParts/media/chatMarkdownPart.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n\r\n.chat-markdown-part {\r\n\r\n\th1,\r\n\th2,\r\n\th3,\r\n\th4,\r\n\th5,\r\n\th6 {\r\n\t\tline-height: normal;\r\n\t}\r\n\r\n\t.katex-display .katex {\r\n\t\tmargin: auto;\r\n\t\twidth: fit-content;\r\n\t\toverflow: hidden;\r\n\t}\r\n}\r\n"],
+  "mappings": "AAMA,CAAC;AAEA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AACC,iBAAa;AACd;AAEA,GAAC,cAAc,CAAC;AACf,YAAQ;AACR,WAAO;AACP,cAAU;AACX;AACD;",
+  "names": []
+}

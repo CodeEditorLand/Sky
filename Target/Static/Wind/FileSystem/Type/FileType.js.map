@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../Source/FileSystem/Type/FileType.ts"],
+  "sourcesContent": ["/**\n * @module FileSystem/Type/FileType\n * @description\n * File type enumeration for distinguishing between files, directories, and symbolic links.\n * Corresponds to VSCode's FileType enum.\n * @category Type\n */\n\n/**\n * File type enum matching VSCode's FileType\n */\nexport enum FileType {\n\t/** Unknown file type */\n\tUnknown = 0,\n\t/** Regular file */\n\tFile = 1,\n\t/** Directory */\n\tDirectory = 2,\n\t/** Symbolic link (or other special file) */\n\tSymbolicLink = 64,\n}\n\n/**\n * Convert FileType enum to readable string\n */\nexport function fileTypeToString(fileType: FileType): string {\n\tswitch (fileType) {\n\t\tcase FileType.File:\n\t\t\treturn \"file\";\n\t\tcase FileType.Directory:\n\t\t\treturn \"directory\";\n\t\tcase FileType.SymbolicLink:\n\t\t\treturn \"symlink\";\n\t\tdefault:\n\t\t\treturn \"unknown\";\n\t}\n}\n"],
+  "mappings": ";;AAWO,IAAK,WAAL,kBAAKA,cAAL;AAEN,EAAAA,oBAAA,aAAU,KAAV;AAEA,EAAAA,oBAAA,UAAO,KAAP;AAEA,EAAAA,oBAAA,eAAY,KAAZ;AAEA,EAAAA,oBAAA,kBAAe,MAAf;AARW,SAAAA;AAAA,GAAA;AAcL,SAAS,iBAAiB,UAA4B;AAC5D,UAAQ,UAAU;AAAA,IACjB,KAAK;AACJ,aAAO;AAAA,IACR,KAAK;AACJ,aAAO;AAAA,IACR,KAAK;AACJ,aAAO;AAAA,IACR;AACC,aAAO;AAAA,EACT;AACD;AAXgB;",
+  "names": ["FileType"]
+}

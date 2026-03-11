@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Configuration/ESBuild/Constant/BoundConstant.ts"],
-  "sourcesContent": ["/**\n * @module Configuration/ESBuild/Constant/BoundConstant\n * @description\n * DEPRECATED: Use PathConstant instead.\n * Kept for backward compatibility.\n * @deprecated\n */\n\nexport const { sep, posix } = await import(\"node:path\");\n"],
-  "mappings": "AAQO,MAAM,EAAE,KAAK,MAAM,IAAI,MAAM,OAAO,WAAW;",
-  "names": []
-}

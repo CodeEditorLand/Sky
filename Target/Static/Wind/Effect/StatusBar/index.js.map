@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Effect/StatusBar/index.ts"],
-  "sourcesContent": ["/**\n * @module Effect/StatusBar\n * @description\n * Main re-export module for StatusBar service.\n * Provides all exports for backward compatibility with existing imports.\n *\n * @see {@link Effect/StatusBar/Interface/StatusBarService} Service interface\n * @see {@link Effect/StatusBar/Layer/StatusBarLive} Live layer\n * @see {@link Effect/StatusBar/Layer/StatusBarMock} Mock layer\n * @category Re-export\n */\n\n// Types\nexport type { StatusBarItem, CreateStatusBarItem } from \"./Type/StatusBarType.js\";\n\n// Service interface\nexport type { StatusBarService } from \"./Interface/StatusBarService.js\";\n\n// Tag\nexport { default as StatusBarTag, StatusBar } from \"./Tag/StatusBarTag.js\";\n\n// Layers\nexport { default as StatusBarLive } from \"./Layer/StatusBarLive.js\";\nexport { default as StatusBarMockLive } from \"./Layer/StatusBarMock.js\";\n\n// Mock factory (for direct usage without Layer)\nexport { makeMockStatusBar } from \"./Layer/StatusBarMock.js\";\n\n// Errors\nexport { default as StatusBarItemNotFoundError } from \"./Error/StatusBarItemNotFoundError.js\";\nexport { default as StatusBarUpdateError } from \"./Error/StatusBarUpdateError.js\";\n"],
-  "mappings": "AAmBA,SAAoB,WAAXA,UAAyB,iBAAiB;AAGnD,SAAoB,WAAXA,gBAAgC;AACzC,SAAoB,WAAXA,gBAAoC;AAG7C,SAAS,yBAAyB;AAGlC,SAAoB,WAAXA,gBAA6C;AACtD,SAAoB,WAAXA,gBAAuC;",
-  "names": ["default"]
-}

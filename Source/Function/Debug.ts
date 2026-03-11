@@ -37,6 +37,9 @@ export const Mountain = process.env["Mountain"] === "true";
 export const Electron = process.env["Electron"] === "true";
 export const BrowserProxy = process.env["BrowserProxy"] === "true";
 
+// Compiler selection environment variable
+export const Compiler = process.env["Compiler"] ?? "esbuild";
+
 // Determine active workbench type
 export const WorkbenchType = Electron
 	? "Electron"

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminalContrib/suggest/browser/lspTerminalUtil.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport const VSCODE_LSP_TERMINAL_PROMPT_TRACKER = 'vscode_lsp_terminal_prompt_tracker= {}\\n';\n\nexport const terminalLspSupportedLanguages = new Set<{ shellType: string; languageId: string; extension: string }>([\n\t{\n\t\tshellType: 'python',\n\t\tlanguageId: 'python',\n\t\textension: 'py'\n\t}\n]);\n\nexport function getTerminalLspSupportedLanguageObj(shellType: string): { shellType: string; languageId: string; extension: string } | undefined {\n\tfor (const supportedLanguage of terminalLspSupportedLanguages) {\n\t\tif (supportedLanguage.shellType === shellType) {\n\t\t\treturn supportedLanguage;\n\t\t}\n\t}\n\treturn undefined;\n}\n"],
-  "mappings": ";;AAKO,MAAM,qCAAqC;AAE3C,MAAM,gCAAgC,oBAAI,IAAkE;EAClH;IACC,WAAW;IACX,YAAY;IACZ,WAAW;;CAEZ;AAEK,SAAU,mCAAmC,WAAiB;AACnE,aAAW,qBAAqB,+BAA+B;AAC9D,QAAI,kBAAkB,cAAc,WAAW;AAC9C,aAAO;IACR;EACD;AACA,SAAO;AACR;AAPgB;",
-  "names": []
-}

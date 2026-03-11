@@ -1,1 +1,0 @@
-{"version":3,"file":"MountainRPCError.d.ts","sourceRoot":"","sources":["../../../../../Source/Effect/Mountain/Error/MountainRPCError.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAQH,qBAAa,gBAAiB,SAAQ,KAAK;IAC1C,QAAQ,CAAC,IAAI,sBAAsB;IACnC,QAAQ,CAAC,MAAM,EAAE,MAAM,CAAC;IACxB,SAAkB,KAAK,EAAE,OAAO,CAAC;gBACrB,MAAM,EAAE,MAAM,EAAE,KAAK,EAAE,OAAO;CAI1C;AAED,eAAe,gBAAgB,CAAC"}

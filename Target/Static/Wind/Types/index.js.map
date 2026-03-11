@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Types/index.ts"],
-  "sourcesContent": ["/**\n * @module Types\n * @description\n * Main re-export module for type definitions used throughout Wind.\n */\n\n// Error types (runtime classes) - each from their own file\nexport { SandboxNotReadyError } from \"./Error/SandboxNotReadyError.js\";\nexport { IPCChannelError } from \"./Error/IPCChannelError.js\";\nexport { ConfigurationNotReadyError } from \"./Error/ConfigurationNotReadyError.js\";\n\n// Message types\nexport type { IPCMessage } from \"./Type/IPCMessage.js\";\nexport type { IPCRendererEvent } from \"./Type/IPCRendererEvent.js\";\n\n// Interface types - all from individual files\nexport type { IPCRenderer } from \"./Interface/IPCRenderer.js\";\nexport type { IPCMessagePort } from \"./Interface/IPCMessagePort.js\";\nexport type { WebFrame } from \"./Interface/WebFrame.js\";\nexport type { ProcessEnvironment } from \"./Interface/ProcessEnvironment.js\";\nexport type { SandboxNodeProcess } from \"./Interface/SandboxNodeProcess.js\";\nexport type { SandboxContext } from \"./Interface/SandboxContext.js\";\nexport type { ISandboxConfiguration, Workspace } from \"./Interface/ISandboxConfiguration.js\";\nexport type { WebUtils } from \"./Interface/WebUtils.js\";\nexport type { SandboxGlobals } from \"./Interface/SandboxGlobals.js\";\n"],
-  "mappings": "AAOA,SAAS,4BAA4B;AACrC,SAAS,uBAAuB;AAChC,SAAS,kCAAkC;",
-  "names": []
-}

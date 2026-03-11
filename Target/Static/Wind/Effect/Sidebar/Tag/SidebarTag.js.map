@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Sidebar/Tag/SidebarTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Sidebar/Tag/SidebarTag\n * @description\n * Service tag for Sidebar dependency injection.\n * Provides the Context.Tag for accessing Sidebar service in Effect programs.\n * @see {@link Effect/Sidebar/Interface/SidebarService} Service interface\n * @see {@link Effect/Sidebar/Layer/SidebarLive} Live implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { SidebarService } from \"../Interface/SidebarService.js\";\n\n/**\n * Context.Tag for Sidebar service dependency injection.\n * Use this tag to access Sidebar in Effect programs.\n *\n * @example\n * ```ts\n * import { Effect } from \"effect\";\n * import { SidebarTag } from \"./Effect/Sidebar/Tag/SidebarTag.js\";\n *\n * const createPanel = Effect.gen(function* () {\n *   const sidebar = yield* SidebarTag;\n *   return yield* sidebar.createPanel({ title: \"Explorer\", icon: \"files\", position: \"left\", priority: 1, viewId: \"explorer\", collapsed: false });\n * });\n * ```\n */\nexport default class SidebarTag extends Context.Tag(\"Sidebar\")<SidebarTag, SidebarService>() {}\n\n/**\n * Alias for SidebarTag for shorter import paths.\n */\nexport const Sidebar = SidebarTag;\n"],
-  "mappings": ";;AAUA,SAAS,eAAe;AAkBxB,MAAO,mBAAiC,QAAQ,IAAI,SAAS,EAA8B,EAAE;AAAA,EA5B7F,OA4B6F;AAAA;AAAA;AAAC;AAKvF,MAAM,UAAU;",
-  "names": []
-}

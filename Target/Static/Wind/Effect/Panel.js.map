@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Effect/Panel.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Panel\n * @description\n * Atomic Panel service using Effect-TS.\n * Manages bottom panel views (output, debug console, terminal, problems, etc.).\n * @deprecated Use {@link Effect/Panel/index} instead.\n * This file remains for backward compatibility.\n */\n\n// Re-export all exports from the atomic structure\nexport * from \"./Panel/index.js\";\n"],
-  "mappings": "AAUA,cAAc;",
-  "names": []
-}

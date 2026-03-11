@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Configuration/Tag/ConfigurationTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Configuration/Tag/ConfigurationTag\n * @description\n * Context Tag for Configuration service dependency injection.\n * Enables service composition and layering in Effect programs.\n * @see {@link Effect/Configuration/Interface/ConfigurationService} Service interface\n * @see [Effect-TS Context](https://effect.website/docs/guide/context)\n * @category Tag\n */\n\nimport { Context } from \"effect\";\n\nimport type { ConfigurationService } from \"../Interface/ConfigurationService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * Context Tag for Configuration service.\n * Use this to inject the Configuration service into Effect programs.\n *\n * @example\n * ```ts\n * import { ConfigurationTag } from \"./Tag/ConfigurationTag.js\";\n *\n * const effect = Effect.gen(function* () {\n *   const configuration = yield* ConfigurationTag;\n *   const config = yield* configuration.get;\n *   return config;\n * });\n * ```\n */\nexport class ConfigurationTag extends Context.Tag(\"Configuration\")<ConfigurationTag, ConfigurationService>() {}\n\nexport default ConfigurationTag;\n"],
-  "mappings": ";;AAUA,SAAS,eAAe;AAuBjB,MAAM,yBAAyB,QAAQ,IAAI,eAAe,EAA0C,EAAE;AAAA,EAjC7G,OAiC6G;AAAA;AAAA;AAAC;AAE9G,IAAO,2BAAQ;",
-  "names": []
-}

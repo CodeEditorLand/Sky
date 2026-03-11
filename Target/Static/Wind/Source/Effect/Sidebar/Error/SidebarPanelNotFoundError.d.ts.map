@@ -1,1 +1,0 @@
-{"version":3,"file":"SidebarPanelNotFoundError.d.ts","sourceRoot":"","sources":["../../../../../Source/Effect/Sidebar/Error/SidebarPanelNotFoundError.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAEH;;;GAGG;AACH,MAAM,CAAC,OAAO,OAAO,yBAA0B,SAAQ,KAAK;IAC3D,QAAQ,CAAC,IAAI,+BAA+B;gBAEhC,OAAO,EAAE,MAAM;IAK3B,IAAa,IAAI,WAEhB;CACD"}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Panel/Error/PanelUpdateError.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Panel/Error/PanelUpdateError\n * @description\n * Error thrown when updating a panel view fails.\n * @see {@link Effect/Panel/Interface/PanelService} Usage context\n * @see {@link Effect/Panel/Error/PanelViewNotFoundError} View not found error\n * @category Error\n */\n\n/**\n * Error thrown when attempting to update a panel view and the operation fails.\n * Includes the view ID and the underlying cause of the failure.\n */\nexport default class PanelUpdateError extends Error {\n\treadonly _tag = \"PanelUpdateError\";\n\toverride readonly cause: unknown;\n\n\tconstructor(viewId: string, cause: unknown) {\n\t\tsuper(`Failed to update panel view '${viewId}': ${String(cause)}`);\n\t\tthis.cause = cause;\n\t\tObject.setPrototypeOf(this, PanelUpdateError.prototype);\n\t}\n\n\toverride get name() {\n\t\treturn \"PanelUpdateError\";\n\t}\n}\n"],
-  "mappings": ";;AAaA,MAAO,yBAAuC,MAAM;AAAA,EAbpD,OAaoD;AAAA;AAAA;AAAA,EAC1C,OAAO;AAAA,EACE;AAAA,EAElB,YAAY,QAAgB,OAAgB;AAC3C,UAAM,gCAAgC,MAAM,MAAM,OAAO,KAAK,CAAC,EAAE;AACjE,SAAK,QAAQ;AACb,WAAO,eAAe,MAAM,iBAAiB,SAAS;AAAA,EACvD;AAAA,EAEA,IAAa,OAAO;AACnB,WAAO;AAAA,EACR;AACD;",
-  "names": []
-}

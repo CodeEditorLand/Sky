@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/extensions/browser/media/extensionManagement.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n.rendered-markdown.extensions-management-publisher-trust-dialog .codicon {\n\tvertical-align: sub;\n}\n\n.rendered-markdown.extensions-management-publisher-trust-dialog .codicon.codicon-extensions-verified-publisher {\n\tcolor: var(--vscode-extensionIcon-verifiedForeground);\n}\n"],
-  "mappings": "AAKA,CAAC,iBAAiB,CAAC,6CAA6C,CAAC;AAChE,kBAAgB;AACjB;AAEA,CAJC,iBAIiB,CAJC,6CAI6C,CAJC,OAIO,CAAC;AACxE,SAAO,IAAI;AACZ;",
-  "names": []
-}

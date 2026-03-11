@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/MountainSync/Tag/MountainSyncTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/MountainSync/Tag/MountainSyncTag\n * @description\n * Service tag for MountainSync dependency injection.\n * Provides the Context.Tag for accessing MountainSync service in Effect programs.\n * @see {@link Effect/MountainSync/Interface/MountainSyncService} Service interface\n * @see {@link Effect/MountainSync/Implementation/MountainSyncImplementation} Implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { MountainSyncService } from \"../Interface/MountainSyncService.js\";\n\n/**\n * Context.Tag for MountainSync service dependency injection.\n * Use this tag to access MountainSync in Effect programs.\n *\n * @example\n * ```ts\n * import { Effect } from \"effect\";\n * import { MountainSyncTag } from \"./Effect/MountainSync/Tag/MountainSyncTag.js\";\n *\n * const syncNow = Effect.gen(function* () {\n *   const mountainSync = yield* MountainSyncTag;\n *   return yield* mountainSync.syncNow();\n * });\n * ```\n */\nexport default class MountainSyncTag extends Context.Tag(\"Effect/MountainSync\")<\n\tMountainSyncTag,\n\tMountainSyncService\n>() {}\n"],
-  "mappings": ";;AAUA,SAAS,eAAe;AAkBxB,MAAO,wBAAsC,QAAQ,IAAI,qBAAqB,EAG5E,EAAE;AAAA,EA/BJ,OA+BI;AAAA;AAAA;AAAC;",
-  "names": []
-}

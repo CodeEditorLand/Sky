@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/electron-browser/titleService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { InstantiationType, registerSingleton } from '../../platform/instantiation/common/extensions.js';\r\nimport { ITitleService } from '../../workbench/services/title/browser/titleService.js';\r\nimport { NativeTitleService } from './parts/titlebarPart.js';\r\n\r\nregisterSingleton(ITitleService, NativeTitleService, InstantiationType.Eager);\r\n"],
-  "mappings": "AAKA,SAA4B,yBAAyB;AACrD,SAAS,qBAAqB;AAC9B,SAAS,0BAA0B;AAEnC;EAAkB;EAAe;EAAkB;;AAAA;",
-  "names": []
-}

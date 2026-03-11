@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Health/Tag/HealthTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Health/Tag/HealthTag\n * @description\n * Service tag for dependency injection of the Health service.\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { HealthService } from \"../Interface/HealthService.js\";\n\nexport class HealthTag extends Context.Tag(\"Effect/HealthService\")<\n\tHealthTag,\n\tHealthService\n>() {}\n\nexport default HealthTag;\n"],
-  "mappings": ";;AAOA,SAAS,eAAe;AAGjB,MAAM,kBAAkB,QAAQ,IAAI,sBAAsB,EAG/D,EAAE;AAAA,EAbJ,OAaI;AAAA;AAAA;AAAC;AAEL,IAAO,oBAAQ;",
-  "names": []
-}

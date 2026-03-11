@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Types/Error/ConfigurationNotReadyError.ts"],
-  "sourcesContent": ["/**\n * @module Types/Error/ConfigurationNotReadyError\n * @description\n * Error thrown when sandbox configuration has not been resolved yet.\n * Occurs when attempting to access configuration before it's fetched from preload.\n * @category Error\n */\n\n/**\n * Configuration not ready error\n */\nexport class ConfigurationNotReadyError extends Error {\n\treadonly _tag = \"ConfigurationNotReadyError\";\n\n\tconstructor() {\n\t\tsuper(\"Configuration not yet resolved from preload\");\n\t}\n}\n"],
-  "mappings": ";;AAWO,MAAM,mCAAmC,MAAM;AAAA,EAXtD,OAWsD;AAAA;AAAA;AAAA,EAC5C,OAAO;AAAA,EAEhB,cAAc;AACb,UAAM,6CAA6C;AAAA,EACpD;AACD;",
-  "names": []
-}

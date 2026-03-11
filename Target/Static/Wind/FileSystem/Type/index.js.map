@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/FileSystem/Type/index.ts"],
-  "sourcesContent": ["/**\n * @module FileSystem/Type\n * @description\n * Type definitions for the FileSystem service.\n * @category Type\n */\n\nexport { FileType, fileTypeToString } from \"./FileType.js\";\nexport { URI } from \"./URI.js\";\nexport type {\n\tIStat,\n\tIFileWriteOptions,\n\tIWatchOptions,\n\tIDisposable,\n\tIFileSystemProvider,\n\tFileSystemError,\n} from \"./FileSystemType.js\";\nexport { FileSystemErrorCode } from \"./FileSystemType.js\";\n"],
-  "mappings": "AAOA,SAAS,UAAU,wBAAwB;AAC3C,SAAS,WAAW;AASpB,SAAS,2BAA2B;",
-  "names": []
-}

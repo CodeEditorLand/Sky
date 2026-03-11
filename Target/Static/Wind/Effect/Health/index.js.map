@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Effect/Health/index.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Health\n * @description\n * Health monitoring service for checking service availability and system health.\n * Replaces Bootstrap Stage6 - HealthCheck with Effect-based monitoring.\n * @category Service\n */\n\n// Types\nexport type { HealthStatus, ServiceHealth, SystemHealth } from \"./Type/HealthType.js\";\n\n// Interface\nexport type { HealthService } from \"./Interface/HealthService.js\";\n\n// Tag\nexport { HealthTag } from \"./Tag/HealthTag.js\";\n\n// Implementation helpers\nexport { CreateServiceHealth, CreateServiceHealthWithNoResponseTime } from \"./Implementation/HealthHelper.js\";\n\n// Implementations\nexport { makeHealthChecker, makeMockHealth } from \"./Implementation/HealthImplementation.js\";\n\n// Layers\nexport { HealthLive, HealthMock } from \"./Implementation/HealthImplementation.js\";\n"],
-  "mappings": "AAeA,SAAS,iBAAiB;AAG1B,SAAS,qBAAqB,6CAA6C;AAG3E,SAAS,mBAAmB,sBAAsB;AAGlD,SAAS,YAAY,kBAAkB;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/base/common/ime.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { Emitter } from './event.js';\n\nexport class IMEImpl {\n\n\tprivate readonly _onDidChange = new Emitter<void>();\n\tpublic readonly onDidChange = this._onDidChange.event;\n\n\tprivate _enabled = true;\n\n\tpublic get enabled() {\n\t\treturn this._enabled;\n\t}\n\n\t/**\n\t * Enable IME\n\t */\n\tpublic enable(): void {\n\t\tthis._enabled = true;\n\t\tthis._onDidChange.fire();\n\t}\n\n\t/**\n\t * Disable IME\n\t */\n\tpublic disable(): void {\n\t\tthis._enabled = false;\n\t\tthis._onDidChange.fire();\n\t}\n}\n\nexport const IME = new IMEImpl();\n"],
-  "mappings": ";;AAKA,SAAS,eAAe;AAElB,MAAO,QAAO;EAPpB,OAOoB;;;EAApB,cAAA;AAEkB,SAAA,eAAe,IAAI,QAAO;AAC3B,SAAA,cAAc,KAAK,aAAa;AAExC,SAAA,WAAW;EAqBpB;EAnBC,IAAW,UAAO;AACjB,WAAO,KAAK;EACb;;;;EAKO,SAAM;AACZ,SAAK,WAAW;AAChB,SAAK,aAAa,KAAI;EACvB;;;;EAKO,UAAO;AACb,SAAK,WAAW;AAChB,SAAK,aAAa,KAAI;EACvB;;AAGM,MAAM,MAAM,IAAI,QAAO;",
-  "names": []
-}

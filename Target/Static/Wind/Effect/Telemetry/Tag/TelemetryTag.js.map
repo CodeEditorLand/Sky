@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Telemetry/Tag/TelemetryTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Telemetry/Tag/TelemetryTag\n * @description\n * Service tag for Telemetry dependency injection.\n * Provides the Context.Tag for accessing Telemetry service in Effect programs.\n * @see {@link Effect/Telemetry/Interface/TelemetryService} Service interface\n * @see {@link Effect/Telemetry/Layer/TelemetryLive} Live implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { TelemetryService } from \"../Interface/TelemetryService.js\";\n\n/**\n * Context.Tag for Telemetry service dependency injection.\n * Use this tag to access Telemetry in Effect programs.\n *\n * @example\n * ```ts\n * import { Effect } from \"effect\";\n * import { Telemetry } from \"./Effect/Telemetry/Tag/TelemetryTag.js\";\n *\n * const logMessage = Effect.gen(function* () {\n *   const telemetry = yield* Telemetry;\n *   return yield* telemetry.log(\"info\", \"System started\");\n * });\n * ```\n */\nexport default class TelemetryTag extends Context.Tag(\"Telemetry\")<TelemetryTag, TelemetryService>() {}\n\n/**\n * Alias for TelemetryTag for shorter import paths.\n */\nexport const Telemetry = TelemetryTag;\n"],
-  "mappings": ";;AAUA,SAAS,eAAe;AAkBxB,MAAO,qBAAmC,QAAQ,IAAI,WAAW,EAAkC,EAAE;AAAA,EA5BrG,OA4BqG;AAAA;AAAA;AAAC;AAK/F,MAAM,YAAY;",
-  "names": []
-}

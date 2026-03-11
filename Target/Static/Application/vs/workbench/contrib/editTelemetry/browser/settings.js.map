@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/editTelemetry/browser/settings.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport const EDIT_TELEMETRY_DETAILS_SETTING_ID = 'telemetry.editStats.details.enabled';\nexport const EDIT_TELEMETRY_SHOW_DECORATIONS = 'telemetry.editStats.showDecorations';\nexport const EDIT_TELEMETRY_SHOW_STATUS_BAR = 'telemetry.editStats.showStatusBar';\n"],
-  "mappings": "AAKO,MAAM,oCAAoC;AAC1C,MAAM,kCAAkC;AACxC,MAAM,iCAAiC;",
-  "names": []
-}

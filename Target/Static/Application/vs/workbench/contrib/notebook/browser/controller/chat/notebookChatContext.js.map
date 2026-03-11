@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/notebook/browser/controller/chat/notebookChatContext.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { localize } from '../../../../../../nls.js';\r\nimport { RawContextKey } from '../../../../../../platform/contextkey/common/contextkey.js';\r\n\r\nexport const CTX_NOTEBOOK_CHAT_HAS_AGENT = new RawContextKey<boolean>('notebookChatAgentRegistered', false, localize('notebookChatAgentRegistered', \"Whether a chat agent for notebook is registered\"));\r\n"],
-  "mappings": "AAKA,SAAS,gBAAgB;AACzB,SAAS,qBAAqB;AAEvB,MAAM,8BAA8B,IAAI,cAAuB,+BAA+B,OAAO,SAAS,+BAA+B,iDAAiD,CAAC;",
-  "names": []
-}

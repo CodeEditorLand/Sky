@@ -5,7 +5,7 @@
 </td>
 <td align="left" valign="middle">
 <h3 align="left">
-🌌
+ 🌌
 </h3>
 </td>
 <td align="left" valign="middle">
@@ -31,7 +31,7 @@ Land
 </td>
 <td align="left" valign="middle">
 <h3 align="left">
-🏞️
+ 🏞️
 </h3>
 </td>
 </tr>
@@ -39,7 +39,7 @@ Land
 
 ---
 
-# **Sky** 🌌 The UI Component Layer for Land 🏞️
+# **Sky** 🌌 The UI Component Layer for Land 🏞️
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
 [![NPM Version](https://img.shields.io/npm/v/@codeeditorland/sky.svg)](https://www.npmjs.com/package/@codeeditorland/sky)
@@ -87,7 +87,6 @@ presentation.
     - **A2 (Mountain - RECOMMENDED):** Browser workbench with Mountain-backed
       providers
     - **A3 (Electron):** Electron workbench with polyfills for VSCode
-      compatibility
 - **Component Modularity:** Organized into Pages (routes), Workbenches
   (components), and Workbench Implementations (BrowserProxy/, Electron/
   subdirectories) for clear separation of concerns and maintainability.
@@ -120,7 +119,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## `Sky` in the Land Ecosystem 🌌 + 🏞️
+## `Sky` in the Land Ecosystem  🌌 + 🏞️
 
 | Component              | Role & Key Responsibilities                                                                                                             |
 | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
@@ -133,7 +132,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## Interaction Flow: Rendering UI from Wind State 🔄
+## Interaction Flow: Rendering UI from Wind State 🔄
 
 Here's a step-by-step example of how `Sky` renders the UI based on `Wind`'s
 state:
@@ -142,41 +141,37 @@ state:
    workbench entry point).
 2. **Workbench Selection:** The page reads environment variables to determine
    which workbench to load:
-
-- `Mountain=true` → Loads the recommended A2: Mountain workbench
-  (`Workbench/Mountain.astro`)
-- `Electron=true` → Loads A3: Electron workbench
-  (`Workbench/Electron/Layout.astro`)
-- `BrowserProxy=true` → Loads A1: Browser Proxy workbench
-  (`Workbench/BrowserProxy/Layout.astro`)
-- `Browser=true` → Loads A1: Browser workbench (`Workbench/Browser.astro`)
-- Default → Loads `Workbench/Default.astro`
+    - `Mountain=true` → Loads the recommended A2: Mountain workbench
+      (`Workbench/Mountain.astro`)
+    - `Electron=true` → Loads A3: Electron workbench
+      (`Workbench/Electron/Layout.astro`)
+    - `BrowserProxy=true` → Loads A1: Browser Proxy workbench
+      (`Workbench/BrowserProxy/Layout.astro`)
+    - `Browser=true` → Loads A1: Browser workbench (`Workbench/Browser.astro`)
+    - Default → Loads `Workbench/Default.astro`
 
 3. **Wind Bootstrap:** The workbench imports and executes `@codeeditorland/wind`
    bootstrap, which:
-
-- Installs the `Preload.ts` environment shim (providing `window.vscode` globals)
-- Initializes Effect-TS runtime and service layers
-- Establishes Tauri IPC connection to `Mountain`
+    - Installs the `Preload.ts` environment shim (providing `window.vscode`
+      globals)
+    - Initializes Effect-TS runtime and service layers
+    - Establishes Tauri IPC connection to `Mountain`
 
 4. **Service Consumption:** `Sky` components subscribe to `Wind` services:
-
-- `StatusBarService` → Updates status bar items
-- `ActivityBarService` → Manages activity bar state
-- `FileSystemService` → Provides file tree data to sidebar
+    - `StatusBarService` → Updates status bar items
+    - `ActivityBarService` → Manages activity bar state
+    - `FileSystemService` → Provides file tree data to sidebar
 
 5. **Event Listening:** `Sky` listens for Tauri events from `Mountain`:
-
-- `sky://terminal/data` → Renders terminal output in panel
-- `sky://scm/update-group` → Updates source control view
-- `sky://configuration/changed` → Re-renders affected UI components
+    - `sky://terminal/data` → Renders terminal output in panel
+    - `sky://scm/update-group` → Updates source control view
+    - `sky://configuration/changed` → Re-renders affected UI components
 
 6. **User Interaction:** When user clicks "Open File":
-
-- `Sky` component calls `Wind`'s `DialogService.showOpenDialog()`
-- `Wind` invokes Tauri's native dialog via `@tauri-apps/plugin-dialog`
-- Selected file URI is returned through `Wind` to `Sky`
-- `Sky` updates the editor component to display the opened file
+    - `Sky` component calls `Wind`'s `DialogService.showOpenDialog()`
+    - `Wind` invokes Tauri's native dialog via `@tauri-apps/plugin-dialog`
+    - Selected file URI is returned through `Wind` to `Sky`
+    - `Sky` updates the editor component to display the opened file
 
 ---
 
@@ -193,13 +188,13 @@ classDef tauri fill:#f9d,stroke:#333,stroke-width:2px;
 classDef mountain fill:#f9f,stroke:#333,stroke-width:2px;
 classDef external fill:#ddd,stroke:#666,stroke-dasharray: 5 5;
 
-subgraph "Sky 🌌 (UI Component Layer - Tauri Webview)"
+subgraph "Sky 🌌 (UI Component Layer - Tauri Webview)"
 Pages["Pages (index, Browser, Electron, Mountain, Isolation)"]:::sky
 Workbenches["Workbench Components (Browser, Mountain, Default, NLS)"]:::sky
 WorkbenchImpl["Workbench Implementations (BrowserProxy/, Electron/)"]:::sky
 end
 
-subgraph "Wind 🍃 (Service Layer - Tauri Webview)"
+subgraph "Wind 🍃 (Service Layer - Tauri Webview)"
 PreloadJS["Preload.js (Environment Shim)"]:::wind
 WindServices[Wind Effect-TS Services]:::wind
 TauriIntegrations[Wind/Tauri Integrations]:::wind
@@ -357,18 +352,18 @@ layer rather than as a direct dependency.
 4. **Use Workbench Components:** Import and use workbench variants in your
    pages:
 
-```astro
----
-// Source/pages/index.astro (or create a custom page)
-import MountainWorkbench from "../Workbench/Mountain.astro";
----
+    ```astro
+    ---
+    // Source/pages/index.astro (or create a custom page)
+    import MountainWorkbench from "../Workbench/Mountain.astro";
+    ---
 
-<html>
-	<body>
-		<MountainWorkbench />
-	</body>
-</html>
-```
+    <html>
+    	<body>
+    		<MountainWorkbench />
+    	</body>
+    </html>
+    ```
 
 Alternatively, set environment variables to select the workbench at runtime:
 
@@ -385,12 +380,13 @@ BrowserProxy=true pnpm run Run
 
 ---
 
-## License ⚖️
+## License ⚖️
 
 This project is released into the public domain under the **Creative Commons CC0
 Universal** license. You are free to use, modify, distribute, and build upon
 this work for any purpose, without any restrictions. For the full legal text,
-see the [`LICENSE`](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE) file.
+see the [`LICENSE`](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
+file.
 
 ---
 
@@ -410,38 +406,38 @@ through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund established by
 [NLnet project page](https://NLnet.NL/project/Land).
 
 <table>
-	<thead>
-		<tr>
-			<th align="left"><strong>Land</strong></th>
-			<th align="left"><strong>PlayForm</strong></th>
-			<th align="left"><strong>NLnet</strong></th>
-			<th align="left"><strong>NGI0 Commons Fund</strong></th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td align="left" valign="middle">
-				<a href="https://Editor.Land">
-					<img width="60" src="https://raw.githubusercontent.com/CodeEditorLand/Asset/refs/heads/Current/Logo/Land.svg" alt="Land">
-				</a>
-			</td>
-			<td align="left" valign="middle">
-				<a href="https://PlayForm.Cloud">
-					<img width="76" src="https://raw.githubusercontent.com/PlayForm/Asset/refs/heads/Current/Logo/PlayForm.svg" alt="PlayForm">
-				</a>
-			</td>
-			<td align="left" valign="middle">
-				<a href="https://NLnet.NL">
-					<img width="240" src="https://NLnet.NL/logo/banner.svg" alt="NLnet">
-				</a>
-			</td>
-			<td align="left" valign="middle">
-				<a href="https://NLnet.NL/commonsfund">
-					<img width="240" src="https://NLnet.NL/image/logos/NGI0CommonsFund_tag_black_mono.svg" alt="NGI0 Commons Fund">
-				</a>
-			</td>
-		</tr>
-	</tbody>
+<thead>
+<tr>
+<th align="left"><strong>Land</strong></th>
+<th align="left"><strong>PlayForm</strong></th>
+<th align="left"><strong>NLnet</strong></th>
+<th align="left"><strong>NGI0 Commons Fund</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="middle">
+<a href="https://Editor.Land">
+<img width="60" src="https://raw.githubusercontent.com/CodeEditorLand/Asset/refs/heads/Current/Logo/Land.svg" alt="Land">
+</a>
+</td>
+<td align="left" valign="middle">
+<a href="https://PlayForm.Cloud">
+<img width="76" src="https://raw.githubusercontent.com/PlayForm/Asset/refs/heads/Current/Logo/PlayForm.svg" alt="PlayForm">
+</a>
+</td>
+<td align="left" valign="middle">
+<a href="https://NLnet.NL">
+<img width="240" src="https://NLnet.NL/logo/banner.svg" alt="NLnet">
+</a>
+</td>
+<td align="left" valign="middle">
+<a href="https://NLnet.NL/commonsfund">
+<img width="240" src="https://NLnet.NL/image/logos/NGI0CommonsFund_tag_black_mono.svg" alt="NGI0 Commons Fund">
+</a>
+</td>
+</tr>
+</tbody>
 </table>
 
 ---

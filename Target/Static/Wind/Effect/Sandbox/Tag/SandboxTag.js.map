@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Sandbox/Tag/SandboxTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Sandbox/Tag/SandboxTag\n * @description\n * Service tag for Sandbox dependency injection.\n * Provides the Context.Tag for accessing Sandbox service in Effect programs.\n * @see {@link Effect/Sandbox/Interface/SandboxService} Service interface\n * @see {@link Effect/Sandbox/Layer/SandboxLive} Live implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { SandboxService } from \"../Interface/SandboxService.js\";\n\n/**\n * Context.Tag for Sandbox service dependency injection.\n * Use this tag to access Sandbox in Effect programs.\n *\n * @example\n * ```ts\n * import { Effect } from \"effect\";\n * import { Sandbox } from \"./Effect/Sandbox/Tag/SandboxTag.js\";\n *\n * const getGlobals = Effect.gen(function* () {\n *   const sandbox = yield* Sandbox;\n *   return yield* sandbox.globals;\n * });\n * ```\n */\nexport const Sandbox = Context.GenericTag<SandboxService>(\"Sandbox\");\n\n/**\n * Alias for Sandbox with clearer naming.\n */\nexport default Sandbox;\n"],
-  "mappings": "AAUA,SAAS,eAAe;AAkBjB,MAAM,UAAU,QAAQ,WAA2B,SAAS;AAKnE,IAAO,qBAAQ;",
-  "names": []
-}

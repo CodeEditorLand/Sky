@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/workingCopy/electron-browser/workingCopyHistoryService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { NativeWorkingCopyHistoryService } from '../common/workingCopyHistoryService.js';\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\nimport { IWorkingCopyHistoryService } from '../common/workingCopyHistory.js';\n\n// Register Service\nregisterSingleton(IWorkingCopyHistoryService, NativeWorkingCopyHistoryService, InstantiationType.Delayed);\n"],
-  "mappings": "AAKA,SAAS,uCAAuC;AAChD,SAA4B,yBAAyB;AACrD,SAAS,kCAAkC;AAG3C;EAAkB;EAA4B;EAA+B;;AAAA;",
-  "names": []
-}

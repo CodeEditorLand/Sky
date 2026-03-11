@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Effect/MountainSync.ts"],
-  "sourcesContent": ["/**\n * @module Effect/MountainSync\n * @description\n * Mountain-Wind synchronization service using Effect-TS.\n * Replaces class-based MountainWindSync with Effect-based reactive sync.\n * @deprecated Use {@link Effect/MountainSync/index} instead.\n * This file remains for backward compatibility.\n */\n\n// Re-export all exports from the atomic structure\nexport * from \"./MountainSync/index.js\";\n"],
-  "mappings": "AAUA,cAAc;",
-  "names": []
-}

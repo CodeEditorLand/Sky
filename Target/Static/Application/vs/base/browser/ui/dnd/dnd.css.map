@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/base/browser/ui/dnd/dnd.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n.monaco-drag-image {\n\tdisplay: inline-block;\n\tpadding: 1px 7px;\n\tborder-radius: 10px;\n\tfont-size: 12px;\n\tposition: absolute;\n\tz-index: 1000;\n\n\t/* Default styles */\n\tbackground-color: var(--vscode-list-activeSelectionBackground);\n\tcolor: var(--vscode-list-activeSelectionForeground);\n\toutline: 1px solid var(--vscode-list-focusOutline);\n\toutline-offset: -1px;\n\n\t/*\n\t * Browsers apply an effect to the drag image when the div becomes too\n\t * large which makes them unreadable. Use max width so it does not happen\n\t */\n\tmax-width: 120px;\n\toverflow: hidden;\n\ttext-overflow: ellipsis;\n\twhite-space: nowrap;\n}\n"],
-  "mappings": "AAKA,CAAC;AACA,WAAS;AACT,WAAS,IAAI;AACb,iBAAe;AACf,aAAW;AACX,YAAU;AACV,WAAS;AAGT,oBAAkB,IAAI;AACtB,SAAO,IAAI;AACX,WAAS,IAAI,MAAM,IAAI;AACvB,kBAAgB;AAMhB,aAAW;AACX,YAAU;AACV,iBAAe;AACf,eAAa;AACd;",
-  "names": []
-}

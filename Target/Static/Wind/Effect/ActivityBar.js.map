@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Effect/ActivityBar.ts"],
-  "sourcesContent": ["/**\n * @module Effect/ActivityBar\n * @description\n * Atomic Activity Bar service using Effect-TS.\n * Manages activity bar items, their display, and active state.\n *\n * @deprecated This file is maintained for backward compatibility.\n * Please import from {@link ./ActivityBar/index.ts} instead.\n *\n * @example\n * ```ts\n * // Old (still works):\n * import { ActivityBar, ActivityBarLive } from \"./Effect/ActivityBar.js\";\n *\n * // New (recommended):\n * import { ActivityBar, ActivityBarLive } from \"./Effect/ActivityBar/index.js\";\n * ```\n */\n\n// Re-export from atomic modules for backward compatibility\nexport {\n\tActivityBarItemNotFoundError,\n\tActivityBarUpdateError,\n\ttype ActivityBarBadge,\n\ttype ActivityBarItem,\n\ttype CreateActivityBarItem,\n\ttype ActivityBarService,\n\tActivityBarTag,\n\tActivityBar,\n\tMakeCreateItem,\n\tMakeUpdateItem,\n\tMakeRemoveItem,\n\tMakeGetItem,\n\tMakeSetActiveItem,\n\tMakeSetBadge,\n\tMakeGetBadge,\n\tGenerateItemId,\n\tActivityBarLive,\n\tActivityBarMockLive,\n} from \"./ActivityBar/index.js\";\n"],
-  "mappings": "AAoBA;AAAA,EACC;AAAA,EACA;AAAA,EAKA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,OACM;",
-  "names": []
-}

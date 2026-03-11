@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/remote/common/remote.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport const REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS = 'remote.defaultExtensionsIfInstalledLocally';\n"],
-  "mappings": "AAKO,MAAM,qCAAqC;",
-  "names": []
-}

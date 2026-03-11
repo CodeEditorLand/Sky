@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Effect/Clipboard/Mock.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Clipboard/Mock\n * @description\n * Mock layer for the Clipboard service for testing purposes.\n * Uses in-memory clipboard state without accessing the system clipboard.\n * @see {@link Effect/Clipboard/Implementation/MockClipboard} Implementation\n * @category Layer\n */\n\nimport { Layer } from \"effect\";\nimport { ClipboardServiceTag } from \"./Tag/ClipboardServiceTag.js\";\nimport { MockClipboardService } from \"./Implementation/MockClipboard.js\";\n\n// ============================================================================\n// Mock Layer\n// ============================================================================\n\n/**\n * Mock clipboard service layer for testing\n */\nexport const MockClipboardServiceLayer = Layer.succeed(\n\tClipboardServiceTag,\n\tMockClipboardService,\n);\n\nexport default MockClipboardServiceLayer;\n"],
-  "mappings": "AASA,SAAS,aAAa;AACtB,SAAS,2BAA2B;AACpC,SAAS,4BAA4B;AAS9B,MAAM,4BAA4B,MAAM;AAAA,EAC9C;AAAA,EACA;AACD;AAEA,IAAO,eAAQ;",
-  "names": []
-}

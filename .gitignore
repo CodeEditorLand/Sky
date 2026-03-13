@@ -1,2 +1,31 @@
+# Sky Package - Ephemeral build artifacts
+# Target directory should be ignored (Astro build output)
+/Target/*
+!/Target/debug
+!/Target/release
+
+# Build outputs
+Configuration/
+.node_modules/
+.netlify/
+.out/
+
+# Astro cache
+.astro/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+
+# Keep dev server certificates
 !dev-server-key.pem
 !dev-server.pem

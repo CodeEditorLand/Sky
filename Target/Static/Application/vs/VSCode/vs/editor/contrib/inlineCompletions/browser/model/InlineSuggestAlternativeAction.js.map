@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/contrib/inlineCompletions/browser/model/InlineSuggestAlternativeAction.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\nimport { ThemeIcon } from '../../../../../base/common/themables.js';\r\nimport { Command } from '../../../../common/languages.js';\r\n\r\nexport type InlineSuggestAlternativeAction = {\r\n\tlabel: string;\r\n\ticon: ThemeIcon;\r\n\tcommand: Command;\r\n\tcount: Promise<number>;\r\n};\r\n\r\nexport namespace InlineSuggestAlternativeAction {\r\n\texport function toString(action: InlineSuggestAlternativeAction | undefined): string | undefined {\r\n\t\treturn action?.command.id ?? undefined;\r\n\t}\r\n}\r\n"],
+  "mappings": ";;AAcM,IAAW;CAAjB,SAAiBA,iCAA8B;AAC9C,WAAgB,SAAS,QAAkD;AAC1E,WAAO,QAAQ,QAAQ,MAAM;EAC9B;AAFgB;AAAA,EAAAA,gCAAA,WAAQ;AAGzB,GAJiB,mCAAA,iCAA8B,CAAA,EAAA;",
+  "names": ["InlineSuggestAlternativeAction"]
+}

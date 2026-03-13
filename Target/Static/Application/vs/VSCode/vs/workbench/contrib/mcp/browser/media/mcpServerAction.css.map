@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/mcp/browser/media/mcpServerAction.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n.mcp-hover-contents {\n\tmargin-top: 4px;\n\tmargin-bottom: 4px;\n\tmax-width: 250px;\n\tmin-width: 200px;\n}\n\n.mcp-hover-contents .mcp-hover-divider {\n\tmargin-top: 8px;\n\tmargin-bottom: 8px;\n}\n\n.mcp-hover-contents .mcp-hover-setting {\n\tdisplay: flex;\n\talign-items: center;\n\tmargin-top: 6px;\n}\n\n.mcp-hover-contents .mcp-hover-setting .monaco-checkbox {\n\tflex-shrink: 0;\n}\n\n.mcp-hover-contents .mcp-hover-setting .mcp-hover-setting-label {\n\tcursor: pointer;\n\tcolor: var(--vscode-foreground);\n\tfont-size: 12px;\n}\n"],
+  "mappings": "AAKA,CAAC;AACA,cAAY;AACZ,iBAAe;AACf,aAAW;AACX,aAAW;AACZ;AAEA,CAPC,mBAOmB,CAAC;AACpB,cAAY;AACZ,iBAAe;AAChB;AAEA,CAZC,mBAYmB,CAAC;AACpB,WAAS;AACT,eAAa;AACb,cAAY;AACb;AAEA,CAlBC,mBAkBmB,CANC,kBAMkB,CAAC;AACvC,eAAa;AACd;AAEA,CAtBC,mBAsBmB,CAVC,kBAUkB,CAAC;AACvC,UAAQ;AACR,SAAO,IAAI;AACX,aAAW;AACZ;",
+  "names": []
+}

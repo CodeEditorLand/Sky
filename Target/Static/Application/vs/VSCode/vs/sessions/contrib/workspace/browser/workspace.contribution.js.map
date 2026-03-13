@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/contrib/workspace/browser/workspace.contribution.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { registerWorkbenchContribution2, WorkbenchPhase } from '../../../../workbench/common/contributions.js';\r\nimport { WorkspaceFolderManagementContribution } from './workspaceFolderManagement.js';\r\n\r\nregisterWorkbenchContribution2(WorkspaceFolderManagementContribution.ID, WorkspaceFolderManagementContribution, WorkbenchPhase.AfterRestored);\r\n"],
+  "mappings": "AAKA,SAAS,sCAAsD;AAC/D,SAAS,6CAA6C;AAEtD;EAA+B,sCAAsC;EAAI;EAAqC;;AAAA;",
+  "names": []
+}

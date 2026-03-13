@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/treeSitter/browser/treeSitter.contribution.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { ITreeSitterLibraryService } from '../../../../editor/common/services/treeSitter/treeSitterLibraryService.js';\nimport { ITreeSitterThemeService } from '../../../../editor/common/services/treeSitter/treeSitterThemeService.js';\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\nimport { TreeSitterLibraryService } from './treeSitterLibraryService.js';\nimport { TreeSitterThemeService } from './treeSitterThemeService.js';\n\nregisterSingleton(ITreeSitterLibraryService, TreeSitterLibraryService, InstantiationType.Eager);\nregisterSingleton(ITreeSitterThemeService, TreeSitterThemeService, InstantiationType.Eager);\n"],
+  "mappings": "AAKA,SAAS,iCAAiC;AAC1C,SAAS,+BAA+B;AACxC,SAA4B,yBAAyB;AACrD,SAAS,gCAAgC;AACzC,SAAS,8BAA8B;AAEvC;EAAkB;EAA2B;EAAwB;;AAAA;AACrE;EAAkB;EAAyB;EAAsB;;AAAA;",
+  "names": []
+}

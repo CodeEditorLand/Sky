@@ -25,7 +25,8 @@
 	},
 	"scripts": {
 		"Run": "astro dev --host",
-		"prepublishOnly": "astro build"
+		"prepublishOnly": "cross-env NODE_OPTIONS=--max-old-space-size=16384 node ./Source/Function/CopyVSCode.js && astro build",
+		"build": "cross-env NODE_OPTIONS=--max-old-space-size=16384 node ./Source/Function/CopyVSCode.js && astro build"
 	},
 	"dependencies": {
 		"@codeeditorland/common": "0.0.6",

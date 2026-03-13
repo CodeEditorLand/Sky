@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/sessions.web.main.internal.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n// This file is the web embedder entry point for the Sessions workbench.\r\n// It mirrors workbench.web.main.internal.ts but loads the sessions entry\r\n// point and factory instead of the standard workbench ones.\r\n\r\nimport './sessions.web.main.js';\r\nimport { create } from './browser/web.factory.js';\r\nimport { URI } from '../base/common/uri.js';\r\nimport { Event, Emitter } from '../base/common/event.js';\r\nimport { Disposable } from '../base/common/lifecycle.js';\r\nimport { LogLevel } from '../platform/log/common/log.js';\r\n\r\nexport {\r\n\tcreate,\r\n\tURI,\r\n\tEvent,\r\n\tEmitter,\r\n\tDisposable,\r\n\tLogLevel,\r\n};\r\n"],
+  "mappings": "AASA,OAAO;AACP,SAAS,cAAc;AACvB,SAAS,WAAW;AACpB,SAAS,OAAO,eAAe;AAC/B,SAAS,kBAAkB;AAC3B,SAAS,gBAAgB;",
+  "names": []
+}

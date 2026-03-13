@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/update/browser/media/updateStatusBarEntry.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-workbench .part.statusbar > .items-container > #status\\.update > a > span {\r\n\tcolor: var(--vscode-button-background);\r\n\tfont-size: 16px;\r\n}\r\n"],
+  "mappings": "AAKA,CAAC,iBAAiB,CAAC,IAAI,CAAC,UAAU,EAAE,CAAC,gBAAgB,EAAE,CAAC,eAAe,EAAE,EAAE,EAAE;AAC5E,SAAO,IAAI;AACX,aAAW;AACZ;",
+  "names": []
+}

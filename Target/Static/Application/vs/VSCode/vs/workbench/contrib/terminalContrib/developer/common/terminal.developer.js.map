@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminalContrib/developer/common/terminal.developer.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport const enum TerminalDeveloperCommandId {\n\tWriteDataToTerminal = 'workbench.action.terminal.writeDataToTerminal',\n\tRecordSession = 'workbench.action.terminal.recordSession',\n\tShowTextureAtlas = 'workbench.action.terminal.showTextureAtlas',\n\tRestartPtyHost = 'workbench.action.terminal.restartPtyHost',\n}\n"],
+  "mappings": "AAKA,IAAkB;CAAlB,SAAkBA,6BAA0B;AAC3C,EAAAA,4BAAA,qBAAA,IAAA;AACA,EAAAA,4BAAA,eAAA,IAAA;AACA,EAAAA,4BAAA,kBAAA,IAAA;AACA,EAAAA,4BAAA,gBAAA,IAAA;AACD,GALkB,+BAAA,6BAA0B,CAAA,EAAA;",
+  "names": ["TerminalDeveloperCommandId"]
+}

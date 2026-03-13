@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/sessions/contrib/changes/browser/media/changesViewActions.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.changes-action-view-item {\r\n\tdisplay: flex;\r\n\talign-items: center;\r\n\tgap: 3px;\r\n\tcursor: pointer;\r\n\tpadding: 0 4px;\r\n\tborder-radius: 3px;\r\n}\r\n\r\n.changes-action-view-item:hover {\r\n\tbackground-color: var(--vscode-toolbar-hoverBackground);\r\n}\r\n\r\n.changes-action-view-item .changes-action-icon {\r\n\tdisplay: flex;\r\n\talign-items: center;\r\n\tflex-shrink: 0;\r\n\tfont-size: 14px;\r\n}\r\n\r\n.changes-action-view-item .changes-action-added {\r\n\tcolor: var(--vscode-gitDecoration-addedResourceForeground);\r\n}\r\n\r\n.changes-action-view-item .changes-action-removed {\r\n\tcolor: var(--vscode-gitDecoration-deletedResourceForeground);\r\n}\r\n"],
+  "mappings": "AAKA,CAAC;AACA,WAAS;AACT,eAAa;AACb,OAAK;AACL,UAAQ;AACR,WAAS,EAAE;AACX,iBAAe;AAChB;AAEA,CATC,wBASwB;AACxB,oBAAkB,IAAI;AACvB;AAEA,CAbC,yBAayB,CAAC;AAC1B,WAAS;AACT,eAAa;AACb,eAAa;AACb,aAAW;AACZ;AAEA,CApBC,yBAoByB,CAAC;AAC1B,SAAO,IAAI;AACZ;AAEA,CAxBC,yBAwByB,CAAC;AAC1B,SAAO,IAAI;AACZ;",
+  "names": []
+}

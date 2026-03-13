@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/browser/web.main.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { ServiceCollection } from '../../platform/instantiation/common/serviceCollection.js';\r\nimport { ILogService } from '../../platform/log/common/log.js';\r\nimport { BrowserMain, IBrowserMainWorkbench } from '../../workbench/browser/web.main.js';\r\nimport { Workbench as SessionsWorkbench } from './workbench.js';\r\n\r\nexport class SessionsBrowserMain extends BrowserMain {\r\n\r\n\tprotected override createWorkbench(domElement: HTMLElement, serviceCollection: ServiceCollection, logService: ILogService): IBrowserMainWorkbench {\r\n\t\tconsole.log('[Sessions Web] Creating Sessions workbench (not standard workbench)');\r\n\t\treturn new SessionsWorkbench(domElement, undefined, serviceCollection, logService);\r\n\t}\r\n}\r\n"],
+  "mappings": ";;AAOA,SAAS,mBAA0C;AACnD,SAAS,aAAa,yBAAyB;AAEzC,MAAO,4BAA4B,YAAW;EAVpD,OAUoD;;;EAEhC,gBAAgB,YAAyB,mBAAsC,YAAuB;AACxH,YAAQ,IAAI,qEAAqE;AACjF,WAAO,IAAI,kBAAkB,YAAY,QAAW,mBAAmB,UAAU;EAClF;;",
+  "names": []
+}

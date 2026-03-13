@@ -1,0 +1,53 @@
+import { VSBuffer } from '../../../../../base/common/buffer.js';
+import { ThemeIcon } from '../../../../../base/common/themables.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { IDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
+import { IDraggedResourceEditorInput, MarkerTransferData, DocumentSymbolTransferData, NotebookCellOutputTransferData } from '../../../../../platform/dnd/browser/dnd.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { EditorInput } from '../../../../common/editor/editorInput.js';
+import { IEditorService } from '../../../../services/editor/common/editorService.js';
+import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
+import { SCMHistoryItemTransferData } from '../../../scm/browser/scmHistoryChatContext.js';
+import { IChatRequestVariableEntry, OmittedState, IDiagnosticVariableEntry, ISymbolVariableEntry, ISCMHistoryItemVariableEntry } from '../../common/attachments/chatVariableEntries.js';
+export declare const IChatAttachmentResolveService: import("../../../../../platform/instantiation/common/instantiation.js").ServiceIdentifier<IChatAttachmentResolveService>;
+export interface IChatAttachmentResolveService {
+    _serviceBrand: undefined;
+    resolveEditorAttachContext(editor: EditorInput | IDraggedResourceEditorInput): Promise<IChatRequestVariableEntry | undefined>;
+    resolveUntitledEditorAttachContext(editor: IDraggedResourceEditorInput): Promise<IChatRequestVariableEntry | undefined>;
+    resolveResourceAttachContext(resource: URI, isDirectory: boolean): Promise<IChatRequestVariableEntry | undefined>;
+    resolveImageEditorAttachContext(resource: URI, data?: VSBuffer, mimeType?: string): Promise<IChatRequestVariableEntry | undefined>;
+    resolveImageAttachContext(images: ImageTransferData[]): Promise<IChatRequestVariableEntry[]>;
+    resolveMarkerAttachContext(markers: MarkerTransferData[]): IDiagnosticVariableEntry[];
+    resolveSymbolsAttachContext(symbols: DocumentSymbolTransferData[]): ISymbolVariableEntry[];
+    resolveNotebookOutputAttachContext(data: NotebookCellOutputTransferData): IChatRequestVariableEntry[];
+    resolveSourceControlHistoryItemAttachContext(data: SCMHistoryItemTransferData[]): ISCMHistoryItemVariableEntry[];
+    resolveDirectoryImages(directoryUri: URI): Promise<IChatRequestVariableEntry[]>;
+}
+export declare class ChatAttachmentResolveService implements IChatAttachmentResolveService {
+    private fileService;
+    private editorService;
+    private extensionService;
+    private dialogService;
+    _serviceBrand: undefined;
+    constructor(fileService: IFileService, editorService: IEditorService, extensionService: IExtensionService, dialogService: IDialogService);
+    resolveEditorAttachContext(editor: EditorInput | IDraggedResourceEditorInput): Promise<IChatRequestVariableEntry | undefined>;
+    resolveUntitledEditorAttachContext(editor: IDraggedResourceEditorInput): Promise<IChatRequestVariableEntry | undefined>;
+    resolveResourceAttachContext(resource: URI, isDirectory: boolean): Promise<IChatRequestVariableEntry | undefined>;
+    resolveImageEditorAttachContext(resource: URI, data?: VSBuffer, mimeType?: string): Promise<IChatRequestVariableEntry | undefined>;
+    resolveImageAttachContext(images: ImageTransferData[]): Promise<IChatRequestVariableEntry[]>;
+    resolveMarkerAttachContext(markers: MarkerTransferData[]): IDiagnosticVariableEntry[];
+    resolveSymbolsAttachContext(symbols: DocumentSymbolTransferData[]): ISymbolVariableEntry[];
+    resolveNotebookOutputAttachContext(data: NotebookCellOutputTransferData): IChatRequestVariableEntry[];
+    resolveDirectoryImages(directoryUri: URI): Promise<IChatRequestVariableEntry[]>;
+    private _collectDirectoryImages;
+    resolveSourceControlHistoryItemAttachContext(data: SCMHistoryItemTransferData[]): ISCMHistoryItemVariableEntry[];
+}
+export type ImageTransferData = {
+    data: Uint8Array;
+    name: string;
+    icon?: ThemeIcon;
+    resource?: URI;
+    id?: string;
+    mimeType?: string;
+    omittedState?: OmittedState;
+};

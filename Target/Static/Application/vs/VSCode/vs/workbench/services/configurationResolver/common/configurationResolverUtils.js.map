@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/configurationResolver/common/configurationResolverUtils.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\nimport * as nls from '../../../../nls.js';\nimport { IJSONSchema } from '../../../../base/common/jsonSchema.js';\n\nexport function applyDeprecatedVariableMessage(schema: IJSONSchema) {\n\tschema.pattern = schema.pattern || '^(?!.*\\\\$\\\\{(env|config|command)\\\\.)';\n\tschema.patternErrorMessage = schema.patternErrorMessage ||\n\t\tnls.localize('deprecatedVariables', \"'env.', 'config.' and 'command.' are deprecated, use 'env:', 'config:' and 'command:' instead.\");\n}"],
+  "mappings": ";;AAIA,YAAY,SAAS;AAGf,SAAU,+BAA+B,QAAmB;AACjE,SAAO,UAAU,OAAO,WAAW;AACnC,SAAO,sBAAsB,OAAO,uBACnC,IAAI,SAAS,uBAAuB,gGAAgG;AACtI;AAJgB;",
+  "names": []
+}

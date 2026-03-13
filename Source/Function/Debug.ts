@@ -1,440 +1,93 @@
-/*---------------------------------------------------------------------------------------------
- * Sky Build Debugger
- * --------------------------------------------------------------------------------------------
- * This script is designed to run during the build phase of the Sky webview (the client-side
- * of the Astro-based application).
- *
- * Its primary responsibilities are:
- * 1. To inspect, resolve, and normalize all environment variables required for the build.
- * 2. To provide a "Single Source of Truth" for build configuration constants (e.g., Path,
- *    Platform flags, Bundling modes).
- * 3. To output an EXTENSIVE, structured, and color-coded report to the build terminal,
- *    ensuring developers have full visibility into the build context (Env, Path,
- *    Flags) before the main Astro/Vite process takes over.
- *
- * Usage:
- * This file is imported by `astro.config.ts`. The act of importing it triggers the
- * console logging side-effects immediately.
- *--------------------------------------------------------------------------------------------*/
+// Re-export On from Shared
+export { On } from "./Shared";
 
-import type { ViteStaticCopyOptions } from "vite-plugin-static-copy";
+// Path utilities
+import { join } from "node:path";
 
-// -----------------------------------------------------------------------------
-// 1. Core Utilities & Exports
-// -----------------------------------------------------------------------------
-export const { readFile } = await import("node:fs/promises");
+// Compute paths based on current working directory (Sky package root when building)
+const cwd = process.cwd();
 
-// -----------------------------------------------------------------------------
-// 2. Environment Variable Resolution
-// -----------------------------------------------------------------------------
+// Relative path from Sky package root to workspace root node_modules
+// Sky is at Element/Sky, workspace root is Land/
+const VSCodeOutputRelative = "../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
+const VSCodeOutput = join(cwd, VSCodeOutputRelative);
+const VSCodeVS = join(VSCodeOutput, "vs");
 
-export const Bundle = process.env["Bundle"] === "true";
+// Ensure forward slashes for glob patterns
+const toGlob = (p: string) => p.split(/\\/).join("/");
 
-// Workbench selection environment variables
-export const Browser = process.env["Browser"] === "true";
-export const Wind = process.env["Wind"] === "true";
-export const Mountain = process.env["Mountain"] === "true";
-export const Electron = process.env["Electron"] === "true";
-export const BrowserProxy = process.env["BrowserProxy"] === "true";
+// Host configuration
+// Used for site URL and dev server host
+export const Host =
+	process.env["HOST"] ?? (process.env["NODE_ENV"] === "development" ? "http://localhost:9999" : undefined);
 
-// Compiler selection environment variable
-export const Compiler = process.env["Compiler"] ?? "esbuild";
-
-// Determine active workbench type
-export const WorkbenchType = Electron
-	? "Electron"
-	: Mountain
-		? "Mountain"
-		: Wind
-			? "Wind"
-			: BrowserProxy
-				? "BrowserProxy"
-				: Browser
-					? "Browser"
-					: "Default";
-
-export const Dependency = process.env["Dependency"] ?? "CodeEditorLand/Editor";
-
-export const Tauri = typeof process.env["TAURI_ENV_ARCH"] !== "undefined";
-
-export const Platform = ((Platform) => {
-	switch (Platform?.toLowerCase()) {
-		case "windows":
-			return "Windows";
-
-		case "darwin":
-			return "Mac";
-
-		case "linux":
-			return "Linux";
-
-		case "android":
-			return "Android";
-
-		case "ios":
-			return "iOS";
-
-		default:
-			return "Windows";
-	}
-})(process.env["TAURI_ENV_PLATFORM"]);
-
-/**
- * "On" represents the active development/debugging state.
- * True if NODE_ENV is 'development' OR TAURI_ENV_DEBUG is set.
- */
-export const On =
-	process.env["NODE_ENV"] === "development" ||
-	process.env["TAURI_ENV_DEBUG"] === "true";
-
-// -----------------------------------------------------------------------------
-// 3. Constants & Path
-// -----------------------------------------------------------------------------
-
+// Link: Modules to exclude from Vite optimization
+// Used in optimizeDeps.exclude
 export const Link = [
-	"@codeeditorland/common",
-
 	"@codeeditorland/output",
-
-	"@codeeditorland/wind",
-
-	"@codeeditorland/worker",
+	"@codeeditorland/output/vs",
+	"monaco-editor",
 ];
 
+// External: Modules to mark as external in Rollup (do not bundle)
+// Used in rollupOptions.external
+// These are VSCode telemetry dependencies that shouldn't be bundled
 export const External = [
-	"@microsoft/1ds-core-js",
+	"@codeeditorland/output",
+	"monaco-editor",
 	"@microsoft/1ds-post-js",
-	// Exclude VSCode worker files from bundling - they are served as static assets
-	"**/vs/workbench/services/extensions/worker/**",
-	"**/vs/workbench/api/worker/**",
-	"**/vs/base/browser/iframe.js",
+	"@microsoft/1ds-core-js",
+	"@microsoft/1ds-signalr-js",
 ];
 
-export const Host = process.env["TAURI_DEV_HOST"]
-	? `https://${process.env["TAURI_DEV_HOST"]}`
-	: On
-		? "http://localhost"
-		: Tauri
-			? "https://tauri.localhost"
-			: "https://editor.land";
-
-export const ApplicationStatic = "Static/Application";
-
-export const VSCodeOutput =
-	"node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
-
-export const KeyboardLayouts =
-	"vs/workbench/services/keybinding/browser/keyboardLayouts";
-
-// -----------------------------------------------------------------------------
-// 4. Static Asset Logic
-// -----------------------------------------------------------------------------
-
-export const Static: ViteStaticCopyOptions = {
-	targets: [],
-
-	structured: false,
-};
-
-// Logic to populate Static.targets based on the environment
-if (Bundle) {
-	switch (Platform) {
-		case "Windows":
-			Static.targets.push({
-				src: `${VSCodeOutput}/${KeyboardLayouts}/*.win.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			});
-
-			break;
-
-		case "Mac":
-			Static.targets.push({
-				src: `${VSCodeOutput}/${KeyboardLayouts}/*.darwin.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			});
-
-			break;
-
-		case "Linux":
-			Static.targets.push({
-				src: `${VSCodeOutput}/${KeyboardLayouts}/*.linux.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			});
-
-			break;
-
-		default:
-			break;
-	}
-	Static.targets.push(
-		...[
-			{
-				src: `node_modules/@codeeditorland/output/Target/${Dependency}/${On ? "vs/" : ""}${On ? "nls.js" : "nls.messages.js"}`,
-
-				dest: `${ApplicationStatic}/${On ? "vs/" : ""}`,
-			},
-
-			{
-				src: `${VSCodeOutput}/${KeyboardLayouts}/_.contribution.js`,
-
-				dest: `${ApplicationStatic}/${KeyboardLayouts}/`,
-			},
-
-			{
-				src: "node_modules/@codeeditorland/worker/Target/Worker.js",
-
-				dest: ".",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/wind/Target/*.js",
-
-				dest: "Static/Wind/",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/wind/Target/Bootstrap/*",
-
-				dest: "Static/Wind/Bootstrap/",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/wind/Target/Configuration/*",
-
-				dest: "Static/Wind/Configuration/",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/wind/Target/Effect/*",
-
-				dest: "Static/Wind/Effect/",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/wind/Target/Function/*",
-
-				dest: "Static/Wind/Function/",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/wind/Target/Types/*",
-
-				dest: "Static/Wind/Types/",
-			},
-
-			// Wind Polyfills - loaded as static scripts for approach A3 (Electron workbench)
-			{
-				src: "node_modules/@codeeditorland/wind/Target/Polyfills/*.js",
-
-				dest: "Static/Wind/Polyfills/",
-			},
-
-			// VSCode Worker files - explicitly copy worker-related assets for web worker extension host
-			// Note: Worker files are located under Microsoft/VSCode path, not CodeEditorLand/Editor path
-			{
-				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/*",
-
-				dest: "Static/Application/vs/workbench/services/extensions/worker/",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/api/worker/*",
-
-				dest: "Static/Application/vs/workbench/api/worker/",
-			},
-		],
-	);
-} else {
-	Static.targets.push(
-		...[
-			{
-				src: `${VSCodeOutput}/*`,
-
-				dest: ApplicationStatic,
-			},
-
-			{
-				src: "node_modules/@codeeditorland/worker/Target/*",
-
-				dest: ".",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/wind/Target/*",
-
-				dest: "Static/Wind/",
-			},
-
-			// Wind Polyfills - loaded as static scripts
-			{
-				src: "node_modules/@codeeditorland/wind/Target/Polyfills/*.js",
-
-				dest: "Static/Wind/Polyfills/",
-			},
-
-			// VSCode Worker files - explicitly copy worker-related assets for web worker extension host
-			// Note: Worker files are located under Microsoft/VSCode path, not CodeEditorLand/Editor path
-			{
-				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/*",
-
-				dest: "Static/Application/vs/workbench/services/extensions/worker/",
-			},
-
-			{
-				src: "node_modules/@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/api/worker/*",
-
-				dest: "Static/Application/vs/workbench/api/worker/",
-			},
-		],
-	);
-}
-
-Browser
-	? External.push(
-			...[
-				"@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js",
-			],
-		)
-	: {};
-
-// -----------------------------------------------------------------------------
-// 5. EXTENSIVE DEBUG LOGGING
-// -----------------------------------------------------------------------------
-// This self-executing block runs immediately on import to output the build context.
-(() => {
-	const Color = {
-		Reset: "\x1b[0m",
-		Bright: "\x1b[1m",
-		Dim: "\x1b[2m",
-		Cyan: "\x1b[36m",
-		Green: "\x1b[32m",
-		Yellow: "\x1b[33m",
-		Red: "\x1b[31m",
-		Magenta: "\x1b[35m",
-		Blue: "\x1b[34m",
-	};
-
-	const Header = (Text: string) =>
-		`\n${Color.Bright}${Color.Cyan}════ ${Text} ════${Color.Reset}`;
-
-	const Output = (Key: string, Value: any) =>
-		`  ${Color.Cyan}${Key.padEnd(18)}${Color.Reset}: ${Value}`;
-
-	console.log(
-		`\n${Color.Bright}${Color.Magenta}╔══════════════════════════════════════════════════════════════════════════════╗${Color.Reset}`,
-	);
-
-	console.log(
-		`${Color.Bright}${Color.Magenta}║  SKY BUILD CONTEXT DEBUGGER                                                  ║${Color.Reset}`,
-	);
-
-	console.log(
-		`${Color.Bright}${Color.Magenta}╚══════════════════════════════════════════════════════════════════════════════╝${Color.Reset}`,
-	);
-
-	console.log(Header("Resolved Flags"));
-
-	console.log(
-		Output("Bundle", Bundle ? Color.Green + "TRUE" : Color.Dim + "false"),
-	);
-
-	console.log(
-		Output("Browser", Browser ? Color.Green + "TRUE" : Color.Dim + "false"),
-	);
-
-	console.log(
-		Output("Tauri", Tauri ? Color.Green + "TRUE" : Color.Dim + "false"),
-	);
-
-	console.log(
-		Output(
-			"Debug Mode (On)",
-			On ? Color.Red + "ACTIVE" : Color.Green + "Inactive (Production)",
-		),
-	);
-
-	console.log(Output("Platform", `${Color.Yellow}${Platform}${Color.Reset}`));
-
-	console.log(Output("Host", `${Color.Blue}${Host}${Color.Reset}`));
-
-	console.log(Output("Dependency", Dependency));
-
-	console.log(Header("Process Environment (Raw)"));
-
-	console.log(
-		Output("NODE_ENV", process.env["NODE_ENV"] || Color.Dim + "undefined"),
-	);
-
-	console.log(
-		Output(
-			"TAURI_ENV_ARCH",
-			process.env["TAURI_ENV_ARCH"] || Color.Dim + "undefined",
-		),
-	);
-
-	console.log(
-		Output(
-			"TAURI_ENV_PLATFORM",
-			process.env["TAURI_ENV_PLATFORM"] || Color.Dim + "undefined",
-		),
-	);
-
-	console.log(
-		Output(
-			"TAURI_ENV_DEBUG",
-			process.env["TAURI_ENV_DEBUG"] || Color.Dim + "undefined",
-		),
-	);
-
-	console.log(
-		Output(
-			"TAURI_DEV_HOST",
-			process.env["TAURI_DEV_HOST"] || Color.Dim + "undefined",
-		),
-	);
-
-	console.log(Header("Build Path"));
-
-	console.log(Output("ApplicationStatic", ApplicationStatic));
-
-	console.log(Output("VSCodeOutput", VSCodeOutput));
-
-	console.log(Output("KeyboardLayouts", KeyboardLayouts));
-
-	console.log(Header("Module Configuration"));
-
-	console.log(
-		`  ${Color.Cyan}External Modules${Color.Reset}  : [ ${External.map((e) => Color.Yellow + e + Color.Reset).join(", ")} ]`,
-	);
-
-	console.log(
-		`  ${Color.Cyan}Linked Packages${Color.Reset}   : [ ${Link.map((l) => Color.Yellow + l + Color.Reset).join(", ")} ]`,
-	);
-
-	console.log(Header("Static Asset Copy Rules"));
-
-	if (Static.targets.length === 0) {
-		console.log(`  ${Color.Dim}(No static targets defined)${Color.Reset}`);
-	} else {
-		Static.targets.forEach((Target, i) => {
-			// @ts-ignore
-			const Source = Target.src;
-
-			// @ts-ignore
-			const Destination = Target.dest;
-
-			console.log(
-				`  ${Color.Dim}[${i + 1}]${Color.Reset} ${Color.Green}${Source}${Color.Reset}`,
+// Static: Configuration for vite-plugin-static-copy
+// Copy public/static assets to the build output
+// Note: Use `src` and `dest`, not `from` and `to`
+export const Static = [
+	{
+		src: toGlob(join(cwd, "Public")),
+		dest: ".",
+		options: {},
+	},
+	{
+		src: toGlob(join(cwd, VSCodeOutputRelative)),
+		dest: "Static/Application/vs",
+		options: {},
+	},
+];
+
+// Validate that the expected VSCode files exist
+export async function validateVSCodeOutput(): Promise<boolean> {
+	try {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		// Check critical paths (use absolute paths)
+		const workbenchPath = path.join(
+			VSCodeVS,
+			"code",
+			"browser",
+			"workbench",
+			"workbench.js",
+		);
+
+		const basePath = path.join(VSCodeVS, "base", "browser", "browser.js");
+
+		if (!fs.existsSync(workbenchPath)) {
+			console.error(
+				`[Sky] Missing VSCode workbench file: ${workbenchPath}`,
 			);
+			return false;
+		}
 
-			console.log(`      ${Color.Dim}➜${Color.Reset} ${Destination}`);
-		});
+		if (!fs.existsSync(basePath)) {
+			console.error(`[Sky] Missing VSCode base file: ${basePath}`);
+			return false;
+		}
+
+		return true;
+	} catch (error) {
+		console.error("[Sky] Error validating VSCode output:", error);
+		return false;
 	}
-
-	console.log(
-		`\n${Color.Bright}${Color.Magenta}════════════════════════════════════════════════════════════════════════════════${Color.Reset}\n`,
-	);
-})();
+}

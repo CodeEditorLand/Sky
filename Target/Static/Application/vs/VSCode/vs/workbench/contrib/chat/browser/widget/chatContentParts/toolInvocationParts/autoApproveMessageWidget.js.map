@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/browser/widget/chatContentParts/toolInvocationParts/autoApproveMessageWidget.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { IMarkdownString } from '../../../../../../../base/common/htmlContent.js';\r\n\r\nexport class AutoApproveMessageWidget {\r\n\tconstructor(public readonly message: IMarkdownString) { }\r\n}\r\n"],
+  "mappings": ";;AAOM,MAAO,yBAAwB;EAPrC,OAOqC;;;EACpC,YAA4B,SAAwB;AAAxB,SAAA,UAAA;EAA4B;;",
+  "names": []
+}

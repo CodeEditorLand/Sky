@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/contrib/chat/common/builtinPromptsStorage.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { URI } from '../../../../base/common/uri.js';\r\nimport { PromptsStorage } from '../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js';\r\nimport { PromptsType } from '../../../../workbench/contrib/chat/common/promptSyntax/promptTypes.js';\r\n\r\n/**\r\n * Extended storage type for AI Customization that includes built-in prompts\r\n * shipped with the application, alongside the core `PromptsStorage` values.\r\n */\r\nexport type AICustomizationPromptsStorage = PromptsStorage | 'builtin';\r\n\r\n/**\r\n * Storage type discriminator for built-in prompts shipped with the application.\r\n */\r\nexport const BUILTIN_STORAGE: AICustomizationPromptsStorage = 'builtin';\r\n\r\n/**\r\n * Prompt path for built-in prompts bundled with the Sessions app.\r\n */\r\nexport interface IBuiltinPromptPath {\r\n\treadonly uri: URI;\r\n\treadonly storage: AICustomizationPromptsStorage;\r\n\treadonly type: PromptsType;\r\n}\r\n"],
+  "mappings": "AAkBO,MAAM,kBAAiD;",
+  "names": []
+}

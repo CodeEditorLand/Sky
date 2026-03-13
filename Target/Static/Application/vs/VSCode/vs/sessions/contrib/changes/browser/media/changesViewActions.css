@@ -1,0 +1,24 @@
+.changes-action-view-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.changes-action-view-item:hover {
+  background-color: var(--vscode-toolbar-hoverBackground);
+}
+.changes-action-view-item .changes-action-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.changes-action-view-item .changes-action-added {
+  color: var(--vscode-gitDecoration-addedResourceForeground);
+}
+.changes-action-view-item .changes-action-removed {
+  color: var(--vscode-gitDecoration-deletedResourceForeground);
+}
+/*# sourceMappingURL=changesViewActions.css.map */

@@ -1,0 +1,36 @@
+import { Separator } from '../../../../../../../base/common/actions.js';
+import { ILanguageService } from '../../../../../../../editor/common/languages/language.js';
+import { ICommandService } from '../../../../../../../platform/commands/common/commands.js';
+import { IContextKeyService } from '../../../../../../../platform/contextkey/common/contextkey.js';
+import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
+import { IKeybindingService } from '../../../../../../../platform/keybinding/common/keybinding.js';
+import { IMarkdownRenderer } from '../../../../../../../platform/markdown/browser/markdownRenderer.js';
+import { IMarkerService } from '../../../../../../../platform/markers/common/markers.js';
+import { IChatToolInvocation } from '../../../../common/chatService/chatService.js';
+import { CodeBlockModelCollection } from '../../../../common/widget/codeBlockModelCollection.js';
+import { ILanguageModelToolsService } from '../../../../common/tools/languageModelToolsService.js';
+import { ILanguageModelToolsConfirmationService } from '../../../../common/tools/languageModelToolsConfirmationService.js';
+import { IChatCodeBlockInfo, IChatWidgetService } from '../../../chat.js';
+import { IChatContentPartRenderContext } from '../chatContentParts.js';
+import { IChatMarkdownAnchorService } from '../chatMarkdownAnchorService.js';
+import { AbstractToolConfirmationSubPart } from './abstractToolConfirmationSubPart.js';
+import { EditorPool } from '../chatContentCodePools.js';
+export declare class ToolConfirmationSubPart extends AbstractToolConfirmationSubPart {
+    private readonly renderer;
+    private readonly editorPool;
+    private readonly currentWidthDelegate;
+    private readonly codeBlockModelCollection;
+    private readonly codeBlockStartIndex;
+    private readonly languageService;
+    private readonly commandService;
+    private readonly markerService;
+    private readonly chatMarkdownAnchorService;
+    private readonly confirmationService;
+    private markdownParts;
+    get codeblocks(): IChatCodeBlockInfo[];
+    constructor(toolInvocation: IChatToolInvocation, context: IChatContentPartRenderContext, renderer: IMarkdownRenderer, editorPool: EditorPool, currentWidthDelegate: () => number, codeBlockModelCollection: CodeBlockModelCollection, codeBlockStartIndex: number, instantiationService: IInstantiationService, keybindingService: IKeybindingService, languageService: ILanguageService, contextKeyService: IContextKeyService, chatWidgetService: IChatWidgetService, commandService: ICommandService, markerService: IMarkerService, languageModelToolsService: ILanguageModelToolsService, chatMarkdownAnchorService: IChatMarkdownAnchorService, confirmationService: ILanguageModelToolsConfirmationService);
+    protected additionalPrimaryActions(): (Separator | import("./abstractToolConfirmationSubPart.js").IAbstractToolPrimaryAction)[];
+    protected createContentElement(): HTMLElement | string;
+    protected getTitle(): string;
+    private _makeMarkdownPart;
+}

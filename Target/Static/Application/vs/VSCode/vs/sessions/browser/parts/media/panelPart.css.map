@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/sessions/browser/parts/media/panelPart.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n/* Hide the top title border because we draw our own */\r\n.monaco-workbench .part.panel.bottom .composite.title {\r\n\tborder-top-width: 0;\r\n}\r\n"],
+  "mappings": "AAMA,CAAC,iBAAiB,CAAC,IAAI,CAAC,KAAK,CAAC,OAAO,CAAC,SAAS,CAAC;AAC/C,oBAAkB;AACnB;",
+  "names": []
+}

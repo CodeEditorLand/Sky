@@ -1,0 +1,38 @@
+import { Event } from '../../../../base/common/event.js';
+import { URI } from '../../../../base/common/uri.js';
+import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
+import { IWorkspace, IWorkspaceContextService, IWorkspaceFoldersChangeEvent, IWorkspaceFoldersWillChangeEvent, IWorkspaceIdentifier, ISingleFolderWorkspaceIdentifier, IWorkspaceFolder, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
+import { IWorkspaceFolderCreationData } from '../../../../platform/workspaces/common/workspaces.js';
+import { IWorkspaceEditingService } from '../../../../workbench/services/workspaces/common/workspaceEditing.js';
+import { Disposable } from '../../../../base/common/lifecycle.js';
+export declare class SessionsWorkspaceContextService extends Disposable implements IWorkspaceContextService, IWorkspaceEditingService {
+    private readonly uriIdentityService;
+    readonly _serviceBrand: undefined;
+    readonly onDidChangeWorkbenchState: Event<any>;
+    readonly onDidChangeWorkspaceName: Event<any>;
+    readonly onDidEnterWorkspace: Event<any>;
+    private readonly _onWillChangeWorkspaceFolders;
+    readonly onWillChangeWorkspaceFolders: Event<IWorkspaceFoldersWillChangeEvent>;
+    private readonly _onDidChangeWorkspaceFolders;
+    readonly onDidChangeWorkspaceFolders: Event<IWorkspaceFoldersChangeEvent>;
+    private workspace;
+    private readonly _updateFoldersQueue;
+    constructor(workspaceIdentifier: IWorkspaceIdentifier, uriIdentityService: IUriIdentityService);
+    getCompleteWorkspace(): Promise<IWorkspace>;
+    getWorkspace(): IWorkspace;
+    getWorkbenchState(): WorkbenchState;
+    hasWorkspaceData(): boolean;
+    getWorkspaceFolder(resource: URI): IWorkspaceFolder | null;
+    isInsideWorkspace(resource: URI): boolean;
+    isCurrentWorkspace(workspaceIdOrFolder: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier | URI): boolean;
+    addFolders(foldersToAdd: IWorkspaceFolderCreationData[]): Promise<void>;
+    removeFolders(foldersToRemove: URI[]): Promise<void>;
+    updateFolders(index: number, deleteCount?: number, foldersToAddCandidates?: IWorkspaceFolderCreationData[]): Promise<void>;
+    enterWorkspace(_path: URI): Promise<void>;
+    createAndEnterWorkspace(_folders: IWorkspaceFolderCreationData[], _path?: URI): Promise<void>;
+    saveAndEnterWorkspace(_path: URI): Promise<void>;
+    copyWorkspaceSettings(_toWorkspace: IWorkspaceIdentifier): Promise<void>;
+    pickNewWorkspacePath(): Promise<URI | undefined>;
+    private doUpdateFolders;
+    private _doUpdateFolders;
+}

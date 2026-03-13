@@ -1,0 +1,33 @@
+import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
+import { IMarkdownRendererService } from '../../../../../../platform/markdown/browser/markdownRenderer.js';
+import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
+import { IOpenerService } from '../../../../../../platform/opener/common/opener.js';
+import { IMcpService } from '../../../../mcp/common/mcpTypes.js';
+import { IChatMcpServersStarting, IChatMcpServersStartingSerialized } from '../../../common/chatService/chatService.js';
+import { IChatRendererContent } from '../../../common/model/chatViewModel.js';
+import { IChatContentPart, IChatContentPartRenderContext } from './chatContentParts.js';
+import './media/chatMcpServersInteractionContent.css';
+export declare class ChatMcpServersInteractionContentPart extends Disposable implements IChatContentPart {
+    private readonly data;
+    private readonly context;
+    private readonly mcpService;
+    private readonly instantiationService;
+    private readonly _openerService;
+    private readonly _markdownRendererService;
+    readonly domNode: HTMLElement;
+    private workingProgressPart;
+    private interactionContainer;
+    private readonly interactionMd;
+    private readonly showSpecificServersScheduler;
+    private readonly previousParts;
+    constructor(data: IChatMcpServersStarting | IChatMcpServersStartingSerialized, context: IChatContentPartRenderContext, mcpService: IMcpService, instantiationService: IInstantiationService, _openerService: IOpenerService, _markdownRendererService: IMarkdownRendererService);
+    private updateForState;
+    private createServerCommandLinks;
+    private updateDetailedProgress;
+    private renderInteractionRequired;
+    private updateInteractionRequired;
+    private createInteractionMessage;
+    private _start;
+    hasSameContent(other: IChatRendererContent): boolean;
+    addDisposable(disposable: IDisposable): void;
+}

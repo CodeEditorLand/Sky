@@ -14,6 +14,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { fileURLToPath } from "node:url";
+import { readFile as fsReadFile } from "node:fs/promises";
 
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
@@ -26,7 +27,6 @@ import {
 	Host,
 	Link,
 	On,
-	readFile,
 	Static,
 } from "./Source/Function/Debug";
 
@@ -83,14 +83,11 @@ export default defineConfig({
 					hoistTransitiveImports: false,
 				},
 			},
-
-			sourcemap: On,
-
-			manifest: On,
-
-			minify: On ? false : "terser",
-
-			cssMinify: On ? false : "esbuild",
+			// Disable sourcemaps and minification to reduce memory
+			sourcemap: false,
+			manifest: false,
+			minify: false,
+			cssMinify: false,
 
 			terserOptions: On
 				? {
@@ -314,11 +311,11 @@ export default defineConfig({
 			strictPort: true,
 
 			https: {
-				cert: await readFile("./dev-server.pem", {
+				cert: await fsReadFile("./dev-server.pem", {
 					encoding: "utf-8",
 				}),
-
-				key: await readFile("./dev-server-key.pem", {
+	
+				key: await fsReadFile("./dev-server-key.pem", {
 					encoding: "utf-8",
 				}),
 			},
@@ -344,7 +341,7 @@ export default defineConfig({
 		},
 
 		plugins: [
-			(await import("vite-plugin-static-copy")).viteStaticCopy(Static),
+			(await import("vite-plugin-static-copy")).viteStaticCopy({ targets: Static }),
 
 			(await import("vite-plugin-top-level-await")).default(),
 

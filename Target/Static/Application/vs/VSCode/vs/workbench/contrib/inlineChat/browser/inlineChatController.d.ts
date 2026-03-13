@@ -1,0 +1,92 @@
+import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { URI } from '../../../../base/common/uri.js';
+import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
+import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
+import { IPosition, Position } from '../../../../editor/common/core/position.js';
+import { IRange } from '../../../../editor/common/core/range.js';
+import { ISelection } from '../../../../editor/common/core/selection.js';
+import { IEditorContribution } from '../../../../editor/common/editorCommon.js';
+import { TextEdit } from '../../../../editor/common/languages.js';
+import { IMarkerDecorationsService } from '../../../../editor/common/services/markerDecorations.js';
+import { EditSuggestionId } from '../../../../editor/common/textModelEditSource.js';
+import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
+import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../platform/log/common/log.js';
+import { ISharedWebContentExtractorService } from '../../../../platform/webContentExtractor/common/webContentExtractor.js';
+import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { IChatAttachmentResolveService } from '../../chat/browser/attachments/chatAttachmentResolveService.js';
+import { IChatEditingService } from '../../chat/common/editing/chatEditingService.js';
+import { IChatService } from '../../chat/common/chatService/chatService.js';
+import { IChatRequestVariableEntry } from '../../chat/common/attachments/chatVariableEntries.js';
+import { ILanguageModelChatSelector, ILanguageModelsService } from '../../chat/common/languageModels.js';
+import { INotebookEditorService } from '../../notebook/browser/services/notebookEditorService.js';
+import { ICellEditOperation } from '../../notebook/common/notebookCommon.js';
+import { InlineChatAffordance } from './inlineChatAffordance.js';
+import { InlineChatInputWidget } from './inlineChatOverlayWidget.js';
+import { IInlineChatSessionService } from './inlineChatSessionService.js';
+import { EditorBasedInlineChatWidget } from './inlineChatWidget.js';
+export declare abstract class InlineChatRunOptions {
+    initialSelection?: ISelection;
+    initialRange?: IRange;
+    message?: string;
+    attachments?: URI[];
+    autoSend?: boolean;
+    position?: IPosition;
+    modelSelector?: ILanguageModelChatSelector;
+    resolveOnResponse?: boolean;
+    attachDiagnostics?: boolean;
+    static isInlineChatRunOptions(options: unknown): options is InlineChatRunOptions;
+}
+export declare class InlineChatController implements IEditorContribution {
+    private readonly _editor;
+    private readonly _instaService;
+    private readonly _notebookEditorService;
+    private readonly _inlineChatSessionService;
+    private readonly _configurationService;
+    private readonly _webContentExtractorService;
+    private readonly _fileService;
+    private readonly _chatAttachmentResolveService;
+    private readonly _editorService;
+    private readonly _markerDecorationsService;
+    private readonly _languageModelService;
+    private readonly _logService;
+    private readonly _chatEditingService;
+    private readonly _chatService;
+    static readonly ID = "editor.contrib.inlineChatController";
+    static get(editor: ICodeEditor): InlineChatController | undefined;
+    /**
+     * Stores the user's explicitly chosen model (qualified name) from a previous inline chat request in the same session.
+     * When set, this takes priority over the inlineChat.defaultModel setting.
+     */
+    private static _userSelectedModel;
+    private readonly _store;
+    private readonly _isActiveController;
+    private readonly _renderMode;
+    private readonly _zone;
+    readonly inputOverlayWidget: InlineChatAffordance;
+    private readonly _inputWidget;
+    private readonly _currentSession;
+    get widget(): EditorBasedInlineChatWidget;
+    get isActive(): boolean;
+    get inputWidget(): InlineChatInputWidget;
+    constructor(_editor: ICodeEditor, _instaService: IInstantiationService, _notebookEditorService: INotebookEditorService, _inlineChatSessionService: IInlineChatSessionService, codeEditorService: ICodeEditorService, contextKeyService: IContextKeyService, _configurationService: IConfigurationService, _webContentExtractorService: ISharedWebContentExtractorService, _fileService: IFileService, _chatAttachmentResolveService: IChatAttachmentResolveService, _editorService: IEditorService, _markerDecorationsService: IMarkerDecorationsService, _languageModelService: ILanguageModelsService, _logService: ILogService, _chatEditingService: IChatEditingService, _chatService: IChatService);
+    dispose(): void;
+    getWidgetPosition(): Position | undefined;
+    focus(): void;
+    run(arg?: InlineChatRunOptions): Promise<boolean>;
+    acceptSession(): Promise<void>;
+    rejectSession(): Promise<void>;
+    continueSessionInChat(): Promise<void>;
+    rephraseSession(): Promise<void>;
+    private _selectVendorDefaultModel;
+    /**
+     * Applies model defaults based on settings and tracks user model changes.
+     * Prioritization: user session choice > inlineChat.defaultModel setting > vendor default
+     */
+    private _applyModelDefaults;
+    createImageAttachment(attachment: URI): Promise<IChatRequestVariableEntry | undefined>;
+}
+export declare function reviewEdits(accessor: ServicesAccessor, editor: ICodeEditor, stream: AsyncIterable<TextEdit[]>, token: CancellationToken, applyCodeBlockSuggestionId: EditSuggestionId | undefined): Promise<boolean>;
+export declare function reviewNotebookEdits(accessor: ServicesAccessor, uri: URI, stream: AsyncIterable<[URI, TextEdit[]] | ICellEditOperation[]>, token: CancellationToken): Promise<boolean>;

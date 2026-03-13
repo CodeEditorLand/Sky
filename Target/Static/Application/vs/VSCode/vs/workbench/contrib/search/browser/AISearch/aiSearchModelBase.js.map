@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/search/browser/AISearch/aiSearchModelBase.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { ISearchTreeFileMatch } from '../searchTreeModel/searchTreeCommon.js';\nimport { Range } from '../../../../../editor/common/core/range.js';\n\nexport interface ISearchTreeAIFileMatch extends ISearchTreeFileMatch {\n\tgetFullRange(): Range | undefined;\n\treadonly rank: number;\n}\n\nexport function isSearchTreeAIFileMatch(obj: any): obj is ISearchTreeAIFileMatch {\n\treturn obj && obj.getFullRange && obj.getFullRange() instanceof Range;\n}\n"],
+  "mappings": ";;AAMA,SAAS,aAAa;AAOhB,SAAU,wBAAwB,KAAQ;AAC/C,SAAO,OAAO,IAAI,gBAAgB,IAAI,aAAY,aAAc;AACjE;AAFgB;",
+  "names": []
+}

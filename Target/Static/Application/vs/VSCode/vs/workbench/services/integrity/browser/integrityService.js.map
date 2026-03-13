@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/integrity/browser/integrityService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IIntegrityService, IntegrityTestResult } from '../common/integrity.js';\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\n\nexport class IntegrityService implements IIntegrityService {\n\n\tdeclare readonly _serviceBrand: undefined;\n\n\tasync isPure(): Promise<IntegrityTestResult> {\n\t\treturn { isPure: true, proof: [] };\n\t}\n}\n\nregisterSingleton(IIntegrityService, IntegrityService, InstantiationType.Delayed);\n"],
-  "mappings": ";;AAKA,SAAS,yBAA8C;AACvD,SAA4B,yBAAyB;AAE/C,MAAO,iBAAgB;EAR7B,OAQ6B;;;EAI5B,MAAM,SAAM;AACX,WAAO,EAAE,QAAQ,MAAM,OAAO,CAAA,EAAE;EACjC;;AAGD;EAAkB;EAAmB;EAAgB;;AAAA;",
-  "names": []
-}

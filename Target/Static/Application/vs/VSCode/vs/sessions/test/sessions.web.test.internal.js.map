@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/test/sessions.web.test.internal.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n// Test entry point for the Sessions workbench with mock services.\r\n// Mirrors sessions.web.main.internal.ts but uses TestSessionsBrowserMain.\r\n\r\nimport '../sessions.web.main.js';\r\nimport { create } from './web.test.factory.js';\r\nimport { URI } from '../../base/common/uri.js';\r\nimport { Event, Emitter } from '../../base/common/event.js';\r\nimport { Disposable } from '../../base/common/lifecycle.js';\r\nimport { LogLevel } from '../../platform/log/common/log.js';\r\n\r\nexport {\r\n\tcreate,\r\n\tURI,\r\n\tEvent,\r\n\tEmitter,\r\n\tDisposable,\r\n\tLogLevel,\r\n};\r\n"],
-  "mappings": "AAQA,OAAO;AACP,SAAS,cAAc;AACvB,SAAS,WAAW;AACpB,SAAS,OAAO,eAAe;AAC/B,SAAS,kBAAkB;AAC3B,SAAS,gBAAgB;",
-  "names": []
-}

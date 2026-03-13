@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/browser/parts/parts.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport const enum AgenticParts {\r\n\tPROJECTBAR_PART = 'workbench.parts.projectbar',\r\n}\r\n"],
-  "mappings": "AAKA,IAAkB;CAAlB,SAAkBA,eAAY;AAC7B,EAAAA,cAAA,iBAAA,IAAA;AACD,GAFkB,iBAAA,eAAY,CAAA,EAAA;",
-  "names": ["AgenticParts"]
-}

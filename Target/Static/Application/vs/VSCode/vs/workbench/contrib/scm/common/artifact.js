@@ -1,1 +1,0 @@
-//# sourceMappingURL=artifact.js.map

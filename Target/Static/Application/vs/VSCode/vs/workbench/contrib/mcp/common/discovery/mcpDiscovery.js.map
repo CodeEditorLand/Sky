@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/mcp/common/discovery/mcpDiscovery.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IDisposable } from '../../../../../base/common/lifecycle.js';\nimport { SyncDescriptor0 } from '../../../../../platform/instantiation/common/descriptors.js';\n\n\nexport interface IMcpDiscovery extends IDisposable {\n\treadonly fromGallery: boolean;\n\tstart(): void;\n}\n\nclass McpDiscoveryRegistry {\n\tprivate readonly _discovery: SyncDescriptor0<IMcpDiscovery>[] = [];\n\n\tregister(discovery: SyncDescriptor0<IMcpDiscovery>): void {\n\t\tthis._discovery.push(discovery);\n\t}\n\n\tgetAll(): readonly SyncDescriptor0<IMcpDiscovery>[] {\n\t\treturn this._discovery;\n\t}\n}\n\nexport const mcpDiscoveryRegistry = new McpDiscoveryRegistry();\n\n\n\n"],
-  "mappings": ";;AAcA,MAAM,qBAAoB;EAd1B,OAc0B;;;EAA1B,cAAA;AACkB,SAAA,aAA+C,CAAA;EASjE;EAPC,SAAS,WAAyC;AACjD,SAAK,WAAW,KAAK,SAAS;EAC/B;EAEA,SAAM;AACL,WAAO,KAAK;EACb;;AAGM,MAAM,uBAAuB,IAAI,qBAAoB;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/base/browser/ui/codicons/codicon/codicon.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n@font-face {\r\n\tfont-family: \"codicon\";\r\n\tfont-display: block;\r\n\tsrc: url(\"./codicon.ttf\") format(\"truetype\");\r\n}\r\n\r\n.codicon[class*='codicon-'] {\r\n\tfont: normal normal normal 16px/1 codicon;\r\n\tdisplay: inline-block;\r\n\ttext-decoration: none;\r\n\ttext-rendering: auto;\r\n\ttext-align: center;\r\n\ttext-transform: none;\r\n\t-webkit-font-smoothing: antialiased;\r\n\t-moz-osx-font-smoothing: grayscale;\r\n\tuser-select: none;\r\n\t-webkit-user-select: none;\r\n}\r\n\r\n/* icon rules are dynamically created by the platform theme service (see iconsStyleSheet.ts) */\r\n"],
-  "mappings": "AAKA;AACC,eAAa;AACb,gBAAc;AACd,OAAK,mBAAqB,OAAO;AAClC;AAEA,CAAC,OAAO,CAAC;AACR,QAAM,OAAO,OAAO,OAAO,IAAI,CAAC,EAAE;AAClC,WAAS;AACT,mBAAiB;AACjB,kBAAgB;AAChB,cAAY;AACZ,kBAAgB;AAChB,0BAAwB;AACxB,2BAAyB;AACzB,eAAa;AACb,uBAAqB;AACtB;",
-  "names": []
-}

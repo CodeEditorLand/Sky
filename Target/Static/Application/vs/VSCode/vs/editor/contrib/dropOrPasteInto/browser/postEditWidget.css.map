@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/editor/contrib/dropOrPasteInto/browser/postEditWidget.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.post-edit-widget {\r\n\tbox-shadow: var(--vscode-shadow-lg);\r\n\tborder: 1px solid var(--vscode-widget-border, transparent);\r\n\tborder-radius: 4px;\r\n\tcolor: var(--vscode-button-foreground);\r\n\tbackground-color: var(--vscode-button-background);\r\n\toverflow: hidden;\r\n}\r\n\r\n.post-edit-widget .monaco-button {\r\n\tpadding: 2px;\r\n\tborder: none;\r\n\tborder-radius: 0;\r\n}\r\n\r\n.post-edit-widget .monaco-button:hover {\r\n\tbackground-color: var(--vscode-button-hoverBackground) !important;\r\n}\r\n\r\n.post-edit-widget .monaco-button .codicon {\r\n\tmargin: 0;\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,cAAY,IAAI;AAChB,UAAQ,IAAI,MAAM,IAAI,sBAAsB,EAAE;AAC9C,iBAAe;AACf,SAAO,IAAI;AACX,oBAAkB,IAAI;AACtB,YAAU;AACX;AAEA,CATC,iBASiB,CAAC;AAClB,WAAS;AACT,UAAQ;AACR,iBAAe;AAChB;AAEA,CAfC,iBAeiB,CANC,aAMa;AAC/B,oBAAkB,IAAI;AACvB;AAEA,CAnBC,iBAmBiB,CAVC,cAUc,CAAC;AACjC,UAAQ;AACT;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/chat/browser/agentPluginEditor/media/agentPluginEditor.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.agent-plugin-editor {\r\n\t& .marketplace-link {\r\n\t\tcolor: var(--vscode-textLink-foreground);\r\n\t\ttext-decoration: none;\r\n\t\tcursor: pointer;\r\n\r\n\t\t&:hover {\r\n\t\t\ttext-decoration: underline;\r\n\t\t\tcolor: var(--vscode-textLink-activeForeground);\r\n\t\t}\r\n\t}\r\n\r\n\t& > .body > .content > .details {\r\n\t\tdisplay: flex;\r\n\t\theight: 100%;\r\n\r\n\t\t&.narrow {\r\n\t\t\tflex-direction: column;\r\n\t\t}\r\n\r\n\t\t& > .content-container {\r\n\t\t\tflex: 1;\r\n\t\t\tmin-width: 0;\r\n\t\t\theight: 100%;\r\n\t\t}\r\n\t}\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,IAAE,CAAC;AACF,WAAO,IAAI;AACX,qBAAiB;AACjB,YAAQ;AAER,KAAC;AACA,uBAAiB;AACjB,aAAO,IAAI;AACZ;AACD;AAEA,IAAE,EAAE,CAAC,KAAK,EAAE,CAAC,QAAQ,EAAE,CAAC;AACvB,aAAS;AACT,YAAQ;AAER,KAAC,CAAC;AACD,sBAAgB;AACjB;AAEA,MAAE,EAAE,CAAC;AACJ,YAAM;AACN,iBAAW;AACX,cAAQ;AACT;AACD;AACD;",
-  "names": []
-}

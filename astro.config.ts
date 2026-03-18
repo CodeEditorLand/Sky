@@ -13,8 +13,10 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import { fileURLToPath } from "node:url";
+import { createReadStream, existsSync } from "node:fs";
 import { readFile as fsReadFile } from "node:fs/promises";
+import { join as pathJoin } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "astro/config";
 import type { ViteDevServer } from "vite";
@@ -22,13 +24,7 @@ import type { ViteDevServer } from "vite";
 // -----------------------------------------------------------------------------
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
-import {
-	External,
-	Host,
-	Link,
-	On,
-	Static,
-} from "./Source/Function/Debug";
+import { External, Host, Link, On, Static } from "./Source/Function/Debug";
 
 // -----------------------------------------------------------------------------
 // ASTRO CONFIGURATION
@@ -77,10 +73,28 @@ export default defineConfig({
 
 		build: {
 			rollupOptions: {
-				external: External,
+				external: [
+					...External,
+					// Externalize VSCode modules - any import that includes VSCode output path
+					(id: string) =>
+						id.includes("/Output/Target/Microsoft/VSCode/vs/") ||
+						id.includes(
+							"\\Output\\Target\\Microsoft\\VSCode\\vs\\",
+						) ||
+						id.startsWith("vs/") ||
+						id === "vscode",
+				],
 				output: {
 					// Preserve dynamic URL imports in VSCode worker files
 					hoistTransitiveImports: false,
+					// Keep module IDs as absolute file URLs to preserve external module references
+					entryFileNames: (chunkInfo) => {
+						if (chunkInfo.name === "entry") return "app.js";
+
+						return chunkInfo.name
+							? `${chunkInfo.name}-[hash].js`
+							: `app-[hash].js`;
+					},
 				},
 			},
 			// Disable sourcemaps and minification to reduce memory
@@ -314,7 +328,7 @@ export default defineConfig({
 				cert: await fsReadFile("./dev-server.pem", {
 					encoding: "utf-8",
 				}),
-	
+
 				key: await fsReadFile("./dev-server-key.pem", {
 					encoding: "utf-8",
 				}),
@@ -339,11 +353,39 @@ export default defineConfig({
 			host: Host,
 			port: 9999,
 		},
-
 		plugins: [
-			(await import("vite-plugin-static-copy")).viteStaticCopy({ targets: Static }),
+			(await import("vite-plugin-static-copy")).viteStaticCopy({
+				targets: Static,
+			}),
 
 			(await import("vite-plugin-top-level-await")).default(),
+
+			// Mark VSCode modules as external to prevent bundling and resolution errors
+			// All VSCode files are served directly from the static Output directory
+			{
+				name: "ExternalizeVSCode",
+				resolveId(source: string, importer: any, options: any) {
+					// Mark 'vscode' package as external
+					if (source === "vscode") {
+						return { id: source, external: true };
+					}
+
+					// Mark any import that points to the Output package as external
+					if (
+						source.includes("Output/Target/Microsoft/VSCode") ||
+						source.includes("\\Output\\Target\\Microsoft\\VSCode\\")
+					) {
+						return { id: source, external: true };
+					}
+
+					// Also mark resolved VSCode internal modules (vs/*) as external
+					if (source.startsWith("vs/")) {
+						return { id: source, external: true };
+					}
+
+					return null;
+				},
+			},
 
 			// Plugin to serve VSCode worker iframe file from Output directory during development
 			// This prevents Astro's SPA fallback from serving index.html instead of the actual iframe
@@ -356,20 +398,22 @@ export default defineConfig({
 								"/Static/Application/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
 							)
 						) {
-							const fs = require("node:fs");
-							          const path = require("node:path");
-							          const iframePath = path.join(
-							            fileURLToPath(new URL("../..", import.meta.url)),
-							            "Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
-							          );
-							          if (fs.existsSync(iframePath)) {
-							            res.setHeader("Content-Type", "text/html");
-							            res.setHeader("Cache-Control", "no-cache");
-							            return fs
-							              .createReadStream(iframePath)
-							              .pipe(res);
-							          }
+							const iframePath = pathJoin(
+								fileURLToPath(
+									new URL("../..", import.meta.url),
+								),
+								"Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
+							);
+
+							if (existsSync(iframePath)) {
+								res.setHeader("Content-Type", "text/html");
+
+								res.setHeader("Cache-Control", "no-cache");
+
+								return createReadStream(iframePath).pipe(res);
+							}
 						}
+
 						next();
 					});
 				},
@@ -420,6 +464,7 @@ export default defineConfig({
 						id.includes("/vs/workbench/api/worker/")
 					) {
 						let modified = false;
+
 						let result = code;
 
 						// Add @vite-ignore to webWorkerExtensionHostIframe.html URL
@@ -430,6 +475,7 @@ export default defineConfig({
 								/new URL\(`([^`]*webWorkerExtensionHostIframe\.html[^`]*)`, import\.meta\.url\)/g,
 								"new URL(`$1`/* @vite-ignore */, import.meta.url)",
 							);
+
 							modified = true;
 						}
 
@@ -439,6 +485,7 @@ export default defineConfig({
 								/new URL\(['"]([^'"]*extensionHostWorkerMain[^'"]*)['"], import\.meta\.url\)/g,
 								"new URL(/* @vite-ignore */ '$1', import.meta.url)",
 							);
+
 							modified = true;
 						}
 
@@ -446,6 +493,7 @@ export default defineConfig({
 							return { code: result, map: null };
 						}
 					}
+
 					return null;
 				},
 			},

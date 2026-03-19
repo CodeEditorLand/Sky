@@ -24,9 +24,9 @@ const VSCodeOutput = join(projectRoot, 'node_modules/@codeeditorland/output/Targ
 // Prefer the Output package's Target (built from src/ via Rest compiler)
 // Fallback to standard VSCode out/ if needed
 const sourceCandidates = [
-	join(projectRoot, 'Element/Output/Target/Microsoft/VSCode'),
-	// Removed prebuilt out/ to enforce source-based compilation
-	// join(projectRoot, 'Dependency/Microsoft/Dependency/Editor/out'),
+  join(projectRoot, 'Element/Output/Target/Microsoft/VSCode'),
+  // Fallback to prebuilt out/ if Output/Target doesn't have vs/ directory
+  join(projectRoot, 'Dependency/Microsoft/Dependency/Editor/out'),
 ];
 
 function isDirectory(p) {

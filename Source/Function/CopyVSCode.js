@@ -60,45 +60,70 @@ async function copyVSCode() {
 
 	// Check if destination already has valid content
 	const destVsPath = join(VSCodeOutput, 'vs');
-	if (existsSync(destVsPath) && hasVSCodeContent(destVsPath)) {
-		console.log('[CopyVSCode] Destination already has valid VSCode content, skipping copy.');
-		return;
+	// Only skip copy if destination has content AND source candidates don't have a better version
+	// Always copy from Dependency/Microsoft/Dependency/Editor/out if it exists and has vs/ directory
+	const forceCopyFromOut = existsSync(join(projectRoot, 'Dependency/Microsoft/Dependency/Editor/out/vs')) &&
+	                         hasVSCodeContent(join(projectRoot, 'Dependency/Microsoft/Dependency/Editor/out/vs'));
+	if (existsSync(destVsPath) && hasVSCodeContent(destVsPath) && !forceCopyFromOut) {
+	  console.log('[CopyVSCode] Destination already has valid VSCode content, skipping copy.');
+	  return;
 	}
 
 	// Find the source vs/ directory with actual content
+	// Prefer Dependency/Microsoft/Dependency/Editor/out if available (has complete vs/ directory)
+	// Skip Element/Output/Target/Microsoft/VSCode if it's the same as destination (symlink issue)
 	let sourceVsPath = null;
-
-	for (const candidate of sourceCandidates) {
-		if (!existsSync(candidate)) {
-			console.log(`[CopyVSCode] Candidate does not exist: ${candidate}`);
-			continue;
-		}
-		console.log(`[CopyVSCode] Found candidate: ${candidate}`);
-
-		// Prefer the vs/ subdirectory inside candidate
-		const vsPath = join(candidate, 'vs');
-		if (existsSync(vsPath) && isDirectory(vsPath)) {
-			console.log(`[CopyVSCode] Found vs subdirectory: ${vsPath}`);
-			// Check if it has actual VSCode content
-			if (hasVSCodeContent(vsPath)) {
-				sourceVsPath = vsPath;
-				console.log(`[CopyVSCode] ✓ vs subdirectory has content, using it`);
-				break;
-			} else {
-				console.log(`[CopyVSCode] vs subdirectory exists but missing content, checking next candidate`);
-			}
-		} else if (basename(candidate) === 'vs' && isDirectory(candidate)) {
-			console.log(`[CopyVSCode] Candidate is a vs directory`);
-			if (hasVSCodeContent(candidate)) {
-				sourceVsPath = candidate;
-				console.log(`[CopyVSCode] ✓ candidate has content, using it`);
-				break;
-			} else {
-				console.log(`[CopyVSCode] candidate exists but missing content, checking next candidate`);
-			}
-		} else {
-			console.log(`[CopyVSCode] Candidate has no valid vs directory, skipping`);
-		}
+	
+	// First, check if Dependency/Microsoft/Dependency/Editor/out has vs/ directory
+	const outCandidate = join(projectRoot, 'Dependency/Microsoft/Dependency/Editor/out');
+	if (existsSync(outCandidate)) {
+	  const outVsPath = join(outCandidate, 'vs');
+	  if (existsSync(outVsPath) && isDirectory(outVsPath) && hasVSCodeContent(outVsPath)) {
+	    sourceVsPath = outVsPath;
+	    console.log(`[CopyVSCode] Using Dependency/Microsoft/Dependency/Editor/out/vs as source`);
+	  }
+	}
+	
+	// If no source found yet, try other candidates
+	if (!sourceVsPath) {
+	  for (const candidate of sourceCandidates) {
+	    // Skip if candidate is the same as destination (symlink issue)
+	    const candidateVsPath = join(candidate, 'vs');
+	    if (candidateVsPath === destVsPath) {
+	      console.log(`[CopyVSCode] Skipping candidate (same as destination): ${candidate}`);
+	      continue;
+	    }
+	
+	    if (!existsSync(candidate)) {
+	      console.log(`[CopyVSCode] Candidate does not exist: ${candidate}`);
+	      continue;
+	    }
+	    console.log(`[CopyVSCode] Found candidate: ${candidate}`);
+	
+	    // Prefer the vs/ subdirectory inside candidate
+	    if (existsSync(candidateVsPath) && isDirectory(candidateVsPath)) {
+	      console.log(`[CopyVSCode] Found vs subdirectory: ${candidateVsPath}`);
+	      // Check if it has actual VSCode content
+	      if (hasVSCodeContent(candidateVsPath)) {
+	        sourceVsPath = candidateVsPath;
+	        console.log(`[CopyVSCode] ✓ vs subdirectory has content, using it`);
+	        break;
+	      } else {
+	        console.log(`[CopyVSCode] vs subdirectory exists but missing content, checking next candidate`);
+	      }
+	    } else if (basename(candidate) === 'vs' && isDirectory(candidate)) {
+	      console.log(`[CopyVSCode] Candidate is a vs directory`);
+	      if (hasVSCodeContent(candidate)) {
+	        sourceVsPath = candidate;
+	        console.log(`[CopyVSCode] ✓ candidate has content, using it`);
+	        break;
+	      } else {
+	        console.log(`[CopyVSCode] candidate exists but missing content, checking next candidate`);
+	      }
+	    } else {
+	      console.log(`[CopyVSCode] Candidate has no valid vs directory, skipping`);
+	    }
+	  }
 	}
 
 	if (!sourceVsPath) {

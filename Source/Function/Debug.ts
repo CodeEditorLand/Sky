@@ -10,8 +10,6 @@ const cwd = process.cwd();
 // Relative path from Sky package root to workspace root node_modules
 // Sky is at Element/Sky, workspace root is Land/
 const VSCodeOutputRelative = "../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
-const VSCodeOutput = join(cwd, VSCodeOutputRelative);
-const VSCodeVS = join(VSCodeOutput, "vs");
 
 // Ensure forward slashes for glob patterns
 const toGlob = (p: string) => p.split(/\\/).join("/");
@@ -40,31 +38,32 @@ export const External = [
 	"@microsoft/1ds-signalr-js",
 ];
 
-// Static: Configuration for vite-plugin-static-copy
-// Copy public/static assets to the build output
-// Note: Use `src` and `dest`, not `from` and `to`
+// Static: Public assets directory (no longer used for VSCode copying)
+// The VSCode output is now accessed directly from node_modules/@codeeditorland/output
 export const Static = [
 	{
 		src: toGlob(join(cwd, "Public")),
 		dest: ".",
 		options: {},
 	},
-	{
-		src: toGlob(join(cwd, VSCodeOutputRelative)),
-		dest: "Static/Application/vs",
-		options: {},
-	},
 ];
 
 // Validate that the expected VSCode files exist
 export async function validateVSCodeOutput(): Promise<boolean> {
-	try {
-		const fs = await import("node:fs");
-		const path = await import("node:path");
+  try {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
 
-		// Check critical paths (use absolute paths)
-		const workbenchPath = path.join(
-			VSCodeVS,
+    // Compute VSCode output path from the Output package
+    const VSCodeOutput = path.join(
+    	cwd,
+    	"../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode",
+    );
+    const VSCodeVS = path.join(VSCodeOutput, "vs");
+
+    // Check critical paths (use absolute paths)
+    const workbenchPath = path.join(
+      VSCodeVS,
 			"code",
 			"browser",
 			"workbench",

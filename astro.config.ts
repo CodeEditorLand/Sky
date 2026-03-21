@@ -13,18 +13,14 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import { createReadStream, existsSync } from "node:fs";
 import { readFile as fsReadFile } from "node:fs/promises";
-import { join as pathJoin } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "astro/config";
-import type { ViteDevServer } from "vite";
 
 // -----------------------------------------------------------------------------
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
-import { External, Host, Link, On, Static } from "./Source/Function/Debug";
+import { External, Host, Link, On } from "./Source/Function/Debug";
 
 // -----------------------------------------------------------------------------
 // ASTRO CONFIGURATION
@@ -65,7 +61,7 @@ export default defineConfig({
 
 		contentIntellisense: true,
 
-		preserveScriptOrder: true,
+		rustCompiler: true,
 	},
 
 	vite: {
@@ -75,11 +71,13 @@ export default defineConfig({
 			rollupOptions: {
 				external: [
 					...External,
-					// Externalize VSCode modules - any import that includes VSCode output path
+					// Externalize VSCode modules from the Output package
 					(id: string) =>
-						id.includes("/Output/Target/Microsoft/VSCode/vs/") ||
 						id.includes(
-							"\\Output\\Target\\Microsoft\\VSCode\\vs\\",
+							"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
+						) ||
+						id.includes(
+							"\\@codeeditorland\\output\\Target\\Microsoft\\VSCode\\vs\\",
 						) ||
 						id.startsWith("vs/") ||
 						id === "vscode",
@@ -354,102 +352,7 @@ export default defineConfig({
 			port: 9999,
 		},
 		plugins: [
-			(await import("vite-plugin-static-copy")).viteStaticCopy({
-				targets: Static,
-			}),
-
 			(await import("vite-plugin-top-level-await")).default(),
-
-			// Mark VSCode modules as external to prevent bundling and resolution errors
-			// All VSCode files are served directly from the static Output directory
-			{
-				name: "ExternalizeVSCode",
-				resolveId(source: string, importer: any, options: any) {
-					// Mark 'vscode' package as external
-					if (source === "vscode") {
-						return { id: source, external: true };
-					}
-
-					// Mark any import that points to the Output package as external
-					if (
-						source.includes("Output/Target/Microsoft/VSCode") ||
-						source.includes("\\Output\\Target\\Microsoft\\VSCode\\")
-					) {
-						return { id: source, external: true };
-					}
-
-					// Also mark resolved VSCode internal modules (vs/*) as external
-					if (source.startsWith("vs/")) {
-						return { id: source, external: true };
-					}
-
-					return null;
-				},
-			},
-
-			// Plugin to serve VSCode worker iframe file from Output directory during development
-			// This prevents Astro's SPA fallback from serving index.html instead of the actual iframe
-			{
-				name: "ServeWorkerIframe",
-				configureServer: (Server: ViteDevServer) => {
-					Server.middlewares.use((req, res, next) => {
-						if (
-							req.url?.includes(
-								"/Static/Application/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
-							)
-						) {
-							const iframePath = pathJoin(
-								fileURLToPath(
-									new URL("../..", import.meta.url),
-								),
-								"Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
-							);
-
-							if (existsSync(iframePath)) {
-								res.setHeader("Content-Type", "text/html");
-
-								res.setHeader("Cache-Control", "no-cache");
-
-								return createReadStream(iframePath).pipe(res);
-							}
-						}
-
-						next();
-					});
-				},
-			},
-
-			((Module: string[]) => ({
-				name: "ExtendedWatcherIgnore",
-
-				configureServer: (Server: ViteDevServer): void => {
-					Server.watcher.options = {
-						...Server.watcher.options,
-
-						ignored: [
-							new RegExp(
-								`^${fileURLToPath(
-									new URL(
-										"./Target/Static/",
-
-										import.meta.url,
-									),
-								).replace(/\\/g, "\\\\")}`,
-							),
-
-							new RegExp(
-								`[/\\\\]node_modules[/\\\\](?!(${Module.join("|")})([/\\\\]|$)).*`,
-							),
-
-							"**/.git/**",
-
-							new RegExp(
-								`^${fileURLToPath(new URL("./Target/", import.meta.url)).replace(/\\/g, "\\\\")}`,
-							),
-						],
-					};
-				},
-			}))(Link),
 
 			// Plugin to add @vite-ignore comments to VSCode worker dynamic URL imports
 			{

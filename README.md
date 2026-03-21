@@ -5,7 +5,7 @@
 </td>
 <td align="left" valign="middle">
 <h3 align="left">
- 🌌
+  🌌
 </h3>
 </td>
 <td align="left" valign="middle">
@@ -31,7 +31,7 @@ Land
 </td>
 <td align="left" valign="middle">
 <h3 align="left">
- 🏞️
+ 🏞️
 </h3>
 </td>
 </tr>
@@ -39,7 +39,7 @@ Land
 
 ---
 
-# **Sky** 🌌 The UI Component Layer for Land 🏞️
+# **Sky** 🌌 The UI Component Layer for Land 🏞️
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
 [![NPM Version](https://img.shields.io/npm/v/@codeeditorland/sky.svg)](https://www.npmjs.com/package/@codeeditorland/sky)
@@ -119,7 +119,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## `Sky` in the Land Ecosystem  🌌 + 🏞️
+## `Sky` in the Land Ecosystem 🌌 + 🏞️
 
 | Component              | Role & Key Responsibilities                                                                                                             |
 | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
@@ -132,7 +132,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## Interaction Flow: Rendering UI from Wind State 🔄
+## Interaction Flow: Rendering UI from Wind State 🔄
 
 Here's a step-by-step example of how `Sky` renders the UI based on `Wind`'s
 state:
@@ -188,19 +188,19 @@ classDef tauri fill:#f9d,stroke:#333,stroke-width:2px;
 classDef mountain fill:#f9f,stroke:#333,stroke-width:2px;
 classDef external fill:#ddd,stroke:#666,stroke-dasharray: 5 5;
 
-subgraph "Sky 🌌 (UI Component Layer - Tauri Webview)"
+subgraph "Sky 🌌 (UI Component Layer - Tauri Webview)"
 Pages["Pages (index, Browser, Electron, Mountain, Isolation)"]:::sky
 Workbenches["Workbench Components (Browser, Mountain, Default, NLS)"]:::sky
 WorkbenchImpl["Workbench Implementations (BrowserProxy/, Electron/)"]:::sky
 end
 
-subgraph "Wind 🍃 (Service Layer - Tauri Webview)"
+subgraph "Wind 🍃 (Service Layer - Tauri Webview)"
 PreloadJS["Preload.js (Environment Shim)"]:::wind
 WindServices[Wind Effect-TS Services]:::wind
 TauriIntegrations[Wind/Tauri Integrations]:::wind
 end
 
-subgraph "Tauri Shell & Mountain ⛰️ (Rust Backend)"
+subgraph "Tauri Shell & Mountain 🌌 (Rust Backend)"
 TauriWindow[Tauri Window API]:::tauri
 TauriEvents[Tauri Event System]:::tauri
 MountainCore[Mountain Rust Core]:::mountain
@@ -282,7 +282,7 @@ Sky/
 
 ## Getting Started 🚀
 
-### Installation
+### Installation 📥
 
 To add `Sky` to your project workspace:
 
@@ -303,7 +303,7 @@ pnpm add @codeeditorland/sky
 **Note:** `@tauri-apps/api` is accessed transitively through `Wind` service
 layer rather than as a direct dependency.
 
-### Usage Pattern
+### Usage Pattern 🚀
 
 `Sky` is primarily used through its page routes and workbench components:
 

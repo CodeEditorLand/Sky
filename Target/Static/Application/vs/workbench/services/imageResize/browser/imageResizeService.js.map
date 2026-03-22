@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/imageResize/browser/imageResizeService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IImageResizeService } from '../../../../platform/imageResize/common/imageResizeService.js';\nimport { ImageResizeService } from '../../../../platform/imageResize/browser/imageResizeService.js';\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\n\nregisterSingleton(IImageResizeService, ImageResizeService, InstantiationType.Delayed);\n"],
-  "mappings": "AAKA,SAAS,2BAA2B;AACpC,SAAS,0BAA0B;AACnC,SAA4B,yBAAyB;AAErD;EAAkB;EAAqB;EAAkB;;AAAA;",
-  "names": []
-}

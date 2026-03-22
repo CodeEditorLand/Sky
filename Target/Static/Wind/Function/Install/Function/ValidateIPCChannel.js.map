@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Function/Install/Function/ValidateIPCChannel.ts"],
-  "sourcesContent": ["/**\n * @module Function/Install/Function/ValidateIPCChannel\n * @description\n * Validates IPC channel names to ensure they meet VSCode security requirements.\n * Only allows channels starting with \"vscode:\" prefix.\n *\n * @see {@link Function/Install/Function/CreateIPCRenderer} IPC renderer factory\n * @category Function\n */\n\n/**\n * Validates IPC channel names\n */\nexport function ValidateIPCChannel(Channel: string): boolean {\n\tif (!Channel || typeof Channel !== \"string\") return false;\n\tif (typeof navigator !== \"undefined\" && !Channel.startsWith(\"vscode:\"))\n\t\treturn false;\n\treturn true;\n}\n"],
-  "mappings": ";;AAaO,SAAS,mBAAmB,SAA0B;AAC5D,MAAI,CAAC,WAAW,OAAO,YAAY,SAAU,QAAO;AACpD,MAAI,OAAO,cAAc,eAAe,CAAC,QAAQ,WAAW,SAAS;AACpE,WAAO;AACR,SAAO;AACR;AALgB;",
-  "names": []
-}

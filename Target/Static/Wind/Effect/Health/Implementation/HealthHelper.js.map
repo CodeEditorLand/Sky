@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Health/Implementation/HealthHelper.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Health/Implementation/HealthHelper\n * @description\n * Helper functions for creating service health instances.\n * @category Implementation\n */\n\nimport type { ServiceHealth, HealthStatus } from \"../Type/HealthType.js\";\n\nexport const CreateServiceHealth = (\n  Name: string,\n  Status: HealthStatus,\n  Message: string,\n  ResponseTime: number,\n  Details?: Readonly<Record<string, unknown>>,\n): ServiceHealth => ({\n  serviceName: Name,\n  status: Status,\n  message: Message,\n  lastChecked: Date.now(),\n  responseTime: ResponseTime,\n  ...(Details !== undefined ? { details: Details } : {}),\n}) satisfies ServiceHealth;\n\nexport const CreateServiceHealthWithNoResponseTime = (\n  Name: string,\n  Status: HealthStatus,\n  Message: string,\n): ServiceHealth => ({\n  serviceName: Name,\n  status: Status,\n  message: Message,\n  lastChecked: Date.now(),\n  responseTime: 0,\n}) satisfies ServiceHealth;\n\nexport default { CreateServiceHealth, CreateServiceHealthWithNoResponseTime };\n"],
-  "mappings": ";;AASO,MAAM,sBAAsB,wBACjC,MACA,QACA,SACA,cACA,aACmB;AAAA,EACnB,aAAa;AAAA,EACb,QAAQ;AAAA,EACR,SAAS;AAAA,EACT,aAAa,KAAK,IAAI;AAAA,EACtB,cAAc;AAAA,EACd,GAAI,YAAY,SAAY,EAAE,SAAS,QAAQ,IAAI,CAAC;AACtD,IAbmC;AAe5B,MAAM,wCAAwC,wBACnD,MACA,QACA,aACmB;AAAA,EACnB,aAAa;AAAA,EACb,QAAQ;AAAA,EACR,SAAS;AAAA,EACT,aAAa,KAAK,IAAI;AAAA,EACtB,cAAc;AAChB,IAVqD;AAYrD,IAAO,uBAAQ,EAAE,qBAAqB,sCAAsC;",
-  "names": []
-}

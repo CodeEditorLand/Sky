@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/IPC/Tag/IPCTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/IPC/Tag/IPCTag\n * @description\n * Service tag for dependency injection of the IPC service.\n * @see {@link Effect/IPC/Interface/IPCService} Service interface\n * @see {@link Effect/IPC/Implementation/IPCImplementation} Implementation\n * @category Tag\n */\n\nimport { Context } from \"effect\";\nimport type { IPCService } from \"../Interface/IPCService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * IPC service tag for dependency injection\n */\nexport class IPCTag extends Context.Tag(\"IPC\")<IPCTag, IPCService>() {}\n\n/**\n * Alias for the IPC service tag\n */\nexport const IPC = IPCTag;\n\nexport default IPCTag;\n"],
-  "mappings": ";;AASA,SAAS,eAAe;AAUjB,MAAM,eAAe,QAAQ,IAAI,KAAK,EAAsB,EAAE;AAAA,EAnBrE,OAmBqE;AAAA;AAAA;AAAC;AAK/D,MAAM,MAAM;AAEnB,IAAO,iBAAQ;",
-  "names": []
-}

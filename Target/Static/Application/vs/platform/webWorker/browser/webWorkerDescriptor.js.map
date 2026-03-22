@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/webWorker/browser/webWorkerDescriptor.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { URI } from '../../../base/common/uri.js';\r\n\r\nexport class WebWorkerDescriptor {\r\n\tpublic readonly esmModuleLocation: URI | (() => URI) | undefined;\r\n\tpublic readonly esmModuleLocationBundler: URL | (() => URL) | undefined;\r\n\tpublic readonly label: string;\r\n\r\n\tconstructor(args: {\r\n\t\t/** The location of the esm module after transpilation */\r\n\t\tesmModuleLocation?: URI | (() => URI);\r\n\t\t/** The location of the esm module when used in a bundler environment. Refer to the typescript file in the src folder and use `?esm`. */\r\n\t\tesmModuleLocationBundler?: URL | (() => URL);\r\n\t\tlabel: string;\r\n\t}) {\r\n\t\tthis.esmModuleLocation = args.esmModuleLocation;\r\n\t\tthis.esmModuleLocationBundler = args.esmModuleLocationBundler;\r\n\t\tthis.label = args.label;\r\n\t}\r\n}\r\n"],
-  "mappings": ";;AAOM,MAAO,oBAAmB;EAPhC,OAOgC;;;EAK/B,YAAY,MAMX;AACA,SAAK,oBAAoB,KAAK;AAC9B,SAAK,2BAA2B,KAAK;AACrC,SAAK,QAAQ,KAAK;EACnB;;",
-  "names": []
-}

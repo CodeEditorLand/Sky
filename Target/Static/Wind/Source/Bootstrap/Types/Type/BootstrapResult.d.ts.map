@@ -1,1 +1,0 @@
-{"version":3,"file":"BootstrapResult.d.ts","sourceRoot":"","sources":["../../../../../Source/Bootstrap/Types/Type/BootstrapResult.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAEH,OAAO,KAAK,EAAE,WAAW,EAAE,MAAM,kBAAkB,CAAC;AAEpD;;GAEG;AACH,MAAM,WAAW,eAAe;IAC/B,qDAAqD;IACrD,OAAO,EAAE,OAAO,CAAC;IACjB,yCAAyC;IACzC,OAAO,EAAE,WAAW,EAAE,CAAC;IACvB,mDAAmD;IACnD,aAAa,EAAE,MAAM,CAAC;CACtB"}

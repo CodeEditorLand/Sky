@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Workbench/index.ts"],
-  "sourcesContent": ["/**\n * @module Workbench\n * @description\n * VSCode browser workbench integration layer for Wind.\n * Integrates Mountain's file system provider with VSCode's browser workbench.\n * @category Service\n */\n\n// ============================================================================\n// Tags\n// ============================================================================\n\nexport { WorkbenchIntegrationTag, WorkbenchIntegrationLiveLayer, default } from \"./Implementation/WorkbenchIntegrationImplementation.js\";\n\n// ============================================================================\n// Interface\n// ============================================================================\n\nexport type { WorkbenchIntegrationService } from \"./Interface/WorkbenchIntegrationService.js\";\n\n// ============================================================================\n// Types\n// ============================================================================\n\nexport type {\n\tWorkbenchState,\n\tWorkbenchInitState,\n\tWorkbenchIntegrationConfig,\n\tProviderRegistrationResult,\n\tWorkspaceContext,\n\tWorkbenchDiagnostics,\n\tWorkbenchIntegrationError,\n} from \"./Type/WorkbenchIntegrationType.js\";\n\nexport { WorkbenchIntegrationErrorCode } from \"./Type/WorkbenchIntegrationType.js\";\n"],
-  "mappings": "AAYA,SAAS,yBAAyB,+BAA+B,WAAAA,gBAAe;AAsBhF,SAAS,qCAAqC;",
-  "names": ["default"]
-}

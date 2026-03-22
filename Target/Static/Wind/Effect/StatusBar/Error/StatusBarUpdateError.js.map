@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/StatusBar/Error/StatusBarUpdateError.ts"],
-  "sourcesContent": ["/**\n * @module Effect/StatusBar/Error/StatusBarUpdateError\n * @description\n * Error thrown when updating a status bar item fails.\n * @see {@link Effect/StatusBar/Interface/StatusBarService} Usage context\n * @see {@link Effect/StatusBar/Error/StatusBarItemNotFoundError} Item not found error\n * @category Error\n */\n\n/**\n * Error thrown when attempting to update a status bar item and the operation fails.\n * Includes the item ID and the underlying cause of the failure.\n */\nexport default class StatusBarUpdateError extends Error {\n\treadonly _tag = \"StatusBarUpdateError\";\n\toverride readonly cause: unknown;\n\treadonly itemId: string;\n\n\tconstructor(itemId: string, cause: unknown) {\n\t\tsuper(`Failed to update status bar item '${itemId}': ${String(cause)}`);\n\t\tthis.itemId = itemId;\n\t\tthis.cause = cause;\n\t\tObject.setPrototypeOf(this, StatusBarUpdateError.prototype);\n\t}\n\n\toverride get name() {\n\t\treturn \"StatusBarUpdateError\";\n\t}\n}\n"],
-  "mappings": ";;AAaA,MAAO,6BAA2C,MAAM;AAAA,EAbxD,OAawD;AAAA;AAAA;AAAA,EAC9C,OAAO;AAAA,EACE;AAAA,EACT;AAAA,EAET,YAAY,QAAgB,OAAgB;AAC3C,UAAM,qCAAqC,MAAM,MAAM,OAAO,KAAK,CAAC,EAAE;AACtE,SAAK,SAAS;AACd,SAAK,QAAQ;AACb,WAAO,eAAe,MAAM,qBAAqB,SAAS;AAAA,EAC3D;AAAA,EAEA,IAAa,OAAO;AACnB,WAAO;AAAA,EACR;AACD;",
-  "names": []
-}

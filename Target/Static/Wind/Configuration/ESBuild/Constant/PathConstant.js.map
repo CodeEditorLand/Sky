@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Configuration/ESBuild/Constant/PathConstant.ts"],
-  "sourcesContent": ["/**\n * @module Configuration/ESBuild/Constant/PathConstant\n * @description\n * Path module imports and constants.\n * Provides path utility functions for file operations.\n * @category Constant\n */\n\nexport const { sep, posix } = await import(\"node:path\");\n"],
-  "mappings": "AAQO,MAAM,EAAE,KAAK,MAAM,IAAI,MAAM,OAAO,WAAW;",
-  "names": []
-}

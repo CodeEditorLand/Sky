@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Configuration/Error/ConfigValidationError.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Configuration/Error/ConfigValidationError\n * @description\n * Error thrown when configuration validation fails.\n * @see {@link Effect/Configuration/Interface/ConfigurationService} Service interface using this error\n * @see [Effect-TS Error Handling](https://effect.website/docs/guide/error-handling)\n * @category Error\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Error Definition\n// ============================================================================\n\nexport class ConfigValidationError extends Error {\n\treadonly _tag = \"ConfigValidationError\";\n\tconstructor(readonly issues: ReadonlyArray<string>) {\n\t\tsuper(`Configuration validation failed: ${issues.join(\", \")}`);\n\t}\n}\n\nexport default ConfigValidationError;\n"],
-  "mappings": ";;AASA,SAAS,SAAS,cAAc;AAMzB,MAAM,8BAA8B,MAAM;AAAA,EAEhD,YAAqB,QAA+B;AACnD,UAAM,oCAAoC,OAAO,KAAK,IAAI,CAAC,EAAE;AADzC;AAAA,EAErB;AAAA,EAnBD,OAeiD;AAAA;AAAA;AAAA,EACvC,OAAO;AAIjB;AAEA,IAAO,gCAAQ;",
-  "names": []
-}

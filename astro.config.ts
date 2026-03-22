@@ -13,22 +13,14 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import { fileURLToPath } from "node:url";
+import { readFile as fsReadFile } from "node:fs/promises";
 
 import { defineConfig } from "astro/config";
-import type { ViteDevServer } from "vite";
 
 // -----------------------------------------------------------------------------
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
-import {
-	External,
-	Host,
-	Link,
-	On,
-	readFile,
-	Static,
-} from "./Source/Function/Debug";
+import { External, Host, Link, On } from "./Source/Function/Debug";
 
 // -----------------------------------------------------------------------------
 // ASTRO CONFIGURATION
@@ -69,7 +61,7 @@ export default defineConfig({
 
 		contentIntellisense: true,
 
-		preserveScriptOrder: true,
+		rustCompiler: true,
 	},
 
 	vite: {
@@ -77,20 +69,37 @@ export default defineConfig({
 
 		build: {
 			rollupOptions: {
-				external: External,
+				external: [
+					...External,
+					// Externalize VSCode modules from the Output package
+					(id: string) =>
+						id.includes(
+							"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
+						) ||
+						id.includes(
+							"\\@codeeditorland\\output\\Target\\Microsoft\\VSCode\\vs\\",
+						) ||
+						id.startsWith("vs/") ||
+						id === "vscode",
+				],
 				output: {
 					// Preserve dynamic URL imports in VSCode worker files
 					hoistTransitiveImports: false,
+					// Keep module IDs as absolute file URLs to preserve external module references
+					entryFileNames: (chunkInfo) => {
+						if (chunkInfo.name === "entry") return "app.js";
+
+						return chunkInfo.name
+							? `${chunkInfo.name}-[hash].js`
+							: `app-[hash].js`;
+					},
 				},
 			},
-
-			sourcemap: On,
-
-			manifest: On,
-
-			minify: On ? false : "terser",
-
-			cssMinify: On ? false : "esbuild",
+			// Disable sourcemaps and minification to reduce memory
+			sourcemap: false,
+			manifest: false,
+			minify: false,
+			cssMinify: false,
 
 			terserOptions: On
 				? {
@@ -314,11 +323,11 @@ export default defineConfig({
 			strictPort: true,
 
 			https: {
-				cert: await readFile("./dev-server.pem", {
+				cert: await fsReadFile("./dev-server.pem", {
 					encoding: "utf-8",
 				}),
 
-				key: await readFile("./dev-server-key.pem", {
+				key: await fsReadFile("./dev-server-key.pem", {
 					encoding: "utf-8",
 				}),
 			},
@@ -342,73 +351,8 @@ export default defineConfig({
 			host: Host,
 			port: 9999,
 		},
-
 		plugins: [
-			(await import("vite-plugin-static-copy")).viteStaticCopy(Static),
-
 			(await import("vite-plugin-top-level-await")).default(),
-
-			// Plugin to serve VSCode worker iframe file from Output directory during development
-			// This prevents Astro's SPA fallback from serving index.html instead of the actual iframe
-			{
-				name: "ServeWorkerIframe",
-				configureServer: (Server: ViteDevServer) => {
-					Server.middlewares.use((req, res, next) => {
-						if (
-							req.url?.includes(
-								"/Static/Application/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
-							)
-						) {
-							const fs = require("node:fs");
-							          const path = require("node:path");
-							          const iframePath = path.join(
-							            fileURLToPath(new URL("../..", import.meta.url)),
-							            "Output/Target/Microsoft/VSCode/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
-							          );
-							          if (fs.existsSync(iframePath)) {
-							            res.setHeader("Content-Type", "text/html");
-							            res.setHeader("Cache-Control", "no-cache");
-							            return fs
-							              .createReadStream(iframePath)
-							              .pipe(res);
-							          }
-						}
-						next();
-					});
-				},
-			},
-
-			((Module: string[]) => ({
-				name: "ExtendedWatcherIgnore",
-
-				configureServer: (Server: ViteDevServer): void => {
-					Server.watcher.options = {
-						...Server.watcher.options,
-
-						ignored: [
-							new RegExp(
-								`^${fileURLToPath(
-									new URL(
-										"./Target/Static/",
-
-										import.meta.url,
-									),
-								).replace(/\\/g, "\\\\")}`,
-							),
-
-							new RegExp(
-								`[/\\\\]node_modules[/\\\\](?!(${Module.join("|")})([/\\\\]|$)).*`,
-							),
-
-							"**/.git/**",
-
-							new RegExp(
-								`^${fileURLToPath(new URL("./Target/", import.meta.url)).replace(/\\/g, "\\\\")}`,
-							),
-						],
-					};
-				},
-			}))(Link),
 
 			// Plugin to add @vite-ignore comments to VSCode worker dynamic URL imports
 			{
@@ -423,6 +367,7 @@ export default defineConfig({
 						id.includes("/vs/workbench/api/worker/")
 					) {
 						let modified = false;
+
 						let result = code;
 
 						// Add @vite-ignore to webWorkerExtensionHostIframe.html URL
@@ -433,6 +378,7 @@ export default defineConfig({
 								/new URL\(`([^`]*webWorkerExtensionHostIframe\.html[^`]*)`, import\.meta\.url\)/g,
 								"new URL(`$1`/* @vite-ignore */, import.meta.url)",
 							);
+
 							modified = true;
 						}
 
@@ -442,6 +388,7 @@ export default defineConfig({
 								/new URL\(['"]([^'"]*extensionHostWorkerMain[^'"]*)['"], import\.meta\.url\)/g,
 								"new URL(/* @vite-ignore */ '$1', import.meta.url)",
 							);
+
 							modified = true;
 						}
 
@@ -449,6 +396,7 @@ export default defineConfig({
 							return { code: result, map: null };
 						}
 					}
+
 					return null;
 				},
 			},

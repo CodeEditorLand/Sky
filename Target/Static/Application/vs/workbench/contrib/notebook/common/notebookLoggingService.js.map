@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/notebook/common/notebookLoggingService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';\r\n\r\nexport const INotebookLoggingService = createDecorator<INotebookLoggingService>('INotebookLoggingService');\r\n\r\nexport interface INotebookLoggingService {\r\n\treadonly _serviceBrand: undefined;\r\n\tinfo(category: string, output: string): void;\r\n\twarn(category: string, output: string): void;\r\n\terror(category: string, output: string): void;\r\n\tdebug(category: string, output: string): void;\r\n\ttrace(category: string, output: string): void;\r\n}\r\n"],
-  "mappings": "AAKA,SAAS,uBAAuB;AAEzB,MAAM,0BAA0B,gBAAyC,yBAAyB;",
-  "names": []
-}

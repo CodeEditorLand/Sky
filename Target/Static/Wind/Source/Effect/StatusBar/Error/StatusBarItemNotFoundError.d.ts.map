@@ -1,1 +1,0 @@
-{"version":3,"file":"StatusBarItemNotFoundError.d.ts","sourceRoot":"","sources":["../../../../../Source/Effect/StatusBar/Error/StatusBarItemNotFoundError.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAEH;;;GAGG;AACH,MAAM,CAAC,OAAO,OAAO,0BAA2B,SAAQ,KAAK;IAGhD,QAAQ,CAAC,MAAM,EAAE,MAAM;IAFnC,QAAQ,CAAC,IAAI,gCAAgC;gBAExB,MAAM,EAAE,MAAM;IAKnC,IAAa,IAAI,WAEhB;CACD"}

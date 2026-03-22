@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/actions/chatActions.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { MarshalledId } from '../../../../../base/common/marshallingIds.js';\r\nimport { URI } from '../../../../../base/common/uri.js';\r\n\r\nexport interface IChatViewTitleActionContext {\r\n\treadonly $mid: MarshalledId.ChatViewContext;\r\n\treadonly sessionResource: URI;\r\n}\r\n\r\nexport function isChatViewTitleActionContext(obj: unknown): obj is IChatViewTitleActionContext {\r\n\treturn !!obj &&\r\n\t\tURI.isUri((obj as IChatViewTitleActionContext).sessionResource)\r\n\t\t&& (obj as IChatViewTitleActionContext).$mid === MarshalledId.ChatViewContext;\r\n}\r\n"],
-  "mappings": ";;AAMA,SAAS,WAAW;AAOd,SAAU,6BAA6B,KAAY;AACxD,SAAO,CAAC,CAAC,OACR,IAAI,MAAO,IAAoC,eAAe,KAC1D,IAAoC,SAAI;AAC9C;AAJgB;",
-  "names": []
-}

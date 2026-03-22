@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Effect/IPC/Mock.ts"],
-  "sourcesContent": ["/**\n * @module Effect/IPC/Mock\n * @description\n * Mock layer for the IPC service for testing purposes.\n * Provides in-memory IPC state without actual communication.\n * @category Layer\n */\n\nimport { Effect, Stream, Layer } from \"effect\";\nimport type { IPCService } from \"./Interface/IPCService.js\";\nimport { IPCTag } from \"./Tag/IPCTag.js\";\n\n/**\n * Mock IPC service for testing\n */\nexport const MockIPCLive = Layer.succeed(IPCTag, {\n\tsend: (_channel: string) => (_args: ReadonlyArray<unknown>) => Effect.void,\n\tinvoke: (_channel: string) => (_args: ReadonlyArray<unknown>) =>\n\t\tEffect.succeed({}),\n\tevents: (_channel: string) => Stream.empty,\n\tonce: (_channel: string) => Effect.succeed({ channel: _channel, args: [] }),\n\tremoveAllListeners: (_channel: string) => Effect.void,\n} satisfies IPCService);\n\nexport default MockIPCLive;\n"],
-  "mappings": ";;AAQA,SAAS,QAAQ,QAAQ,aAAa;AAEtC,SAAS,cAAc;AAKhB,MAAM,cAAc,MAAM,QAAQ,QAAQ;AAAA,EAChD,MAAM,wBAAC,aAAqB,CAAC,UAAkC,OAAO,MAAhE;AAAA,EACN,QAAQ,wBAAC,aAAqB,CAAC,UAC9B,OAAO,QAAQ,CAAC,CAAC,GADV;AAAA,EAER,QAAQ,wBAAC,aAAqB,OAAO,OAA7B;AAAA,EACR,MAAM,wBAAC,aAAqB,OAAO,QAAQ,EAAE,SAAS,UAAU,MAAM,CAAC,EAAE,CAAC,GAApE;AAAA,EACN,oBAAoB,wBAAC,aAAqB,OAAO,MAA7B;AACrB,CAAsB;AAEtB,IAAO,eAAQ;",
-  "names": []
-}

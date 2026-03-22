@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../Source/Bootstrap/Types/VSCode/Type/VSCodeConfigurationType.ts"],
-  "sourcesContent": ["/**\n * @module Bootstrap/Types/VSCode/Type/VSCodeConfigurationType\n * @description\n * Configuration-related types for VSCode service.\n * Includes event types and configuration target enum.\n * @see {@link Bootstrap/Types/VSCode/Interface/VSCodeConfigurationService} Related service interface\n * @category Type\n */\n\nimport type { URI } from \"./VSCodeUtilityType.js\";\n\n/**\n * Event type definition\n */\nexport interface Event<T> {\n\t(listener: (e: T) => any): IDisposable;\n}\n\n/**\n * Disposable interface\n */\nexport interface IDisposable {\n\tdispose(): void;\n}\n\n/**\n * Configuration change event interface\n */\nexport interface IConfigurationChangeEvent {\n\taffectsConfiguration(section: string, resource?: URI): boolean;\n}\n\n/**\n * Configuration change event interface\n */\nexport interface IConfigurationChangeEvent {\n\taffectsConfiguration(section: string, resource?: URI): boolean;\n}\n\n/**\n * Configuration target enum\n */\nexport enum ConfigurationTarget {\n\tUSER = 1,\n\tWORKSPACE = 2,\n\tWORKSPACE_FOLDER = 3,\n\tDEFAULT = 4,\n\tMEMORY = 5,\n}\n"],
-  "mappings": "AA0CO,IAAK,sBAAL,kBAAKA,yBAAL;AACN,EAAAA,0CAAA,UAAO,KAAP;AACA,EAAAA,0CAAA,eAAY,KAAZ;AACA,EAAAA,0CAAA,sBAAmB,KAAnB;AACA,EAAAA,0CAAA,aAAU,KAAV;AACA,EAAAA,0CAAA,YAAS,KAAT;AALW,SAAAA;AAAA,GAAA;",
-  "names": ["ConfigurationTarget"]
-}

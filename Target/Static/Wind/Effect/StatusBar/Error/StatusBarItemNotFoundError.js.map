@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/StatusBar/Error/StatusBarItemNotFoundError.ts"],
-  "sourcesContent": ["/**\n * @module Effect/StatusBar/Error/StatusBarItemNotFoundError\n * @description\n * Error thrown when a requested status bar item cannot be found.\n * @see {@link Effect/StatusBar/Interface/StatusBarService} Usage context\n * @see {@link Effect/StatusBar/Error/StatusBarUpdateError} Update error\n * @category Error\n */\n\n/**\n * Error thrown when attempting to access or modify a status bar item that doesn't exist.\n * Includes the item ID that was not found.\n */\nexport default class StatusBarItemNotFoundError extends Error {\n\treadonly _tag = \"StatusBarItemNotFoundError\";\n\n\tconstructor(readonly itemId: string) {\n\t\tsuper(`Status bar item '${itemId}' not found`);\n\t\tObject.setPrototypeOf(this, StatusBarItemNotFoundError.prototype);\n\t}\n\n\toverride get name() {\n\t\treturn \"StatusBarItemNotFoundError\";\n\t}\n}\n"],
-  "mappings": ";;AAaA,MAAO,mCAAiD,MAAM;AAAA,EAG7D,YAAqB,QAAgB;AACpC,UAAM,oBAAoB,MAAM,aAAa;AADzB;AAEpB,WAAO,eAAe,MAAM,2BAA2B,SAAS;AAAA,EACjE;AAAA,EAnBD,OAa8D;AAAA;AAAA;AAAA,EACpD,OAAO;AAAA,EAOhB,IAAa,OAAO;AACnB,WAAO;AAAA,EACR;AACD;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminal/common/terminalExtensionPoints.contribution.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';\nimport { ITerminalContributionService, TerminalContributionService } from './terminalExtensionPoints.js';\n\nregisterSingleton(ITerminalContributionService, TerminalContributionService, InstantiationType.Delayed);\n"],
-  "mappings": "AAKA,SAA4B,yBAAyB;AACrD,SAAS,8BAA8B,mCAAmC;AAE1E;EAAkB;EAA8B;EAA2B;;AAAA;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Effect/StatusBar.ts"],
-  "sourcesContent": ["/**\n * @module Effect/StatusBar\n * @description\n * Atomic Status Bar service using Effect-TS.\n * Manages status bar items, their display, and updates.\n * @deprecated Use {@link Effect/StatusBar/index} instead.\n * This file remains for backward compatibility.\n */\n\n// Re-export all exports from the atomic structure\nexport * from \"./StatusBar/index.js\";\n"],
-  "mappings": "AAUA,cAAc;",
-  "names": []
-}

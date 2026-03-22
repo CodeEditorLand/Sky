@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/FileSystem/Error/index.ts"],
-  "sourcesContent": ["/**\n * @module FileSystem/Error\n * @description\n * Error types for FileSystem operations.\n * @category Error\n */\n\nexport {\n\tFileSystemProviderError,\n\tFileNotFoundError,\n\tFileExistsError,\n\tPermissionError,\n\tInvalidPathError,\n\tNotSupportedError,\n\tUnknownFileSystemError,\n\ttoFileSystemProviderError,\n\tisFileSystemProviderError,\n\tisFileNotFoundError,\n\tisFileExistsError,\n\tisPermissionError,\n\tisInvalidPathError,\n\tisNotSupportedError,\n\tisUnknownFileSystemError,\n} from \"./FileSystemProviderError.js\";\n"],
-  "mappings": "AAOA;AAAA,EACC;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,OACM;",
-  "names": []
-}

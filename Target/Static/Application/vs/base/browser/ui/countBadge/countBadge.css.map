@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/base/browser/ui/countBadge/countBadge.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-count-badge {\r\n\tpadding: 3px 5px;\r\n\tborder-radius: 11px;\r\n\tfont-size: 11px;\r\n\tmin-width: 18px;\r\n\tmin-height: 18px;\r\n\tline-height: 11px;\r\n\tfont-weight: normal;\r\n\ttext-align: center;\r\n\tdisplay: inline-block;\r\n\tbox-sizing: border-box;\r\n}\r\n\r\n.monaco-count-badge.long {\r\n\tpadding: 2px 3px;\r\n\tborder-radius: 2px;\r\n\tmin-height: auto;\r\n\tline-height: normal;\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,WAAS,IAAI;AACb,iBAAe;AACf,aAAW;AACX,aAAW;AACX,cAAY;AACZ,eAAa;AACb,eAAa;AACb,cAAY;AACZ,WAAS;AACT,cAAY;AACb;AAEA,CAbC,kBAakB,CAAC;AACnB,WAAS,IAAI;AACb,iBAAe;AACf,cAAY;AACZ,eAAa;AACd;",
-  "names": []
-}

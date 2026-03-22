@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/chat/common/widget/input/modelPickerWidget.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { localize } from '../../../../../../nls.js';\r\n\r\nexport const DEFAULT_MODEL_PICKER_CATEGORY = { label: localize('chat.modelPicker.other', \"Other Models\"), order: Number.MAX_SAFE_INTEGER };\r\n"],
-  "mappings": "AAKA,SAAS,gBAAgB;AAElB,MAAM,gCAAgC,EAAE,OAAO,SAAS,0BAA0B,cAAc,GAAG,OAAO,OAAO,iBAAgB;",
-  "names": []
-}

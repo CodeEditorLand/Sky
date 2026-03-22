@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Configuration/ESBuild/Wind.ts"],
-  "sourcesContent": ["/**\n * @module Configuration/ESBuild/Wind\n * @description\n * ESBuild Wind configuration with all build targets.\n * This is the main configuration entry point.\n */\n\nimport BaseConfig from \"./Config/BaseConfig.js\";\nimport TargetConfig from \"./Config/TargetConfig.js\";\nimport CompileConfig from \"./Config/CompileConfig.js\";\n\nexport * from \"./Constant/EnvironmentConstant.js\";\nexport { sep, posix } from \"./Constant/BoundConstant.js\";\n\nexport { BaseConfig, TargetConfig, CompileConfig };\n"],
-  "mappings": "AAOA,OAAO,gBAAgB;AACvB,OAAO,kBAAkB;AACzB,OAAO,mBAAmB;AAE1B,cAAc;AACd,SAAS,KAAK,aAAa;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminalContrib/chatAgentTools/common/terminal.chatAgentTools.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nexport const enum TerminalChatAgentToolsCommandId {\n\tChatAddTerminalSelection = 'workbench.action.terminal.chat.addTerminalSelection',\n}\n"],
-  "mappings": "AAKA,IAAkB;CAAlB,SAAkBA,kCAA+B;AAChD,EAAAA,iCAAA,0BAAA,IAAA;AACD,GAFkB,oCAAA,kCAA+B,CAAA,EAAA;",
-  "names": ["TerminalChatAgentToolsCommandId"]
-}

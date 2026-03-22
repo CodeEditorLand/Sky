@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/ActivityBar/Tag/ActivityBarTag.ts"],
-  "sourcesContent": ["/**\n * @module Effect/ActivityBar/Tag/ActivityBarTag\n * @description\n * Context Tag for ActivityBar service dependency injection.\n * Enables service composition and layering in Effect programs.\n * @see {@link Effect/ActivityBar/Interface/ActivityBarService} Service interface\n * @see [Effect-TS Context](https://effect.website/docs/guide/context)\n * @category Tag\n */\n\nimport { Context } from \"effect\";\n\nimport type { ActivityBarService } from \"../Interface/ActivityBarService.js\";\n\n// ============================================================================\n// Service Tag\n// ============================================================================\n\n/**\n * Context Tag for ActivityBar service.\n * Use this to inject the ActivityBar service into Effect programs.\n *\n * @example\n * ```ts\n * import { ActivityBarTag } from \"./Tag/ActivityBarTag.js\";\n *\n * const effect = Effect.gen(function* () {\n *   const activityBar = yield* ActivityBarTag;\n *   const items = yield* activityBar.items;\n * });\n * ```\n */\nexport class ActivityBarTag extends Context.Tag(\"ActivityBar\")<ActivityBarTag, ActivityBarService>() {}\n\nexport default ActivityBarTag;\n"],
-  "mappings": ";;AAUA,SAAS,eAAe;AAsBjB,MAAM,uBAAuB,QAAQ,IAAI,aAAa,EAAsC,EAAE;AAAA,EAhCrG,OAgCqG;AAAA;AAAA;AAAC;AAEtG,IAAO,yBAAQ;",
-  "names": []
-}

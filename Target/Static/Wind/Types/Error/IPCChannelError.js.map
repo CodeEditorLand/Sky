@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Types/Error/IPCChannelError.ts"],
-  "sourcesContent": ["/**\n * @module Types/Error/IPCChannelError\n * @description\n * Error thrown when an IPC channel operation fails.\n * Includes the channel name and underlying cause.\n * @category Error\n */\n\n/**\n * IPC channel error\n */\nexport class IPCChannelError extends Error {\n\treadonly _tag = \"IPCChannelError\";\n\n\tconstructor(\n\t\treadonly channel: string,\n\t\toverride readonly cause: unknown,\n\t) {\n\t\tsuper(`IPC channel '${channel}' error: ${String(cause)}`);\n\t}\n}\n"],
-  "mappings": ";;AAWO,MAAM,wBAAwB,MAAM;AAAA,EAG1C,YACU,SACS,OACjB;AACD,UAAM,gBAAgB,OAAO,YAAY,OAAO,KAAK,CAAC,EAAE;AAH/C;AACS;AAAA,EAGnB;AAAA,EAnBD,OAW2C;AAAA;AAAA;AAAA,EACjC,OAAO;AAQjB;",
-  "names": []
-}

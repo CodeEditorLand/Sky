@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Effect/Sidebar.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Sidebar\n * @description\n * Atomic Sidebar service using Effect-TS.\n * Manages sidebar panels, their display, and active/collapsed states.\n * @deprecated Use {@link Effect/Sidebar/index} instead.\n * This file remains for backward compatibility.\n */\n\n// Re-export all exports from the atomic structure\nexport * from \"./Sidebar/index.js\";\n"],
-  "mappings": "AAUA,cAAc;",
-  "names": []
-}

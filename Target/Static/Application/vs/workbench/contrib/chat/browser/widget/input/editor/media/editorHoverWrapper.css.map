@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/workbench/contrib/chat/browser/widget/input/editor/media/editorHoverWrapper.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.chat-editor-hover-wrapper-content {\r\n\tpadding: 2px 8px;\r\n}\r\n"],
-  "mappings": "AAKA,CAAC;AACA,WAAS,IAAI;AACd;",
-  "names": []
-}

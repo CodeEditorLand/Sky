@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../Source/Effect/Sidebar/index.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Sidebar\n * @description\n * Main re-export module for Sidebar service.\n * Provides all exports for backward compatibility with existing imports.\n *\n * @see {@link Effect/Sidebar/Interface/SidebarService} Service interface\n * @see {@link Effect/Sidebar/Layer/SidebarLive} Live layer\n * @see {@link Effect/Sidebar/Layer/SidebarMock} Mock layer\n * @category Re-export\n */\n\n// Types\nexport type { SidebarPanel, CreateSidebarPanel } from \"./Type/SidebarType.js\";\n\n// Service interface\nexport type { SidebarService } from \"./Interface/SidebarService.js\";\n\n// Tag\nexport { default as SidebarTag, Sidebar } from \"./Tag/SidebarTag.js\";\n\n// Layers\nexport { default as SidebarLive } from \"./Layer/SidebarLive.js\";\nexport { default as SidebarMockLive } from \"./Layer/SidebarMock.js\";\n\n// Mock factory (for direct usage without Layer)\nexport { makeMockSidebar } from \"./Layer/SidebarMock.js\";\n\n// Errors\nexport { default as SidebarPanelNotFoundError } from \"./Error/SidebarPanelNotFoundError.js\";\nexport { default as SidebarUpdateError } from \"./Error/SidebarUpdateError.js\";\n"],
-  "mappings": "AAmBA,SAAoB,WAAXA,UAAuB,eAAe;AAG/C,SAAoB,WAAXA,gBAA8B;AACvC,SAAoB,WAAXA,gBAAkC;AAG3C,SAAS,uBAAuB;AAGhC,SAAoB,WAAXA,gBAA4C;AACrD,SAAoB,WAAXA,gBAAqC;",
-  "names": ["default"]
-}

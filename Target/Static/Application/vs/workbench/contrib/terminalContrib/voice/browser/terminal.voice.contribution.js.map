@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/terminalContrib/voice/browser/terminal.voice.contribution.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { registerTerminalVoiceActions } from './terminalVoiceActions.js';\n\nregisterTerminalVoiceActions();\n"],
-  "mappings": "AAKA,SAAS,oCAAoC;AAE7C,6BAA4B;",
-  "names": []
-}

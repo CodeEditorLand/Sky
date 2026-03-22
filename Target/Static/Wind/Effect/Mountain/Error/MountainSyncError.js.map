@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Effect/Mountain/Error/MountainSyncError.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Mountain/Error/MountainSyncError\n * @description\n * Error thrown when Mountain sync operation fails.\n * @see {@link Effect/Mountain/Interface/MountainService} Service interface using this error\n * @see [Effect-TS Error Handling](https://effect.website/docs/guide/error-handling)\n * @category Error\n */\n\nimport { Context, Effect } from \"effect\";\n\n// ============================================================================\n// Error Definition\n// ============================================================================\n\nexport class MountainSyncError extends Error {\n\treadonly _tag = \"MountainSyncError\";\n\treadonly resource: string;\n\toverride readonly cause: unknown;\n\tconstructor(resource: string, cause: unknown) {\n\t\tsuper(`Mountain sync for '${resource}' failed: ${String(cause)}`);\n\t\tthis.resource = resource;\n\t}\n}\n\nexport default MountainSyncError;\n"],
-  "mappings": ";;AASA,SAAS,SAAS,cAAc;AAMzB,MAAM,0BAA0B,MAAM;AAAA,EAf7C,OAe6C;AAAA;AAAA;AAAA,EACnC,OAAO;AAAA,EACP;AAAA,EACS;AAAA,EAClB,YAAY,UAAkB,OAAgB;AAC7C,UAAM,sBAAsB,QAAQ,aAAa,OAAO,KAAK,CAAC,EAAE;AAChE,SAAK,WAAW;AAAA,EACjB;AACD;AAEA,IAAO,4BAAQ;",
-  "names": []
-}

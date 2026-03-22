@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/contrib/inlineCompletions/browser/controller/common.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { ICodeEditor } from '../../../../browser/editorBrowser.js';\r\nimport type { InlineCompletionsController } from './inlineCompletionsController.js';\r\n\r\nlet _getInlineCompletionsController: ((editor: ICodeEditor) => InlineCompletionsController | null) | undefined;\r\n\r\nexport function getInlineCompletionsController(editor: ICodeEditor): InlineCompletionsController | null {\r\n\treturn _getInlineCompletionsController?.(editor) ?? null;\r\n}\r\n\r\nexport function setInlineCompletionsControllerGetter(getter: (editor: ICodeEditor) => InlineCompletionsController | null): void {\r\n\t_getInlineCompletionsController = getter;\r\n}\r\n"],
-  "mappings": ";;AAQA,IAAI;AAEE,SAAU,+BAA+B,QAAmB;AACjE,SAAO,kCAAkC,MAAM,KAAK;AACrD;AAFgB;AAIV,SAAU,qCAAqC,QAAmE;AACvH,oCAAkC;AACnC;AAFgB;",
-  "names": []
-}

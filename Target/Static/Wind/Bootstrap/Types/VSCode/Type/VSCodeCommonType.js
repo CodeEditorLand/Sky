@@ -1,1 +1,0 @@
-//# sourceMappingURL=VSCodeCommonType.js.map

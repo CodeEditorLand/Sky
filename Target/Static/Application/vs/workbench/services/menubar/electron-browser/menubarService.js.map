@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/services/menubar/electron-browser/menubarService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\nimport { IMenubarService } from '../../../../platform/menubar/electron-browser/menubar.js';\nimport { registerMainProcessRemoteService } from '../../../../platform/ipc/electron-browser/services.js';\n\nregisterMainProcessRemoteService(IMenubarService, 'menubar');\n"],
-  "mappings": "AAKA,SAAS,uBAAuB;AAChC,SAAS,wCAAwC;AAEjD,iCAAiC,iBAAiB,SAAS;",
-  "names": []
-}

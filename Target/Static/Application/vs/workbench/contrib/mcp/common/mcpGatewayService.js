@@ -1,6 +1,0 @@
-import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
-const IWorkbenchMcpGatewayService = createDecorator("IWorkbenchMcpGatewayService");
-export {
-  IWorkbenchMcpGatewayService
-};
-//# sourceMappingURL=mcpGatewayService.js.map

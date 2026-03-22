@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../Source/Effect/Bootstrap.ts"],
-  "sourcesContent": ["/**\n * @module Effect/Bootstrap\n * @description\n * Bootstrap orchestration using Effect-TS.\n * Replaces legacy BootstrapOrchestrator with Effect-based stage sequencing.\n *\n * @deprecated This file is maintained for backward compatibility.\n * Please import from {@link ./Bootstrap/index.ts} instead.\n *\n * @example\n * ```ts\n * // Old (still works):\n * import { Bootstrap, BootstrapLive } from \"./Effect/Bootstrap.js\";\n *\n * // New (recommended):\n * import { Bootstrap, BootstrapLive } from \"./Effect/Bootstrap/index.js\";\n * ```\n */\n\n// Re-export from atomic modules for backward compatibility\nexport {\n\ttype BootstrapOptions,\n\ttype StageResult,\n\ttype BootstrapResult,\n\ttype BootstrapService,\n\tBootstrapTag,\n\tstage0_Environment,\n\tstage1_Preload,\n\tstage2_Configuration,\n\tstage3_Services,\n\tstage4_Preparation,\n\tstage5_Initialization,\n\tstage6_HealthCheck,\n\tBootstrapLive,\n\tBootstrapMock,\n\tmakeMockBootstrap,\n\trunBootstrap,\n} from \"./Bootstrap/index.js\";\n"],
-  "mappings": "AAoBA;AAAA,EAKC;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,EACA;AAAA,OACM;",
-  "names": []
-}

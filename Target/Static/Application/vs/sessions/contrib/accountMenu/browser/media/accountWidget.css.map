@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/out/vs/sessions/contrib/accountMenu/browser/media/accountWidget.css"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n/* Account Button */\r\n.monaco-workbench .part.sidebar > .sidebar-footer .account-widget-account {\r\n\toverflow: hidden;\r\n\tmin-width: 0;\r\n\tflex: 1;\r\n}\r\n\r\n/* Update Button */\r\n.monaco-workbench .part.sidebar > .sidebar-footer .update-widget-action {\r\n\toverflow: hidden;\r\n\tmin-width: 0;\r\n\tflex: 1;\r\n}\r\n"],
-  "mappings": "AAMA,CAAC,iBAAiB,CAAC,IAAI,CAAC,QAAQ,EAAE,CAAC,eAAe,CAAC;AAClD,YAAU;AACV,aAAW;AACX,QAAM;AACP;AAGA,CAPC,iBAOiB,CAPC,IAOI,CAPC,QAOQ,EAAE,CAPC,eAOe,CAAC;AAClD,YAAU;AACV,aAAW;AACX,QAAM;AACP;",
-  "names": []
-}

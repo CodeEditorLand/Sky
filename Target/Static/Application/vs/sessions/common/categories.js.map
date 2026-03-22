@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/sessions/common/categories.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { localize2 } from '../../nls.js';\r\n\r\nexport const SessionsCategories = Object.freeze({\r\n\tSessions: localize2('sessions', \"Sessions\"),\r\n});\r\n"],
-  "mappings": "AAKA,SAAS,iBAAiB;AAEnB,MAAM,qBAAqB,OAAO,OAAO;EAC/C,UAAU,UAAU,YAAY,UAAU;CAC1C;",
-  "names": []
-}

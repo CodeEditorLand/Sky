@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../Source/Function/Install/Function/Fallback.ts"],
-  "sourcesContent": ["/**\n * @module Function/Install/Function/Fallback\n * @description\n * Implements graceful degradation with fallback support when Wind preload fails.\n * Attempts to use legacy bridge or provides minimal VSCode shim.\n *\n * @see {@link Function/Install/Function/Install} Main installation function\n * @category Function\n */\n\n/**\n * Implements graceful degradation with fallback support\n */\nexport function Fallback(): void {\n\tif (typeof (window as any).legacyBridge !== \"undefined\") {\n\t\t(window as any).vscode = (window as any).legacyBridge;\n\t\treturn;\n\t}\n\tif (typeof (window as any).vscode === \"undefined\") {\n\t\t(window as any).vscode = {\n\t\t\tprocess: { platform: \"web\" },\n\t\t\tipcRenderer: {\n\t\t\t\tsend: () => {},\n\t\t\t\tinvoke: async () => ({}),\n\t\t\t\ton: () => ({}),\n\t\t\t\tonce: () => ({}),\n\t\t\t\tremoveListener: () => ({}),\n\t\t\t\tremoveAllListeners: () => {}\n\t\t\t},\n\t\t};\n\t}\n}\n"],
-  "mappings": ";;AAaO,SAAS,WAAiB;AAChC,MAAI,OAAQ,OAAe,iBAAiB,aAAa;AACxD,IAAC,OAAe,SAAU,OAAe;AACzC;AAAA,EACD;AACA,MAAI,OAAQ,OAAe,WAAW,aAAa;AAClD,IAAC,OAAe,SAAS;AAAA,MACxB,SAAS,EAAE,UAAU,MAAM;AAAA,MAC3B,aAAa;AAAA,QACZ,MAAM,6BAAM;AAAA,QAAC,GAAP;AAAA,QACN,QAAQ,oCAAa,CAAC,IAAd;AAAA,QACR,IAAI,8BAAO,CAAC,IAAR;AAAA,QACJ,MAAM,8BAAO,CAAC,IAAR;AAAA,QACN,gBAAgB,8BAAO,CAAC,IAAR;AAAA,QAChB,oBAAoB,6BAAM;AAAA,QAAC,GAAP;AAAA,MACrB;AAAA,IACD;AAAA,EACD;AACD;AAlBgB;",
-  "names": []
-}

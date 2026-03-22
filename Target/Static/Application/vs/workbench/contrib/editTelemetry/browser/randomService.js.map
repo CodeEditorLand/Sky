@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/editTelemetry/browser/randomService.ts"],
-  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { generateUuid } from '../../../../base/common/uuid.js';\r\nimport { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';\r\n\r\nexport const IRandomService = createDecorator<IRandomService>('randomService');\r\n\r\nexport interface IRandomService {\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\tgenerateUuid(): string;\r\n\tgeneratePrefixedUuid(prefix: string): string;\r\n}\r\n\r\nexport class RandomService implements IRandomService {\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\tgenerateUuid(): string {\r\n\t\treturn generateUuid();\r\n\t}\r\n\r\n\t/** Namespace should be 3 letter. */\r\n\tgeneratePrefixedUuid(namespace: string): string {\r\n\t\treturn `${namespace}-${this.generateUuid()}`;\r\n\t}\r\n}\r\n"],
-  "mappings": ";;AAKA,SAAS,oBAAoB;AAC7B,SAAS,uBAAuB;AAEzB,MAAM,iBAAiB,gBAAgC,eAAe;AASvE,MAAO,cAAa;EAjB1B,OAiB0B;;;EAGzB,eAAY;AACX,WAAO,aAAY;EACpB;;EAGA,qBAAqB,WAAiB;AACrC,WAAO,GAAG,SAAS,IAAI,KAAK,aAAY,CAAE;EAC3C;;",
-  "names": []
-}

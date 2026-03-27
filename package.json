@@ -25,8 +25,7 @@
 	},
 	"scripts": {
 		"Run": "astro dev --host",
-		"prepublishOnly": "cross-env NODE_OPTIONS=--max-old-space-size=16384 astro build",
-		"build": "cross-env NODE_OPTIONS=--max-old-space-size=16384 astro build"
+		"prepublishOnly": "cross-env NODE_OPTIONS=--max-old-space-size=16384 astro build"
 	},
 	"dependencies": {
 		"@codeeditorland/common": "0.0.6",
@@ -36,11 +35,11 @@
 		"@playform/build": "0.3.0",
 		"@playform/compress": "0.2.2",
 		"@playform/inline": "0.1.4",
-		"astro": "6.0.8",
+		"astro": "6.1.1",
 		"deepmerge-ts": "7.1.5",
 		"dotenv": "17.3.1",
-		"typescript": "5.9.3",
-		"vite": "8.0.2",
+		"typescript": "6.0.2",
+		"vite": "8.0.3",
 		"vite-plugin-top-level-await": "1.6.0",
 		"zod": "4.3.6"
 	},

@@ -13,7 +13,7 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import { readFile as fsReadFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 
 import { defineConfig } from "astro/config";
 
@@ -71,7 +71,6 @@ export default defineConfig({
 			rollupOptions: {
 				external: [
 					...External,
-					// Externalize VSCode modules from the Output package
 					(id: string) =>
 						id.includes(
 							"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
@@ -323,11 +322,11 @@ export default defineConfig({
 			strictPort: true,
 
 			https: {
-				cert: await fsReadFile("./dev-server.pem", {
+				cert: await readFile("./dev-server.pem", {
 					encoding: "utf-8",
 				}),
 
-				key: await fsReadFile("./dev-server-key.pem", {
+				key: await readFile("./dev-server-key.pem", {
 					encoding: "utf-8",
 				}),
 			},

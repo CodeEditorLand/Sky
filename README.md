@@ -39,9 +39,9 @@ Land
 
 ---
 
-# **Sky** 🌌
+# **Sky** 🌌
 
-The UI Component Layer for Land 🏞️
+The UI Component Layer for Land 🏞️
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
 [![NPM Version](https://img.shields.io/npm/v/@codeeditorland/sky.svg)](https://www.npmjs.com/package/@codeeditorland/sky)
@@ -68,7 +68,7 @@ presentation.
 
 ---
 
-## Key Features 🔐
+## Key Features 🔐
 
 - **Astro-Based Component Architecture:** Leverages Astro's component islands
   architecture for efficient, content-driven UI development with zero JavaScript
@@ -110,7 +110,7 @@ presentation.
 
 ---
 
-## Deep Dive & Component Breakdown 🔬
+## Deep Dive & Component Breakdown 🔬
 
 To understand how `Sky`'s internal components interact — including the Astro
 configuration, workbench approaches, and integration with `Wind` — please refer
@@ -121,7 +121,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## `Sky` in the Land Ecosystem 🌌 + 🏞️
+## `Sky` in the Land Ecosystem 🌌 + 🏞️
 
 | Component              | Role & Key Responsibilities                                                                                                             |
 | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
@@ -134,7 +134,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## Interaction Flow: Rendering UI from Wind State 🔄
+## Interaction Flow: Rendering UI from Wind State 🔄
 
 Here's a step-by-step example of how `Sky` renders the UI based on `Wind`'s
 state:
@@ -229,7 +229,7 @@ WorkbenchImpl -- Loads --> VSCodeComponents
 
 ---
 
-## Project Structure Overview 🗺️
+## Project Structure Overview 🗺️
 
 The `Sky` repository is organized to separate concerns between pages,
 workbenches, and components:
@@ -282,9 +282,9 @@ Sky/
 
 ---
 
-## Getting Started 🚀
+## Getting Started 🚀
 
-### Installation 📥
+### Installation 📥
 
 To add `Sky` to your project workspace:
 
@@ -305,7 +305,7 @@ pnpm add @codeeditorland/sky
 **Note:** `@tauri-apps/api` is accessed transitively through the `Wind` service
 layer rather than as a direct dependency.
 
-### Usage Pattern 🚀
+### Usage Pattern 🚀
 
 `Sky` is primarily used through its page routes and workbench components:
 

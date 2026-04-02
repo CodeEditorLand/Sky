@@ -15,14 +15,14 @@ console.log("[BrowserProxy] and route them through Mountain services.");
 try {
 	// The services proxy will intercept window.vscode API calls
 	// and forward them to Mountain services via IPC
-	console.log("[BrowserProxy] ✓ Services proxy initialized");
+	console.log("[BrowserProxy] ✓ Services proxy initialized");
 	console.log(
 		"[BrowserProxy] - Proxied APIs: ipcRenderer, process, shell, clipboard, etc.",
 	);
 	console.log("[BrowserProxy] - Proxy target: Mountain services");
 } catch (error: unknown) {
 	console.error(
-		"[BrowserProxy] ✗ Failed to initialize services proxy:",
+		"[BrowserProxy] ✗ Failed to initialize services proxy:",
 		error,
 	);
 }

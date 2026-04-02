@@ -16,22 +16,22 @@ console.log(
 // Install the Wind preload polyfill (window.vscode globals)
 Install()
 	.then(() => {
-		console.log("[Electron] ✓ Wind preload installed successfully");
+		console.log("[Electron] ✓ Wind preload installed successfully");
 
 		// Verify preloadGlobals is available
 		if (window.preloadGlobals && window.preloadGlobals.process) {
-			console.log("[Electron] ✓ preloadGlobals.process is available");
+			console.log("[Electron] ✓ preloadGlobals.process is available");
 			const process = window.preloadGlobals.process;
 			console.log("[Electron] - Platform:", process.platform);
 			console.log("[Electron] - Arch:", process.arch);
 			console.log("[Electron] - Type:", process.type);
 		} else {
-			console.warn("[Electron] ⚠ preloadGlobals.process not available");
+			console.warn("[Electron] ⚠ preloadGlobals.process not available");
 		}
 
 		// Verify window.vscode is available
 		if (window.vscode) {
-			console.log("[Electron] ✓ window.vscode is available");
+			console.log("[Electron] ✓ window.vscode is available");
 			console.log(
 				"[Electron] - ipcRenderer:",
 				typeof window.vscode.ipcRenderer,
@@ -39,14 +39,14 @@ Install()
 			console.log("[Electron] - process:", typeof window.vscode.process);
 			console.log("[Electron] - context:", typeof window.vscode.context);
 		} else {
-			console.error("[Electron] ✗ window.vscode not available");
+			console.error("[Electron] ✗ window.vscode not available");
 		}
 
 		// Verify Wind preload ready flag
 		if (window.__WIND_PRELOAD_READY__) {
-			console.log("[Electron] ✓ Wind preload ready flag is set");
+			console.log("[Electron] ✓ Wind preload ready flag is set");
 		} else {
-			console.warn("[Electron] ⚠ Wind preload ready flag is not set");
+			console.warn("[Electron] ⚠ Wind preload ready flag is not set");
 		}
 
 		console.log(
@@ -54,5 +54,5 @@ Install()
 		);
 	})
 	.catch((error: unknown) => {
-		console.error("[Electron] ✗ Wind preload install error:", error);
+		console.error("[Electron] ✗ Wind preload install error:", error);
 	});

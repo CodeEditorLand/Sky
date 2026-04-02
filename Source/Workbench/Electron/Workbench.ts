@@ -24,7 +24,7 @@ try {
 	// @ts-ignore - Dynamic import for side effects, .d.ts file is not a module but the .js file exists at runtime
 	await import("@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js");
 
-	console.log("[Electron] ✓ Electron workbench script loaded successfully");
+	console.log("[Electron] ✓ Electron workbench script loaded successfully");
 	console.log("[Electron] ===== Workbench load complete =====");
 
 	// Log initial state after workbench load
@@ -51,13 +51,13 @@ try {
 		// Check for Electron-specific globals (using bracket notation)
 		if (typeof window.require !== "undefined") {
 			console.log(
-				"[Electron] ✓ Node.js require() available (via polyfill)",
+				"[Electron] ✓ Node.js require() available (via polyfill)",
 			);
 			try {
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				void window.require("electron");
 				console.log(
-					"[Electron] ✓ Electron module accessible (polyfill)",
+					"[Electron] ✓ Electron module accessible (polyfill)",
 				);
 			} catch {
 				console.log(
@@ -67,7 +67,7 @@ try {
 		}
 	}, 2000);
 } catch (error: unknown) {
-	console.error("[Electron] ✗ Failed to load Electron workbench:", error);
+	console.error("[Electron] ✗ Failed to load Electron workbench:", error);
 	console.error("[Electron] This may be due to:");
 	console.error("[Electron] 1. Incomplete or non-functional polyfills");
 	console.error("[Electron] 2. CSP errors with vscode-file:// protocol");

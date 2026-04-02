@@ -82,9 +82,9 @@ export async function copyVSCodeOutput(): Promise<void> {
 
 	try {
 		await cp(sourcePath, VSCodeOutput, { recursive: true });
-		console.log("[BuildVSCode] ✓ VSCode output copied successfully");
+		console.log("[BuildVSCode] ✓ VSCode output copied successfully");
 	} catch (error) {
-		console.error("[BuildVSCode] ✗ Failed to copy VSCode output:", error);
+		console.error("[BuildVSCode] ✗ Failed to copy VSCode output:", error);
 		throw error;
 	}
 
@@ -110,7 +110,7 @@ async function verifyVSCodeOutput(vscodePath: string): Promise<void> {
 		if (!fs.existsSync(fullPath)) {
 			console.warn(`[BuildVSCode] WARNING: Missing required file: ${file}`);
 		} else {
-			console.log(`[BuildVSCode] ✓ Found: ${file}`);
+			console.log(`[BuildVSCode] ✓ Found: ${file}`);
 		}
 	}
 }

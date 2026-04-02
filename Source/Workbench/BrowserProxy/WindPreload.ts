@@ -16,33 +16,33 @@ console.log(
 // Install the Wind preload polyfill (window.vscode globals)
 Install()
 	.then(() => {
-		console.log("[BrowserProxy] ✓ Wind preload installed successfully");
+		console.log("[BrowserProxy] ✓ Wind preload installed successfully");
 
 		// Verify preloadGlobals is available
 		if (window.preloadGlobals && window.preloadGlobals.process) {
-			console.log("[BrowserProxy] ✓ preloadGlobals.process is available");
+			console.log("[BrowserProxy] ✓ preloadGlobals.process is available");
 			const process = window.preloadGlobals.process;
 			console.log("[BrowserProxy] - Platform:", process.platform);
 			console.log("[BrowserProxy] - Arch:", process.arch);
 			console.log("[BrowserProxy] - Type:", process.type);
 		} else {
 			console.warn(
-				"[BrowserProxy] ⚠ preloadGlobals.process not available",
+				"[BrowserProxy] ⚠ preloadGlobals.process not available",
 			);
 		}
 
 		// Verify window.vscode is available
 		if (window.vscode) {
-			console.log("[BrowserProxy] ✓ window.vscode is available");
+			console.log("[BrowserProxy] ✓ window.vscode is available");
 		} else {
-			console.error("[BrowserProxy] ✗ window.vscode not available");
+			console.error("[BrowserProxy] ✗ window.vscode not available");
 		}
 
 		// Verify Wind preload ready flag
 		if (window.__WIND_PRELOAD_READY__) {
-			console.log("[BrowserProxy] ✓ Wind preload ready flag is set");
+			console.log("[BrowserProxy] ✓ Wind preload ready flag is set");
 		} else {
-			console.warn("[BrowserProxy] ⚠ Wind preload ready flag is not set");
+			console.warn("[BrowserProxy] ⚠ Wind preload ready flag is not set");
 		}
 
 		console.log(
@@ -50,5 +50,5 @@ Install()
 		);
 	})
 	.catch((error: unknown) => {
-		console.error("[BrowserProxy] ✗ Wind preload install error:", error);
+		console.error("[BrowserProxy] ✗ Wind preload install error:", error);
 	});

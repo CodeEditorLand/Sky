@@ -24,7 +24,7 @@ try {
 	const { runBootstrap } =
 		await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 
-	console.log("[BrowserProxy] ✓ Bootstrap module loaded successfully");
+	console.log("[BrowserProxy] ✓ Bootstrap module loaded successfully");
 
 	// Run the bootstrap with options
 	const bootstrapResult: BootstrapResult = await runBootstrap({
@@ -33,7 +33,7 @@ try {
 	});
 
 	if (bootstrapResult.success) {
-		console.log("[BrowserProxy] ✓ Bootstrap completed successfully");
+		console.log("[BrowserProxy] ✓ Bootstrap completed successfully");
 		console.log(
 			"[BrowserProxy] - Total duration:",
 			bootstrapResult.totalDuration,
@@ -49,12 +49,12 @@ try {
 		});
 	} else {
 		console.error(
-			"[BrowserProxy] ✗ Bootstrap failed:",
+			"[BrowserProxy] ✗ Bootstrap failed:",
 			bootstrapResult.error,
 		);
 	}
 } catch (error: unknown) {
-	console.error("[BrowserProxy] ✗ Failed to load/run bootstrap:", error);
+	console.error("[BrowserProxy] ✗ Failed to load/run bootstrap:", error);
 }
 
 console.log("[BrowserProxy] ===== Wind bootstrap sequence complete =====");

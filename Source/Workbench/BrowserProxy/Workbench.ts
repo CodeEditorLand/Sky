@@ -16,7 +16,7 @@ try {
 	await import("@codeeditorland/output/vs/code/browser/workbench/workbench.js");
 
 	console.log(
-		"[BrowserProxy] ✓ Browser workbench script loaded successfully",
+		"[BrowserProxy] ✓ Browser workbench script loaded successfully",
 	);
 	console.log("[BrowserProxy] ===== Workbench load complete =====");
 
@@ -32,7 +32,7 @@ try {
 		);
 	}, 2000);
 } catch (error: unknown) {
-	console.error("[BrowserProxy] ✗ Failed to load browser workbench:", error);
+	console.error("[BrowserProxy] ✗ Failed to load browser workbench:", error);
 }
 
 console.log("[BrowserProxy] ===== Workbench load sequence complete =====");

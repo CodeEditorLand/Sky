@@ -24,7 +24,7 @@ try {
 	const { runBootstrap } =
 		await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 
-	console.log("[Electron] ✓ Bootstrap module loaded successfully");
+	console.log("[Electron] ✓ Bootstrap module loaded successfully");
 
 	// Run the bootstrap with options
 	const bootstrapResult: BootstrapResult = await runBootstrap({
@@ -33,7 +33,7 @@ try {
 	});
 
 	if (bootstrapResult.success) {
-		console.log("[Electron] ✓ Bootstrap completed successfully");
+		console.log("[Electron] ✓ Bootstrap completed successfully");
 		console.log(
 			"[Electron] - Total duration:",
 			bootstrapResult.totalDuration,
@@ -48,10 +48,10 @@ try {
 			);
 		});
 	} else {
-		console.error("[Electron] ✗ Bootstrap failed:", bootstrapResult.error);
+		console.error("[Electron] ✗ Bootstrap failed:", bootstrapResult.error);
 	}
 } catch (error: unknown) {
-	console.error("[Electron] ✗ Failed to load/run bootstrap:", error);
+	console.error("[Electron] ✗ Failed to load/run bootstrap:", error);
 }
 
 console.log("[Electron] ===== Wind bootstrap sequence complete =====");

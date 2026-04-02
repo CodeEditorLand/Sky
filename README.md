@@ -5,7 +5,7 @@
 </td>
 <td align="left" valign="middle">
 <h3 align="left">
-  🌌
+  🌌
 </h3>
 </td>
 <td align="left" valign="middle">
@@ -31,7 +31,7 @@ Land
 </td>
 <td align="left" valign="middle">
 <h3 align="left">
- 🏞️
+ 🏞️
 </h3>
 </td>
 </tr>
@@ -39,7 +39,9 @@ Land
 
 ---
 
-# **Sky** 🌌 The UI Component Layer for Land 🏞️
+# **Sky** 🌌
+
+The UI Component Layer for Land 🏞️
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
 [![NPM Version](https://img.shields.io/npm/v/@codeeditorland/sky.svg)](https://www.npmjs.com/package/@codeeditorland/sky)
@@ -57,8 +59,8 @@ presentation.
 
 1. **Render UI Components:** Provide a comprehensive set of Astro-based
    components that compose the Land editor interface.
-2. **Support Multiple Workbench Variants:** Offer four distinct workbench
-   approaches (A1-A4) for different deployment scenarios.
+2. **Support Multiple Workbench Variants:** Offer distinct workbench approaches
+   (A1-A3) for different deployment scenarios.
 3. **Integrate with Wind Services:** Consume `Wind`'s Effect-TS powered services
    for state management and backend communication.
 4. **Enable Page Routing:** Manage application navigation and page transitions
@@ -66,14 +68,14 @@ presentation.
 
 ---
 
-## Key Features 🔐
+## Key Features 🔐
 
 - **Astro-Based Component Architecture:** Leverages Astro's component islands
   architecture for efficient, content-driven UI development with zero JavaScript
   by default and selective hydration for interactive components.
 - **VSCode UI Compatibility:** Provides multiple workbench approaches that load
   and integrate VSCode's core UI components from `@codeeditorland/output`,
-  ensuring high-fidelity editor experience.
+  ensuring a high-fidelity editor experience.
 - **Wind Service Layer Integration:** Seamlessly consumes `Wind`'s Effect-TS
   services for file operations, dialogs, configuration, and state management,
   enabling a clean separation between UI and business logic.
@@ -83,13 +85,13 @@ presentation.
 - **Flexible Workbench Variants:** Supports multiple workbench approaches
   through environment-based selection:
     - **A1 (Browser/BrowserProxy):** Browser-based workbench with optional
-      service proxy
+      service proxy.
     - **A2 (Mountain - RECOMMENDED):** Browser workbench with Mountain-backed
-      providers
-    - **A3 (Electron):** Electron workbench with polyfills for VSCode
+      providers.
+    - **A3 (Electron):** Electron workbench with polyfills for VSCode.
 - **Component Modularity:** Organized into Pages (routes), Workbenches
   (components), and Workbench Implementations (BrowserProxy/, Electron/
-  subdirectories) for clear separation of concerns and maintainability.
+  subdirectories) for clear separation of concerns.
 - **Responsive Design:** Built with CSS and Astro's styling capabilities to
   ensure the editor interface adapts to different window sizes and user
   preferences.
@@ -108,10 +110,10 @@ presentation.
 
 ---
 
-## Deep Dive & Component Breakdown 🔬
+## Deep Dive & Component Breakdown 🔬
 
-To understand how `Sky`'s internal components interact, including the Astro
-configuration, workbench approaches, and integration with `Wind`, please refer
+To understand how `Sky`'s internal components interact — including the Astro
+configuration, workbench approaches, and integration with `Wind` — please refer
 to the detailed technical breakdown in the `Documentation/` directory or the
 source code comments in [`astro.config.ts`](astro.config.ts) and workbench
 components. The source files explain the role of each workbench variant, page
@@ -119,7 +121,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## `Sky` in the Land Ecosystem 🌌 + 🏞️
+## `Sky` in the Land Ecosystem 🌌 + 🏞️
 
 | Component              | Role & Key Responsibilities                                                                                                             |
 | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
@@ -132,7 +134,7 @@ routing, and the build process for bundling Wind modules.
 
 ---
 
-## Interaction Flow: Rendering UI from Wind State 🔄
+## Interaction Flow: Rendering UI from Wind State 🔄
 
 Here's a step-by-step example of how `Sky` renders the UI based on `Wind`'s
 state:
@@ -188,19 +190,19 @@ classDef tauri fill:#f9d,stroke:#333,stroke-width:2px;
 classDef mountain fill:#f9f,stroke:#333,stroke-width:2px;
 classDef external fill:#ddd,stroke:#666,stroke-dasharray: 5 5;
 
-subgraph "Sky 🌌 (UI Component Layer - Tauri Webview)"
+subgraph "Sky 🌌 (UI Component Layer - Tauri Webview)"
 Pages["Pages (index, Browser, Electron, Mountain, Isolation)"]:::sky
 Workbenches["Workbench Components (Browser, Mountain, Default, NLS)"]:::sky
 WorkbenchImpl["Workbench Implementations (BrowserProxy/, Electron/)"]:::sky
 end
 
-subgraph "Wind 🍃 (Service Layer - Tauri Webview)"
+subgraph "Wind 🍃 (Service Layer - Tauri Webview)"
 PreloadJS["Preload.js (Environment Shim)"]:::wind
 WindServices[Wind Effect-TS Services]:::wind
 TauriIntegrations[Wind/Tauri Integrations]:::wind
 end
 
-subgraph "Tauri Shell & Mountain 🌌 (Rust Backend)"
+subgraph "Tauri Shell & Mountain 🌌 (Rust Backend)"
 TauriWindow[Tauri Window API]:::tauri
 TauriEvents[Tauri Event System]:::tauri
 MountainCore[Mountain Rust Core]:::mountain
@@ -227,7 +229,7 @@ WorkbenchImpl -- Loads --> VSCodeComponents
 
 ---
 
-## Project Structure Overview 🗺️
+## Project Structure Overview 🗺️
 
 The `Sky` repository is organized to separate concerns between pages,
 workbenches, and components:
@@ -280,9 +282,9 @@ Sky/
 
 ---
 
-## Getting Started 🚀
+## Getting Started 🚀
 
-### Installation 📥
+### Installation 📥
 
 To add `Sky` to your project workspace:
 
@@ -300,10 +302,10 @@ pnpm add @codeeditorland/sky
 - `@playform/build`, `@playform/compress`, `@playform/inline`: Build utilities
 - `deepmerge-ts`, `dotenv`, `typescript`, `vite`, `zod`: Development utilities
 
-**Note:** `@tauri-apps/api` is accessed transitively through `Wind` service
+**Note:** `@tauri-apps/api` is accessed transitively through the `Wind` service
 layer rather than as a direct dependency.
 
-### Usage Pattern 🚀
+### Usage Pattern 🚀
 
 `Sky` is primarily used through its page routes and workbench components:
 
@@ -383,10 +385,11 @@ BrowserProxy=true pnpm run Run
 ## License ⚖️
 
 This project is released into the public domain under the **Creative Commons CC0
-Universal** license. You are free to use, modify, distribute, and build upon
-this work for any purpose, without any restrictions. For the full legal text,
-see the [`LICENSE`](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
-file.
+Universal** license.
+
+You are free to use, modify, distribute, and build upon this work for any
+purpose, without any restrictions. For the full legal text, see the
+[`LICENSE`](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE) file.
 
 ---
 
@@ -404,6 +407,11 @@ through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund established by
 [NLnet](https://NLnet.NL) with financial support from the European Commission's
 [Next Generation Internet](https://ngi.eu) program. Learn more at the
 [NLnet project page](https://NLnet.NL/project/Land).
+
+The project is operated by PlayForm, based in Sofia, Bulgaria.
+
+PlayForm acts as the open-source steward for Code Editor Land under the NGI0
+Commons Fund grant.
 
 <table>
 <thead>

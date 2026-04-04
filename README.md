@@ -45,8 +45,8 @@ The UI Component Layer for Land 🏞️
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
 [![NPM Version](https://img.shields.io/npm/v/@codeeditorland/sky.svg)](https://www.npmjs.com/package/@codeeditorland/sky)
-[![Astro Version](https://img.shields.io/badge/Astro-5.17.3-blue.svg)](https://www.npmjs.com/package/astro)
-[![Effect Version](https://img.shields.io/badge/Effect-3.x-blueviolet.svg)](https://www.npmjs.com/package/effect)
+[<img src="https://cdn.simpleicons.org/astro/BC52EE" width="14" alt="Astro" />](https://astro.build/)&#x2001;[![Astro Version](https://img.shields.io/badge/Astro-5.17.3-blue.svg)](https://www.npmjs.com/package/astro)
+[<img src="https://cdn.simpleicons.org/effect" width="14" alt="Effect-TS" />](https://effect.website/)&#x2001;[![Effect Version](https://img.shields.io/badge/Effect-3.x-blueviolet.svg)](https://www.npmjs.com/package/effect)
 
 Welcome to **Sky**, the declarative **UI component layer** of the **Land Code
 Editor**. Built with the **Astro** framework, **Sky** renders the user interface

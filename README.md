@@ -400,6 +400,14 @@ history of changes specific to **Sky**.
 
 ---
 
+
+## See Also
+
+- [Architecture Overview](https://editor.land/Doc/architecture)
+- [Wind](https://github.com/CodeEditorLand/Wind)
+- [Cocoon](https://github.com/CodeEditorLand/Cocoon)
+- [Mountain](https://github.com/CodeEditorLand/Mountain)
+
 ## Funding & Acknowledgements 🙏🏻
 
 **Sky** is a core element of the **Land** ecosystem. This project is funded

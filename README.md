@@ -55,16 +55,16 @@ operates within the **Tauri** webview alongside `Wind`, consuming state and
 services from the `Wind` service layer to display and manage the editor's visual
 presentation.
 
-**Sky** is engineered to:
+**What Sky gives you:**
 
-1. **Render UI Components:** Provide a comprehensive set of Astro-based
-   components that compose the Land editor interface.
-2. **Support Multiple Workbench Variants:** Offer distinct workbench approaches
-   (A1-A3) for different deployment scenarios.
-3. **Integrate with Wind Services:** Consume `Wind`'s Effect-TS powered services
-   for state management and backend communication.
-4. **Enable Page Routing:** Manage application navigation and page transitions
-   within the Tauri webview.
+1. **The editor you see.** Every panel, sidebar, tab bar, and status bar is an
+   Astro component. Change a component, and Tauri hot-reloads it instantly.
+2. **Multiple workbench layouts.** Three approaches (A1-A3) for different
+   deployment scenarios: full desktop, embedded, and minimal.
+3. **State from Wind.** Sky consumes Wind's Effect-TS services. UI state is
+   always consistent, always typed, always reactive.
+4. **SPA routing in a webview.** Page transitions happen client-side inside
+   Tauri's webview. No full-page reloads, no navigation flicker.
 
 ---
 

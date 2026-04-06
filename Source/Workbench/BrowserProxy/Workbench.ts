@@ -12,8 +12,10 @@ interface MountainProxyWindow extends Window {
 console.log("[BrowserProxy] ===== Loading browser VSCode workbench =====");
 
 try {
-	// Import the browser workbench
-	await import("@codeeditorland/output/vs/code/browser/workbench/workbench.js");
+	// Variable URL: Rollup only analyzes string literals — an identifier
+	// reference is treated as truly dynamic and never resolved at build time.
+	const WorkbenchUrl = "/vs/code/browser/workbench/workbench.js";
+	await import(WorkbenchUrl);
 
 	console.log(
 		"[BrowserProxy] ✓ Browser workbench script loaded successfully",

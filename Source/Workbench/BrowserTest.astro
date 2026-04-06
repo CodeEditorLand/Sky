@@ -73,17 +73,15 @@ import NLS from "./NLS.astro";
 			);
 	</script>
 
-	<!-- Browser Workbench Script -->
-	<script type="module">
-		await import("@codeeditorland/output/vs/code/browser/workbench/workbench.js");
-
-		console.log(
-			"[BrowserTest] ===== Loading browser VSCode workbench =====",
-		);
-		console.log(
-			"[BrowserTest] ✓ Browser workbench script loaded successfully",
-		);
-
+	<!-- Browser Workbench Script — is:inline bypasses Vite bundling entirely -->
+	<script is:inline type="module">
+		try {
+			await import("/vs/code/browser/workbench/workbench.js");
+			console.log("[BrowserTest] ===== Loading browser VSCode workbench =====");
+			console.log("[BrowserTest] ✓ Browser workbench script loaded successfully");
+		} catch (error) {
+			console.error("[BrowserTest] Failed to load VS Code browser workbench:", error);
+		}
 		console.log("[BrowserTest] ===== Workbench load attempted =====");
 	</script>
 </Fragment>

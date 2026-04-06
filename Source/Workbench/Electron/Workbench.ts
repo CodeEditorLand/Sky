@@ -22,7 +22,9 @@ try {
 	// Import the Electron workbench (NOT browser workbench)
 	// Electron workbench uses Electron-specific APIs
 	// @ts-ignore - Dynamic import for side effects, .d.ts file is not a module but the .js file exists at runtime
-	await import("@codeeditorland/output/vs/code/electron-browser/workbench/workbench.js");
+	// electron-browser workbench.js is not compiled in Output — only .d.ts exists.
+	// When the Electron approach is activated, this path will need to be compiled first.
+	// await import("/vs/code/electron-browser/workbench/workbench.js");
 
 	console.log("[Electron] ✓ Electron workbench script loaded successfully");
 	console.log("[Electron] ===== Workbench load complete =====");

@@ -72,9 +72,10 @@ export default defineConfig({
 				external: [
 					...External,
 					(id: string) =>
-						// Pre-resolved package specifier — catches @codeeditorland/output/vs/**
-						// before Rollup attempts resolution. Static imports of unresolved
-						// package specifiers are hard build errors; dynamic imports warn only.
+						// Absolute browser URL paths (/vs/...) — Rollup treats / as filesystem,
+						// but these are real browser URLs served at runtime. Mark external.
+						id.startsWith("/vs/") ||
+						// Package specifier — catches @codeeditorland/output/vs/**
 						id.startsWith("@codeeditorland/output/vs/") ||
 						// Resolved absolute path (after symlink + package.json exports map)
 						id.includes(

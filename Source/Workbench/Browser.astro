@@ -5,14 +5,14 @@ import NLS from "./NLS.astro";
 <Fragment>
 	<NLS />
 
-	<!-- Browser Workbench Script -->
-	<!-- Dynamic import matches the pattern used by Mountain.astro, BrowserTest.astro,
-	     BrowserProxy/Workbench.ts, and Electron/Workbench.ts. Static imports cause
-	     Rollup to hard-fail at build time (cannot resolve package specifiers).
-	     Dynamic imports only warn on resolution failure and allow the build to complete. -->
-	<script>
-		await import(
-			"@codeeditorland/output/vs/code/browser/workbench/workbench.js"
-		);
+	<!-- VS Code Browser Workbench — loaded via inline script to bypass Vite bundling.
+	     /vs/ is served from Sky/Public/vs → Output/Target/Microsoft/VSCode/vs (symlink).
+	     Relative imports inside workbench.js (../../../base/...) resolve against /vs/. -->
+	<script is:inline type="module">
+		try {
+			await import("/vs/code/browser/workbench/workbench.js");
+		} catch (error) {
+			console.error("[Browser] Failed to load VS Code browser workbench:", error);
+		}
 	</script>
 </Fragment>

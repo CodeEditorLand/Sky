@@ -48,27 +48,27 @@ graph TB
 
 ## Key Modules
 
-| Path | Description |
-| :--- | :--- |
-| `Source/pages/index.astro` | Default entry point; reads environment variables to select workbench variant |
-| `Source/pages/Mountain.astro` | A2 workbench page — recommended production entry point |
-| `Source/pages/Browser.astro` | A1 browser-only workbench page |
-| `Source/pages/BrowserProxy.astro` | A1 browser workbench with services proxy |
-| `Source/pages/Electron.astro` | A3 workbench page with Electron polyfills |
-| `Source/pages/Isolation.astro` | Isolated mode page for extension sandboxing |
-| `Source/Workbench/Mountain.astro` | A2 workbench component — loads VSCode UI with Mountain providers |
-| `Source/Workbench/Browser.astro` | A1 workbench component — pure browser workbench |
-| `Source/Workbench/BrowserProxy/Layout.astro` | A1 layout with service proxy bootstrapping |
-| `Source/Workbench/BrowserProxy/Bootstrap.ts` | Initializes Effect-TS runtime and services for BrowserProxy |
-| `Source/Workbench/BrowserProxy/ServicesProxy.ts` | Service proxy implementation |
-| `Source/Workbench/Electron/Layout.astro` | A3 layout with Electron polyfill injection |
-| `Source/Workbench/Electron/Polyfills.ts` | Electron compatibility shims |
-| `Source/Workbench/NLS.astro` | Natural language support component |
-| `Source/Function/Debug.ts` | Build-time debug utilities |
-| `Source/Function/Shared.ts` | Shared runtime utilities |
-| `Source/Function/Meta.astro` | HTML meta tag component |
-| `Source/Function/Markup/Base.astro` | Base HTML layout skeleton |
-| `astro.config.ts` | Astro build configuration, alias resolution, Vite settings |
+| Path                                             | Description                                                                  |
+| :----------------------------------------------- | :--------------------------------------------------------------------------- |
+| `Source/pages/index.astro`                       | Default entry point; reads environment variables to select workbench variant |
+| `Source/pages/Mountain.astro`                    | A2 workbench page — recommended production entry point                       |
+| `Source/pages/Browser.astro`                     | A1 browser-only workbench page                                               |
+| `Source/pages/BrowserProxy.astro`                | A1 browser workbench with services proxy                                     |
+| `Source/pages/Electron.astro`                    | A3 workbench page with Electron polyfills                                    |
+| `Source/pages/Isolation.astro`                   | Isolated mode page for extension sandboxing                                  |
+| `Source/Workbench/Mountain.astro`                | A2 workbench component — loads VSCode UI with Mountain providers             |
+| `Source/Workbench/Browser.astro`                 | A1 workbench component — pure browser workbench                              |
+| `Source/Workbench/BrowserProxy/Layout.astro`     | A1 layout with service proxy bootstrapping                                   |
+| `Source/Workbench/BrowserProxy/Bootstrap.ts`     | Initializes Effect-TS runtime and services for BrowserProxy                  |
+| `Source/Workbench/BrowserProxy/ServicesProxy.ts` | Service proxy implementation                                                 |
+| `Source/Workbench/Electron/Layout.astro`         | A3 layout with Electron polyfill injection                                   |
+| `Source/Workbench/Electron/Polyfills.ts`         | Electron compatibility shims                                                 |
+| `Source/Workbench/NLS.astro`                     | Natural language support component                                           |
+| `Source/Function/Debug.ts`                       | Build-time debug utilities                                                   |
+| `Source/Function/Shared.ts`                      | Shared runtime utilities                                                     |
+| `Source/Function/Meta.astro`                     | HTML meta tag component                                                      |
+| `Source/Function/Markup/Base.astro`              | Base HTML layout skeleton                                                    |
+| `astro.config.ts`                                | Astro build configuration, alias resolution, Vite settings                   |
 
 ---
 
@@ -109,28 +109,28 @@ sequenceDiagram
 
 ## Integration Points
 
-| Connecting Element | Direction | Mechanism | Description |
-| :--- | :--- | :--- | :--- |
-| **Wind** | Inbound | Direct import | Sky consumes Wind Effect-TS services for all business logic |
-| **Mountain** | Bidirectional | Tauri IPC + Events | Commands sent via Tauri invoke; updates received as Tauri events |
-| **Output** | Inbound | Static bundle | VSCode core UI components loaded from `@codeeditorland/output` |
-| **Worker** | Inbound | Web Worker API | Web workers for background processing imported from `@codeeditorland/worker` |
+| Connecting Element | Direction     | Mechanism          | Description                                                                  |
+| :----------------- | :------------ | :----------------- | :--------------------------------------------------------------------------- |
+| **Wind**           | Inbound       | Direct import      | Sky consumes Wind Effect-TS services for all business logic                  |
+| **Mountain**       | Bidirectional | Tauri IPC + Events | Commands sent via Tauri invoke; updates received as Tauri events             |
+| **Output**         | Inbound       | Static bundle      | VSCode core UI components loaded from `@codeeditorland/output`               |
+| **Worker**         | Inbound       | Web Worker API     | Web workers for background processing imported from `@codeeditorland/worker` |
 
 ---
 
 ## Configuration
 
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `Mountain` | unset | Set to `true` to load the A2 Mountain workbench (recommended) |
-| `Electron` | unset | Set to `true` to load the A3 Electron workbench |
-| `BrowserProxy` | unset | Set to `true` to load the A1 BrowserProxy workbench |
-| `Browser` | unset | Set to `true` to load the A1 Browser workbench |
-| `NODE_ENV` | `production` | Controls source map generation and debug output |
+| Variable       | Default      | Description                                                   |
+| :------------- | :----------- | :------------------------------------------------------------ |
+| `Mountain`     | unset        | Set to `true` to load the A2 Mountain workbench (recommended) |
+| `Electron`     | unset        | Set to `true` to load the A3 Electron workbench               |
+| `BrowserProxy` | unset        | Set to `true` to load the A1 BrowserProxy workbench           |
+| `Browser`      | unset        | Set to `true` to load the A1 Browser workbench                |
+| `NODE_ENV`     | `production` | Controls source map generation and debug output               |
 
-When no variant flag is set, `index.astro` loads `Workbench/Default.astro`.
-The recommended deployment always sets `Mountain=true`.
+When no variant flag is set, `index.astro` loads `Workbench/Default.astro`. The
+recommended deployment always sets `Mountain=true`.
 
 **Astro configuration** (`astro.config.ts`) resolves Wind and other
-`@codeeditorland/*` packages through Vite aliases, sets `Source/` as the
-content root, and directs build output to `Target/`.
+`@codeeditorland/*` packages through Vite aliases, sets `Source/` as the content
+root, and directs build output to `Target/`.

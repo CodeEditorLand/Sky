@@ -1,15 +1,16 @@
-// Re-export On from Shared
-export { On } from "./Shared";
-
 // Path utilities
 import { join } from "node:path";
+
+// Re-export On from Shared
+export { On } from "./Shared";
 
 // Compute paths based on current working directory (Sky package root when building)
 const cwd = process.cwd();
 
 // Relative path from Sky package root to workspace root node_modules
 // Sky is at Element/Sky, workspace root is Land/
-const VSCodeOutputRelative = "../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
+const VSCodeOutputRelative =
+	"../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
 
 // Ensure forward slashes for glob patterns
 const toGlob = (p: string) => p.split(/\\/).join("/");
@@ -17,7 +18,10 @@ const toGlob = (p: string) => p.split(/\\/).join("/");
 // Host configuration
 // Used for site URL and dev server host
 export const Host =
-	process.env["HOST"] ?? (process.env["NODE_ENV"] === "development" ? "http://localhost:9999" : undefined);
+	process.env["HOST"] ??
+	(process.env["NODE_ENV"] === "development"
+		? "http://localhost:9999"
+		: undefined);
 
 // Link: Modules to exclude from Vite optimization
 // Used in optimizeDeps.exclude
@@ -50,20 +54,20 @@ export const Static = [
 
 // Validate that the expected VSCode files exist
 export async function validateVSCodeOutput(): Promise<boolean> {
-  try {
-    const fs = await import("node:fs");
-    const path = await import("node:path");
+	try {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
-    // Compute VSCode output path from the Output package
-    const VSCodeOutput = path.join(
-    	cwd,
-    	"../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode",
-    );
-    const VSCodeVS = path.join(VSCodeOutput, "vs");
+		// Compute VSCode output path from the Output package
+		const VSCodeOutput = path.join(
+			cwd,
+			"../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode",
+		);
+		const VSCodeVS = path.join(VSCodeOutput, "vs");
 
-    // Check critical paths (use absolute paths)
-    const workbenchPath = path.join(
-      VSCodeVS,
+		// Check critical paths (use absolute paths)
+		const workbenchPath = path.join(
+			VSCodeVS,
 			"code",
 			"browser",
 			"workbench",

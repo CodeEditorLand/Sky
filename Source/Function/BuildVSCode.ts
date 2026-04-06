@@ -8,8 +8,8 @@
  * vs/ directory structure to be present at the root of the package.
  */
 
-import { readFile, mkdir, cp, rm } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { cp, mkdir, readFile, rm } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import process from "node:process";
 
 /**
@@ -108,7 +108,9 @@ async function verifyVSCodeOutput(vscodePath: string): Promise<void> {
 	for (const file of requiredFiles) {
 		const fullPath = join(vscodePath, file);
 		if (!fs.existsSync(fullPath)) {
-			console.warn(`[BuildVSCode] WARNING: Missing required file: ${file}`);
+			console.warn(
+				`[BuildVSCode] WARNING: Missing required file: ${file}`,
+			);
 		} else {
 			console.log(`[BuildVSCode] ✓ Found: ${file}`);
 		}

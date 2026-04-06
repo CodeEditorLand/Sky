@@ -9,7 +9,7 @@
 </h3>
 </td>
 <td align="left" valign="middle">
-<h3 align="left"> + </h3>
+<h3 align="left"> + </h3>
 </td>
 <td align="left" valign="middle">
 <h3 align="left">
@@ -107,7 +107,7 @@ presentation.
 
 ---
 
-## `Sky` in the Land Ecosystem&#x2001;🌌 + 🏞️
+## `Sky` in the Land Ecosystem&#x2001;🌌 + 🏞️
 
 | Component              | Role & Key Responsibilities                                                                                                             |
 | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
@@ -209,8 +209,8 @@ Sky/
 │   ├── pages/                           # Page routes
 │   │   ├── index.astro                  # Home page (default workbench entry)
 │   │   ├── Browser.astro                # A1: Browser workbench page
-│   │   ├── BrowserProxy.astro           # A1: Browser + services proxy page
-│   │   ├── Electron.astro               # A3: Electron + polyfills page
+│   │   ├── BrowserProxy.astro           # A1: Browser + services proxy page
+│   │   ├── Electron.astro               # A3: Electron + polyfills page
 │   │   ├── Isolation.astro              # Isolated mode page
 │   │   └── Mountain.astro               # A2: Mountain providers page (RECOMMENDED)
 │   ├── Workbench/                       # Workbench component implementations

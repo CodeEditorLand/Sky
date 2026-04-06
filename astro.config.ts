@@ -269,43 +269,6 @@ export default defineConfig({
 
 		resolve: {
 			preserveSymlinks: false,
-			alias: {
-				// Wind packages - Target prefix imports need to map to static paths without Target
-				"@codeeditorland/wind": "/Static/Wind",
-				"@codeeditorland/wind/Bootstrap": "/Static/Wind/Bootstrap",
-				"@codeeditorland/wind/Configuration":
-					"/Static/Wind/Configuration",
-				"@codeeditorland/wind/Effect": "/Static/Wind/Effect",
-				"@codeeditorland/wind/Function": "/Static/Wind/Function",
-				"@codeeditorland/wind/Types": "/Static/Wind/Types",
-
-				// Handle @codeeditorland/wind/Target/* imports by removing Target prefix
-				"@codeeditorland/wind/Target/Bootstrap":
-					"/Static/Wind/Bootstrap",
-				"@codeeditorland/wind/Target/Configuration":
-					"/Static/Wind/Configuration",
-				"@codeeditorland/wind/Target/Effect": "/Static/Wind/Effect",
-				"@codeeditorland/wind/Target/Function": "/Static/Wind/Function",
-				"@codeeditorland/wind/Target/Types": "/Static/Wind/Types",
-				"@codeeditorland/wind/Target/Polyfills":
-					"/Static/Wind/Polyfills",
-
-				// Wind Polyfills for A3 Electron workbench - full paths
-				"@codeeditorland/wind/Target/Polyfills/ProcessPolyfill":
-					"/Static/Wind/Polyfills/ProcessPolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/FileProtocolShim":
-					"/Static/Wind/Polyfills/FileProtocolShim.js",
-				"@codeeditorland/wind/Target/Polyfills/FileSystemPolyfill":
-					"/Static/Wind/Polyfills/FileSystemPolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/IPCRendererShim":
-					"/Static/Wind/Polyfills/IPCRendererShim.js",
-				"@codeeditorland/wind/Target/Polyfills/ChildProcessPolyfill":
-					"/Static/Wind/Polyfills/ChildProcessPolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/NativeModulePolyfill":
-					"/Static/Wind/Polyfills/NativeModulePolyfill.js",
-				"@codeeditorland/wind/Target/Polyfills/SharedProcessProxy":
-					"/Static/Wind/Polyfills/SharedProcessProxy.js",
-			},
 		},
 
 		css: {

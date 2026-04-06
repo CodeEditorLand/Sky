@@ -6,7 +6,13 @@ import NLS from "./NLS.astro";
 	<NLS />
 
 	<!-- Browser Workbench Script -->
+	<!-- Dynamic import matches the pattern used by Mountain.astro, BrowserTest.astro,
+	     BrowserProxy/Workbench.ts, and Electron/Workbench.ts. Static imports cause
+	     Rollup to hard-fail at build time (cannot resolve package specifiers).
+	     Dynamic imports only warn on resolution failure and allow the build to complete. -->
 	<script>
-		import "@codeeditorland/output/vs/code/browser/workbench/workbench.js";
+		await import(
+			"@codeeditorland/output/vs/code/browser/workbench/workbench.js"
+		);
 	</script>
 </Fragment>

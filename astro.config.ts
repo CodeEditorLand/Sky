@@ -72,6 +72,11 @@ export default defineConfig({
 				external: [
 					...External,
 					(id: string) =>
+						// Pre-resolved package specifier — catches @codeeditorland/output/vs/**
+						// before Rollup attempts resolution. Static imports of unresolved
+						// package specifiers are hard build errors; dynamic imports warn only.
+						id.startsWith("@codeeditorland/output/vs/") ||
+						// Resolved absolute path (after symlink + package.json exports map)
 						id.includes(
 							"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
 						) ||

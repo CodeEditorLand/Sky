@@ -340,6 +340,102 @@ import NLS from "./NLS.astro";
 						"[Mountain] ✗ Workbench initialization failed",
 					);
 				}
+
+				// ---- SkyBridge: subscribe to all sky:// Tauri events ----
+				try {
+					const { InstallSkyBridge } =
+						await import("@codeeditorland/sky/Source/Function/SkyBridge");
+
+					// Expose workbench IWorkbench if VS Code made it accessible
+					// via the AMD loader as the workbench.web.main create() return value.
+					// The browser workbench.js calls create() and we attempt to
+					// retrieve the resulting IWorkbench via window.require.
+					if (typeof windowRecord["require"] === "function") {
+						try {
+							const { create } = await new Promise((Resolve) =>
+								windowRecord["require"](
+									[
+										"vs/workbench/workbench.web.main.internal",
+									],
+									Resolve,
+								),
+							);
+							if (typeof create === "function") {
+								// Store a proxy workbench for SkyBridge to use
+								// when the real workbench creation completes
+								windowRecord["__CEL_WORKBENCH__"] = {
+									commands: {
+										executeCommand: (Id, ...Args) =>
+											new Promise((Res, Rej) => {
+												windowRecord["require"](
+													[
+														"vs/platform/commands/common/commands",
+													],
+													({ CommandsRegistry }) => {
+														try {
+															const Cmd =
+																CommandsRegistry?.getCommand?.(
+																	Id,
+																);
+															if (Cmd)
+																Res(
+																	Cmd.handler(
+																		null,
+																		...Args,
+																	),
+																);
+															else
+																Rej(
+																	new Error(
+																		`Unknown command: ${Id}`,
+																	),
+																);
+														} catch (E) {
+															Rej(E);
+														}
+													},
+												);
+											}),
+									},
+									env: {
+										openUri: async (Uri) => {
+											window.open(
+												String(Uri),
+												"_blank",
+												"noopener",
+											);
+											return true;
+										},
+									},
+									logger: {
+										log: (Level, Msg) =>
+											console.log(
+												`[Workbench/${Level}]`,
+												Msg,
+											),
+									},
+								};
+								console.log(
+									"[Mountain] ✓ IWorkbench proxy registered for SkyBridge",
+								);
+							}
+						} catch (_amdErr) {
+							console.warn(
+								"[Mountain] AMD workbench accessor unavailable, SkyBridge will use DOM fallbacks",
+							);
+						}
+					}
+
+					await InstallSkyBridge();
+					console.log(
+						"[Mountain] ✓ SkyBridge installed — all sky:// channels active",
+					);
+				} catch (BridgeErr) {
+					console.error(
+						"[Mountain] ✗ SkyBridge install failed:",
+						BridgeErr,
+					);
+				}
 			}, 2000);
 		} catch (error) {
 			const err = error;

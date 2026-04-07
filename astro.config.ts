@@ -54,6 +54,36 @@ export default defineConfig({
 		!On
 			? (await import("@playform/compress")).default({ Logger: 1 })
 			: null,
+
+		{
+			name: "CopyVSCodeAssets",
+			hooks: {
+				"astro:build:done": async ({ dir }) => {
+					const { cp } = await import("node:fs/promises");
+					const { fileURLToPath } = await import("node:url");
+					const { join, resolve } = await import("node:path");
+					const Source = resolve(
+						process.cwd(),
+						"../../Output/Target/Microsoft/VSCode/vs",
+					);
+					const Destination = join(fileURLToPath(dir), "vs");
+					console.log(
+						`[CopyVSCode] Copying vs/ assets → Target/vs/`,
+					);
+					try {
+						await cp(Source, Destination, { recursive: true });
+						console.log(
+							"[CopyVSCode] ✓ VS Code assets copied to Target/vs/",
+						);
+					} catch (Error) {
+						console.warn(
+							"[CopyVSCode] ✗ Could not copy VS Code assets:",
+							Error,
+						);
+					}
+				},
+			},
+		},
 	],
 
 	experimental: {

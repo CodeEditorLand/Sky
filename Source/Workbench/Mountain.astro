@@ -122,14 +122,17 @@ import NLS from "./NLS.astro";
 			// Import from the Effect module which exports runBootstrap
 			const { runBootstrap } =
 				await import("@codeeditorland/wind/Target/Effect/Bootstrap");
+			const { Effect } = await import("effect");
 
 			console.log("[Mountain] ✓ Bootstrap module loaded successfully");
 
-			// Run the bootstrap with options
-			const bootstrapResult = await runBootstrap({
-				skipHealthCheck: true, // Skip health check for initial test
-				debugMode: true, // Enable debug logging
-			});
+			// runBootstrap returns an Effect — run it via Effect.runPromise
+			const bootstrapResult = await Effect.runPromise(
+				runBootstrap({
+					skipHealthCheck: true,
+					debugMode: true,
+				}),
+			);
 
 			if (bootstrapResult.success) {
 				console.log("[Mountain] ✓ Bootstrap completed successfully");

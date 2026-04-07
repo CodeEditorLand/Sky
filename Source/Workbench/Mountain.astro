@@ -194,7 +194,8 @@ import NLS from "./NLS.astro";
 		try {
 			// Variable URL: Rollup only analyzes string literals — an identifier
 			// reference is treated as truly dynamic and never resolved at build time.
-			const WorkbenchUrl = "/vs/code/browser/workbench/workbench.js";
+			const WorkbenchUrl =
+				"/Static/Application/vs/code/browser/workbench/workbench.js";
 			await import(WorkbenchUrl);
 
 			console.log(

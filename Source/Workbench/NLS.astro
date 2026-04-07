@@ -6,5 +6,5 @@ import { Bust, On } from "../Function/Shared";
 	is:inline
 	type="module"
 	src={Bust(
-		`${On ? "/vs/nls.js" : "/Static/Application/nls.messages.js"}`,
+		`/Static/Application/${On ? "vs/" : ""}${On ? "nls.js" : "nls.messages.js"}`,
 	)}></script>

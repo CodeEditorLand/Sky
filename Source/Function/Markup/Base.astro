@@ -23,7 +23,20 @@ import Meta from "../Meta.astro";
 
 		<!-- Global VSCode File Root - Must execute before module scripts -->
 		<script is:inline>
-			globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/`;
+			globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/Static/Application/`;
+			// esbuild __name helper — required by Dependency/out/ files loaded in
+			// extension host worker contexts that don't have their own __name definition.
+			if (typeof globalThis.__name === "undefined") {
+				Object.defineProperty(globalThis, "__name", {
+					value: (Target, Value) =>
+						Object.defineProperty(Target, "name", {
+							value: Value,
+							configurable: true,
+						}),
+					configurable: true,
+					writable: true,
+				});
+			}
 		</script>
 
 		<slot name="Head" />

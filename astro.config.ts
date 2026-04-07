@@ -13,7 +13,9 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import { readFile } from "node:fs/promises";
+import { copyFile, cp, readdir, readFile, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "astro/config";
 
@@ -59,28 +61,125 @@ export default defineConfig({
 			name: "CopyVSCodeAssets",
 			hooks: {
 				"astro:build:done": async ({ dir }) => {
-					const { cp } = await import("node:fs/promises");
-					const { fileURLToPath } = await import("node:url");
-					const { join, resolve } = await import("node:path");
-					const Source = resolve(
-						process.cwd(),
-						"../../Output/Target/Microsoft/VSCode/vs",
+					const TargetDir = fileURLToPath(dir);
+					const Destination = join(
+						TargetDir,
+						"Static",
+						"Application",
+						"vs",
 					);
-					const Destination = join(fileURLToPath(dir), "vs");
+					// Step 1: Copy ESBuild-processed files from Output (primary source)
+					const OutputSource = resolve(
+						process.cwd(),
+						"../Output/Target/Microsoft/VSCode/vs",
+					);
 					console.log(
-						`[CopyVSCode] Copying vs/ assets → Target/vs/`,
+						`[CopyVSCode] Step 1: Copying Output/vs → Static/Application/vs/`,
 					);
 					try {
-						await cp(Source, Destination, { recursive: true });
-						console.log(
-							"[CopyVSCode] ✓ VS Code assets copied to Target/vs/",
-						);
+						await cp(OutputSource, Destination, {
+							recursive: true,
+						});
 					} catch (Error) {
 						console.warn(
-							"[CopyVSCode] ✗ Could not copy VS Code assets:",
+							"[CopyVSCode] ✗ Output copy failed:",
 							Error,
 						);
 					}
+					// Step 2: Supplement with tsc-compiled files from Dependency
+					// (fills gaps like workbench.web.main.js missing from Output)
+					const DependencySource = resolve(
+						process.cwd(),
+						"../../Dependency/Microsoft/Dependency/Editor/out/vs",
+					);
+					console.log(
+						`[CopyVSCode] Step 2: Supplementing from Dependency/out/vs/`,
+					);
+					try {
+						await cp(DependencySource, Destination, {
+							recursive: true,
+							force: false,
+						});
+					} catch (Error) {
+						console.warn(
+							"[CopyVSCode] ✗ Dependency supplement failed:",
+							Error,
+						);
+					}
+					// Step 3: Copy Worker.js from node_modules to Target/Worker.js
+					const WorkerSource = resolve(
+						process.cwd(),
+						"node_modules/@codeeditorland/worker/Target/Worker.js",
+					);
+					const WorkerDestination = join(TargetDir, "Worker.js");
+					try {
+						await copyFile(WorkerSource, WorkerDestination);
+						console.log(
+							"[CopyVSCode] ✓ Worker.js copied to Target/",
+						);
+					} catch (Error) {
+						console.warn(
+							"[CopyVSCode] ✗ Worker.js copy failed:",
+							Error,
+						);
+					}
+					// Step 4: Strip CSS imports — Tauri WKWebView has no service worker
+					// interception for Tauri embedded assets, so CSS module imports in
+					// VS Code's JS files must be removed before embedding.
+					// (The Worker/CSS interception handles the browser/PWA context.)
+					// Matches: import "./foo.css"; or import './bar.css'
+					const CSSImport =
+						/^import\s+(['"])([^'"]+\.css)\1\s*;?\s*$/gm;
+					async function StripCSSImports(Dir: string): Promise<void> {
+						let Entries;
+						try {
+							Entries = await readdir(Dir, {
+								withFileTypes: true,
+							});
+						} catch {
+							return;
+						}
+						await Promise.all(
+							Entries.map(async (Entry) => {
+								const Full = join(Dir, Entry.name);
+								if (Entry.isDirectory()) {
+									await StripCSSImports(Full);
+								} else if (Entry.name.endsWith(".js")) {
+									try {
+										const Content = await readFile(
+											Full,
+											"utf-8",
+										);
+										if (CSSImport.test(Content)) {
+											CSSImport.lastIndex = 0;
+											// Replace with _LOAD_CSS_WORKER call so CSS is
+											// injected as a <link> element instead of being
+											// imported as a JS module (which fails with
+											// 'text/css is not a valid MIME type').
+											// import.meta.url resolves the relative path to
+											// the correct absolute /Static/Application/vs/ URL.
+											await writeFile(
+												Full,
+												Content.replace(
+													CSSImport,
+													(_m, _q, Path) =>
+														`window._LOAD_CSS_WORKER?.(new URL("${Path}",import.meta.url).pathname);`,
+												),
+												"utf-8",
+											);
+										}
+									} catch {
+										/* skip */
+									}
+								}
+							}),
+						);
+					}
+					console.log(
+						"[CopyVSCode] Step 4: Stripping CSS imports from Static/Application/vs/",
+					);
+					await StripCSSImports(Destination);
+					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 				},
 			},
 		},
@@ -99,6 +198,15 @@ export default defineConfig({
 
 		build: {
 			rollupOptions: {
+				treeshake: {
+					// Preserve all side effects in the worker package so Register.js
+					// SW registration code is not eliminated by Rollup.
+					moduleSideEffects: (Id: string) =>
+						Id.includes("@codeeditorland/worker") ||
+						Id.includes("Element/Worker")
+							? true
+							: "no-external",
+				},
 				external: [
 					...External,
 					(id: string) =>

@@ -102,6 +102,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 				],
 				"connect-src": [
 					"'self'",
+					"ipc:",
 					"http://localhost:*",
 					"https://tauri.localhost",
 					"wss://tauri.localhost",
@@ -119,6 +120,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					"WorkerApplication",
 					"amdLoader",
 					"cellRendererEditorText",
+					"chatDebugTokenizer",
 					"defaultWorkerFactory",
 					"diffEditorWidget",
 					"diffReview",

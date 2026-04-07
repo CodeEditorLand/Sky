@@ -12,7 +12,10 @@ import NLS from "./NLS.astro";
 		try {
 			await import("/vs/code/browser/workbench/workbench.js");
 		} catch (error) {
-			console.error("[Browser] Failed to load VS Code browser workbench:", error);
+			console.error(
+				"[Browser] Failed to load VS Code browser workbench:",
+				error,
+			);
 		}
 	</script>
 </Fragment>

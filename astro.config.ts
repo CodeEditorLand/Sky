@@ -180,61 +180,12 @@ export default defineConfig({
 					);
 					await StripCSSImports(Destination);
 
-					// Step 5: Patch Electron workbench.js baseUrl computation.
-					// The original uses vscode-file://vscode-app/{appRoot}/out/
-					// which doesn't exist in Tauri. Replace with the embedded
-					// asset root /Static/Application/ using location.origin.
-					const ElectronWorkbench = join(
-						Destination,
-						"code",
-						"electron-browser",
-						"workbench",
-						"workbench.js",
-					);
-					try {
-						const WB = await readFile(
-							ElectronWorkbench,
-							"utf-8",
-						);
-						// The original line uses fileUriFromPath which
-						// produces vscode-file:// URIs that Tauri can't load.
-						// Replace with direct URL from _VSCODE_FILE_ROOT.
-						const SearchStr =
-							"fileUriFromPath(configuration.appRoot";
-						const Idx = WB.indexOf(SearchStr);
-						let Patched = WB;
-						if (Idx !== -1) {
-							// Find the enclosing: const baseUrl = new URL(`${...}/out/`);
-							// Replace entire line from "const baseUrl" to the semicolon
-							const LineStart = WB.lastIndexOf(
-								"const baseUrl",
-								Idx,
-							);
-							const LineEnd = WB.indexOf(";", Idx) + 1;
-							if (LineStart !== -1 && LineEnd > 0) {
-								Patched =
-									WB.slice(0, LineStart) +
-									`const baseUrl = new URL(globalThis._VSCODE_FILE_ROOT || "/Static/Application/", globalThis.location?.origin || "https://tauri.localhost")` +
-									WB.slice(LineEnd);
-							}
-						}
-						if (Patched !== WB) {
-							await writeFile(
-								ElectronWorkbench,
-								Patched,
-								"utf-8",
-							);
-							console.log(
-								"[CopyVSCode] Step 5: Patched electron workbench baseUrl",
-							);
-						} else {
-							console.log(
-								"[CopyVSCode] Step 5: Pattern not found in workbench.js (may already be patched)",
-							);
-						}
-					} catch {
-						// Electron workbench may not exist (Browser/Mountain build)
-					}
+					// Step 5: No JS patching needed.
+					// VSCODE_DEV=true in Wind's process.env + _VSCODE_USE_RELATIVE_IMPORTS=true
+					// in Base.astro makes the Electron workbench use relative import paths
+					// that resolve against http://localhost instead of vscode-file://.
+					// The native vscode-file:// Rust handler (Scheme.rs) covers
+					// non-module requests (fetch, images, JSON).
 
 					// Step 6: Inject __name shim into extension host iframe.
 					// The blob worker created by this HTML doesn't have the
@@ -249,8 +200,7 @@ export default defineConfig({
 					);
 					try {
 						const HTML = await readFile(ExtHostIframe, "utf-8");
-						const NameShim =
-							`var __defProp=Object.defineProperty;var __name=(t,v)=>__defProp(t,"name",{value:v,configurable:true});`;
+						const NameShim = `var __defProp=Object.defineProperty;var __name=(t,v)=>__defProp(t,"name",{value:v,configurable:true});`;
 						// Inject into the blob content (before the first globalThis._VSCODE line)
 						const PatchedHTML = HTML.replace(
 							"`/*extensionHostWorker*/`,",

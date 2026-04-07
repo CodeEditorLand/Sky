@@ -24,6 +24,10 @@ import Meta from "../Meta.astro";
 		<!-- Global VSCode File Root - Must execute before module scripts -->
 		<script is:inline>
 			globalThis._VSCODE_FILE_ROOT = `${window.location.origin}/Static/Application/`;
+			// Tells the Electron workbench to use relative imports
+			// (resolves against http://localhost URL) instead of
+			// vscode-file:// URLs that WKWebView can't import().
+			globalThis._VSCODE_USE_RELATIVE_IMPORTS = true;
 			// esbuild __name helper — required by Dependency/out/ files loaded in
 			// extension host worker contexts that don't have their own __name definition.
 			if (typeof globalThis.__name === "undefined") {

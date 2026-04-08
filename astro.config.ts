@@ -62,20 +62,24 @@ export default defineConfig({
 			hooks: {
 				"astro:build:done": async ({ dir }) => {
 					const TargetDir = fileURLToPath(dir);
+
 					const Destination = join(
 						TargetDir,
 						"Static",
 						"Application",
 						"vs",
 					);
+
 					// Step 1: Copy ESBuild-processed files from Output (primary source)
 					const OutputSource = resolve(
 						process.cwd(),
 						"../Output/Target/Microsoft/VSCode/vs",
 					);
+
 					console.log(
 						`[CopyVSCode] Step 1: Copying Output/vs → Static/Application/vs/`,
 					);
+
 					try {
 						await cp(OutputSource, Destination, {
 							recursive: true,
@@ -92,9 +96,11 @@ export default defineConfig({
 						process.cwd(),
 						"../../Dependency/Microsoft/Dependency/Editor/out/vs",
 					);
+
 					console.log(
 						`[CopyVSCode] Step 2: Supplementing from Dependency/out/vs/`,
 					);
+
 					try {
 						await cp(DependencySource, Destination, {
 							recursive: true,
@@ -111,9 +117,12 @@ export default defineConfig({
 						process.cwd(),
 						"node_modules/@codeeditorland/worker/Target/Worker.js",
 					);
+
 					const WorkerDestination = join(TargetDir, "Worker.js");
+
 					try {
 						await copyFile(WorkerSource, WorkerDestination);
+
 						console.log(
 							"[CopyVSCode] ✓ Worker.js copied to Target/",
 						);
@@ -130,8 +139,10 @@ export default defineConfig({
 					// Matches: import "./foo.css"; or import './bar.css'
 					const CSSImport =
 						/^import\s+(['"])([^'"]+\.css)\1\s*;?\s*$/gm;
+
 					async function StripCSSImports(Dir: string): Promise<void> {
 						let Entries;
+
 						try {
 							Entries = await readdir(Dir, {
 								withFileTypes: true,
@@ -142,6 +153,7 @@ export default defineConfig({
 						await Promise.all(
 							Entries.map(async (Entry) => {
 								const Full = join(Dir, Entry.name);
+
 								if (Entry.isDirectory()) {
 									await StripCSSImports(Full);
 								} else if (Entry.name.endsWith(".js")) {
@@ -150,8 +162,10 @@ export default defineConfig({
 											Full,
 											"utf-8",
 										);
+
 										if (CSSImport.test(Content)) {
 											CSSImport.lastIndex = 0;
+
 											// Replace with _LOAD_CSS_WORKER call so CSS is
 											// injected as a <link> element instead of being
 											// imported as a JS module (which fails with
@@ -178,6 +192,7 @@ export default defineConfig({
 					console.log(
 						"[CopyVSCode] Step 4: Stripping CSS imports from Static/Application/vs/",
 					);
+
 					await StripCSSImports(Destination);
 
 					// Step 5: No JS patching needed.
@@ -198,20 +213,25 @@ export default defineConfig({
 						"worker",
 						"webWorkerExtensionHostIframe.html",
 					);
+
 					try {
 						const HTML = await readFile(ExtHostIframe, "utf-8");
+
 						const NameShim = `var __defProp=Object.defineProperty;var __name=(t,v)=>__defProp(t,"name",{value:v,configurable:true});`;
+
 						// Inject into the blob content (before the first globalThis._VSCODE line)
 						const PatchedHTML = HTML.replace(
 							"`/*extensionHostWorker*/`,",
 							"`/*extensionHostWorker*/${NameShim}`,",
 						);
+
 						if (PatchedHTML !== HTML) {
 							await writeFile(
 								ExtHostIframe,
 								PatchedHTML,
 								"utf-8",
 							);
+
 							console.log(
 								"[CopyVSCode] Step 6: Injected __name shim into ext host iframe",
 							);
@@ -223,55 +243,86 @@ export default defineConfig({
 					// Step 7: When Electron=true, replace ElectronIPCMainProcessService
 					// with TauriMainProcessService that routes channel.call() directly
 					// through Tauri invoke to Mountain's WindServiceHandlers.
-					// This eliminates the binary IPC protocol entirely.
+					//
+					// ESM wrapper approach: copy the compiled service as a separate
+					// module and write a 1-line re-export wrapper. This avoids
+					// inlining esbuild helpers (__defProp/__name) and regex stripping.
 					if (process.env["Electron"] === "true") {
-						const MainProcessServicePath = join(
+						const IPCDir = join(
 							Destination,
 							"platform",
 							"ipc",
 							"electron-browser",
-							"mainProcessService.js",
 						);
+
 						try {
 							const TauriServiceSource = resolve(
 								process.cwd(),
 								"node_modules/@codeeditorland/wind/Target/Service/TauriMainProcessService.js",
 							);
-							let TauriServiceContent = await readFile(
+
+							// Copy the compiled service as a separate module
+							await copyFile(
 								TauriServiceSource,
-								"utf-8",
+								join(IPCDir, "TauriMainProcessService.js"),
 							);
-							// Strip the compiled module's own exports and sourcemap
-							// so we can re-export under the original name.
-							TauriServiceContent = TauriServiceContent
-								.replace(
-									/^export\s*\{[^}]*\}\s*;?\s*$/gm,
-									"",
-								)
-								.replace(
-									/^\/\/# sourceMappingURL=.*$/gm,
-									"",
-								)
-								.replace(
-									/^export default .*$/gm,
-									"",
-								);
-							const ReplacementModule = [
-								"// TauriMainProcessService — routes IPC channels through Tauri invoke to Mountain",
-								TauriServiceContent,
-								"export { TauriMainProcessService as ElectronIPCMainProcessService };",
-							].join("\n");
+
+							// Replace mainProcessService.js with a minimal ESM re-export
 							await writeFile(
-								MainProcessServicePath,
-								ReplacementModule,
+								join(IPCDir, "mainProcessService.js"),
+								`export { TauriMainProcessService as ElectronIPCMainProcessService } from './TauriMainProcessService.js';\n`,
 								"utf-8",
 							);
+
 							console.log(
-								"[CopyVSCode] Step 7: Replaced ElectronIPCMainProcessService with TauriMainProcessService",
+								"[CopyVSCode] Step 7: Replaced ElectronIPCMainProcessService with TauriMainProcessService (ESM wrapper)",
 							);
 						} catch (Error) {
 							console.warn(
 								"[CopyVSCode] Step 7: TauriMainProcessService replacement failed:",
+								Error,
+							);
+						}
+					}
+
+					// Step 8: When Electron=true, patch workbench.js to surface
+					// errors from the async IIFE. The original code does NOT await
+					// result.main(configuration) and has no unhandledrejection
+					// listener, so all boot errors are silently swallowed.
+					if (process.env["Electron"] === "true") {
+						const WorkbenchJS = join(
+							Destination,
+							"code",
+							"electron-browser",
+							"workbench",
+							"workbench.js",
+						);
+
+						try {
+							let Content = await readFile(WorkbenchJS, "utf-8");
+
+							// 8a: Prepend global error listeners before the IIFE
+							const ErrorListeners = [
+								`window.addEventListener("unhandledrejection",(e)=>{console.error("[workbench.js:unhandledrejection]",e.reason);if(e.reason&&e.reason.stack)console.error(e.reason.stack);});`,
+								`window.addEventListener("error",(e)=>{console.error("[workbench.js:error]",e.message,e.filename,e.lineno);});`,
+							].join("\n");
+
+							Content = ErrorListeners + "\n" + Content;
+
+							// 8b: Wrap result.main(configuration) with try/catch + await
+							Content = Content.replace(
+								"result.main(configuration)",
+								`try{await result.main(configuration)}catch(_e){console.error("[workbench.js] main() failed:",_e);if(_e&&_e.stack)console.error(_e.stack)}`,
+							);
+
+							await writeFile(WorkbenchJS, Content, "utf-8");
+
+							console.log(
+								"[CopyVSCode] Step 8: Patched workbench.js with error surfacing",
+							);
+						} catch (Error) {
+							console.warn(
+								"[CopyVSCode] Step 8: workbench.js error surfacing failed:",
 								Error,
 							);
 						}

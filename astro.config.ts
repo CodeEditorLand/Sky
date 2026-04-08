@@ -220,6 +220,63 @@ export default defineConfig({
 						// May not exist yet
 					}
 
+					// Step 7: When Electron=true, replace ElectronIPCMainProcessService
+					// with TauriMainProcessService that routes channel.call() directly
+					// through Tauri invoke to Mountain's WindServiceHandlers.
+					// This eliminates the binary IPC protocol entirely.
+					if (process.env["Electron"] === "true") {
+						const MainProcessServicePath = join(
+							Destination,
+							"platform",
+							"ipc",
+							"electron-browser",
+							"mainProcessService.js",
+						);
+						try {
+							const TauriServiceSource = resolve(
+								process.cwd(),
+								"node_modules/@codeeditorland/wind/Target/Service/TauriMainProcessService.js",
+							);
+							let TauriServiceContent = await readFile(
+								TauriServiceSource,
+								"utf-8",
+							);
+							// Strip the compiled module's own exports and sourcemap
+							// so we can re-export under the original name.
+							TauriServiceContent = TauriServiceContent
+								.replace(
+									/^export\s*\{[^}]*\}\s*;?\s*$/gm,
+									"",
+								)
+								.replace(
+									/^\/\/# sourceMappingURL=.*$/gm,
+									"",
+								)
+								.replace(
+									/^export default .*$/gm,
+									"",
+								);
+							const ReplacementModule = [
+								"// TauriMainProcessService — routes IPC channels through Tauri invoke to Mountain",
+								TauriServiceContent,
+								"export { TauriMainProcessService as ElectronIPCMainProcessService };",
+							].join("\n");
+							await writeFile(
+								MainProcessServicePath,
+								ReplacementModule,
+								"utf-8",
+							);
+							console.log(
+								"[CopyVSCode] Step 7: Replaced ElectronIPCMainProcessService with TauriMainProcessService",
+							);
+						} catch (Error) {
+							console.warn(
+								"[CopyVSCode] Step 7: TauriMainProcessService replacement failed:",
+								Error,
+							);
+						}
+					}
+
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 				},
 			},

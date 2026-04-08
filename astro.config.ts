@@ -309,10 +309,43 @@ export default defineConfig({
 
 							Content = ErrorListeners + "\n" + Content;
 
-							// 8b: Wrap result.main(configuration) with try/catch + await
+							// 8b: Add checkpoints inside load() to trace the hang
+							Content = Content.replace(
+								"const configuration2 = await resolveWindowConfiguration()",
+								`console.log("[workbench.js] WB1: calling resolveWindowConfiguration");const configuration2 = await resolveWindowConfiguration()`,
+							);
+							// 8b-fix: Ensure profile URIs exist for reviveProfile().
+							// Wind's ResolveConfiguration may have location:undefined
+							// due to Vite cache. Fix the configuration in-place here.
+							Content = Content.replace(
+								"setupNLS(configuration2)",
+								[
+									`if(configuration2.profiles){`,
+									`const _S="vscode-userdata";`,
+									`const _fix=(p)=>{if(!p)return;`,
+									`if(!p.location)p.location={scheme:_S,path:"/User/profiles/"+(p.id||"default")};`,
+									`if(!p.promptsHome)p.promptsHome={scheme:_S,path:"/User/prompts"};`,
+									`if(!p.extensionsResource)p.extensionsResource={scheme:_S,path:"/User/extensions.json"};`,
+									`if(!p.mcpResource)p.mcpResource={scheme:_S,path:"/User/mcp.json"};`,
+									`};`,
+									`_fix(configuration2.profiles.profile);`,
+									`if(Array.isArray(configuration2.profiles.all))configuration2.profiles.all.forEach(_fix);`,
+									`}`,
+									`console.log("[workbench.js] WB2: config resolved, calling setupNLS");setupNLS(configuration2)`,
+								].join(""),
+							);
+							Content = Content.replace(
+								"const result2 = await import(workbenchUrl)",
+								`console.log("[workbench.js] WB3: importing workbench module:",workbenchUrl);const result2 = await import(workbenchUrl)`,
+							);
+							Content = Content.replace(
+								"return { result: result2, configuration: configuration2 }",
+								`console.log("[workbench.js] WB4: import done");return { result: result2, configuration: configuration2 }`,
+							);
+							// 8c: Wrap result.main(configuration) with try/catch + await
 							Content = Content.replace(
 								"result.main(configuration)",
-								`try{await result.main(configuration)}catch(_e){console.error("[workbench.js] main() failed:",_e);if(_e&&_e.stack)console.error(_e.stack)}`,
+								`console.log("[workbench.js] WB5: calling main()");try{await result.main(configuration)}catch(_e){console.error("[workbench.js] main() failed:",_e);if(_e&&_e.stack)console.error(_e.stack)}`,
 							);
 
 							await writeFile(WorkbenchJS, Content, "utf-8");
@@ -323,6 +356,126 @@ export default defineConfig({
 						} catch (Error) {
 							console.warn(
 								"[CopyVSCode] Step 8: workbench.js error surfacing failed:",
+								Error,
+							);
+						}
+					}
+
+					// Step 9: When Electron=true, patch desktop.main.js with
+					// checkpoint logging to trace where initServices() hangs.
+					if (process.env["Electron"] === "true") {
+						const DesktopMainJS = join(
+							Destination,
+							"workbench",
+							"electron-browser",
+							"desktop.main.js",
+						);
+						try {
+							let Content = await readFile(
+								DesktopMainJS,
+								"utf-8",
+							);
+							// Patches use IIFE wrappers (()=>{log;return expr})() for
+							// expression contexts, and statement prepends for statement contexts.
+							// CP5-7 are inside Promise.all([...]) so we log BEFORE the array.
+							const Patches: [string, string][] = [
+								[
+									"new ElectronIPCMainProcessService(this.configuration.windowId)",
+									`(()=>{console.log("[desktop.main] CP1: creating MainProcessService");return new ElectronIPCMainProcessService(this.configuration.windowId)})()`,
+								],
+								[
+									"new NativeWorkbenchEnvironmentService(this.configuration, productService)",
+									`(()=>{console.log("[desktop.main] CP2: creating EnvironmentService");return new NativeWorkbenchEnvironmentService(this.configuration, productService)})()`,
+								],
+								[
+									"new SharedProcessService(this.configuration.windowId, logService)",
+									`(()=>{console.log("[desktop.main] CP3: creating SharedProcessService");return new SharedProcessService(this.configuration.windowId, logService)})()`,
+								],
+								[
+									"new FileService(logService)",
+									`(()=>{console.log("[desktop.main] CP4: creating FileService");return new FileService(logService)})()`,
+								],
+								[
+									"const [configurationService, storageService] = await Promise.all([",
+									`console.log("[desktop.main] CP5: entering Promise.all (workspace+storage+keyboard)");const [configurationService, storageService] = await Promise.all([`,
+								],
+								[
+									"const workbench = new Workbench(",
+									`console.log("[desktop.main] CP6: initServices DONE, creating Workbench");const workbench = new Workbench(`,
+								],
+							];
+							for (const [Search, Replace] of Patches) {
+								if (Content.includes(Search)) {
+									Content = Content.replace(Search, Replace);
+								}
+							}
+							await writeFile(DesktopMainJS, Content, "utf-8");
+							console.log(
+								"[CopyVSCode] Step 9: Patched desktop.main.js with checkpoint logging",
+							);
+						} catch (Error) {
+							console.warn(
+								"[CopyVSCode] Step 9: desktop.main.js checkpoint patching failed:",
+								Error,
+							);
+						}
+					}
+
+					// Step 10: When Electron=true, replace workbench.desktop.main.js
+					// static imports with sequential dynamic imports that log progress.
+					// Static imports of 3385 modules overwhelm WKWebView's module loader.
+					if (process.env["Electron"] === "true") {
+						const DesktopBarrelJS = join(
+							Destination,
+							"workbench",
+							"workbench.desktop.main.js",
+						);
+						try {
+							const Content = await readFile(
+								DesktopBarrelJS,
+								"utf-8",
+							);
+							// Extract side-effect import paths: import './foo.js';
+							const SideEffectImports: string[] = [];
+							const SideEffectRE =
+								/^import\s+['"]([^'"]+)['"]\s*;?\s*$/gm;
+							let Match;
+							while (
+								(Match = SideEffectRE.exec(Content)) !== null
+							) {
+								SideEffectImports.push(Match[1]);
+							}
+							// Build: static named imports at top, then dynamic side-effect
+							// imports, then registerSingleton + export at bottom.
+							const Lines = [
+								`// Sequential dynamic import loader (Step 10)`,
+								`import { registerSingleton } from '../platform/instantiation/common/extensions.js';`,
+								`import { IUserDataInitializationService, UserDataInitializationService } from './services/userData/browser/userDataInit.js';`,
+								`import { SyncDescriptor } from '../platform/instantiation/common/descriptors.js';`,
+								``,
+								`console.log("[workbench.desktop.main] Loading ${SideEffectImports.length} modules sequentially...");`,
+								`const _t0 = performance.now();`,
+								`let _n = 0;`,
+								...SideEffectImports.map(
+									(Path: string, I: number) =>
+										`try{await import('${Path}');_n++;${I % 10 === 0 ? `console.log("[workbench.desktop.main] "+_n+"/${SideEffectImports.length}: ${Path}");` : ""}}catch(_e){console.error("[workbench.desktop.main] FAILED #${I}: ${Path}",_e)}`,
+								),
+								`console.log("[workbench.desktop.main] Done: "+_n+"/${SideEffectImports.length} in "+(performance.now()-_t0).toFixed(0)+"ms");`,
+								``,
+								`registerSingleton(IUserDataInitializationService, new SyncDescriptor(UserDataInitializationService, [[]], true));`,
+								`export { main } from './electron-browser/desktop.main.js';`,
+							];
+							await writeFile(
+								DesktopBarrelJS,
+								Lines.join("\n"),
+								"utf-8",
+							);
+							console.log(
+								`[CopyVSCode] Step 10: Replaced ${SideEffectImports.length} static imports with sequential dynamic imports`,
+							);
+						} catch (Error) {
+							console.warn(
+								"[CopyVSCode] Step 10: dynamic import replacement failed:",
 								Error,
 							);
 						}

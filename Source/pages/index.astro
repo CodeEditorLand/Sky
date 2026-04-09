@@ -32,16 +32,17 @@ const Electron = process.env["Electron"] === "true";
 const BrowserProxy = process.env["BrowserProxy"] === "true";
 
 // Determine workbench type (default to Browser if nothing specified)
-const WorkbenchType = Electron
+// Mountain uses the Electron workbench — it has the full IPC chain
+// (TauriMainProcessService → Mountain WindServiceHandlers → tokio::fs)
+// for real filesystem access. The browser workbench uses IndexedDB.
+const WorkbenchType = Electron || Mountain
 	? "Electron"
-	: Mountain
-		? "Mountain"
-		: BrowserProxy
-			? "BrowserProxy"
-			: "Browser"; // Default, not null
+	: BrowserProxy
+		? "BrowserProxy"
+		: "Browser"; // Default, not null
 
 // Determine embedder identifier
-const EmbedderId = Electron ? "desktop" : "browser";
+const EmbedderId = Electron || Mountain ? "desktop" : "browser";
 
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 ---
@@ -194,6 +195,21 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 		})}
 		slot="Meta"
 	/>
+
+	<!-- Inject folderUri from URL into workbench config (must run before module scripts) -->
+	<script is:inline slot="Meta">
+		(function() {
+			var FolderParam = new URLSearchParams(window.location.search).get("folder");
+			if (FolderParam) {
+				var Element = document.getElementById("vscode-workbench-web-configuration");
+				if (Element) {
+					var Settings = JSON.parse(Element.getAttribute("data-settings") || "{}");
+					Settings.folderUri = { scheme: "file", path: FolderParam, authority: "" };
+					Element.setAttribute("data-settings", JSON.stringify(Settings));
+				}
+			}
+		})();
+	</script>
 
 	<!-- VSCode Auth Session -->
 	<meta

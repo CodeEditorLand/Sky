@@ -161,6 +161,21 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 		slot="Meta"
 	/>
 
+	<!-- Inject folderUri from URL into workbench config (must run before module scripts) -->
+	<script is:inline slot="Meta">
+		(function() {
+			var FolderParam = new URLSearchParams(window.location.search).get("folder");
+			if (FolderParam) {
+				var Element = document.getElementById("vscode-workbench-web-configuration");
+				if (Element) {
+					var Settings = JSON.parse(Element.getAttribute("data-settings") || "{}");
+					Settings.folderUri = { scheme: "file", path: FolderParam, authority: "" };
+					Element.setAttribute("data-settings", JSON.stringify(Settings));
+				}
+			}
+		})();
+	</script>
+
 	<!-- VSCode Auth Session -->
 	<meta
 		id="vscode-workbench-auth-session"

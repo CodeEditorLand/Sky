@@ -62,6 +62,25 @@ console.log(
 	(window as any).vscode?.process?.env?.VSCODE_DEV,
 );
 
+// Stubs for APIs that VS Code uses but don't exist in Tauri's WKWebView.
+// queryLocalFonts: VS Code's fonts.js calls mainWindow.queryLocalFonts() to
+// enumerate system fonts. Returns empty array = VS Code falls back to defaults.
+if (typeof (window as any).queryLocalFonts !== "function") {
+	(window as any).queryLocalFonts = () => Promise.resolve([]);
+}
+
+// __name: esbuild keepNames helper used inside VS Code blob workers.
+// Without this, the extension host blob throws "Can't find variable: __name".
+if (typeof (globalThis as any).__name !== "function") {
+	(globalThis as any).__name = (Target: any, Value: string) => {
+		Object.defineProperty(Target, "name", {
+			value: Value,
+			configurable: true,
+		});
+		return Target;
+	};
+}
+
 try {
 	const WorkbenchUrl =
 		"/Static/Application/vs/code/electron-browser/workbench/workbench.js";

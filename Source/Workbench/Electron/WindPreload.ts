@@ -7,6 +7,20 @@
 
 import Install from "@codeeditorland/wind/Target/Function/Install";
 
+// Initialize LAND_DEV_LOG from localStorage (persistent) or URL param (?devlog=config,vfs)
+// Can also be set at runtime: window.__LAND_DEV_LOG = "all"
+{
+	const Stored = localStorage.getItem("LAND_DEV_LOG");
+	const UrlParam = new URLSearchParams(window.location.search).get("devlog");
+	const Value = UrlParam ?? Stored ?? "";
+	if (Value) {
+		(window as any).__LAND_DEV_LOG = Value;
+		console.log(
+			`[DevLog] Enabled tags: ${Value} (source: ${UrlParam ? "url" : "localStorage"})`,
+		);
+	}
+}
+
 console.log("[Electron] ===== Starting Wind preload installation =====");
 
 console.log("[Electron] Workbench: Electron (A3)");

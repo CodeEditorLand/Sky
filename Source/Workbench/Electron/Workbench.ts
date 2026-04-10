@@ -63,6 +63,31 @@ console.log(
 );
 
 // Stubs for APIs that VS Code uses but don't exist in Tauri's WKWebView.
+
+// requestIdleCallback/cancelIdleCallback: WKWebView doesn't support these.
+// VS Code uses them in workbench.js for deferred canvas cleanup and other
+// non-critical tasks. Without this polyfill, the workbench crashes on load.
+if (typeof window.requestIdleCallback !== "function") {
+	(window as any).requestIdleCallback = (
+		Callback: IdleRequestCallback,
+		Options?: IdleRequestOptions,
+	): number => {
+		const Timeout = Options?.timeout ?? 1;
+		const Start = Date.now();
+		return setTimeout(() => {
+			Callback({
+				didTimeout: Timeout <= 0,
+				timeRemaining: () => Math.max(0, Timeout - (Date.now() - Start)),
+			});
+		}, Timeout) as unknown as number;
+	};
+}
+if (typeof window.cancelIdleCallback !== "function") {
+	(window as any).cancelIdleCallback = (Id: number): void => {
+		clearTimeout(Id);
+	};
+}
+
 // queryLocalFonts: VS Code's fonts.js calls mainWindow.queryLocalFonts() to
 // enumerate system fonts. Returns empty array = VS Code falls back to defaults.
 if (typeof (window as any).queryLocalFonts !== "function") {

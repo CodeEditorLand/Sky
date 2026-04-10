@@ -481,6 +481,46 @@ export default defineConfig({
 						}
 					}
 
+					// Step 7: Copy @xterm and other VS Code node_modules
+					// VS Code's importAMDNodeModule loads from
+					// /Static/Application/node_modules/@xterm/xterm/lib/xterm.js
+					const NodeModulesToCopy = [
+						"@xterm/xterm",
+						"@xterm/addon-clipboard",
+						"@xterm/addon-image",
+						"@xterm/addon-ligatures",
+						"@xterm/addon-progress",
+						"@xterm/addon-search",
+						"@xterm/addon-serialize",
+						"@xterm/addon-unicode11",
+						"@xterm/addon-webgl",
+						"@vscode/vscode-languagedetection",
+						"vscode-regexp-languagedetection",
+					];
+
+					for (const Pkg of NodeModulesToCopy) {
+						const Source = resolve(
+							process.cwd(),
+							"node_modules",
+							Pkg,
+						);
+						const Destination = join(
+							TargetDir,
+							"Static/Application/node_modules",
+							Pkg,
+						);
+						try {
+							await cp(Source, Destination, {
+								recursive: true,
+							});
+						} catch {
+							// Package not installed — skip silently
+						}
+					}
+					console.log(
+						"[CopyVSCode] Step 7: Copied node_modules for terminal + language detection",
+					);
+
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 				},
 			},

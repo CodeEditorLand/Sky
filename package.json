@@ -36,7 +36,7 @@
 		"@playform/compress": "0.2.3",
 		"@playform/inline": "0.1.4",
 		"@vscode/vscode-languagedetection": "^1.0.23",
-		"@xterm/xterm": "6.1.0-beta.196",
+		"@xterm/xterm": "6.1.0-beta.197",
 		"astro": "6.1.5",
 		"deepmerge-ts": "7.1.5",
 		"dotenv": "17.4.1",

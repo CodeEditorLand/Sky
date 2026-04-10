@@ -27,10 +27,13 @@ try {
 
 	console.log("[Electron] Bootstrap module loaded successfully");
 
-	// runBootstrap returns an Effect — run it via Effect.runPromise
+	// runBootstrap returns an Effect — run it via Effect.runPromise.
+	// skipHealthCheck: true because the minimal layer (TelemetryLive only)
+	// doesn't provide HealthTag, EnvironmentTag, etc. Individual stages
+	// catch their own errors gracefully.
 	const BootstrapResult: BootstrapResult = await Effect.runPromise(
 		runBootstrap({
-			skipHealthCheck: false,
+			skipHealthCheck: true,
 			debugMode: true,
 		}),
 	);

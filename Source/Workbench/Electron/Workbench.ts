@@ -62,11 +62,7 @@ console.log(
 	(window as any).vscode?.process?.env?.VSCODE_DEV,
 );
 
-// Stubs for APIs that VS Code uses but don't exist in Tauri's WKWebView.
-
-// requestIdleCallback/cancelIdleCallback: WKWebView doesn't support these.
-// VS Code uses them in workbench.js for deferred canvas cleanup and other
-// non-critical tasks. Without this polyfill, the workbench crashes on load.
+// WKWebView polyfills: requestIdleCallback, queryLocalFonts, __name.
 if (typeof window.requestIdleCallback !== "function") {
 	(window as any).requestIdleCallback = (
 		Callback: IdleRequestCallback,
@@ -89,14 +85,10 @@ if (typeof window.cancelIdleCallback !== "function") {
 	};
 }
 
-// queryLocalFonts: VS Code's fonts.js calls mainWindow.queryLocalFonts() to
-// enumerate system fonts. Returns empty array = VS Code falls back to defaults.
 if (typeof (window as any).queryLocalFonts !== "function") {
 	(window as any).queryLocalFonts = () => Promise.resolve([]);
 }
 
-// __name: esbuild keepNames helper used inside VS Code blob workers.
-// Without this, the extension host blob throws "Can't find variable: __name".
 if (typeof (globalThis as any).__name !== "function") {
 	(globalThis as any).__name = (Target: any, Value: string) => {
 		Object.defineProperty(Target, "name", {
@@ -107,15 +99,12 @@ if (typeof (globalThis as any).__name !== "function") {
 	};
 }
 
-// Inject __name into blob workers via Blob constructor patch (zero-cost).
-// VS Code's getWorkerBootstrapUrl builds blobs from string arrays. We intercept
-// Blob creation and prepend the __name shim to any application/javascript blob
-// that contains the VS Code worker marker. No XHR, no re-fetch — just string
-// prepend at construction time.
+// Blob patch: inject __name + rewrite vscode-file:// to http://localhost in worker blobs.
 {
 	const OriginalBlob = globalThis.Blob;
 	const NameShim =
 		"var __defProp=Object.defineProperty;var __name=(t,v)=>__defProp(t,'name',{value:v,configurable:true});\n";
+	const Origin = window.location.origin;
 
 	(globalThis as any).Blob = function PatchedBlob(
 		Parts?: BlobPart[],
@@ -124,10 +113,15 @@ if (typeof (globalThis as any).__name !== "function") {
 		if (
 			Options?.type === "application/javascript" &&
 			Parts?.length &&
-			typeof Parts[0] === "string" &&
-			Parts[0].includes("_VSCODE_NLS_MESSAGES")
+			typeof Parts[0] === "string"
 		) {
-			// This is a VS Code worker bootstrap blob — prepend __name shim
+			Parts = Parts.map((Part) => {
+				if (typeof Part !== "string") return Part;
+				return Part.replace(
+					/vscode-file:\/\/vscode-app\/Static\/Application\/out\//g,
+					`${Origin}/Static/Application/`,
+				);
+			});
 			Parts = [NameShim, ...Parts];
 		}
 		return new OriginalBlob(Parts, Options);

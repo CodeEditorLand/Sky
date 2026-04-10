@@ -82,6 +82,9 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 			"frame-src": [
 				"'self'",
 				"vscode-webview:",
+				"vscode-webview.net",
+				"*.vscode-cdn.net",
+				"*.vscode-webview.net",
 				"http://localhost:*",
 				"https://tauri.localhost",
 			],
@@ -91,6 +94,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 				"'unsafe-eval'",
 				"blob:",
 				"vscode-file:",
+				"vscode-file://vscode-app",
 				"http://localhost:*",
 				"https://tauri.localhost",
 			],
@@ -103,8 +107,10 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 			],
 			"connect-src": [
 				"'self'",
+				"blob:",
 				"ipc:",
 				"vscode-file:",
+				"vscode-file://vscode-app",
 				"http://localhost:*",
 				"https://tauri.localhost",
 				"wss://tauri.localhost",

@@ -26,7 +26,6 @@ import MountainWorkbench from "../Workbench/Mountain.astro";
 
 // Environment detection ONLY
 const Bundle = process.env["Bundle"] === "true";
-const Browser = process.env["Browser"] === "true";
 const Mountain = process.env["Mountain"] === "true";
 const Electron = process.env["Electron"] === "true";
 const BrowserProxy = process.env["BrowserProxy"] === "true";
@@ -35,11 +34,12 @@ const BrowserProxy = process.env["BrowserProxy"] === "true";
 // Mountain uses the Electron workbench — it has the full IPC chain
 // (TauriMainProcessService → Mountain WindServiceHandlers → tokio::fs)
 // for real filesystem access. The browser workbench uses IndexedDB.
-const WorkbenchType = Electron || Mountain
-	? "Electron"
-	: BrowserProxy
-		? "BrowserProxy"
-		: "Browser"; // Default, not null
+const WorkbenchType =
+	Electron || Mountain
+		? "Electron"
+		: BrowserProxy
+			? "BrowserProxy"
+			: "Browser"; // Default, not null
 
 // Determine embedder identifier
 const EmbedderId = Electron || Mountain ? "desktop" : "browser";
@@ -93,6 +93,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					"'unsafe-eval'",
 					"blob:",
 					"vscode-file:",
+					"vscode-file://vscode-app",
 					"http://localhost:*",
 					"https://tauri.localhost",
 				],
@@ -107,6 +108,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					"'self'",
 					"ipc:",
 					"vscode-file:",
+					"vscode-file://vscode-app",
 					"http://localhost:*",
 					"https://tauri.localhost",
 					"wss://tauri.localhost",
@@ -198,14 +200,27 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 
 	<!-- Inject folderUri from URL into workbench config (must run before module scripts) -->
 	<script is:inline slot="Meta">
-		(function() {
-			var FolderParam = new URLSearchParams(window.location.search).get("folder");
+		(function () {
+			var FolderParam = new URLSearchParams(window.location.search).get(
+				"folder",
+			);
 			if (FolderParam) {
-				var Element = document.getElementById("vscode-workbench-web-configuration");
+				var Element = document.getElementById(
+					"vscode-workbench-web-configuration",
+				);
 				if (Element) {
-					var Settings = JSON.parse(Element.getAttribute("data-settings") || "{}");
-					Settings.folderUri = { scheme: "file", path: FolderParam, authority: "" };
-					Element.setAttribute("data-settings", JSON.stringify(Settings));
+					var Settings = JSON.parse(
+						Element.getAttribute("data-settings") || "{}",
+					);
+					Settings.folderUri = {
+						scheme: "file",
+						path: FolderParam,
+						authority: "",
+					};
+					Element.setAttribute(
+						"data-settings",
+						JSON.stringify(Settings),
+					);
 				}
 			}
 		})();

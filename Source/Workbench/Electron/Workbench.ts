@@ -77,7 +77,8 @@ if (typeof window.requestIdleCallback !== "function") {
 		return setTimeout(() => {
 			Callback({
 				didTimeout: Timeout <= 0,
-				timeRemaining: () => Math.max(0, Timeout - (Date.now() - Start)),
+				timeRemaining: () =>
+					Math.max(0, Timeout - (Date.now() - Start)),
 			});
 		}, Timeout) as unknown as number;
 	};
@@ -104,6 +105,34 @@ if (typeof (globalThis as any).__name !== "function") {
 		});
 		return Target;
 	};
+}
+
+// Inject __name into blob workers via Blob constructor patch (zero-cost).
+// VS Code's getWorkerBootstrapUrl builds blobs from string arrays. We intercept
+// Blob creation and prepend the __name shim to any application/javascript blob
+// that contains the VS Code worker marker. No XHR, no re-fetch — just string
+// prepend at construction time.
+{
+	const OriginalBlob = globalThis.Blob;
+	const NameShim =
+		"var __defProp=Object.defineProperty;var __name=(t,v)=>__defProp(t,'name',{value:v,configurable:true});\n";
+
+	(globalThis as any).Blob = function PatchedBlob(
+		Parts?: BlobPart[],
+		Options?: BlobPropertyBag,
+	) {
+		if (
+			Options?.type === "application/javascript" &&
+			Parts?.length &&
+			typeof Parts[0] === "string" &&
+			Parts[0].includes("_VSCODE_NLS_MESSAGES")
+		) {
+			// This is a VS Code worker bootstrap blob — prepend __name shim
+			Parts = [NameShim, ...Parts];
+		}
+		return new OriginalBlob(Parts, Options);
+	} as unknown as typeof Blob;
+	(globalThis as any).Blob.prototype = OriginalBlob.prototype;
 }
 
 try {

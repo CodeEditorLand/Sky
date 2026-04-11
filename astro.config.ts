@@ -13,7 +13,7 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import { copyFile, cp, readdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -256,16 +256,44 @@ export default defineConfig({
 						);
 
 						try {
-							const TauriServiceSource = resolve(
+							// Source from Output (consolidated) first, fall back to Wind
+							const OutputServicePath = resolve(
+								process.cwd(),
+								"node_modules/@codeeditorland/output/Configuration/Service/TauriMainProcessService.js",
+							);
+							const WindServicePath = resolve(
 								process.cwd(),
 								"node_modules/@codeeditorland/wind/Target/Service/TauriMainProcessService.js",
 							);
+
+							let TauriServiceSource: string;
+							try {
+								await readFile(OutputServicePath);
+								TauriServiceSource = OutputServicePath;
+								console.log("[CopyVSCode] Step 7: Using Output/Configuration/Service/TauriMainProcessService.js");
+							} catch {
+								TauriServiceSource = WindServicePath;
+								console.log("[CopyVSCode] Step 7: Falling back to Wind/Target/Service/TauriMainProcessService.js");
+							}
 
 							// Copy the compiled service as a separate module
 							await copyFile(
 								TauriServiceSource,
 								join(IPCDir, "TauriMainProcessService.js"),
 							);
+
+							// Strip sourceMappingURL to prevent 404 → HTML → JSON parse error
+							const ServiceJS = await readFile(
+								join(IPCDir, "TauriMainProcessService.js"),
+								"utf-8",
+							);
+							if (ServiceJS.includes("sourceMappingURL")) {
+								await writeFile(
+									join(IPCDir, "TauriMainProcessService.js"),
+									ServiceJS.replace(/\/\/# sourceMappingURL=.*/g, ""),
+									"utf-8",
+								);
+							}
 
 							// Replace mainProcessService.js with a minimal ESM re-export
 							await writeFile(
@@ -302,9 +330,10 @@ export default defineConfig({
 							let Content = await readFile(WorkbenchJS, "utf-8");
 
 							// 8a: Prepend global error listeners before the IIFE
+							// Filter out expected errors: FileNotFound from stat(), Canceled from model disposal
 							const ErrorListeners = [
-								`window.addEventListener("unhandledrejection",(e)=>{console.error("[workbench.js:unhandledrejection]",e.reason);if(e.reason&&e.reason.stack)console.error(e.reason.stack);});`,
-								`window.addEventListener("error",(e)=>{console.error("[workbench.js:error]",e.message,e.filename,e.lineno);});`,
+								`window.addEventListener("unhandledrejection",(e)=>{var r=e.reason;if(!r)return;var m=String(r.message||r);if(m.includes("Canceled")||m.includes("FileNotFound")||(r.code&&r.code==="FileNotFound")||m.includes("No such file or directory"))return;console.error("[workbench.js:unhandledrejection]",r);if(r&&r.stack)console.error(r.stack);});`,
+								`window.addEventListener("error",(e)=>{if(e.message==="Script error.")return;console.error("[workbench.js:error]",e.message,e.filename,e.lineno);});`,
 							].join("\n");
 
 							Content = ErrorListeners + "\n" + Content;
@@ -481,7 +510,7 @@ export default defineConfig({
 						}
 					}
 
-					// Step 7: Copy @xterm and other VS Code node_modules
+					// Step 11: Copy @xterm and other VS Code node_modules
 					// VS Code's importAMDNodeModule loads from
 					// /Static/Application/node_modules/@xterm/xterm/lib/xterm.js
 					const NodeModulesToCopy = [
@@ -489,13 +518,11 @@ export default defineConfig({
 						"@xterm/addon-clipboard",
 						"@xterm/addon-image",
 						"@xterm/addon-ligatures",
-						"@xterm/addon-progress",
 						"@xterm/addon-search",
 						"@xterm/addon-serialize",
 						"@xterm/addon-unicode11",
 						"@xterm/addon-webgl",
 						"@vscode/vscode-languagedetection",
-						"vscode-regexp-languagedetection",
 					];
 
 					for (const Pkg of NodeModulesToCopy) {
@@ -518,7 +545,39 @@ export default defineConfig({
 						}
 					}
 					console.log(
-						"[CopyVSCode] Step 7: Copied node_modules for terminal + language detection",
+						"[CopyVSCode] Step 11: Copied node_modules for terminal + language detection",
+					);
+
+					// Step 12: Create stubs for unpublished xterm addons.
+					// VS Code's xtermAddonImporter.ts references @xterm/addon-progress
+					// but the package doesn't exist on npm yet. Without a stub, the
+					// AMD loader gets a 404 → HTML → SyntaxError. Provide a no-op.
+					// VS Code's amdX loader uses define() not ESM import.
+					const StubAddons: Record<string, string> = {
+						"@xterm/addon-progress":
+							"define([],function(){return{ProgressAddon:function(){this.activate=function(){};this.dispose=function(){}}}})",
+					};
+					for (const [Pkg, Code] of Object.entries(StubAddons)) {
+						const StubDir = join(
+							TargetDir,
+							"Static/Application/node_modules",
+							Pkg,
+							"lib",
+						);
+						try {
+							await mkdir(StubDir, { recursive: true });
+							const FileName = Pkg.split("/").pop()!;
+							await writeFile(
+								join(StubDir, `${FileName}.js`),
+								Code,
+								"utf-8",
+							);
+						} catch {
+							// Non-critical
+						}
+					}
+					console.log(
+						"[CopyVSCode] Step 12: Created stubs for unpublished addons",
 					);
 
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");

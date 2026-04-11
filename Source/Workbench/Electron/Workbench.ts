@@ -117,10 +117,20 @@ if (typeof (globalThis as any).__name !== "function") {
 		) {
 			Parts = Parts.map((Part) => {
 				if (typeof Part !== "string") return Part;
-				return Part.replace(
+				// Rewrite all vscode-file:// URLs to http:// so blob workers
+				// can fetch modules. Handles:
+				//   vscode-file://vscode-app/Static/Application/out/vs/...
+				//   vscode-file://vscode-app/Static/Application/vs/...
+				//   vscode-file://vscode-app/Static/Application/node_modules/...
+				let Rewritten = Part.replace(
 					/vscode-file:\/\/vscode-app\/Static\/Application\/out\//g,
 					`${Origin}/Static/Application/`,
 				);
+				Rewritten = Rewritten.replace(
+					/vscode-file:\/\/vscode-app\//g,
+					`${Origin}/`,
+				);
+				return Rewritten;
 			});
 			Parts = [NameShim, ...Parts];
 		}

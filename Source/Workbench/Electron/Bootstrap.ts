@@ -1,8 +1,6 @@
 /**
- * Effect-TS bootstrap script for Electron workbench (A3)
- *
- * runBootstrap() returns an Effect, not a Promise.
- * Must be executed via Effect.runPromise().
+ * Effect-TS bootstrap for Electron workbench (A3).
+ * Zero console.* output. Results captured via performance.mark().
  */
 
 interface BootstrapStage {
@@ -18,19 +16,13 @@ interface BootstrapResult {
 	error?: unknown;
 }
 
-console.log("[Electron] ===== Starting Wind Effect-TS bootstrap =====");
-
 try {
+	performance.mark("land:bootstrap:start");
+
 	const { runBootstrap } =
 		await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 	const { Effect } = await import("effect");
 
-	console.log("[Electron] Bootstrap module loaded successfully");
-
-	// runBootstrap returns an Effect — run it via Effect.runPromise.
-	// skipHealthCheck: true because the minimal layer (TelemetryLive only)
-	// doesn't provide HealthTag, EnvironmentTag, etc. Individual stages
-	// catch their own errors gracefully.
 	const BootstrapResult: BootstrapResult = await Effect.runPromise(
 		runBootstrap({
 			skipHealthCheck: true,
@@ -38,28 +30,16 @@ try {
 		}),
 	);
 
-	if (BootstrapResult.success) {
-		console.log("[Electron] Bootstrap completed successfully");
-		console.log(
-			"[Electron] - Total duration:",
-			BootstrapResult.totalDuration,
-			"ms",
-		);
-
-		// Log individual stage results
-		BootstrapResult.stages.forEach((Stage: BootstrapStage) => {
-			const Status = Stage.success ? "OK" : "FAIL";
-			console.log(
-				`[Electron] - ${Status} ${Stage.stageName}: ${Stage.duration}ms`,
-			);
-		});
-	} else {
-		console.error("[Electron] Bootstrap failed:", BootstrapResult.error);
-	}
-} catch (Error: unknown) {
-	console.error("[Electron] Failed to load/run bootstrap:", Error);
+	performance.mark("land:bootstrap:done", {
+		detail: {
+			success: BootstrapResult.success,
+			duration: BootstrapResult.totalDuration,
+			stages: BootstrapResult.stages.map((S: BootstrapStage) => `${S.stageName}:${S.success ? "ok" : "fail"}:${S.duration}ms`),
+		},
+	});
+	performance.measure("land:bootstrap", "land:bootstrap:start", "land:bootstrap:done");
+} catch {
+	performance.mark("land:bootstrap:error");
 }
-
-console.log("[Electron] ===== Wind bootstrap sequence complete =====");
 
 export default {};

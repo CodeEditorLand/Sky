@@ -329,23 +329,21 @@ export default defineConfig({
 						try {
 							let Content = await readFile(WorkbenchJS, "utf-8");
 
-							// 8a: Prepend global error listeners before the IIFE
-							// Filter out expected errors: FileNotFound from stat(), Canceled from model disposal
+							// 8a: Prepend global error listeners — emit performance.mark only
+							// Filter expected: FileNotFound, Canceled, Script error
 							const ErrorListeners = [
-								`window.addEventListener("unhandledrejection",(e)=>{var r=e.reason;if(!r)return;var m=String(r.message||r);if(m.includes("Canceled")||m.includes("FileNotFound")||(r.code&&r.code==="FileNotFound")||m.includes("No such file or directory"))return;console.error("[workbench.js:unhandledrejection]",r);if(r&&r.stack)console.error(r.stack);});`,
-								`window.addEventListener("error",(e)=>{if(e.message==="Script error.")return;console.error("[workbench.js:error]",e.message,e.filename,e.lineno);});`,
+								`window.addEventListener("unhandledrejection",(e)=>{var r=e.reason;if(!r)return;var m=String(r.message||r);if(m.includes("Canceled")||m.includes("FileNotFound")||(r.code&&r.code==="FileNotFound")||m.includes("No such file or directory")||m.includes("Script error"))return;try{performance.mark("land:error:rejection:"+m.slice(0,100))}catch{}});`,
+								`window.addEventListener("error",(e)=>{if(!e.message||e.message==="Script error.")return;try{performance.mark("land:error:global:"+e.message.slice(0,100))}catch{}});`,
 							].join("\n");
 
 							Content = ErrorListeners + "\n" + Content;
 
-							// 8b: Add checkpoints inside load() to trace the hang
+							// 8b: Add performance.mark checkpoints inside load()
 							Content = Content.replace(
 								"const configuration2 = await resolveWindowConfiguration()",
-								`console.log("[workbench.js] WB1: calling resolveWindowConfiguration");const configuration2 = await resolveWindowConfiguration()`,
+								`performance.mark("land:wb:resolveConfig");const configuration2 = await resolveWindowConfiguration()`,
 							);
 							// 8b-fix: Ensure profile URIs exist for reviveProfile().
-							// Wind's ResolveConfiguration may have location:undefined
-							// due to Vite cache. Fix the configuration in-place here.
 							Content = Content.replace(
 								"setupNLS(configuration2)",
 								[
@@ -360,21 +358,21 @@ export default defineConfig({
 									`_fix(configuration2.profiles.profile);`,
 									`if(Array.isArray(configuration2.profiles.all))configuration2.profiles.all.forEach(_fix);`,
 									`}`,
-									`console.log("[workbench.js] WB2: config resolved, calling setupNLS");setupNLS(configuration2)`,
+									`performance.mark("land:wb:setupNLS");setupNLS(configuration2)`,
 								].join(""),
 							);
 							Content = Content.replace(
 								"const result2 = await import(workbenchUrl)",
-								`console.log("[workbench.js] WB3: importing workbench module:",workbenchUrl);const result2 = await import(workbenchUrl)`,
+								`performance.mark("land:wb:importModule");const result2 = await import(workbenchUrl)`,
 							);
 							Content = Content.replace(
 								"return { result: result2, configuration: configuration2 }",
-								`console.log("[workbench.js] WB4: import done");return { result: result2, configuration: configuration2 }`,
+								`performance.mark("land:wb:importDone");return { result: result2, configuration: configuration2 }`,
 							);
 							// 8c: Wrap result.main(configuration) with try/catch + await
 							Content = Content.replace(
 								"result.main(configuration)",
-								`console.log("[workbench.js] WB5: calling main()");try{await result.main(configuration)}catch(_e){console.error("[workbench.js] main() failed:",_e);if(_e&&_e.stack)console.error(_e.stack)}`,
+								`performance.mark("land:wb:main");try{await result.main(configuration);performance.mark("land:wb:mainDone")}catch(_e){performance.mark("land:wb:mainError")}`,
 							);
 
 							await writeFile(WorkbenchJS, Content, "utf-8");
@@ -410,27 +408,27 @@ export default defineConfig({
 							const Patches: [string, string][] = [
 								[
 									"new ElectronIPCMainProcessService(this.configuration.windowId)",
-									`(()=>{console.log("[desktop.main] CP1: creating MainProcessService");return new ElectronIPCMainProcessService(this.configuration.windowId)})()`,
+									`(()=>{performance.mark("land:desktop:CP1:MainProcessService");return new ElectronIPCMainProcessService(this.configuration.windowId)})()`,
 								],
 								[
 									"new NativeWorkbenchEnvironmentService(this.configuration, productService)",
-									`(()=>{console.log("[desktop.main] CP2: creating EnvironmentService");return new NativeWorkbenchEnvironmentService(this.configuration, productService)})()`,
+									`(()=>{performance.mark("land:desktop:CP2:EnvironmentService");return new NativeWorkbenchEnvironmentService(this.configuration, productService)})()`,
 								],
 								[
 									"new SharedProcessService(this.configuration.windowId, logService)",
-									`(()=>{console.log("[desktop.main] CP3: creating SharedProcessService");return new SharedProcessService(this.configuration.windowId, logService)})()`,
+									`(()=>{performance.mark("land:desktop:CP3:SharedProcessService");return new SharedProcessService(this.configuration.windowId, logService)})()`,
 								],
 								[
 									"new FileService(logService)",
-									`(()=>{console.log("[desktop.main] CP4: creating FileService");return new FileService(logService)})()`,
+									`(()=>{performance.mark("land:desktop:CP4:FileService");return new FileService(logService)})()`,
 								],
 								[
 									"const [configurationService, storageService] = await Promise.all([",
-									`console.log("[desktop.main] CP5: entering Promise.all (workspace+storage+keyboard)");const [configurationService, storageService] = await Promise.all([`,
+									`performance.mark("land:desktop:CP5:PromiseAll");const [configurationService, storageService] = await Promise.all([`,
 								],
 								[
 									"const workbench = new Workbench(",
-									`console.log("[desktop.main] CP6: initServices DONE, creating Workbench");const workbench = new Workbench(`,
+									`performance.mark("land:desktop:CP6:Workbench");const workbench = new Workbench(`,
 								],
 							];
 							for (const [Search, Replace] of Patches) {

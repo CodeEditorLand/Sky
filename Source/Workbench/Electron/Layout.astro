@@ -20,6 +20,11 @@ import NLS from "../NLS.astro";
 
 	<!-- Sequential: Preload → Polyfills → Bootstrap → Workbench -->
 	<script type="module">
+		// 0. OTEL Bridge — PerformanceObserver for land:* marks → OTLP/HTTP
+		//    Build-baked: included in dev, tree-shaken in prod.
+		//    Catches all marks (buffered:true) including those from steps 1-4.
+		import "./OTELBridge.js";
+
 		// 1. Wind Preload — must complete first (sets window.vscode)
 		await import("./WindPreload.js");
 

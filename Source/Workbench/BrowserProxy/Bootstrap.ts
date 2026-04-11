@@ -18,13 +18,9 @@ interface BootstrapResult {
 	error?: unknown;
 }
 
-console.log("[BrowserProxy] ===== Starting Wind Effect-TS bootstrap =====");
-
 try {
 	const { runBootstrap } =
 		await import("@codeeditorland/wind/Target/Effect/Bootstrap");
-
-	console.log("[BrowserProxy] ✓ Bootstrap module loaded successfully");
 
 	// Run the bootstrap with options
 	const bootstrapResult: BootstrapResult = await runBootstrap({
@@ -33,30 +29,14 @@ try {
 	});
 
 	if (bootstrapResult.success) {
-		console.log("[BrowserProxy] ✓ Bootstrap completed successfully");
-		console.log(
-			"[BrowserProxy] - Total duration:",
-			bootstrapResult.totalDuration,
-			"ms",
-		);
 
 		// Log individual stage results
 		bootstrapResult.stages.forEach(function (stage: BootstrapStage) {
 			const status = stage.success ? "✓" : "✗";
-			console.log(
-				`[BrowserProxy] - ${status} ${stage.stageName}: ${stage.duration}ms`,
-			);
 		});
 	} else {
-		console.error(
-			"[BrowserProxy] ✗ Bootstrap failed:",
-			bootstrapResult.error,
-		);
 	}
 } catch (error: unknown) {
-	console.error("[BrowserProxy] ✗ Failed to load/run bootstrap:", error);
 }
-
-console.log("[BrowserProxy] ===== Wind bootstrap sequence complete =====");
 
 export default {};

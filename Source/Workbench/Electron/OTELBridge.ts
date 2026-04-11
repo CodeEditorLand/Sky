@@ -123,37 +123,18 @@ const Flush = (): void => {
 	};
 
 	// Send via fetch (keepalive) to avoid CORS preflight.
-	// Split into chunks of 20 spans max to stay under the 64KB keepalive limit.
-	const AllSpans = Payload.resourceSpans[0].scopeSpans[0].spans;
-	const ChunkSize = 20;
-
-	for (let I = 0; I < AllSpans.length; I += ChunkSize) {
-		const ChunkPayload = {
-			resourceSpans: [
-				{
-					...Payload.resourceSpans[0],
-					scopeSpans: [
-						{
-							...Payload.resourceSpans[0].scopeSpans[0],
-							spans: AllSpans.slice(I, I + ChunkSize),
-						},
-					],
-				},
-			],
-		};
-
-		try {
-			fetch(OTLPEndpoint, {
-				method: "POST",
-				body: JSON.stringify(ChunkPayload),
-				headers: { "Content-Type": "application/json" },
-				keepalive: true,
-			}).catch(() => {
-				CollectorAvailable = false;
-			});
-		} catch {
+	// Send WITHOUT keepalive to avoid the 64KB browser limit.
+	// Regular fetch has no size restriction. Fire-and-forget.
+	try {
+		fetch(OTLPEndpoint, {
+			method: "POST",
+			body: JSON.stringify(Payload),
+			headers: { "Content-Type": "application/json" },
+		}).catch(() => {
 			CollectorAvailable = false;
-		}
+		});
+	} catch {
+		CollectorAvailable = false;
 	}
 };
 

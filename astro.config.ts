@@ -650,6 +650,170 @@ export default defineConfig({
 						);
 					}
 
+					// Step 14: Patch extensionsScannerService (node/) to fetch
+					// extensions from Mountain via IPC instead of reading from disk.
+					// The webview has no filesystem access, so the scanner can't read
+					// builtinExtensionsPath. Instead, we override scanSystemExtensions
+					// to call extensions:getAll via TauriMainProcessService.
+					try {
+						const ScannerPath = join(
+							TargetDir,
+							"Static/Application/vs/workbench/services/extensions/electron-browser/extensionsScannerService.js",
+						);
+						await writeFile(
+							ScannerPath,
+							`import { URI } from '../../../../base/common/uri.js';
+import { IExtensionsScannerService } from '../../../../platform/extensionManagement/common/extensionsScannerService.js';
+import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
+import { ILogService } from '../../../../platform/log/common/log.js';
+import { Emitter } from '../../../../base/common/event.js';
+
+const _t = (Tag, Detail) => { try { performance.mark('land:exthost:' + Tag, Detail ? { detail: Detail } : undefined); } catch {} };
+const _w = (...Args) => { try { console.warn('[Land Scanner]', ...Args); } catch {} };
+
+class ExtensionsScannerService {
+	constructor(logService) {
+		this._logService = logService;
+		this.userExtensionsLocation = URI.file('/extensions');
+		this._onDidChangeCache = new Emitter();
+		this.onDidChangeCache = this._onDidChangeCache.event;
+		_t('scanner:construct');
+		_w('Constructed');
+	}
+
+	async _fetchFromMountain() {
+		_t('scanner:fetch:start');
+		try {
+			const Invoke = globalThis.__TAURI__?.core?.invoke ?? globalThis.__TAURI__?.invoke;
+			if (typeof Invoke !== 'function') {
+				_t('scanner:fetch:no-tauri');
+				_w('No Tauri invoke available');
+				return [];
+			}
+			const RawResult = await Invoke('MountainIPCInvoke', {
+				method: 'extensions:getAll',
+				params: [],
+			});
+			const Extensions = Array.isArray(RawResult) ? RawResult : [];
+			_t('scanner:fetch:result', { count: Extensions.length, type: typeof RawResult, isArray: Array.isArray(RawResult) });
+			_w('IPC returned', Extensions.length, 'extensions');
+			if (Extensions.length === 0) return [];
+
+			const Mapped = [];
+			let Errors = 0;
+			for (let I = 0; I < Extensions.length; I++) {
+				const ext = Extensions[I];
+				try {
+					const location = ext.extensionLocation
+						? (typeof ext.extensionLocation === 'string' ? URI.parse(ext.extensionLocation) : URI.revive(ext.extensionLocation))
+						: URI.file('/extensions/' + (ext.name || 'unknown'));
+					const id = ext.identifier?.value
+						|| (ext.publisher ? ext.publisher + '.' + ext.name : ext.name)
+						|| 'unknown';
+					Mapped.push({
+						type: 0,
+						identifier: { id },
+						manifest: {
+							name: ext.name || '',
+							publisher: ext.publisher || '',
+							version: ext.version || '0.0.0',
+							engines: ext.engines || { vscode: '*' },
+							main: ext.main || undefined,
+							browser: ext.browser || undefined,
+							activationEvents: ext.activationEvents || [],
+							contributes: ext.contributes || {},
+							extensionDependencies: [],
+							extensionPack: [],
+							enabledApiProposals: [],
+						},
+						location,
+						isBuiltin: true,
+						targetPlatform: 'undefined',
+						isValid: true,
+						validationMessages: [],
+					});
+				} catch (e) {
+					Errors++;
+					if (Errors <= 3) _w('Map error for ext', I, ':', String(e).slice(0, 100));
+				}
+			}
+			_t('scanner:fetch:mapped', { mapped: Mapped.length, errors: Errors });
+			_w('Mapped', Mapped.length, 'extensions,', Errors, 'errors');
+			if (Mapped.length > 0) {
+				_w('First:', Mapped[0].identifier.id, 'name:', Mapped[0].manifest.name, 'pub:', Mapped[0].manifest.publisher, 'loc:', Mapped[0].location?.toString?.()?.slice(0, 80));
+			}
+			return Mapped;
+		} catch (e) {
+			_t('scanner:fetch:error', { message: String(e).slice(0, 200) });
+			_w('Fetch error:', String(e).slice(0, 200));
+			return [];
+		}
+	}
+
+	async scanAllExtensions(systemScanOptions, userScanOptions) {
+		_t('scanner:scanAll:start');
+		const sys = await this.scanSystemExtensions(systemScanOptions);
+		const usr = await this.scanUserExtensions(userScanOptions);
+		const all = [...sys, ...usr];
+		_t('scanner:scanAll:done', { system: sys.length, user: usr.length, total: all.length });
+		_w('scanAll:', sys.length, 'system +', usr.length, 'user =', all.length);
+		return all;
+	}
+
+	async scanSystemExtensions(scanOptions) {
+		_t('scanner:scanSystem:start');
+		const result = await this._fetchFromMountain();
+		_t('scanner:scanSystem:done', { count: result.length });
+		_w('scanSystemExtensions returning', result.length);
+		return result;
+	}
+
+	async scanUserExtensions(scanOptions) {
+		_t('scanner:scanUser:start');
+		_w('scanUserExtensions returning 0');
+		return [];
+	}
+
+	getTargetPlatform() { return Promise.resolve('undefined'); }
+	getProductVersion() { return { version: '0.0.1', date: undefined }; }
+	async scanAllUserExtensions(scanOptions) { return []; }
+	async scanExtensionsUnderDevelopment(existingExtensions, scanOptions) { _t('scanner:scanDev'); return []; }
+	async scanExistingExtension(extensionLocation, extensionType, scanOptions) { return null; }
+	async scanOneOrMultipleExtensions(extensionLocation, extensionType, scanOptions) { return []; }
+	async scanMetadata(extensionLocation) { return undefined; }
+	async updateMetadata(extensionLocation, metadata) { return undefined; }
+	async initializeDefaultProfileExtensions() { _t('scanner:initDefaults'); }
+}
+
+// DI decorators must be defined before use
+var __decorate = function(decorators, target, key, desc) {
+	var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+	if (typeof Reflect === 'object' && typeof Reflect.decorate === 'function') r = Reflect.decorate(decorators, target, key, desc);
+	else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+	return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = function(paramIndex, decorator) {
+	return function(target, key) { decorator(target, key, paramIndex); };
+};
+ExtensionsScannerService = __decorate([
+	__param(0, ILogService)
+], ExtensionsScannerService);
+
+registerSingleton(IExtensionsScannerService, ExtensionsScannerService, InstantiationType.Delayed);
+export { ExtensionsScannerService, IExtensionsScannerService };
+`,
+							"utf-8",
+						);
+						console.log(
+							"[CopyVSCode] Step 14: Patched extensionsScannerService (IPC override)",
+						);
+					} catch (Error) {
+						console.warn(
+							"[CopyVSCode] Step 14: extensionsScannerService patch failed:",
+							Error,
+						);
+					}
+
 					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 

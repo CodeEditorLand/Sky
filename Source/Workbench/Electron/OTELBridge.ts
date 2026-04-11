@@ -81,42 +81,79 @@ const Flush = (): void => {
 				scopeSpans: [
 					{
 						scope: { name: "land.otel.bridge", version: "1.0.0" },
-						spans: Spans.map((S) => ({
-							traceId: TraceId,
-							spanId: S.SpanId,
-							name: S.Name,
-							kind: 1, // INTERNAL
-							startTimeUnixNano: S.StartTimeUnixNano,
-							endTimeUnixNano: S.EndTimeUnixNano,
-							attributes: S.Detail
+						spans: Spans.map((S) => {
+							const IsError = S.Name.includes("error");
+							const DetailObj = S.Detail as Record<string, unknown> | undefined;
+							const Attributes = S.Detail
 								? Object.entries(S.Detail).map(
 										([K, V]) => ({
 											key: K,
-											value: { stringValue: String(V) },
+											value: { stringValue: String(V).slice(0, 500) },
 										}),
 									)
-								: [],
-							status: S.Name.includes("error")
-								? { code: 2 } // ERROR
-								: { code: 1 }, // OK
-						})),
+								: [];
+							const Events = IsError
+								? [{
+									name: "exception",
+									timeUnixNano: S.StartTimeUnixNano,
+									attributes: [
+										{ key: "exception.type", value: { stringValue: S.Name } },
+										{ key: "exception.message", value: { stringValue: String(DetailObj?.message || S.Name).slice(0, 500) } },
+									],
+								}]
+								: [];
+							return {
+								traceId: TraceId,
+								spanId: S.SpanId,
+								name: S.Name,
+								kind: 1,
+								startTimeUnixNano: S.StartTimeUnixNano,
+								endTimeUnixNano: S.EndTimeUnixNano,
+								attributes: Attributes,
+								events: Events,
+								status: IsError
+									? { code: 2, message: String(DetailObj?.message || "").slice(0, 200) }
+									: { code: 1 },
+							};
+						}),
 					},
 				],
 			},
 		],
 	};
 
-	// sendBeacon avoids CORS preflight - fire-and-forget, no OPTIONS request.
-	// Content-Type is set to text/plain by sendBeacon which bypasses CORS,
-	// but OTLP/HTTP accepts JSON regardless of Content-Type header.
-	try {
-		const Queued = navigator.sendBeacon(
-			OTLPEndpoint,
-			new Blob([JSON.stringify(Payload)], { type: "application/json" }),
-		);
-		if (!Queued) CollectorAvailable = false;
-	} catch {
-		CollectorAvailable = false;
+	// Send via fetch (keepalive) to avoid CORS preflight.
+	// Split into chunks of 20 spans max to stay under the 64KB keepalive limit.
+	const AllSpans = Payload.resourceSpans[0].scopeSpans[0].spans;
+	const ChunkSize = 20;
+
+	for (let I = 0; I < AllSpans.length; I += ChunkSize) {
+		const ChunkPayload = {
+			resourceSpans: [
+				{
+					...Payload.resourceSpans[0],
+					scopeSpans: [
+						{
+							...Payload.resourceSpans[0].scopeSpans[0],
+							spans: AllSpans.slice(I, I + ChunkSize),
+						},
+					],
+				},
+			],
+		};
+
+		try {
+			fetch(OTLPEndpoint, {
+				method: "POST",
+				body: JSON.stringify(ChunkPayload),
+				headers: { "Content-Type": "application/json" },
+				keepalive: true,
+			}).catch(() => {
+				CollectorAvailable = false;
+			});
+		} catch {
+			CollectorAvailable = false;
+		}
 	}
 };
 

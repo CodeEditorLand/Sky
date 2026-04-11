@@ -151,6 +151,7 @@ const Initialize = async (): Promise<void> => {
 				$exception_source: Event.filename,
 				$exception_lineno: Event.lineno,
 				$exception_colno: Event.colno,
+				$exception_origin: "window.onerror",
 			},
 		);
 	});
@@ -159,14 +160,79 @@ const Initialize = async (): Promise<void> => {
 		const Reason = Event.reason;
 		if (!Reason) return;
 		const Message = String(Reason.message || Reason);
+		if (Message.includes("Canceled")) return;
+		PH.captureException(
+			Reason instanceof Error ? Reason : new Error(Message),
+			{ $exception_origin: "unhandledrejection" },
+		);
+	});
+
+	// Intercept console.error to capture VS Code internal errors
+	const OriginalConsoleError = console.error;
+	let ConsoleErrorCount = 0;
+	console.error = (...Args: unknown[]) => {
+		OriginalConsoleError.apply(console, Args);
+		ConsoleErrorCount++;
+		const Message = Args.map(String).join(" ").slice(0, 500);
 		if (
 			Message.includes("Canceled") ||
-			Message.includes("FileNotFound") ||
-			Message.includes("No such file or directory")
+			Message.includes("[PostHog.js]") ||
+			Message.includes("sourceMappingURL")
 		)
 			return;
-		PH.captureException(Reason instanceof Error ? Reason : new Error(Message));
-	});
+		try {
+			performance.mark(`land:console:error`, {
+				detail: { message: Message, count: ConsoleErrorCount },
+			});
+		} catch {}
+		PH.captureException(new Error(Message), {
+			$exception_origin: "console.error",
+			$exception_count: ConsoleErrorCount,
+		});
+	};
+
+	// Intercept console.warn for VS Code warnings
+	const OriginalConsoleWarn = console.warn;
+	let ConsoleWarnCount = 0;
+	console.warn = (...Args: unknown[]) => {
+		OriginalConsoleWarn.apply(console, Args);
+		ConsoleWarnCount++;
+		const Message = Args.map(String).join(" ").slice(0, 500);
+		try {
+			performance.mark(`land:console:warn`, {
+				detail: { message: Message, count: ConsoleWarnCount },
+			});
+		} catch {}
+	};
+
+	// Hook into VS Code's error handler if available
+	const HookVSCodeErrors = () => {
+		const OnUnexpectedError = (window as any)._VSCODE_onUnexpectedError;
+		if (typeof OnUnexpectedError === "function") return;
+
+		// VS Code sets window.onerror and has its own error infrastructure.
+		// We hook via a global that the workbench checks after bootstrap.
+		(window as any)._LAND_ERROR_HOOK = (Error: unknown) => {
+			const Message = Error instanceof Error
+				? Error.message
+				: String(Error);
+			PH.captureException(
+				Error instanceof Error ? Error : new Error(Message),
+				{ $exception_origin: "vscode.onUnexpectedError" },
+			);
+			try {
+				performance.mark(`land:vscode:error`, {
+					detail: { message: Message.slice(0, 200) },
+				});
+			} catch {}
+		};
+	};
+	HookVSCodeErrors();
+
+	// Capture IPC failures via performance marks
+	// TauriMainProcessService already emits land:ipc:* marks for all calls.
+	// Errors are marked as land:ipc:*:error — already captured by the
+	// PerformanceObserver above.
 
 	// Capture boot timing
 	window.addEventListener("load", () => {
@@ -183,10 +249,36 @@ const Initialize = async (): Promise<void> => {
 		}
 	});
 
+	// Capture resource loading errors (failed scripts, stylesheets, images)
+	window.addEventListener(
+		"error",
+		(Event) => {
+			const Target = Event.target as HTMLElement;
+			if (Target && Target !== window && "src" in Target) {
+				PH.capture("land:resource:error", {
+					tag: Target.tagName,
+					src: (Target as HTMLScriptElement).src?.slice(0, 200),
+				});
+				try {
+					performance.mark(`land:resource:error`, {
+						detail: {
+							tag: Target.tagName,
+							src: (Target as HTMLScriptElement).src?.slice(0, 200),
+						},
+					});
+				} catch {}
+			}
+		},
+		true, // Capture phase — catches resource errors that don't bubble
+	);
+
 	// Flush on page hide
 	addEventListener("visibilitychange", () => {
 		if (document.visibilityState === "hidden") {
-			PH.capture("land:session:end");
+			PH.capture("land:session:end", {
+				console_errors: ConsoleErrorCount,
+				console_warns: ConsoleWarnCount,
+			});
 		}
 	});
 

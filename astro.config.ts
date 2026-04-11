@@ -618,29 +618,31 @@ export default defineConfig({
 					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 
-					// PostHog build telemetry — fire-and-forget
-					try {
-						const { request } = await import("node:https");
-						const Body = JSON.stringify({
-							api_key: "phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
-							event: "sky:build:complete",
-							properties: {
-								distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
-								$app: "land-editor",
-								$component: "sky",
-								$build_mode: process.env["NODE_ENV"] || "production",
-								electron: process.env["Electron"] || "false",
-								total_ms: Math.round(performance.now() - BuildStart),
-								steps: StepTimings,
-							},
-							timestamp: new Date().toISOString(),
-						});
-						const Url = new URL("https://eu.i.posthog.com/capture/");
-						const Req = request({ hostname: Url.hostname, port: 443, path: Url.pathname, method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(Body) } });
-						Req.on("error", () => {});
-						Req.write(Body);
-						Req.end();
-					} catch {};
+					// PostHog build telemetry — debug only, skipped in production
+					if (process.env["NODE_ENV"] !== "production") {
+						try {
+							const { request } = await import("node:https");
+							const Body = JSON.stringify({
+								api_key: "phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
+								event: "sky:build:complete",
+								properties: {
+									distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
+									$app: "land-editor",
+									$component: "sky",
+									$build_mode: process.env["NODE_ENV"] || "development",
+									electron: process.env["Electron"] || "false",
+									total_ms: Math.round(performance.now() - BuildStart),
+									steps: StepTimings,
+								},
+								timestamp: new Date().toISOString(),
+							});
+							const Url = new URL("https://eu.i.posthog.com/capture/");
+							const Req = request({ hostname: Url.hostname, port: 443, path: Url.pathname, method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(Body) } });
+							Req.on("error", () => {});
+							Req.write(Body);
+							Req.end();
+						} catch {};
+					}
 				},
 			},
 		},

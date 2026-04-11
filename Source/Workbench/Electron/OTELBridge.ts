@@ -1,7 +1,7 @@
 /**
  * Build-baked OTEL bridge.
  *
- * Injected by Sky's build when On=true (dev). Removed entirely in production.
+ * Guarded by import.meta.env.DEV — Vite dead-code-eliminates in production.
  * No runtime SDK, no window.__LAND_DEV_LOG checks.
  *
  * How it works:
@@ -109,11 +109,15 @@ const Flush = (): void => {
 	// sendBeacon avoids CORS preflight - fire-and-forget, no OPTIONS request.
 	// Content-Type is set to text/plain by sendBeacon which bypasses CORS,
 	// but OTLP/HTTP accepts JSON regardless of Content-Type header.
-	const Queued = navigator.sendBeacon(
-		OTLPEndpoint,
-		new Blob([JSON.stringify(Payload)], { type: "application/json" }),
-	);
-	if (!Queued) CollectorAvailable = false;
+	try {
+		const Queued = navigator.sendBeacon(
+			OTLPEndpoint,
+			new Blob([JSON.stringify(Payload)], { type: "application/json" }),
+		);
+		if (!Queued) CollectorAvailable = false;
+	} catch {
+		CollectorAvailable = false;
+	}
 };
 
 // PerformanceObserver: watch all land:* marks and measures
@@ -142,12 +146,14 @@ const Observer = new PerformanceObserver((List) => {
 	}
 });
 
-Observer.observe({ type: "mark", buffered: true });
-Observer.observe({ type: "measure", buffered: true });
+if (import.meta.env.DEV) {
+	Observer.observe({ type: "mark", buffered: true });
+	Observer.observe({ type: "measure", buffered: true });
 
-// Flush on page unload
-addEventListener("visibilitychange", () => {
-	if (document.visibilityState === "hidden") Flush();
-});
+	// Flush on page unload
+	addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "hidden") Flush();
+	});
+}
 
 export default {};

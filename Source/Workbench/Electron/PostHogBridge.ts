@@ -1,7 +1,7 @@
 /**
  * Build-baked PostHog analytics bridge (debug builds only).
  *
- * Injected by Sky's build when On=true (dev). Tree-shaken in production.
+ * Guarded by import.meta.env.DEV — Vite dead-code-eliminates in production.
  * Captures:
  * - All land:* performance marks (same as OTELBridge but for PostHog)
  * - Unhandled errors and rejections (error tracking)
@@ -22,7 +22,8 @@ const LoadPostHog = async (): Promise<any> => {
 		if ((window as any).posthog) return (window as any).posthog;
 
 		// Dynamic script injection — no bundler dependency
-		return new Promise((Resolve, Reject) => {
+		// Gracefully returns null if CSP blocks the CDN or network fails
+		return await new Promise((Resolve) => {
 			const Script = document.createElement("script");
 			Script.src = "https://eu-assets.i.posthog.com/static/array.js";
 			Script.async = true;
@@ -31,15 +32,14 @@ const LoadPostHog = async (): Promise<any> => {
 				if (PH) {
 					PH.init(PostHogAPIKey, {
 						api_host: PostHogHost,
-						autocapture: false, // No click tracking in editor
-						capture_pageview: false, // SPA — manual pageviews
+						autocapture: false,
+						capture_pageview: false,
 						capture_pageleave: false,
-						persistence: "memory", // No cookies/localStorage in debug
+						persistence: "memory",
 						bootstrap: {
 							distinctID: `land-dev-${Date.now()}`,
 						},
 						loaded: (Instance: any) => {
-							// Tag all events with debug context
 							Instance.register({
 								$app: "land-editor",
 								$app_version: "0.0.1",
@@ -50,10 +50,10 @@ const LoadPostHog = async (): Promise<any> => {
 						},
 					});
 				} else {
-					Reject(new Error("posthog not found after script load"));
+					Resolve(null);
 				}
 			};
-			Script.onerror = () => Reject(new Error("Failed to load posthog-js"));
+			Script.onerror = () => Resolve(null); // CSP block or network fail — degrade silently
 			document.head.appendChild(Script);
 		});
 	} catch {
@@ -154,6 +154,8 @@ const Initialize = async (): Promise<void> => {
 	PH.capture("land:session:start");
 };
 
-Initialize();
+if (import.meta.env.DEV) {
+	Initialize().catch(() => {});
+}
 
 export default {};

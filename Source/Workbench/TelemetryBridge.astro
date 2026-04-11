@@ -3,15 +3,16 @@
  * TelemetryBridge — shared OTEL + PostHog loader for all workbench layouts.
  *
  * Import this component in any Layout.astro to get build-baked telemetry.
- * Both bridges are tree-shaken in production builds (On=false).
- * Uses static import (no await) so the observer starts immediately
- * and catches all buffered performance marks from subsequent scripts.
+ * Both bridges check import.meta.env.DEV internally and no-op in production.
+ * Vite dead-code-eliminates the bridge bodies when DEV=false.
  */
 ---
 
 <script type="module">
-	// OTEL Bridge — PerformanceObserver for land:* marks → OTLP/HTTP
-	import "../Workbench/Electron/OTELBridge.js";
-	// PostHog Bridge — error tracking + analytics (debug only)
-	import "../Workbench/Electron/PostHogBridge.js";
+	if (import.meta.env.DEV) {
+		// OTEL Bridge — PerformanceObserver for land:* marks → OTLP/HTTP
+		await import("../Workbench/Electron/OTELBridge.js");
+		// PostHog Bridge — error tracking + analytics (debug only)
+		await import("../Workbench/Electron/PostHogBridge.js");
+	}
 </script>

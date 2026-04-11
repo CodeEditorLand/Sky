@@ -61,6 +61,10 @@ export default defineConfig({
 			name: "CopyVSCodeAssets",
 			hooks: {
 				"astro:build:done": async ({ dir }) => {
+					const BuildStart = performance.now();
+					const StepTimings: Record<string, number> = {};
+					const StepMark = (Step: string) => { StepTimings[Step] = performance.now() - BuildStart; };
+
 					const TargetDir = fileURLToPath(dir);
 
 					const Destination = join(
@@ -132,7 +136,7 @@ export default defineConfig({
 							Error,
 						);
 					}
-					// Step 4: Strip CSS imports — Tauri WKWebView has no service worker
+					// Step 4: Strip CSS imports - Tauri WKWebView has no service worker
 					// interception for Tauri embedded assets, so CSS module imports in
 					// VS Code's JS files must be removed before embedding.
 					// (The Worker/CSS interception handles the browser/PWA context.)
@@ -329,7 +333,7 @@ export default defineConfig({
 						try {
 							let Content = await readFile(WorkbenchJS, "utf-8");
 
-							// 8a: Prepend global error listeners — emit performance.mark only
+							// 8a: Prepend global error listeners - emit performance.mark only
 							// Filter expected: FileNotFound, Canceled, Script error
 							const ErrorListeners = [
 								`window.addEventListener("unhandledrejection",(e)=>{var r=e.reason;if(!r)return;var m=String(r.message||r);if(m.includes("Canceled")||m.includes("FileNotFound")||(r.code&&r.code==="FileNotFound")||m.includes("No such file or directory")||m.includes("Script error"))return;try{performance.mark("land:error:rejection:"+m.slice(0,100))}catch{}});`,
@@ -539,7 +543,7 @@ export default defineConfig({
 								recursive: true,
 							});
 						} catch {
-							// Package not installed — skip silently
+							// Package not installed - skip silently
 						}
 					}
 					console.log(
@@ -553,7 +557,7 @@ export default defineConfig({
 					// VS Code's amdX loader uses define() not ESM import.
 					const StubAddons: Record<string, string> = {
 						"@xterm/addon-progress":
-							"define([],function(){return{ProgressAddon:function(){this.activate=function(){};this.dispose=function(){}}}})",
+							"define([],function(){var n=function(){};var P=function(){this.activate=n;this.dispose=n;this.onChange=function(){return{dispose:n}}};return{ProgressAddon:P}})",
 					};
 					for (const [Pkg, Code] of Object.entries(StubAddons)) {
 						const StubDir = join(
@@ -578,7 +582,65 @@ export default defineConfig({
 						"[CopyVSCode] Step 12: Created stubs for unpublished addons",
 					);
 
+					// Step 13: Copy built-in extensions from VS Code build output.
+					// `npm run gulp compile-extensions-build` produces .build/extensions/
+					// Mountain scans Static/Application/extensions/ at startup.
+					const ExtensionsSource = resolve(
+						process.cwd(),
+						"../../Dependency/Microsoft/Dependency/Editor/.build/extensions",
+					);
+					const ExtensionsTarget = join(
+						TargetDir,
+						"Static/Application/extensions",
+					);
+					try {
+						const ExtDirs = await readdir(ExtensionsSource);
+						let Copied = 0;
+						for (const Ext of ExtDirs) {
+							const Source = join(ExtensionsSource, Ext);
+							const Dest = join(ExtensionsTarget, Ext);
+							try {
+								await cp(Source, Dest, { recursive: true });
+								Copied++;
+							} catch {
+								// Skip broken extensions
+							}
+						}
+						console.log(
+							`[CopyVSCode] Step 13: Copied ${Copied}/${ExtDirs.length} built-in extensions`,
+						);
+					} catch {
+						console.warn(
+							"[CopyVSCode] Step 13: No built-in extensions found (run: npm run gulp compile-extensions-build)",
+						);
+					}
+
+					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
+
+					// PostHog build telemetry — fire-and-forget
+					try {
+						const { request } = await import("node:https");
+						const Body = JSON.stringify({
+							api_key: "phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
+							event: "sky:build:complete",
+							properties: {
+								distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
+								$app: "land-editor",
+								$component: "sky",
+								$build_mode: process.env["NODE_ENV"] || "production",
+								electron: process.env["Electron"] || "false",
+								total_ms: Math.round(performance.now() - BuildStart),
+								steps: StepTimings,
+							},
+							timestamp: new Date().toISOString(),
+						});
+						const Url = new URL("https://eu.i.posthog.com/capture/");
+						const Req = request({ hostname: Url.hostname, port: 443, path: Url.pathname, method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(Body) } });
+						Req.on("error", () => {});
+						Req.write(Body);
+						Req.end();
+					} catch {};
 				},
 			},
 		},
@@ -609,10 +671,10 @@ export default defineConfig({
 				external: [
 					...External,
 					(id: string) =>
-						// Absolute browser URL paths (/vs/...) — Rollup treats / as filesystem,
+						// Absolute browser URL paths (/vs/...) - Rollup treats / as filesystem,
 						// but these are real browser URLs served at runtime. Mark external.
 						id.startsWith("/vs/") ||
-						// Package specifier — catches @codeeditorland/output/vs/**
+						// Package specifier - catches @codeeditorland/output/vs/**
 						id.startsWith("@codeeditorland/output/vs/") ||
 						// Resolved absolute path (after symlink + package.json exports map)
 						id.includes(
@@ -826,6 +888,15 @@ export default defineConfig({
 			host: Host,
 
 			strictPort: true,
+
+			// OTLP proxy - OTELBridge sends to /v1/traces (same-origin),
+			// Vite forwards to the local Jaeger/OTEL collector. No CORS.
+			proxy: {
+				"/v1/traces": {
+					target: "http://localhost:4318",
+					changeOrigin: true,
+				},
+			},
 
 			https: {
 				cert: await readFile("./dev-server.pem", {

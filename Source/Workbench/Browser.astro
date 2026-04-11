@@ -1,21 +1,19 @@
 ---
 import NLS from "./NLS.astro";
+import TelemetryBridge from "./TelemetryBridge.astro";
 ---
 
 <Fragment>
 	<NLS />
+	<TelemetryBridge />
 
-	<!-- VS Code Browser Workbench — loaded via inline script to bypass Vite bundling.
-	     /vs/ is served from Sky/Public/vs → Output/Target/Microsoft/VSCode/vs (symlink).
-	     Relative imports inside workbench.js (../../../base/...) resolve against /vs/. -->
 	<script is:inline type="module">
 		try {
+			performance.mark("land:browser:workbench:start");
 			await import("/vs/code/browser/workbench/workbench.js");
-		} catch (error) {
-			console.error(
-				"[Browser] Failed to load VS Code browser workbench:",
-				error,
-			);
+			performance.mark("land:browser:workbench:loaded");
+		} catch {
+			performance.mark("land:browser:workbench:error");
 		}
 	</script>
 </Fragment>

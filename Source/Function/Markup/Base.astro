@@ -28,7 +28,7 @@ import Meta from "../Meta.astro";
 			// (resolves against http://localhost URL) instead of
 			// vscode-file:// URLs that WKWebView can't import().
 			globalThis._VSCODE_USE_RELATIVE_IMPORTS = true;
-			// esbuild __name helper — required by Dependency/out/ files loaded in
+			// esbuild __name helper - required by Dependency/out/ files loaded in
 			// extension host worker contexts that don't have their own __name definition.
 			if (typeof globalThis.__name === "undefined") {
 				Object.defineProperty(globalThis, "__name", {

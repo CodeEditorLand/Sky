@@ -1,31 +1,14 @@
 /**
- * browser-proxy-wind-preload.ts - Wind preload installation script for Browser Proxy
- *
- * This script installs the Wind preload polyfill which provides VSCode-compatible
- * globals (window.vscode, window.preloadGlobals) for the browser workbench.
+ * Wind preload for BrowserProxy workbench (A1).
+ * Zero console.* output. Tracing via performance.mark().
  */
 
-import Install from "@codeeditorland/wind/Target/Function/Install";
+import Install from "@codeeditorland/wind/Target/Function/Install/Function/Install";
 
-// Install the Wind preload polyfill (window.vscode globals)
-Install()
-	.then(() => {
-
-		// Verify preloadGlobals is available
-		if (window.preloadGlobals && window.preloadGlobals.process) {
-			const process = window.preloadGlobals.process;
-		} else {
-		}
-
-		// Verify window.vscode is available
-		if (window.vscode) {
-		} else {
-		}
-
-		// Verify Wind preload ready flag
-		if (window.__WIND_PRELOAD_READY__) {
-		} else {
-		}
-	})
-	.catch((error: unknown) => {
-	});
+try {
+	performance.mark("land:browserproxy:preload:start");
+	await Install();
+	performance.mark("land:browserproxy:preload:done");
+} catch {
+	performance.mark("land:browserproxy:preload:error");
+}

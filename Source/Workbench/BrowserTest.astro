@@ -1,94 +1,37 @@
 ---
 /**
  * BrowserTest.astro - Browser VSCode Workbench Test Page
- *
- * This page tests the browser-compatible VSCode workbench in the Tauri environment.
- * It's a diagnostic tool to verify if the browser workbench can load without
- * the vscode-file:// CSP error that the Electron workbench causes.
- *
- * Key differences from Default.astro:
- * - Uses browser workbench (vs/code/browser/workbench/workbench.js)
- * - Not Electron workbench (vs/code/electron-browser/workbench/workbench.js)
- *
- * Expected outcome:
- * - Browser workbench should load without vscode-file:// CSP errors
- * - Identifies what additional setup is needed (providers, IPC handlers, etc.)
- * - Informs whether to proceed with Approach A2 (browser workbench + Mountain providers)
+ * Diagnostic: tests browser workbench in Tauri without Electron polyfills.
  */
 
 import NLS from "./NLS.astro";
+import TelemetryBridge from "./TelemetryBridge.astro";
 ---
 
 <Fragment>
 	<NLS />
+	<TelemetryBridge />
 
-	<!-- Wind Preload Script - Required for VSCode workbench -->
 	<script type="module">
-		import Install from "@codeeditorland/wind/Target/Function/Install";
-
-		console.log(
-			"[BrowserTest] ===== Starting Wind preload installation =====",
-		);
-
-		// Install the Wind preload polyfill (window.vscode globals)
-		// This must run before VSCode workbench.js which expects window.vscode
-		Install()
-			.then(() => {
-				console.log(
-					"[BrowserTest] ✓ Wind preload installed successfully",
-				);
-
-				// Verify preloadGlobals is available
-				if (window.preloadGlobals && window.preloadGlobals.process) {
-					console.log(
-						"[BrowserTest] ✓ preloadGlobals.process is available",
-					);
-				} else {
-					console.warn(
-						"[BrowserTest] ⚠ preloadGlobals.process not available",
-					);
-				}
-
-				// Verify window.vscode is available
-				if (window.vscode) {
-					console.log("[BrowserTest] ✓ window.vscode is available");
-					console.log(
-						"[BrowserTest] ✓ Window.vscode methods:",
-						Object.keys(window.vscode || {}),
-					);
-				} else {
-					console.error(
-						"[BrowserTest] ✗ window.vscode not available",
-					);
-				}
-
-				console.log(
-					"[BrowserTest] ===== Wind preload installation complete =====",
-				);
-			})
-			.catch(
-				/** @param {any} _error */ (_error) => {
-					console.error("[BrowserTest] ✗ Wind preload install error");
-				},
+		performance.mark("land:browsertest:preload:start");
+		try {
+			const { default: Install } = await import(
+				"@codeeditorland/wind/Target/Function/Install/Function/Install"
 			);
+			await Install();
+			performance.mark("land:browsertest:preload:done");
+		} catch {
+			performance.mark("land:browsertest:preload:error");
+		}
 	</script>
 
-	<!-- Browser Workbench Script — is:inline bypasses Vite bundling entirely -->
 	<script is:inline type="module">
 		try {
+			performance.mark("land:browsertest:workbench:start");
 			await import("/vs/code/browser/workbench/workbench.js");
-			console.log(
-				"[BrowserTest] ===== Loading browser VSCode workbench =====",
-			);
-			console.log(
-				"[BrowserTest] ✓ Browser workbench script loaded successfully",
-			);
-		} catch (error) {
-			console.error(
-				"[BrowserTest] Failed to load VS Code browser workbench:",
-				error,
-			);
+			performance.mark("land:browsertest:workbench:loaded");
+		} catch {
+			performance.mark("land:browsertest:workbench:error");
 		}
-		console.log("[BrowserTest] ===== Workbench load attempted =====");
 	</script>
 </Fragment>

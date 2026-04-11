@@ -61,7 +61,7 @@ function GetOrCreateChannel(Id: string, Name?: string): string[] {
 		// Announce channel creation to VS Code workbench output panel
 		const Wb = GetWorkbench();
 		if (Wb && Name) {
-			// Use logger as a lightweight sink — a real IOutputService integration
+			// Use logger as a lightweight sink - a real IOutputService integration
 			// requires AMD require('vs/workbench/services/output/common/output')
 			Wb.commands
 				.executeCommand("workbench.action.output.show")

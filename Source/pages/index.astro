@@ -31,7 +31,7 @@ const Electron = process.env["Electron"] === "true";
 const BrowserProxy = process.env["BrowserProxy"] === "true";
 
 // Determine workbench type (default to Browser if nothing specified)
-// Mountain uses the Electron workbench — it has the full IPC chain
+// Mountain uses the Electron workbench - it has the full IPC chain
 // (TauriMainProcessService → Mountain WindServiceHandlers → tokio::fs)
 // for real filesystem access. The browser workbench uses IndexedDB.
 const WorkbenchType =

@@ -38,7 +38,7 @@ The UI Component Layer for `Land`&#x2001;🏞️.
 
 Welcome to **Sky**&#x2001;🌌, the declarative **UI component layer** of the
 **Land**&#x2001;🏞️ Code Editor. Built with the **`Astro`** framework, `Sky` renders
-the user interface — editor, side bar, activity bar, status bar, and panels. It
+the user interface - editor, side bar, activity bar, status bar, and panels. It
 operates within the **`Tauri`** webview alongside `Wind`, consuming state and
 services from the `Wind` service layer to display and manage the editor's visual
 presentation.
@@ -74,7 +74,7 @@ presentation.
   through environment-based selection:
   - **A1 (Browser/BrowserProxy):** Browser-based workbench with optional service
     proxy.
-  - **A2 (Mountain — RECOMMENDED):** Browser workbench with Mountain-backed
+  - **A2 (Mountain - RECOMMENDED):** Browser workbench with Mountain-backed
     providers.
   - **A3 (Electron):** Electron workbench with polyfills for `VS Code`.
 - **Component Modularity:** Organized into Pages (routes), Workbenches
@@ -147,26 +147,26 @@ graph LR
     classDef mountain fill:#f0d0ff,stroke:#9b59b6,stroke-width:2px,color:#2c0050;
     classDef external fill:#ebebeb,stroke:#888,stroke-dasharray:5 5,color:#333;
 
-    subgraph "🌌 Sky — UI Component Layer (Tauri Webview)"
-        Pages["Pages — index, Browser, Electron, Mountain, Isolation"]:::sky
-        Workbenches["Workbench Components — Browser, Mountain, Default, NLS"]:::sky
-        WorkbenchImpl["Workbench Implementations — BrowserProxy/, Electron/"]:::sky
+    subgraph "🌌 Sky - UI Component Layer (Tauri Webview)"
+        Pages["Pages - index, Browser, Electron, Mountain, Isolation"]:::sky
+        Workbenches["Workbench Components - Browser, Mountain, Default, NLS"]:::sky
+        WorkbenchImpl["Workbench Implementations - BrowserProxy/, Electron/"]:::sky
     end
 
-    subgraph "🍃 Wind — Service Layer (Tauri Webview)"
-        PreloadJS["Preload.js — Environment Shim"]:::wind
+    subgraph "🍃 Wind - Service Layer (Tauri Webview)"
+        PreloadJS["Preload.js - Environment Shim"]:::wind
         WindServices["Wind Effect-TS Services"]:::wind
         TauriIntegrations["Wind/Tauri Integrations"]:::wind
     end
 
-    subgraph "📱 Tauri Shell & Mountain — Rust Backend"
+    subgraph "📱 Tauri Shell & Mountain - Rust Backend"
         TauriWindow["Tauri Window API"]:::tauri
         TauriEvents["Tauri Event System"]:::tauri
-        MountainCore["⛰️ Mountain — Rust Core"]:::mountain
+        MountainCore["⛰️ Mountain - Rust Core"]:::mountain
     end
 
     subgraph "📦 External"
-        VSCodeComponents["VS Code Core UI — @codeeditorland/output"]:::external
+        VSCodeComponents["VS Code Core UI - @codeeditorland/output"]:::external
     end
 
     Pages --> Workbenches

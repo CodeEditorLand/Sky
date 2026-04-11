@@ -24,10 +24,12 @@
 import { Astro } from "astro:global";
 
 import NLS from "../NLS.astro";
+import TelemetryBridge from "../TelemetryBridge.astro";
 ---
 
 <Fragment>
 	<NLS />
+	<TelemetryBridge />
 
 	<!-- Wind Preload Script - Required for VSCode workbench -->
 	<script type="module">

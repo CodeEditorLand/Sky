@@ -3,7 +3,7 @@
  * Zero console.* output. Tracing via performance.mark().
  */
 
-import Install from "@codeeditorland/wind/Target/Function/Install";
+import Install from "@codeeditorland/wind/Target/Function/Install/Function/Install";
 
 try {
 	performance.mark("land:preload:start");

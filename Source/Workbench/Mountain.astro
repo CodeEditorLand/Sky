@@ -1,475 +1,77 @@
 ---
 /**
- * Mountain.astro - Browser Workbench with Mountain Providers (Approach A2 - RECOMMENDED)
+ * Mountain.astro - Browser Workbench with Mountain Providers (Approach A2)
  *
- * This is the RECOMMENDED production workbench entry point using the browser-compatible
- * VSCode workbench with Wind services, Effect-TS, and Mountain-backed providers.
- *
- * Complexity: Medium
- * Feature Coverage: 80-90%
- * Trade-offs:
- * - RECOMMENDED approach for production use
- * - Direct Tauri IPC to Mountain providers (no proxy overhead)
- * - Uses browser workbench (no vscode-file:// CSP errors)
- * - 80-90% VSCode functionality
- * - Lower complexity than Electron polyfills (A3)
- * - Better maintainability than A1 proxy approach
- * - More features than A4 native workbench
- *
- * Approach A2 implementation:
- * - Uses browser workbench (vs/code/browser/workbench/workbench.js)
- * - NOT Electron workbench (vs/code/electron-browser/workbench/workbench.js)
- * - Loads Wind preload for VSCode-compatible globals
- * - Loads Effect-TS bootstrap for Wind services
- * - Integrates Mountain providers for file operations (Batch 3 - COMPLETE)
- *
- * This avoids the `vscode-file://` CSP errors that Electron workbench causes
- * and provides a path to 80-90% VSCode functionality with Mountain-backed providers.
- *
- * Implementation Status: Batches 1-3 COMPLETE
- * - Batch 1: Get browser workbench to load successfully ✓
- * - Batch 2: Create Mountain file system provider ✓
- * - Batch 3: Create workbench integration ✓
- * - The workbench uses Mountain's file system provider for file operations
- * - File operations are routed through Mountain instead of IndexedDB
+ * Uses browser workbench with Wind services + Mountain-backed providers.
+ * Zero console.* — all tracing via performance.mark().
  */
 
 import NLS from "./NLS.astro";
+import TelemetryBridge from "./TelemetryBridge.astro";
 ---
 
 <Fragment>
 	<NLS />
+	<TelemetryBridge />
 
-	<!-- Wind Preload Script - Required for VSCode workbench -->
+	<!-- Wind Preload -->
 	<script type="module">
-		import Install from "@codeeditorland/wind/Target/Function/Install";
-
-		console.log(
-			"[Mountain] ===== Starting Wind preload installation =====",
-		);
-		console.log("[Mountain] Workbench: Mountain (A2 - RECOMMENDED)");
-		console.log(
-			"[Mountain] Approach: Browser workbench + Wind services + Mountain providers",
-		);
-
-		// Install the Wind preload polyfill (window.vscode globals)
-		// This must run before VSCode workbench.js which expects window.vscode
-		Install()
-			.then(() => {
-				console.log("[Mountain] ✓ Wind preload installed successfully");
-
-				// Verify preloadGlobals is available
-				if (window.preloadGlobals && window.preloadGlobals.process) {
-					console.log(
-						"[Mountain] ✓ preloadGlobals.process is available",
-					);
-					const process = window.preloadGlobals.process;
-					console.log("[Mountain] - Platform:", process.platform);
-					console.log("[Mountain] - Arch:", process.arch);
-					console.log("[Mountain] - Type:", process.type);
-				} else {
-					console.warn(
-						"[Mountain] ⚠ preloadGlobals.process not available",
-					);
-				}
-
-				// Verify window.vscode is available
-				if (window.vscode) {
-					console.log("[Mountain] ✓ window.vscode is available");
-					console.log(
-						"[Mountain] - ipcRenderer:",
-						typeof window.vscode.ipcRenderer,
-					);
-					console.log(
-						"[Mountain] - process:",
-						typeof window.vscode.process,
-					);
-					console.log(
-						"[Mountain] - context:",
-						typeof window.vscode.context,
-					);
-				} else {
-					console.error("[Mountain] ✗ window.vscode not available");
-				}
-
-				// Verify Wind preload ready flag
-				if (window.__WIND_PRELOAD_READY__) {
-					console.log("[Mountain] ✓ Wind preload ready flag is set");
-					console.log("[Mountain] Effect-TS bootstrap can proceed");
-				} else {
-					console.warn(
-						"[Mountain] ⚠ Wind preload ready flag is not set",
-					);
-				}
-
-				console.log(
-					"[Mountain] ===== Wind preload installation complete =====",
-				);
-			})
-			.catch((error) => {
-				console.error(
-					"[Mountain] ✗ Wind preload install error:",
-					error,
-				);
-			});
-	</script>
-
-	<!-- Wind Effect-TS Bootstrap Script -->
-	<script type="module">
-		console.log("[Mountain] ===== Starting Wind Effect-TS bootstrap =====");
-
+		performance.mark("land:mountain:preload:start");
 		try {
-			// Import from the Effect module which exports runBootstrap
-			const { runBootstrap } =
-				await import("@codeeditorland/wind/Target/Effect/Bootstrap");
-			const { Effect } = await import("effect");
-
-			console.log("[Mountain] ✓ Bootstrap module loaded successfully");
-
-			// runBootstrap returns an Effect — run it via Effect.runPromise
-			const bootstrapResult = await Effect.runPromise(
-				runBootstrap({
-					skipHealthCheck: true,
-					debugMode: true,
-				}),
+			const { default: Install } = await import(
+				"@codeeditorland/wind/Target/Function/Install/Function/Install"
 			);
-
-			if (bootstrapResult.success) {
-				console.log("[Mountain] ✓ Bootstrap completed successfully");
-				console.log(
-					"[Mountain] - Total duration:",
-					bootstrapResult.totalDuration,
-					"ms",
-				);
-				console.log(
-					"[Mountain] - Stages completed:",
-					bootstrapResult.stages.length,
-				);
-
-				// Log individual stage results
-				bootstrapResult.stages.forEach(
-					/** @type {{ stageName: string; duration: number; success: boolean }} */ (
-						stage,
-					) => {
-						const status = stage.success ? "✓" : "✗";
-						console.log(
-							`[Mountain] - ${status} ${stage.stageName}: ${stage.duration}ms`,
-						);
-					},
-				);
-			} else {
-				console.error(
-					"[Mountain] ✗ Bootstrap failed:",
-					bootstrapResult.error,
-				);
-				console.error("[Mountain] Failed stages:");
-				bootstrapResult.stages
-					.filter(
-						/** @type {{ stageName: string; duration: number; success: boolean }} */ (
-							stage,
-						) => !stage.success,
-					)
-					.forEach(
-						/** @type {{ stageName: string; duration: number; success: boolean; error?: Error }} */ (
-							stage,
-						) => {
-							console.error(
-								`[Mountain] - ${stage.stageName}: ${stage.error?.message || "Unknown error"}`,
-							);
-						},
-					);
-			}
-		} catch (error) {
-			console.error("[Mountain] ✗ Failed to load/run bootstrap:", error);
-			// Continue anyway - workbench may load without full bootstrap
+			await Install();
+			performance.mark("land:mountain:preload:done");
+			performance.measure(
+				"land:mountain:preload",
+				"land:mountain:preload:start",
+				"land:mountain:preload:done",
+			);
+		} catch {
+			performance.mark("land:mountain:preload:error");
 		}
-
-		console.log("[Mountain] ===== Wind bootstrap sequence complete =====");
 	</script>
 
-	<!-- Browser VSCode Workbench Script -->
+	<!-- Wind Effect-TS Bootstrap -->
 	<script type="module">
-		console.log("[Mountain] ===== Loading browser VSCode workbench =====");
-		console.log(
-			"[Mountain] Workbench path: @codeeditorland/output/vs/code/browser/workbench/workbench.js",
-		);
-
+		performance.mark("land:mountain:bootstrap:start");
 		try {
-			// Variable URL: Rollup only analyzes string literals — an identifier
-			// reference is treated as truly dynamic and never resolved at build time.
+			const { runBootstrap } = await import(
+				"@codeeditorland/wind/Target/Effect/Bootstrap"
+			);
+			const { Effect } = await import("effect");
+			await Effect.runPromise(
+				runBootstrap({ skipHealthCheck: true, debugMode: true }),
+			);
+			performance.mark("land:mountain:bootstrap:done");
+		} catch {
+			performance.mark("land:mountain:bootstrap:error");
+		}
+	</script>
+
+	<!-- Browser Workbench -->
+	<script type="module">
+		performance.mark("land:mountain:workbench:start");
+		try {
 			const WorkbenchUrl =
 				"/Static/Application/vs/code/browser/workbench/workbench.js";
 			await import(WorkbenchUrl);
+			performance.mark("land:mountain:workbench:loaded");
 
-			console.log(
-				"[Mountain] ✓ Browser workbench script loaded successfully",
-			);
-			console.log("[Mountain] ===== Workbench load complete =====");
-
-			// Log initial state after workbench load
 			setTimeout(async () => {
-				console.log("[Mountain] ===== Post-workbench load state =====");
-				console.log(
-					"[Mountain] window.vscode available:",
-					typeof window.vscode !== "undefined",
-				);
-				console.log(
-					"[Mountain] Monaco editor available:",
-					typeof window.monaco !== "undefined",
-				);
-
-				// Use Record<string, unknown> instead of type assertions
-				const windowAny = window;
-
-				// Check for workbench globals (without type assertion)
-				if (typeof windowAny.workbench !== "undefined") {
-					console.log("[Mountain] Workbench globals detected");
-				} else if (typeof windowAny.require !== "undefined") {
-					try {
-						void windowAny.require("vs/base/browser/browser");
-						console.log("[Mountain] VSCode browser module loaded");
-					} catch (_e) {
-						console.log("[Mountain] Could not query VSCode module");
-					}
-				}
-
-				// Log integration status
-				console.log(
-					"[Mountain] ===== Workbench integration status =====",
-				);
-				const windowRecord = /** @type {Record<string, any>} */ (
-					/** @type {unknown} */ (window)
-				);
-				const windMountainProvider =
-					windowRecord["__WIND_MOUNTAIN_PROVIDER__"];
-				const mountainFsScheme = windowRecord["__MOUNTAIN_FS_SCHEME__"];
-				const workspaceContext = windowRecord["__WORKSPACE_CONTEXT__"];
-				console.log(
-					"[Mountain] Mountain provider available:",
-					typeof windMountainProvider !== "undefined",
-				);
-				console.log(
-					"[Mountain] File scheme:",
-					mountainFsScheme || "default",
-				);
-				console.log(
-					"[Mountain] Workspace context:",
-					typeof workspaceContext !== "undefined",
-				);
-
-				if (typeof windMountainProvider !== "undefined") {
-					console.log(
-						"[Mountain] ✓ File operations will route through Mountain provider",
-					);
-
-					// Test provider if available
-					console.log("[Mountain] Testing Mountain provider...");
-					try {
-						const provider = windMountainProvider;
-						if (typeof provider.stat === "function") {
-							console.log(
-								"[Mountain] ✓ Provider has stat method",
-							);
-						}
-						if (typeof provider.readdir === "function") {
-							console.log(
-								"[Mountain] ✓ Provider has readdir method",
-							);
-						}
-						if (typeof provider.readFile === "function") {
-							console.log(
-								"[Mountain] ✓ Provider has readFile method",
-							);
-						}
-						if (typeof provider.writeFile === "function") {
-							console.log(
-								"[Mountain] ✓ Provider has writeFile method",
-							);
-						}
-					} catch (_testError) {
-						console.error("[Mountain] ✗ Provider test failed");
-					}
-				} else {
-					console.log(
-						"[Mountain] ℹ File operations will use default IndexedDB provider",
-					);
-					console.log(
-						"[Mountain] ℹ Mountain provider will be initialized by FileSystem service",
-					);
-				}
-
-				// Initialize workbench integration
-				console.log(
-					"[Mountain] ===== Initializing workbench integration =====",
-				);
 				try {
-					const workbenchContext = {
-						rootUri: "file:///",
-						name: "CodeEditorLand Workspace",
-						isDefault: true,
-						folders: [
-							{
-								uri: "file:///",
-								name: "workspace",
-							},
-						],
-					};
-
-					// Store workspace context globally
-					windowRecord["__WORKSPACE_CONTEXT__"] = workbenchContext;
-
-					console.log("[Mountain] ✓ Workbench context configured:");
-					console.log(
-						"[Mountain] - Root URI:",
-						workbenchContext.rootUri,
+					const { InstallSkyBridge } = await import(
+						"@codeeditorland/sky/Source/Function/SkyBridge"
 					);
-					console.log("[Mountain] - Name:", workbenchContext.name);
-					console.log(
-						"[Mountain] - Folders:",
-						workbenchContext.folders.length,
-					);
-
-					// Register provider if available
-					if (typeof windMountainProvider !== "undefined") {
-						windowRecord["__MOUNTAIN_FS_PROVIDER__"] =
-							windMountainProvider;
-						windowRecord["__MOUNTAIN_FS_SCHEME__"] = "file";
-						console.log(
-							"[Mountain] ✓ Mountain file system provider registered for 'file' scheme",
-						);
-					}
-
-					console.log("[Mountain] ✓ Workbench integration complete");
-				} catch (_integrationError) {
-					console.error(
-						"[Mountain] ✗ Workbench initialization failed",
-					);
-				}
-
-				// ---- SkyBridge: subscribe to all sky:// Tauri events ----
-				try {
-					const { InstallSkyBridge } =
-						await import("@codeeditorland/sky/Source/Function/SkyBridge");
-
-					// Expose workbench IWorkbench if VS Code made it accessible
-					// via the AMD loader as the workbench.web.main create() return value.
-					// The browser workbench.js calls create() and we attempt to
-					// retrieve the resulting IWorkbench via window.require.
-					if (typeof windowRecord["require"] === "function") {
-						try {
-							const { create } = await new Promise((Resolve) =>
-								windowRecord["require"](
-									[
-										"vs/workbench/workbench.web.main.internal",
-									],
-									Resolve,
-								),
-							);
-							if (typeof create === "function") {
-								// Store a proxy workbench for SkyBridge to use
-								// when the real workbench creation completes
-								windowRecord["__CEL_WORKBENCH__"] = {
-									commands: {
-										executeCommand: (Id, ...Args) =>
-											new Promise((Res, Rej) => {
-												windowRecord["require"](
-													[
-														"vs/platform/commands/common/commands",
-													],
-													({ CommandsRegistry }) => {
-														try {
-															const Cmd =
-																CommandsRegistry?.getCommand?.(
-																	Id,
-																);
-															if (Cmd)
-																Res(
-																	Cmd.handler(
-																		null,
-																		...Args,
-																	),
-																);
-															else
-																Rej(
-																	new Error(
-																		`Unknown command: ${Id}`,
-																	),
-																);
-														} catch (E) {
-															Rej(E);
-														}
-													},
-												);
-											}),
-									},
-									env: {
-										openUri: async (Uri) => {
-											window.open(
-												String(Uri),
-												"_blank",
-												"noopener",
-											);
-											return true;
-										},
-									},
-									logger: {
-										log: (Level, Msg) =>
-											console.log(
-												`[Workbench/${Level}]`,
-												Msg,
-											),
-									},
-								};
-								console.log(
-									"[Mountain] ✓ IWorkbench proxy registered for SkyBridge",
-								);
-							}
-						} catch (_amdErr) {
-							console.warn(
-								"[Mountain] AMD workbench accessor unavailable, SkyBridge will use DOM fallbacks",
-							);
-						}
-					}
-
 					await InstallSkyBridge();
-					console.log(
-						"[Mountain] ✓ SkyBridge installed — all sky:// channels active",
-					);
-				} catch (BridgeErr) {
-					console.error(
-						"[Mountain] ✗ SkyBridge install failed:",
-						BridgeErr,
-					);
+					performance.mark("land:mountain:skybridge:installed");
+				} catch {
+					performance.mark("land:mountain:skybridge:error");
 				}
 			}, 2000);
-		} catch (error) {
-			const err = error;
-			console.error(
-				"[Mountain] ✗ Failed to load browser workbench:",
-				err,
-			);
-			if (err instanceof Error) {
-				console.error("[Mountain] Error details:", {
-					message: err.message,
-					name: err.name,
-					stack: err.stack,
-				});
-			}
-
-			// Provide helpful diagnostics
-			console.log("[Mountain] ===== Diagnostic information =====");
-			console.log("[Mountain] User agent:", navigator.userAgent);
-			console.log("[Mountain] Platform:", navigator.platform);
-			console.log("[Mountain] Language:", navigator.language);
-			const windPreloadReady = window.__WIND_PRELOAD_READY__;
-			console.log(
-				"[Mountain] Wind preload ready:",
-				typeof windPreloadReady !== "undefined",
-			);
-			const vscodeGlobal = window.vscode;
-			console.log("[Mountain] window.vscode:", typeof vscodeGlobal);
+		} catch {
+			performance.mark("land:mountain:workbench:error");
 		}
-
-		console.log("[Mountain] ===== Workbench load sequence complete =====");
 	</script>
 </Fragment>

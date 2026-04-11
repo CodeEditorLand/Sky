@@ -66,7 +66,33 @@ const Initialize = async (): Promise<void> => {
 	const PH = await LoadPostHog();
 	if (!PH) return;
 
-	// Capture performance marks as PostHog events
+	// Batch performance marks to avoid rate limiting.
+	// Collects marks for 2 seconds, then flushes as a single event.
+	let MarkBuffer: Array<{
+		Name: string;
+		Category: string;
+		Action: string;
+		TimestampMs: number;
+		DurationMs: number;
+		Detail: unknown;
+	}> = [];
+	let FlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+	const FlushMarks = () => {
+		FlushTimer = null;
+		if (MarkBuffer.length === 0) return;
+
+		const Marks = MarkBuffer;
+		MarkBuffer = [];
+
+		PH.capture("land:boot_marks", {
+			marks: Marks,
+			mark_count: Marks.length,
+			first_mark_ms: Marks[0]?.TimestampMs,
+			last_mark_ms: Marks[Marks.length - 1]?.TimestampMs,
+		});
+	};
+
 	const Observer = new PerformanceObserver((List) => {
 		for (const Entry of List.getEntries()) {
 			if (!Entry.name.startsWith("land:")) continue;
@@ -77,7 +103,7 @@ const Initialize = async (): Promise<void> => {
 			const Action = Parts.slice(2).join(":");
 
 			if (IsError) {
-				// Error tracking — capture as exception
+				// Errors always sent immediately
 				PH.captureException(new Error(Entry.name), {
 					$exception_type: `land:${Category}`,
 					$exception_message: Action,
@@ -85,23 +111,35 @@ const Initialize = async (): Promise<void> => {
 					detail: (Entry as any).detail,
 				});
 			} else {
-				// Regular event
-				PH.capture(`land:${Category}`, {
-					action: Action,
-					mark_name: Entry.name,
-					timestamp_ms: performance.timeOrigin + Entry.startTime,
-					duration_ms:
+				// Buffer regular marks
+				MarkBuffer.push({
+					Name: Entry.name,
+					Category,
+					Action,
+					TimestampMs: performance.timeOrigin + Entry.startTime,
+					DurationMs:
 						Entry.entryType === "measure"
 							? (Entry as PerformanceMeasure).duration
 							: 0,
-					detail: (Entry as any).detail,
+					Detail: (Entry as any).detail,
 				});
+
+				if (!FlushTimer) {
+					FlushTimer = setTimeout(FlushMarks, 2000);
+				}
 			}
 		}
 	});
 
 	Observer.observe({ type: "mark", buffered: true });
 	Observer.observe({ type: "measure", buffered: true });
+
+	// Flush remaining marks on page hide
+	addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "hidden" && MarkBuffer.length > 0) {
+			FlushMarks();
+		}
+	});
 
 	// Capture unhandled errors
 	window.addEventListener("error", (Event) => {

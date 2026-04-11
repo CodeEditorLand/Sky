@@ -107,6 +107,7 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 				],
 				"connect-src": [
 					"'self'",
+					"blob:",
 					"ipc:",
 					"vscode-file:",
 					"vscode-file://vscode-app",

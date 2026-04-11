@@ -13,7 +13,14 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import { copyFile, cp, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import {
+	copyFile,
+	cp,
+	mkdir,
+	readdir,
+	readFile,
+	writeFile,
+} from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -63,7 +70,9 @@ export default defineConfig({
 				"astro:build:done": async ({ dir }) => {
 					const BuildStart = performance.now();
 					const StepTimings: Record<string, number> = {};
-					const StepMark = (Step: string) => { StepTimings[Step] = performance.now() - BuildStart; };
+					const StepMark = (Step: string) => {
+						StepTimings[Step] = performance.now() - BuildStart;
+					};
 
 					const TargetDir = fileURLToPath(dir);
 
@@ -274,10 +283,14 @@ export default defineConfig({
 							try {
 								await readFile(OutputServicePath);
 								TauriServiceSource = OutputServicePath;
-								console.log("[CopyVSCode] Step 7: Using Output/Configuration/Service/TauriMainProcessService.js");
+								console.log(
+									"[CopyVSCode] Step 7: Using Output/Configuration/Service/TauriMainProcessService.js",
+								);
 							} catch {
 								TauriServiceSource = WindServicePath;
-								console.log("[CopyVSCode] Step 7: Falling back to Wind/Target/Service/TauriMainProcessService.js");
+								console.log(
+									"[CopyVSCode] Step 7: Falling back to Wind/Target/Service/TauriMainProcessService.js",
+								);
 							}
 
 							// Copy the compiled service as a separate module
@@ -294,7 +307,10 @@ export default defineConfig({
 							if (ServiceJS.includes("sourceMappingURL")) {
 								await writeFile(
 									join(IPCDir, "TauriMainProcessService.js"),
-									ServiceJS.replace(/\/\/# sourceMappingURL=.*/g, ""),
+									ServiceJS.replace(
+										/\/\/# sourceMappingURL=.*/g,
+										"",
+									),
 									"utf-8",
 								);
 							}
@@ -582,36 +598,55 @@ export default defineConfig({
 						"[CopyVSCode] Step 12: Created stubs for unpublished addons",
 					);
 
-					// Step 13: Copy built-in extensions from VS Code build output.
-					// `npm run gulp compile-extensions-build` produces .build/extensions/
+					// Step 13: Copy built-in extensions.
+					// Primary: .build/extensions/ (compiled via gulp compile-extensions-build)
+					// Fallback: extensions/ (source — themes, snippets, grammars work uncompiled)
 					// Mountain scans Static/Application/extensions/ at startup.
-					const ExtensionsSource = resolve(
-						process.cwd(),
-						"../../Dependency/Microsoft/Dependency/Editor/.build/extensions",
-					);
 					const ExtensionsTarget = join(
 						TargetDir,
 						"Static/Application/extensions",
 					);
-					try {
-						const ExtDirs = await readdir(ExtensionsSource);
-						let Copied = 0;
-						for (const Ext of ExtDirs) {
-							const Source = join(ExtensionsSource, Ext);
-							const Dest = join(ExtensionsTarget, Ext);
-							try {
-								await cp(Source, Dest, { recursive: true });
-								Copied++;
-							} catch {
-								// Skip broken extensions
+					const ExtensionsSources = [
+						resolve(
+							process.cwd(),
+							"../../Dependency/Microsoft/Dependency/Editor/.build/extensions",
+						),
+						resolve(
+							process.cwd(),
+							"../../Dependency/Microsoft/Dependency/Editor/extensions",
+						),
+					];
+					let ExtensionsCopied = false;
+					for (const ExtensionsSource of ExtensionsSources) {
+						try {
+							const ExtDirs = await readdir(ExtensionsSource);
+							let Copied = 0;
+							for (const Ext of ExtDirs) {
+								const Source = join(ExtensionsSource, Ext);
+								const PkgPath = join(Source, "package.json");
+								try {
+									await readFile(PkgPath);
+									const Dest = join(ExtensionsTarget, Ext);
+									await cp(Source, Dest, { recursive: true });
+									Copied++;
+								} catch {
+									// Skip dirs without package.json or broken extensions
+								}
 							}
+							if (Copied > 0) {
+								console.log(
+									`[CopyVSCode] Step 13: Copied ${Copied} built-in extensions from ${ExtensionsSource}`,
+								);
+								ExtensionsCopied = true;
+								break;
+							}
+						} catch {
+							// Source dir not found, try next
 						}
-						console.log(
-							`[CopyVSCode] Step 13: Copied ${Copied}/${ExtDirs.length} built-in extensions`,
-						);
-					} catch {
+					}
+					if (!ExtensionsCopied) {
 						console.warn(
-							"[CopyVSCode] Step 13: No built-in extensions found (run: npm run gulp compile-extensions-build)",
+							"[CopyVSCode] Step 13: No built-in extensions found",
 						);
 					}
 
@@ -623,25 +658,42 @@ export default defineConfig({
 						try {
 							const { request } = await import("node:https");
 							const Body = JSON.stringify({
-								api_key: "phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
+								api_key:
+									"phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
 								event: "sky:build:complete",
 								properties: {
 									distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
 									$app: "land-editor",
 									$component: "sky",
-									$build_mode: process.env["NODE_ENV"] || "development",
-									electron: process.env["Electron"] || "false",
-									total_ms: Math.round(performance.now() - BuildStart),
+									$build_mode:
+										process.env["NODE_ENV"] ||
+										"development",
+									electron:
+										process.env["Electron"] || "false",
+									total_ms: Math.round(
+										performance.now() - BuildStart,
+									),
 									steps: StepTimings,
 								},
 								timestamp: new Date().toISOString(),
 							});
-							const Url = new URL("https://eu.i.posthog.com/capture/");
-							const Req = request({ hostname: Url.hostname, port: 443, path: Url.pathname, method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(Body) } });
+							const Url = new URL(
+								"https://eu.i.posthog.com/capture/",
+							);
+							const Req = request({
+								hostname: Url.hostname,
+								port: 443,
+								path: Url.pathname,
+								method: "POST",
+								headers: {
+									"Content-Type": "application/json",
+									"Content-Length": Buffer.byteLength(Body),
+								},
+							});
 							Req.on("error", () => {});
 							Req.write(Body);
 							Req.end();
-						} catch {};
+						} catch {}
 					}
 				},
 			},

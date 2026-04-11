@@ -1,28 +1,31 @@
 /**
- * Build-baked PostHog analytics bridge (debug builds only).
+ * PostHog analytics bridge — semantic events by component.
  *
  * Guarded by import.meta.env.DEV — Vite dead-code-eliminates in production.
- * Captures:
- * - All land:* performance marks (same as OTELBridge but for PostHog)
- * - Unhandled errors and rejections (error tracking)
- * - Page lifecycle events (load, visibility)
- * - Custom IPC command timing
  *
- * PostHog project: codeeditorland (debug only — no production telemetry).
- * Uses posthog-js loaded from CDN to avoid bundling in production.
+ * Event taxonomy (filterable in PostHog by $component):
+ *   land:exthost:*   — Extension host lifecycle, activation, errors
+ *   land:cocoon:*    — Cocoon sidecar gRPC, bootstrap, health
+ *   land:wind:*      — Wind service layer, Effect-TS bootstrap
+ *   land:sky:*       — Sky rendering, Astro, Workbench DOM
+ *   land:ipc:*       — IPC channel calls and failures
+ *   land:vscode:*    — VS Code workbench internals
+ *   land:console:*   — Intercepted console.error/warn
+ *   land:resource:*  — Failed script/image/CSS loads
+ *   land:boot:*      — Boot timing, navigation performance
+ *   land:session:*   — Session start/end
+ *
+ * All events carry $component for PostHog filtering.
+ * Marks are batched per-component (max 10 per flush, 2s window).
+ * Errors always sent immediately via captureException.
  */
 
 const PostHogAPIKey = "phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA";
 const PostHogHost = "https://eu.i.posthog.com";
 
-// Load posthog-js from CDN — no npm dependency, tree-shaken in prod
 const LoadPostHog = async (): Promise<any> => {
 	try {
-		// Check if already loaded (e.g. by another script)
 		if ((window as any).posthog) return (window as any).posthog;
-
-		// Dynamic script injection — no bundler dependency
-		// Gracefully returns null if CSP blocks the CDN or network fails
 		return await new Promise((Resolve) => {
 			const Script = document.createElement("script");
 			Script.src = "https://eu-assets.i.posthog.com/static/array.js";
@@ -54,7 +57,7 @@ const LoadPostHog = async (): Promise<any> => {
 					Resolve(null);
 				}
 			};
-			Script.onerror = () => Resolve(null); // CSP block or network fail — degrade silently
+			Script.onerror = () => Resolve(null);
 			document.head.appendChild(Script);
 		});
 	} catch {
@@ -62,59 +65,100 @@ const LoadPostHog = async (): Promise<any> => {
 	}
 };
 
-// Initialize PostHog and start capturing
+// Component mapping: mark prefix → PostHog $component value
+const ComponentMap: Record<string, string> = {
+	exthost: "extension-host",
+	cocoon: "cocoon",
+	wind: "wind",
+	sky: "sky",
+	ipc: "ipc",
+	vscode: "vscode",
+	console: "vscode",
+	resource: "sky",
+	boot: "sky",
+	session: "all",
+};
+
+interface BufferedMark {
+	Name: string;
+	Component: string;
+	Category: string;
+	Action: string;
+	TimestampMs: number;
+	DurationMs: number;
+	Detail: unknown;
+}
+
 const Initialize = async (): Promise<void> => {
 	const PH = await LoadPostHog();
 	if (!PH) return;
 
-	// Batch performance marks to avoid rate limiting.
-	// Collects marks for 2 seconds, then flushes as a single event.
-	let MarkBuffer: Array<{
-		Name: string;
-		Category: string;
-		Action: string;
-		TimestampMs: number;
-		DurationMs: number;
-		Detail: unknown;
-	}> = [];
-	let FlushTimer: ReturnType<typeof setTimeout> | null = null;
+	// Per-component buffers — flushed independently
+	const Buffers = new Map<string, BufferedMark[]>();
+	const Timers = new Map<string, ReturnType<typeof setTimeout>>();
+	const MaxPerFlush = 10; // Stay well under 64KB per request
 
-	const FlushMarks = () => {
-		FlushTimer = null;
-		if (MarkBuffer.length === 0) return;
+	const FlushComponent = (Component: string) => {
+		Timers.delete(Component);
+		const Buffer = Buffers.get(Component);
+		if (!Buffer || Buffer.length === 0) return;
 
-		const Marks = MarkBuffer;
-		MarkBuffer = [];
+		const Marks = Buffer.splice(0);
 
-		PH.capture("land:boot_marks", {
-			marks: Marks,
-			mark_count: Marks.length,
-			first_mark_ms: Marks[0]?.TimestampMs,
-			last_mark_ms: Marks[Marks.length - 1]?.TimestampMs,
-		});
+		// Split into chunks of MaxPerFlush
+		for (let I = 0; I < Marks.length; I += MaxPerFlush) {
+			const Chunk = Marks.slice(I, I + MaxPerFlush);
+			PH.capture(`land:${Component}:marks`, {
+				$component: Component,
+				marks: Chunk,
+				mark_count: Chunk.length,
+				first_mark_ms: Chunk[0]?.TimestampMs,
+				last_mark_ms: Chunk[Chunk.length - 1]?.TimestampMs,
+			});
+		}
 	};
 
+	const FlushAll = () => {
+		for (const Component of Buffers.keys()) {
+			FlushComponent(Component);
+		}
+	};
+
+	const BufferMark = (Mark: BufferedMark) => {
+		const Component = Mark.Component;
+		if (!Buffers.has(Component)) Buffers.set(Component, []);
+		Buffers.get(Component)!.push(Mark);
+
+		if (!Timers.has(Component)) {
+			Timers.set(Component, setTimeout(() => FlushComponent(Component), 2000));
+		}
+	};
+
+	// PerformanceObserver — routes to component buffers
 	const Observer = new PerformanceObserver((List) => {
 		for (const Entry of List.getEntries()) {
 			if (!Entry.name.startsWith("land:")) continue;
 
-			const IsError = Entry.name.includes("error");
 			const Parts = Entry.name.split(":");
 			const Category = Parts[1] || "unknown";
 			const Action = Parts.slice(2).join(":");
+			const Component = ComponentMap[Category] || "all";
+			const IsError = Entry.name.includes("error");
 
 			if (IsError) {
-				// Errors always sent immediately
+				// Errors sent immediately with full component context
 				PH.captureException(new Error(Entry.name), {
+					$component: Component,
 					$exception_type: `land:${Category}`,
 					$exception_message: Action,
+					$exception_origin: "performance.mark",
 					timestamp_ms: performance.timeOrigin + Entry.startTime,
 					detail: (Entry as any).detail,
 				});
 			} else {
-				// Buffer regular marks
-				MarkBuffer.push({
+				BufferMark({
 					Name: Entry.name,
+					Component,
 					Category,
 					Action,
 					TimestampMs: performance.timeOrigin + Entry.startTime,
@@ -124,10 +168,6 @@ const Initialize = async (): Promise<void> => {
 							: 0,
 					Detail: (Entry as any).detail,
 				});
-
-				if (!FlushTimer) {
-					FlushTimer = setTimeout(FlushMarks, 2000);
-				}
 			}
 		}
 	});
@@ -135,19 +175,17 @@ const Initialize = async (): Promise<void> => {
 	Observer.observe({ type: "mark", buffered: true });
 	Observer.observe({ type: "measure", buffered: true });
 
-	// Flush remaining marks on page hide
 	addEventListener("visibilitychange", () => {
-		if (document.visibilityState === "hidden" && MarkBuffer.length > 0) {
-			FlushMarks();
-		}
+		if (document.visibilityState === "hidden") FlushAll();
 	});
 
-	// Capture unhandled errors
+	// === Error capture: window.onerror ===
 	window.addEventListener("error", (Event) => {
 		if (!Event.message || Event.message === "Script error.") return;
 		PH.captureException(
 			Event.error || new Error(Event.message),
 			{
+				$component: "vscode",
 				$exception_source: Event.filename,
 				$exception_lineno: Event.lineno,
 				$exception_colno: Event.colno,
@@ -156,6 +194,7 @@ const Initialize = async (): Promise<void> => {
 		);
 	});
 
+	// === Error capture: unhandled promise rejections ===
 	window.addEventListener("unhandledrejection", (Event) => {
 		const Reason = Event.reason;
 		if (!Reason) return;
@@ -163,11 +202,14 @@ const Initialize = async (): Promise<void> => {
 		if (Message.includes("Canceled")) return;
 		PH.captureException(
 			Reason instanceof Error ? Reason : new Error(Message),
-			{ $exception_origin: "unhandledrejection" },
+			{
+				$component: "vscode",
+				$exception_origin: "unhandledrejection",
+			},
 		);
 	});
 
-	// Intercept console.error to capture VS Code internal errors
+	// === Error capture: console.error → PostHog + OTEL ===
 	const OriginalConsoleError = console.error;
 	let ConsoleErrorCount = 0;
 	console.error = (...Args: unknown[]) => {
@@ -181,17 +223,18 @@ const Initialize = async (): Promise<void> => {
 		)
 			return;
 		try {
-			performance.mark(`land:console:error`, {
+			performance.mark("land:console:error", {
 				detail: { message: Message, count: ConsoleErrorCount },
 			});
 		} catch {}
 		PH.captureException(new Error(Message), {
+			$component: "vscode",
 			$exception_origin: "console.error",
 			$exception_count: ConsoleErrorCount,
 		});
 	};
 
-	// Intercept console.warn for VS Code warnings
+	// === Warning capture: console.warn → OTEL only ===
 	const OriginalConsoleWarn = console.warn;
 	let ConsoleWarnCount = 0;
 	console.warn = (...Args: unknown[]) => {
@@ -199,68 +242,45 @@ const Initialize = async (): Promise<void> => {
 		ConsoleWarnCount++;
 		const Message = Args.map(String).join(" ").slice(0, 500);
 		try {
-			performance.mark(`land:console:warn`, {
+			performance.mark("land:console:warn", {
 				detail: { message: Message, count: ConsoleWarnCount },
 			});
 		} catch {}
 	};
 
-	// Hook into VS Code's error handler if available
-	const HookVSCodeErrors = () => {
-		const OnUnexpectedError = (window as any)._VSCODE_onUnexpectedError;
-		if (typeof OnUnexpectedError === "function") return;
-
-		// VS Code sets window.onerror and has its own error infrastructure.
-		// We hook via a global that the workbench checks after bootstrap.
-		(window as any)._LAND_ERROR_HOOK = (Error: unknown) => {
-			const Message = Error instanceof Error
-				? Error.message
-				: String(Error);
-			PH.captureException(
-				Error instanceof Error ? Error : new Error(Message),
-				{ $exception_origin: "vscode.onUnexpectedError" },
-			);
-			try {
-				performance.mark(`land:vscode:error`, {
-					detail: { message: Message.slice(0, 200) },
-				});
-			} catch {}
-		};
-	};
-	HookVSCodeErrors();
-
-	// Capture IPC failures via performance marks
-	// TauriMainProcessService already emits land:ipc:* marks for all calls.
-	// Errors are marked as land:ipc:*:error — already captured by the
-	// PerformanceObserver above.
-
-	// Capture boot timing
-	window.addEventListener("load", () => {
-		const Navigation = performance.getEntriesByType(
-			"navigation",
-		)[0] as PerformanceNavigationTiming;
-		if (Navigation) {
-			PH.capture("land:boot:timing", {
-				dom_interactive_ms: Navigation.domInteractive,
-				dom_complete_ms: Navigation.domComplete,
-				load_event_ms: Navigation.loadEventEnd,
-				ttfb_ms: Navigation.responseStart - Navigation.requestStart,
+	// === VS Code error hook ===
+	(window as any)._LAND_ERROR_HOOK = (Error: unknown) => {
+		const Message =
+			Error instanceof globalThis.Error ? Error.message : String(Error);
+		PH.captureException(
+			Error instanceof globalThis.Error
+				? Error
+				: new globalThis.Error(Message),
+			{
+				$component: "vscode",
+				$exception_origin: "vscode.onUnexpectedError",
+			},
+		);
+		try {
+			performance.mark("land:vscode:error", {
+				detail: { message: Message.slice(0, 200) },
 			});
-		}
-	});
+		} catch {}
+	};
 
-	// Capture resource loading errors (failed scripts, stylesheets, images)
+	// === Resource load failures (capture phase) ===
 	window.addEventListener(
 		"error",
 		(Event) => {
 			const Target = Event.target as HTMLElement;
 			if (Target && Target !== window && "src" in Target) {
 				PH.capture("land:resource:error", {
+					$component: "sky",
 					tag: Target.tagName,
 					src: (Target as HTMLScriptElement).src?.slice(0, 200),
 				});
 				try {
-					performance.mark(`land:resource:error`, {
+					performance.mark("land:resource:error", {
 						detail: {
 							tag: Target.tagName,
 							src: (Target as HTMLScriptElement).src?.slice(0, 200),
@@ -269,20 +289,37 @@ const Initialize = async (): Promise<void> => {
 				} catch {}
 			}
 		},
-		true, // Capture phase — catches resource errors that don't bubble
+		true,
 	);
 
-	// Flush on page hide
+	// === Boot timing ===
+	window.addEventListener("load", () => {
+		const Navigation = performance.getEntriesByType(
+			"navigation",
+		)[0] as PerformanceNavigationTiming;
+		if (Navigation) {
+			PH.capture("land:boot:timing", {
+				$component: "sky",
+				dom_interactive_ms: Navigation.domInteractive,
+				dom_complete_ms: Navigation.domComplete,
+				load_event_ms: Navigation.loadEventEnd,
+				ttfb_ms: Navigation.responseStart - Navigation.requestStart,
+			});
+		}
+	});
+
+	// === Session lifecycle ===
 	addEventListener("visibilitychange", () => {
 		if (document.visibilityState === "hidden") {
 			PH.capture("land:session:end", {
+				$component: "all",
 				console_errors: ConsoleErrorCount,
 				console_warns: ConsoleWarnCount,
 			});
 		}
 	});
 
-	PH.capture("land:session:start");
+	PH.capture("land:session:start", { $component: "all" });
 };
 
 if (import.meta.env.DEV) {

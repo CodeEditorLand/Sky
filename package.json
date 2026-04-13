@@ -36,7 +36,7 @@
 		"@playform/compress": "0.2.3",
 		"@playform/inline": "0.1.4",
 		"@vscode/vscode-languagedetection": "^1.0.23",
-		"@xterm/addon-clipboard": "0.2.0-beta.69",
+		"@xterm/addon-clipboard": "0.2.0",
 		"@xterm/addon-image": "0.9.0",
 		"@xterm/addon-ligatures": "0.10.0-beta.69",
 		"@xterm/addon-search": "0.16.0",

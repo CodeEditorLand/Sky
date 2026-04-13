@@ -17,9 +17,12 @@
 
 const ServiceName = "land-editor";
 const ServiceVersion = "0.0.1";
-// Same-origin path - proxied by Vite (dev) or Mountain (prod) to the real
-// OTLP collector. No CORS preflight, no cross-origin issues.
-const OTLPEndpoint = "/v1/traces";
+// In Vite dev server, /v1/traces is proxied. In Tauri desktop (localhost:PORT),
+// we must use the real collector URL directly. CSP allows http://localhost:*.
+const OTLPEndpoint =
+	typeof (window as any).__TAURI_INTERNALS__ !== "undefined"
+		? "http://localhost:4318/v1/traces"
+		: "/v1/traces";
 const BatchIntervalMs = 2000;
 const TraceId = Array.from(crypto.getRandomValues(new Uint8Array(16)))
 	.map((B) => B.toString(16).padStart(2, "0"))

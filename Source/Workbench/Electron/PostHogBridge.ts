@@ -41,6 +41,7 @@ const LoadPostHog = async (): Promise<any> => {
 						disable_session_recording: true,
 						disable_surveys: true,
 						advanced_disable_decide: true,
+						disable_external_dependency_loading: true,
 						persistence: "memory",
 						bootstrap: {
 							distinctID: `land-dev-${Date.now()}`,

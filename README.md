@@ -289,7 +289,7 @@ file.
 
 ## Changelog&#x2001;📜
 
-See [`CHANGELOG.md`](../../CHANGELOG.md) for a history of changes specific to
+See [`CHANGELOG.md`](https://github.com/CodeEditorLand/Land/tree/Current/CHANGELOG.md) for a history of changes specific to
 **Sky**&#x2001;🌌.
 
 ---

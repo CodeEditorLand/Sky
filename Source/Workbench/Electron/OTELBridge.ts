@@ -11,8 +11,10 @@
  * 4. Falls back to console.debug if no collector is running
  *
  * OTLP endpoint: http://localhost:4318/v1/traces (standard OTLP/HTTP)
- * Start a collector: `docker run -p 4318:4318 otel/opentelemetry-collector`
- * Or use Jaeger: `docker run -p 4318:4318 -p 16686:16686 jaegertracing/jaeger:2`
+ * Start Jaeger with CORS enabled:
+ *   docker run -e COLLECTOR_OTLP_HTTP_CORS_ALLOWED_ORIGINS='*' \
+ *     -e COLLECTOR_OTLP_HTTP_CORS_ALLOWED_HEADERS='Content-Type' \
+ *     -p 4318:4318 -p 16686:16686 jaegertracing/jaeger:2
  */
 
 const ServiceName = "land-editor";
@@ -125,9 +127,12 @@ const Flush = (): void => {
 		],
 	};
 
-	// Send via fetch (keepalive) to avoid CORS preflight.
-	// Send WITHOUT keepalive to avoid the 64KB browser limit.
-	// Regular fetch has no size restriction. Fire-and-forget.
+	// Fire-and-forget telemetry. If Jaeger has CORS enabled, this works.
+	// If not, the catch silently marks collector as unavailable.
+	// Start Jaeger with CORS:
+	//   docker run -e COLLECTOR_OTLP_HTTP_CORS_ALLOWED_ORIGINS='*' \
+	//     -e COLLECTOR_OTLP_HTTP_CORS_ALLOWED_HEADERS='Content-Type' \
+	//     -p 4318:4318 -p 16686:16686 jaegertracing/jaeger:2
 	try {
 		fetch(OTLPEndpoint, {
 			method: "POST",

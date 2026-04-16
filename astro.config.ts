@@ -541,12 +541,23 @@ export default defineConfig({
 						"@xterm/addon-unicode11",
 						"@xterm/addon-webgl",
 						"@vscode/vscode-languagedetection",
+						"vscode-textmate",
+						"vscode-oniguruma",
 					];
+
+					const VSCodeNodeModules = resolve(
+						process.cwd(),
+						"../../Dependency/Microsoft/Dependency/Editor/node_modules",
+					);
 
 					for (const Pkg of NodeModulesToCopy) {
 						const Source = resolve(
 							process.cwd(),
 							"node_modules",
+							Pkg,
+						);
+						const FallbackSource = resolve(
+							VSCodeNodeModules,
 							Pkg,
 						);
 						const Destination = join(
@@ -559,7 +570,13 @@ export default defineConfig({
 								recursive: true,
 							});
 						} catch {
-							// Package not installed - skip silently
+							try {
+								await cp(FallbackSource, Destination, {
+									recursive: true,
+								});
+							} catch {
+								// Package not installed in either location
+							}
 						}
 					}
 					console.log(
@@ -694,9 +711,22 @@ class ExtensionsScannerService {
 				method: 'extensions:getAll',
 				params: [],
 			});
-			const Extensions = Array.isArray(RawResult) ? RawResult : [];
+			let Extensions = Array.isArray(RawResult) ? RawResult : [];
 			_t('scanner:fetch:result', { count: Extensions.length, type: typeof RawResult, isArray: Array.isArray(RawResult) });
 			_w('IPC returned', Extensions.length, 'extensions');
+
+			// Mountain may still be scanning on first window open. Retry up to 5 times.
+			if (Extensions.length === 0) {
+				for (let Retry = 1; Retry <= 5; Retry++) {
+					_w('0 extensions, retry', Retry, '/5 in 1000ms');
+					await new Promise(R => setTimeout(R, 1000));
+					const RetryResult = await Invoke('MountainIPCInvoke', { method: 'extensions:getAll', params: [] });
+					Extensions = Array.isArray(RetryResult) ? RetryResult : [];
+					_t('scanner:fetch:retry', { retry: Retry, count: Extensions.length });
+					_w('Retry', Retry, 'returned', Extensions.length, 'extensions');
+					if (Extensions.length > 0) break;
+				}
+			}
 			if (Extensions.length === 0) return [];
 
 			const Mapped = [];

@@ -48,7 +48,7 @@
 		"astro": "6.1.7",
 		"deepmerge-ts": "7.1.5",
 		"dotenv": "17.4.2",
-		"typescript": "6.0.2",
+		"typescript": "6.0.3",
 		"vite": "8.0.8",
 		"vite-plugin-top-level-await": "1.6.0",
 		"zod": "4.3.6"

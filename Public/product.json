@@ -18,9 +18,9 @@
 	"extensionAllowedProposedApi": [],
 	"builtInExtensions": [],
 	"extensionsGallery": {
-		"serviceUrl": "",
-		"itemUrl": "",
-		"resourceUrlTemplate": ""
+		"serviceUrl": "https://open-vsx.org/api",
+		"itemUrl": "https://open-vsx.org/extension",
+		"resourceUrlTemplate": "https://open-vsx.org/files/{publisher}/{name}/{version}/{path}"
 	},
 	"documentationUrl": "https://editor.land",
 	"introductoryVideosUrl": "",

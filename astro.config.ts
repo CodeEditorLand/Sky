@@ -905,6 +905,20 @@ export { ExtensionsScannerService, IExtensionsScannerService };
 	vite: {
 		clearScreen: false,
 
+		// Tier:*:Resolution 🟢 Primary — mirror every Tier* env var into
+		// `import.meta.env.Tier<Capability>` so Wind's Utility/Tier.ts
+		// sees the same values Cocoon does. Vite substitutes these at
+		// build time; missing values fall through to Utility/Tier.ts's
+		// PascalCase defaults.
+		define: Object.fromEntries(
+			Object.entries(process.env)
+				.filter(([Key]) => Key.startsWith("Tier"))
+				.map(([Key, Value]) => [
+					`import.meta.env.${Key}`,
+					JSON.stringify(Value),
+				]),
+		),
+
 		build: {
 			rollupOptions: {
 				treeshake: {

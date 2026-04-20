@@ -370,6 +370,308 @@ export async function InstallSkyBridge(): Promise<void> {
 		);
 	});
 
+	// BATCH-19 Part B: Mountain now fans terminal lifecycle events back
+	// through the `sky://terminal/*` channel so the xterm panel can mount
+	// without waiting for Cocoon to relay. Each event is re-dispatched as a
+	// DOM `CustomEvent` so the terminal React/Astro components subscribe
+	// through the same `document.addEventListener("cel:terminal:*")`
+	// interface they use for resize.
+	await Register(
+		"sky://terminal/create",
+		({ id, name, pid }: any) => {
+			document.dispatchEvent(
+				new CustomEvent("cel:terminal:create", {
+					detail: { id, name, pid },
+				}),
+			);
+		},
+	);
+
+	await Register("sky://terminal/data", ({ id, data }: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:terminal:data", {
+				detail: { id, data },
+			}),
+		);
+	});
+
+	await Register("sky://terminal/exit", ({ id }: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:terminal:exit", {
+				detail: { id },
+			}),
+		);
+	});
+
+	// ---- Workspace folders ----
+	// BATCH-14 follow-up: whenever Mountain mutates the workspace folder set
+	// it emits `sky://workspaces/changed` with `{ added, removed, folders }`.
+	// Sky re-dispatches it as a DOM event so the sidebar, breadcrumb, and
+	// recent-folders list can refresh without polling `workspaces:getFolders`.
+	await Register(
+		"sky://workspaces/changed",
+		({ added, removed, folders }: any) => {
+			document.dispatchEvent(
+				new CustomEvent("cel:workspaces:changed", {
+					detail: { added, removed, folders },
+				}),
+			);
+		},
+	);
+
+	// ---- Notifications ----
+	// Cocoon's `vscode.window.show{Information,Warning,Error}Message` routes
+	// through Mountain's `Window.ShowMessage` effect which emits this event.
+	// Sky re-dispatches it as `cel:notification:show` so any notification UI
+	// (toast stack, status bar banner) can subscribe without needing a
+	// direct Tauri listener.
+	await Register("sky://notification/show", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:notification:show", {
+				detail: Payload,
+			}),
+		);
+	});
+	await Register("sky://notification/progress-begin", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:notification:progress-begin", {
+				detail: Payload,
+			}),
+		);
+	});
+	await Register(
+		"sky://notification/progress-update",
+		(Payload: any) => {
+			document.dispatchEvent(
+				new CustomEvent("cel:notification:progress-update", {
+					detail: Payload,
+				}),
+			);
+		},
+	);
+	await Register("sky://notification/progress-end", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:notification:progress-end", {
+				detail: Payload,
+			}),
+		);
+	});
+
+	// ---- Quick-pick / input / dialog prompts ----
+	// Mountain's `Window.ShowQuickPick`/`ShowInputBox`/`ShowOpenDialog`/
+	// `ShowSaveDialog` effects emit these events so Sky can render the
+	// picker. Reply path (Sky → Mountain) is a downstream batch; re-
+	// dispatching the event is enough for the current stub path.
+	await Register("sky://quickpick/show", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:quickpick:show", { detail: Payload }),
+		);
+	});
+	await Register("sky://input-box/show", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:input-box:show", { detail: Payload }),
+		);
+	});
+	await Register("sky://dialog/open", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:dialog:open", { detail: Payload }),
+		);
+	});
+	await Register("sky://dialog/save", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:dialog:save", { detail: Payload }),
+		);
+	});
+
+	// ---- Lifecycle ----
+	// Mountain emits this on `ApplicationRunTime::Shutdown()` before the
+	// recovery pass tears sockets down. Wind/Sky need to flush state and
+	// dispose long-lived subscriptions.
+	await Register("sky://lifecycle/willShutdown", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:lifecycle:willShutdown", {
+				detail: Payload,
+			}),
+		);
+	});
+
+	// ---- Status bar ----
+	// Extensions that call `vscode.window.createStatusBarItem(...)` fan
+	// `statusBar.update` through Mountain to `sky://status-bar/update`, and
+	// `setStatusBarMessage` through `statusBar.message` →
+	// `sky://status-bar/message`. Sky re-dispatches both as DOM events so
+	// the workbench's status-bar component can subscribe in one place.
+	await Register("sky://status-bar/update", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:status-bar:update", { detail: Payload }),
+		);
+	});
+	await Register("sky://status-bar/dispose", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:status-bar:dispose", { detail: Payload }),
+		);
+	});
+	await Register("sky://status-bar/message", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:status-bar:message", { detail: Payload }),
+		);
+	});
+
+	// ---- Languages ----
+	// `vscode.languages.setTextDocumentLanguage(doc, languageId)` flows
+	// through Mountain's `languages.setDocumentLanguage` notification.
+	await Register(
+		"sky://languages/setDocumentLanguage",
+		(Payload: any) => {
+			document.dispatchEvent(
+				new CustomEvent("cel:languages:setDocumentLanguage", {
+					detail: Payload,
+				}),
+			);
+		},
+	);
+	// `setLanguageConfiguration` fires when an extension's activation
+	// installs brackets, wordPattern, indentationRules, etc. Monaco
+	// applies them via `monaco.languages.setLanguageConfiguration` in the
+	// workbench layer; re-dispatch so that shim can pick them up.
+	await Register("sky://language/configure", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:language:configure", { detail: Payload }),
+		);
+	});
+
+	// ---- Diagnostics / themes / SCM / docs / tests / native ----
+	// Round up the remaining `sky://` channels Mountain already emits so
+	// every event has a DOM listener downstream. Each arm re-dispatches
+	// on `cel:<prefix>:<action>` so consumers never need a Tauri listener
+	// of their own.
+	for (const [Channel, DomEvent] of [
+		["sky://diagnostics/changed", "cel:diagnostics:changed"],
+		["sky://theme/change", "cel:theme:change"],
+		["sky://tree-view/dispose", "cel:tree-view:dispose"],
+		["sky://tree-view/create", "cel:tree-view:create"],
+		["sky://test/registered", "cel:test:registered"],
+		["sky://scm/provider/added", "cel:scm:provider-added"],
+		["sky://scm/provider/removed", "cel:scm:provider-removed"],
+		["sky://documents/open", "cel:documents:open"],
+		["sky://documents/saved", "cel:documents:saved"],
+		["sky://debug/stop", "cel:debug:stop"],
+		["sky://debug/addBreakpoints", "cel:debug:addBreakpoints"],
+		["sky://debug/removeBreakpoints", "cel:debug:removeBreakpoints"],
+		["sky://debug/consoleAppend", "cel:debug:consoleAppend"],
+		["sky://terminal/closed", "cel:terminal:closed"],
+		["sky://terminal/opened", "cel:terminal:opened"],
+		["sky://native/openExternal", "cel:native:openExternal"],
+		["sky://task/terminate", "cel:task:terminate"],
+		["sky://editor/applyEdits", "cel:editor:applyEdits"],
+		["sky://editor/openDocument", "cel:editor:openDocument"],
+		["sky://editor/saveAll", "cel:editor:saveAll"],
+		["sky://output/replace", "cel:output:replace"],
+		["sky://output/reveal", "cel:output:reveal"],
+		["sky://statusbar/create", "cel:statusbar:create"],
+		["sky://statusbar/dispose", "cel:statusbar:dispose"],
+		["sky://statusbar/dispose-entry", "cel:statusbar:dispose-entry"],
+		["sky://statusbar/set-entry", "cel:statusbar:set-entry"],
+		["sky://webview/setHtml", "cel:webview:setHtml"],
+	] as const) {
+		await Register(Channel, (Payload: any) => {
+			document.dispatchEvent(
+				new CustomEvent(DomEvent, { detail: Payload }),
+			);
+		});
+	}
+
+	// ---- Extension-host debug service ----
+	// Workbench reload/close triggered from the extension host debug
+	// service (`vscode.debug.onDidReceiveDebugSessionCustomEvent` flow).
+	await Register("sky://exthost/debug-reload", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:exthost:debug-reload", { detail: Payload }),
+		);
+	});
+	await Register("sky://exthost/debug-close", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:exthost:debug-close", { detail: Payload }),
+		);
+	});
+
+	// ---- Webview extensions ----
+	// Extension-initiated webview metadata/content updates. Covers
+	// setTitle, setIconPath, setHtml so every webview panel stays in sync.
+	for (const Action of ["setTitle", "setIconPath", "setHtml"]) {
+		await Register(`sky://webview/${Action}`, (Payload: any) => {
+			document.dispatchEvent(
+				new CustomEvent(`cel:webview:${Action}`, { detail: Payload }),
+			);
+		});
+	}
+
+	// ---- Tasks ----
+	// `vscode.tasks.executeTask(task)` flows through Mountain's
+	// `Task.Execute` effect, which emits `sky://task/execute` so the
+	// workbench's task-runner component can pick up the payload and drive
+	// the underlying process.
+	await Register("sky://task/execute", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:task:execute", { detail: Payload }),
+		);
+	});
+
+	// ---- Workspace edits / focus ----
+	// Extensions' `workspace.applyEdit(edit)` / `window.showTextDocument(uri)`
+	// round-trip through Mountain; Sky re-dispatches so the workbench can
+	// drive its BulkEditService + EditorService.
+	await Register("sky://workspace/applyEdit", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:workspace:applyEdit", { detail: Payload }),
+		);
+	});
+	await Register("sky://window/showTextDocument", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:window:showTextDocument", { detail: Payload }),
+		);
+	});
+
+	// ---- Editor decorations ----
+	await Register(
+		"sky://decoration/createTextEditorDecorationType",
+		(Payload: any) => {
+			document.dispatchEvent(
+				new CustomEvent("cel:decoration:create", { detail: Payload }),
+			);
+		},
+	);
+	await Register(
+		"sky://decoration/disposeTextEditorDecorationType",
+		(Payload: any) => {
+			document.dispatchEvent(
+				new CustomEvent("cel:decoration:dispose", { detail: Payload }),
+			);
+		},
+	);
+
+	// ---- Output channels ----
+	// `vscode.window.createOutputChannel(...)` runs entirely in the extension
+	// host, but lifecycle events (create/append/clear/show/hide/dispose)
+	// round-trip through Mountain as notifications so the workbench's
+	// Output panel can mirror every write. Sky re-dispatches each arm.
+	for (const Action of [
+		"create",
+		"append",
+		"clear",
+		"show",
+		"hide",
+		"dispose",
+	]) {
+		await Register(`sky://output-channel/${Action}`, (Payload: any) => {
+			document.dispatchEvent(
+				new CustomEvent(`cel:output-channel:${Action}`, {
+					detail: Payload,
+				}),
+			);
+		});
+	}
+
 	// ---- Webview ----
 	await Register(
 		"sky://webview/message",

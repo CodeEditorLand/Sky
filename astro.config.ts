@@ -779,6 +779,75 @@ export default defineConfig({
 						"[CopyVSCode] Step 11: Copied node_modules for terminal + language detection",
 					);
 
+					// Step 11b (Atom I8): strip dangling `//# sourceMappingURL=…`
+					// comments from copied JS files whose sibling `.map` was not
+					// shipped. Without this the webview fetches the missing map,
+					// gets a 404 HTML page, and Safari surfaces
+					//   Source Map "…main.js.map" has SyntaxError:
+					//   Unrecognized token '<'
+					// for every such file on every page load.
+					const StripDanglingSourceMaps = async (Root: string): Promise<number> => {
+						let Stripped = 0;
+						const { readdir: _readdir, stat: _stat } = await import("node:fs/promises");
+						const Walk = async (Dir: string): Promise<void> => {
+							let Entries: string[] = [];
+							try {
+								Entries = await _readdir(Dir);
+							} catch {
+								return;
+							}
+							for (const Entry of Entries) {
+								const Full = join(Dir, Entry);
+								let Info;
+								try {
+									Info = await _stat(Full);
+								} catch {
+									continue;
+								}
+								if (Info.isDirectory()) {
+									await Walk(Full);
+									continue;
+								}
+								if (!Entry.endsWith(".js")) continue;
+								try {
+									await _stat(`${Full}.map`);
+									// Map exists — leave the reference intact.
+									continue;
+								} catch {
+									// No sibling map. Strip the trailing comment if present.
+								}
+								try {
+									const Content = await readFile(Full, "utf-8");
+									const Rewritten = Content.replace(
+										/\n?\/\/[#@][ \t]*sourceMappingURL=[^\n]*\n?$/,
+										"\n",
+									);
+									if (Rewritten !== Content) {
+										await writeFile(Full, Rewritten, "utf-8");
+										Stripped++;
+									}
+								} catch {
+									// Best-effort; skip files we can't read.
+								}
+							}
+						};
+						await Walk(Root);
+						return Stripped;
+					};
+					for (const Pkg of NodeModulesToCopy) {
+						const PkgRoot = join(
+							TargetDir,
+							"Static/Application/node_modules",
+							Pkg,
+						);
+						const Stripped = await StripDanglingSourceMaps(PkgRoot);
+						if (Stripped > 0) {
+							console.log(
+								`[CopyVSCode] Step 11b: Stripped ${Stripped} dangling sourceMappingURL comment(s) in ${Pkg}`,
+							);
+						}
+					}
+
 					// Step 12: Create stubs for unpublished xterm addons.
 					// VS Code's xtermAddonImporter.ts references @xterm/addon-progress
 					// but the package doesn't exist on npm yet. Without a stub, the

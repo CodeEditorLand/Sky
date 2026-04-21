@@ -1,16 +1,7 @@
 {
-	"nameShort": "Land",
-	"nameLong": "Land",
-	"applicationName": "land",
-	"dataFolderName": ".land",
-	"version": "0.1.0",
-	"commit": "development",
-	"date": "2026-04-17T00:00:00.000Z",
-	"quality": "stable",
-	"urlProtocol": "land",
+	"date": "2026-04-21T18:11:08.294Z",
 	"licenseName": "MIT",
 	"licenseUrl": "https://github.com/codeeditorland/land/blob/main/LICENSE",
-	"serverApplicationName": "land-server",
 	"serverDataFolderName": ".land-server",
 	"darwinBundleIdentifier": "land.editor",
 	"reportIssueUrl": "https://github.com/codeeditorland/land/issues/new",
@@ -35,5 +26,15 @@
 	"enableTelemetry": false,
 	"aiConfig": {
 		"ariaKey": ""
-	}
+	},
+	"nameShort": "Land",
+	"nameLong": "Land Editor",
+	"applicationName": "land",
+	"dataFolderName": ".land",
+	"version": "1.118.0",
+	"commit": "dev",
+	"quality": "development",
+	"urlProtocol": "land",
+	"embedderIdentifier": "land-desktop",
+	"serverApplicationName": "land-server"
 }

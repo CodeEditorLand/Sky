@@ -1,7 +1,7 @@
 /**
  * Build-baked OTEL bridge.
  *
- * Guarded by import.meta.env.DEV — Vite dead-code-eliminates in production.
+ * Guarded by import.meta.env.DEV - Vite dead-code-eliminates in production.
  * No runtime SDK, no window.__LAND_DEV_LOG checks.
  *
  * How it works:

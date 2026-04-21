@@ -1,19 +1,19 @@
 /**
- * PostHog analytics bridge — semantic events by component.
+ * PostHog analytics bridge - semantic events by component.
  *
- * Guarded by import.meta.env.DEV — Vite dead-code-eliminates in production.
+ * Guarded by import.meta.env.DEV - Vite dead-code-eliminates in production.
  *
  * Event taxonomy (filterable in PostHog by $component):
- *   land:exthost:*   — Extension host lifecycle, activation, errors
- *   land:cocoon:*    — Cocoon sidecar gRPC, bootstrap, health
- *   land:wind:*      — Wind service layer, Effect-TS bootstrap
- *   land:sky:*       — Sky rendering, Astro, Workbench DOM
- *   land:ipc:*       — IPC channel calls and failures
- *   land:vscode:*    — VS Code workbench internals
- *   land:console:*   — Intercepted console.error/warn
- *   land:resource:*  — Failed script/image/CSS loads
- *   land:boot:*      — Boot timing, navigation performance
- *   land:session:*   — Session start/end
+ *   land:exthost:*   - Extension host lifecycle, activation, errors
+ *   land:cocoon:*    - Cocoon sidecar gRPC, bootstrap, health
+ *   land:wind:*      - Wind service layer, Effect-TS bootstrap
+ *   land:sky:*       - Sky rendering, Astro, Workbench DOM
+ *   land:ipc:*       - IPC channel calls and failures
+ *   land:vscode:*    - VS Code workbench internals
+ *   land:console:*   - Intercepted console.error/warn
+ *   land:resource:*  - Failed script/image/CSS loads
+ *   land:boot:*      - Boot timing, navigation performance
+ *   land:session:*   - Session start/end
  *
  * All events carry $component for PostHog filtering.
  * Marks are batched per-component (max 10 per flush, 2s window).
@@ -96,7 +96,7 @@ const Initialize = async (): Promise<void> => {
 	const PH = await LoadPostHog();
 	if (!PH) return;
 
-	// Per-component buffers — flushed independently
+	// Per-component buffers - flushed independently
 	const Buffers = new Map<string, BufferedMark[]>();
 	const Timers = new Map<string, ReturnType<typeof setTimeout>>();
 	const MaxPerFlush = 10; // Stay well under 64KB per request
@@ -137,7 +137,7 @@ const Initialize = async (): Promise<void> => {
 		}
 	};
 
-	// PerformanceObserver — routes to component buffers
+	// PerformanceObserver - routes to component buffers
 	const Observer = new PerformanceObserver((List) => {
 		for (const Entry of List.getEntries()) {
 			if (!Entry.name.startsWith("land:")) continue;

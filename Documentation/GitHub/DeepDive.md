@@ -1,4 +1,4 @@
-# Sky — Deep Dive
+# Sky - Deep Dive
 
 This document provides the technical foundation for the Sky UI component layer
 within the Land ecosystem. **Sky** renders the complete editor interface inside
@@ -15,20 +15,20 @@ and utility functions that support the build and runtime process.
 
 ```mermaid
 graph TB
-    subgraph "Sky — UI Component Layer"
+    subgraph "Sky - UI Component Layer"
         Pages["Pages\nindex / Browser / Electron / Mountain / Isolation"]
         Workbenches["Workbench Components\nBrowser / Mountain / Default / NLS"]
         WorkbenchImpl["Workbench Implementations\nBrowserProxy/ · Electron/"]
         Functions["Function/\nDebug · Shared · Meta · Markup/Base"]
     end
 
-    subgraph "Wind — Service Layer"
-        Preload["Preload.js — Environment Shim"]
+    subgraph "Wind - Service Layer"
+        Preload["Preload.js - Environment Shim"]
         WindServices["Effect-TS Services"]
         TauriIntegrations["Tauri IPC Integrations"]
     end
 
-    subgraph "Mountain — Rust Backend"
+    subgraph "Mountain - Rust Backend"
         TauriEvents["Tauri Event System"]
         MountainCore["Mountain Core"]
     end
@@ -51,13 +51,13 @@ graph TB
 | Path                                             | Description                                                                  |
 | :----------------------------------------------- | :--------------------------------------------------------------------------- |
 | `Source/pages/index.astro`                       | Default entry point; reads environment variables to select workbench variant |
-| `Source/pages/Mountain.astro`                    | A2 workbench page — recommended production entry point                       |
+| `Source/pages/Mountain.astro`                    | A2 workbench page - recommended production entry point                       |
 | `Source/pages/Browser.astro`                     | A1 browser-only workbench page                                               |
 | `Source/pages/BrowserProxy.astro`                | A1 browser workbench with services proxy                                     |
 | `Source/pages/Electron.astro`                    | A3 workbench page with Electron polyfills                                    |
 | `Source/pages/Isolation.astro`                   | Isolated mode page for extension sandboxing                                  |
-| `Source/Workbench/Mountain.astro`                | A2 workbench component — loads VSCode UI with Mountain providers             |
-| `Source/Workbench/Browser.astro`                 | A1 workbench component — pure browser workbench                              |
+| `Source/Workbench/Mountain.astro`                | A2 workbench component - loads VSCode UI with Mountain providers             |
+| `Source/Workbench/Browser.astro`                 | A1 workbench component - pure browser workbench                              |
 | `Source/Workbench/BrowserProxy/Layout.astro`     | A1 layout with service proxy bootstrapping                                   |
 | `Source/Workbench/BrowserProxy/Bootstrap.ts`     | Initializes Effect-TS runtime and services for BrowserProxy                  |
 | `Source/Workbench/BrowserProxy/ServicesProxy.ts` | Service proxy implementation                                                 |

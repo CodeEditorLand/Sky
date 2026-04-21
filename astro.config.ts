@@ -107,7 +107,7 @@ export default defineConfig({
 					// (nls.messages.js, nls.messages.json, bootstrap-*.js, etc.)
 					// into `Static/Application/`. These sit alongside `vs/` at
 					// the Output root, and the workbench HTML references them at
-					// URLs like `/Static/Application/nls.messages.js` — without
+					// URLs like `/Static/Application/nls.messages.js` - without
 					// this step the webview 404s to the SPA fallback and the
 					// browser reports `Unexpected token '<'` when trying to
 					// parse the HTML as a JS module.
@@ -176,7 +176,7 @@ export default defineConfig({
 
 						if (!Copied) {
 							console.warn(
-								`[CopyVSCode] Step 1b: ${File} not found in Output or Dependency — skipping`,
+								`[CopyVSCode] Step 1b: ${File} not found in Output or Dependency - skipping`,
 							);
 						}
 					}
@@ -407,7 +407,7 @@ export default defineConfig({
 							// The Extensions sidebar queries
 							// `sharedProcessService.getChannel('extensions')`
 							// (see `extensionManagementServerService.ts:35`
-							// in VS Code's electron-browser source — it's the
+							// in VS Code's electron-browser source - it's the
 							// channel ExtensionManagementChannelClient wraps).
 							// Land has no Electron shared process, so the
 							// shipped SharedProcessService tries
@@ -417,7 +417,7 @@ export default defineConfig({
 							// `TauriMainProcessService` here routes every
 							// `getChannel(name)` through the same
 							// `ChannelRouteMap` that already backs the main
-							// process — `extensions` maps to Mountain's
+							// process - `extensions` maps to Mountain's
 							// `extensions:*` handler family (getAll /
 							// getInstalled / scanSystemExtensions / …).
 							const SharedProcessDir = join(
@@ -434,7 +434,7 @@ export default defineConfig({
 								// `notifyRestored()` method. Our replacement
 								// extends TauriMainProcessService (which
 								// provides `getChannel`) and stubs the
-								// restore-barrier API as a no-op — Land
+								// restore-barrier API as a no-op - Land
 								// doesn't gate channel access on window
 								// restoration.
 								await writeFile(
@@ -813,7 +813,7 @@ export default defineConfig({
 
 					// Step 13: Copy built-in extensions.
 					// Primary: .build/extensions/ (compiled via gulp compile-extensions-build)
-					// Fallback: extensions/ (source — themes, snippets, grammars work uncompiled)
+					// Fallback: extensions/ (source - themes, snippets, grammars work uncompiled)
 					// Mountain scans Static/Application/extensions/ at startup.
 					const ExtensionsTarget = join(
 						TargetDir,
@@ -1043,7 +1043,7 @@ export { ExtensionsScannerService, IExtensionsScannerService };
 					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 
-					// PostHog build telemetry — debug only, skipped in production
+					// PostHog build telemetry - debug only, skipped in production
 					if (process.env["NODE_ENV"] !== "production") {
 						try {
 							const { request } = await import("node:https");
@@ -1101,7 +1101,7 @@ export { ExtensionsScannerService, IExtensionsScannerService };
 	vite: {
 		clearScreen: false,
 
-		// Tier:*:Resolution 🟢 Primary — mirror every Tier* env var into
+		// Tier:*:Resolution 🟢 Primary - mirror every Tier* env var into
 		// `import.meta.env.Tier<Capability>` so Wind's Utility/Tier.ts
 		// sees the same values Cocoon does. Vite substitutes these at
 		// build time; missing values fall through to Utility/Tier.ts's

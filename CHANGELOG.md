@@ -3,15 +3,15 @@
 All notable changes to Sky (UI Component Layer) are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 
-## [v2.1] — Q2 2026: Full Workbench Lift
+## [v2.1] - Q2 2026: Full Workbench Lift
 
 ### Added
 
-- `Source/Workbench/Electron/OTELBridge.ts` (153 lines) —
+- `Source/Workbench/Electron/OTELBridge.ts` (153 lines) -
   PerformanceObserver capturing `land:*` marks → OTLP/HTTP with retry logic
-- `Source/Workbench/Electron/PostHogBridge.ts` (159 lines) — error tracking
+- `Source/Workbench/Electron/PostHogBridge.ts` (159 lines) - error tracking
   and analytics via CDN with per-component buffering and $component taxonomy
-- `Source/Workbench/TelemetryBridge.astro` (17 lines) — shared component
+- `Source/Workbench/TelemetryBridge.astro` (17 lines) - shared component
   loading bridges
 - Terminal addon dependencies: xterm, xterm-addon-* promoted to stable releases
 - Extension scanning retry logic with node_modules fallback
@@ -30,7 +30,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - PostHog surveys disabled; endpoint decision finalized
 - Astro 6.1.1 → 6.1.7, Vite 8.0.2 → 8.0.3
 
-## [v2.0] — Q1 2026: Editor Launch Sprint
+## [v2.0] - Q1 2026: Editor Launch Sprint
 
 ### Added
 
@@ -46,7 +46,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - PascalCase import naming enforced in TypeScript config
 - Build pipeline integration simplified
 
-## [v1.3] — Q4 2025: Dependency Maintenance
+## [v1.3] - Q4 2025: Dependency Maintenance
 
 ### Changed
 
@@ -55,12 +55,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - 85-file gitattributes cleanup (binary/text normalization)
 - No source code changes; architecture stable
 
-## [v1.2] — Q3 2025: Full Stack Integration
+## [v1.2] - Q3 2025: Full Stack Integration
 
 ### Added
 
-- `jsconfig.json` — JavaScript configuration
-- `Source/Function/sky-ipc-router.ts` — module path fixes
+- `jsconfig.json` - JavaScript configuration
+- `Source/Function/sky-ipc-router.ts` - module path fixes
 - `Source/Function/sky-host-bridge.ts`
 
 ### Changed
@@ -69,15 +69,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - nls.messages.js module updates
 - Dependency bumps: zod, vite, astro
 
-## [v1.1] — Q2 2025: Architecture Buildout
+## [v1.1] - Q2 2025: Architecture Buildout
 
 **Critical milestone: Tauri workbench bootstrap.**
 
 ### Added
 
-- `Source/Function/WorkBench.ts` (200 lines) — IPC shim, process env,
+- `Source/Function/WorkBench.ts` (200 lines) - IPC shim, process env,
   configuration resolution
-- `Source/Workbench/Default.astro` — entry point
+- `Source/Workbench/Default.astro` - entry point
 - `Source/Workbench/Browser.astro`
 - `Source/Workbench/BrowserTest.astro`
 - `Source/Workbench/Electron/Layout.astro`
@@ -101,7 +101,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - `/Source/pages/Wind.astro` (superseded by WorkBench.ts)
 - Application.astro.mjs, Wind.astro.mjs
 
-## [v1.0] — Q1 2025: Integration Phase
+## [v1.0] - Q1 2025: Integration Phase
 
 ### Changed
 
@@ -110,7 +110,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - Firebase 11.5.0 → 11.6.0
 - Stable architecture; minimal source changes
 
-## [v0.2] — Q4 2024: Architecture Solidification
+## [v0.2] - Q4 2024: Architecture Solidification
 
 **Astro 5 migration complete.**
 
@@ -133,12 +133,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 - Legacy `/_noop-*` middleware
 
-## [v0.1] — Q3 2024: Rapid Development
+## [v0.1] - Q3 2024: Rapid Development
 
 ### Added
 
-- `Source/pages/VSCode.astro` — VS Code rendering profile
-- `Source/pages/Editor.astro` — editor profile
+- `Source/pages/VSCode.astro` - VS Code rendering profile
+- `Source/pages/Editor.astro` - editor profile
 - Firebase integration for authentication
 
 ### Changed
@@ -147,7 +147,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - Large bundle reorganization: removed Monaco/highlight.js bundles (250+
   manifest changes)
 
-## [v0.0] — Q2 2024: Project Inception
+## [v0.0] - Q2 2024: Project Inception
 
 ### Added
 

@@ -103,6 +103,83 @@ export default defineConfig({
 							Error,
 						);
 					}
+					// Step 1b: Copy root-level files VS Code loads directly
+					// (nls.messages.js, nls.messages.json, bootstrap-*.js, etc.)
+					// into `Static/Application/`. These sit alongside `vs/` at
+					// the Output root, and the workbench HTML references them at
+					// URLs like `/Static/Application/nls.messages.js` — without
+					// this step the webview 404s to the SPA fallback and the
+					// browser reports `Unexpected token '<'` when trying to
+					// parse the HTML as a JS module.
+					const StaticApplicationDir = join(
+						TargetDir,
+						"Static",
+						"Application",
+					);
+
+					const OutputRoot = resolve(
+						process.cwd(),
+						"../Output/Target/Microsoft/VSCode",
+					);
+
+					const DependencyOutBuild = resolve(
+						process.cwd(),
+						"../../Dependency/Microsoft/Dependency/Editor/out-build",
+					);
+
+					const DependencyOut = resolve(
+						process.cwd(),
+						"../../Dependency/Microsoft/Dependency/Editor/out",
+					);
+
+					// Whitelist only the root files the webview actually loads.
+					// tsconfig/*, *.map, typings/, date/ etc. stay out of the
+					// shipped bundle even if the upstream ships them.
+					const RootFilesToCopy = [
+						"nls.keys.json",
+						"nls.messages.js",
+						"nls.messages.json",
+						"nls.metadata.json",
+						"bootstrap-esm.js",
+						"bootstrap-import.js",
+						"bootstrap-meta.js",
+					];
+
+					console.log(
+						`[CopyVSCode] Step 1b: Copying ${RootFilesToCopy.length} root-level VSCode files → Static/Application/`,
+					);
+
+					for (const File of RootFilesToCopy) {
+						// Primary: Output. Fallbacks: Dependency/out-build,
+						// then Dependency/out. The .env.Land tier set
+						// controls which trees have been populated at any
+						// given time; try each until one resolves.
+						const Candidates = [
+							join(OutputRoot, File),
+							join(DependencyOutBuild, File),
+							join(DependencyOut, File),
+						];
+
+						let Copied = false;
+						for (const Source of Candidates) {
+							try {
+								await copyFile(
+									Source,
+									join(StaticApplicationDir, File),
+								);
+								Copied = true;
+								break;
+							} catch {
+								// Try next candidate
+							}
+						}
+
+						if (!Copied) {
+							console.warn(
+								`[CopyVSCode] Step 1b: ${File} not found in Output or Dependency — skipping`,
+							);
+						}
+					}
 					// Step 2: Supplement with tsc-compiled files from Dependency
 					// (fills gaps like workbench.web.main.js missing from Output)
 					const DependencySource = resolve(
@@ -325,6 +402,68 @@ export default defineConfig({
 							console.log(
 								"[CopyVSCode] Step 7: Replaced ElectronIPCMainProcessService with TauriMainProcessService (ESM wrapper)",
 							);
+
+							// Step 7b: Replace sharedProcessService.js too.
+							// The Extensions sidebar queries
+							// `sharedProcessService.getChannel('extensions')`
+							// (see `extensionManagementServerService.ts:35`
+							// in VS Code's electron-browser source — it's the
+							// channel ExtensionManagementChannelClient wraps).
+							// Land has no Electron shared process, so the
+							// shipped SharedProcessService tries
+							// `acquirePort(...)` → hangs forever → the
+							// @builtin sidebar stays empty despite 94
+							// extensions being scanned. Substituting
+							// `TauriMainProcessService` here routes every
+							// `getChannel(name)` through the same
+							// `ChannelRouteMap` that already backs the main
+							// process — `extensions` maps to Mountain's
+							// `extensions:*` handler family (getAll /
+							// getInstalled / scanSystemExtensions / …).
+							const SharedProcessDir = join(
+								Destination,
+								"workbench",
+								"services",
+								"sharedProcess",
+								"electron-browser",
+							);
+							try {
+								// The original service exports
+								// `{ SharedProcessService }` with a ctor
+								// `(windowId, logService)` and a
+								// `notifyRestored()` method. Our replacement
+								// extends TauriMainProcessService (which
+								// provides `getChannel`) and stubs the
+								// restore-barrier API as a no-op — Land
+								// doesn't gate channel access on window
+								// restoration.
+								await writeFile(
+									join(SharedProcessDir, "sharedProcessService.js"),
+									[
+										`import { TauriMainProcessService } from '../../../../platform/ipc/electron-browser/TauriMainProcessService.js';`,
+										``,
+										`class SharedProcessService extends TauriMainProcessService {`,
+										`  constructor(windowId, _logService) { super(windowId); }`,
+										`  notifyRestored() { /* Land has no shared process; channels go direct to Mountain */ }`,
+										`  async getConnection() { return this; /* self-satisfy the IPC Client shape */ }`,
+										`}`,
+										``,
+										`export { SharedProcessService };`,
+										`export default SharedProcessService;`,
+										``,
+									].join("\n"),
+									"utf-8",
+								);
+
+								console.log(
+									"[CopyVSCode] Step 7b: Replaced SharedProcessService with TauriMainProcessService-backed shim (unblocks @builtin Extensions sidebar)",
+								);
+							} catch (Error) {
+								console.warn(
+									"[CopyVSCode] Step 7b: SharedProcessService replacement failed:",
+									Error,
+								);
+							}
 						} catch (Error) {
 							console.warn(
 								"[CopyVSCode] Step 7: TauriMainProcessService replacement failed:",
@@ -363,7 +502,27 @@ export default defineConfig({
 								"const configuration2 = await resolveWindowConfiguration()",
 								`performance.mark("land:wb:resolveConfig");const configuration2 = await resolveWindowConfiguration()`,
 							);
-							// 8b-fix: Ensure profile URIs exist for reviveProfile().
+							// 8b-fix: Ensure profile URIs exist for reviveProfile(),
+							// and backfill every init-data field VS Code assumes is
+							// non-null. Each missing field produced a concrete
+							// PostHog error in the 2026-04-21 report (counts below
+							// from a single boot session):
+							//
+							//   colorScheme           → nativeHostColorSchemeService
+							//                            destructures {highContrast,dark}
+							//                            from the scheme literal (14×)
+							//   detectedProfiles      → terminalPlatformConfiguration
+							//                            .map over the profile list (25×)
+							//   externalTerminal      → .windows / .osx / .linux pane (5×)
+							//   backupPath            → base/common/path rejects undefined (33×)
+							//   perfMarks             → timerService .marks.filter (14×)
+							//   watcher / utilityProcess → destructure .reason (14×)
+							//   colorScheme initial   → same service, initial read (14×)
+							//
+							// Providing neutral defaults here means the workbench
+							// boots cleanly even when Mountain hasn't yet populated
+							// a field; later, when Mountain DOES send a real value
+							// via Tauri IPC, the assignment overwrites our default.
 							Content = Content.replace(
 								"setupNLS(configuration2)",
 								[
@@ -378,6 +537,26 @@ export default defineConfig({
 									`_fix(configuration2.profiles.profile);`,
 									`if(Array.isArray(configuration2.profiles.all))configuration2.profiles.all.forEach(_fix);`,
 									`}`,
+									// Backfill colorScheme so nativeHostColorSchemeService's
+									// `initial.highContrast` read (nativeHostColorSchemeService.ts:46)
+									// and the subsequent promise-resolved `update({highContrast,dark})`
+									// never destructure from undefined.
+									`if(!configuration2.colorScheme)configuration2.colorScheme={dark:false,highContrast:false};`,
+									// Backfill detectedProfiles so terminalPlatformConfiguration's
+									// .map call doesn't explode on cold boots where the terminal
+									// profile detection hasn't completed yet.
+									`if(!Array.isArray(configuration2.detectedProfiles))configuration2.detectedProfiles=[];`,
+									// Backfill external-terminal per-OS config so
+									// externalTerminal.electron-browser doesn't destructure
+									// .windows / .osx / .linux from undefined.
+									`if(!configuration2.externalTerminal)configuration2.externalTerminal={windows:{},osx:{},linux:{}};`,
+									// Backfill perfMarks so timerService's marks.filter()
+									// doesn't fire on a missing array.
+									`if(!Array.isArray(configuration2.perfMarks))configuration2.perfMarks=[];`,
+									// Backfill an empty backupPath so base/common/path
+									// validators that assume a string get one. Empty
+									// string is also what the browser workbench carries.
+									`if(typeof configuration2.backupPath!=="string")configuration2.backupPath="";`,
 									`performance.mark("land:wb:setupNLS");setupNLS(configuration2)`,
 								].join(""),
 							);
@@ -389,10 +568,30 @@ export default defineConfig({
 								"return { result: result2, configuration: configuration2 }",
 								`performance.mark("land:wb:importDone");return { result: result2, configuration: configuration2 }`,
 							);
-							// 8c: Wrap result.main(configuration) with try/catch + await
+							// 8c: Wrap result.main(configuration) with try/catch + await,
+							// bookended by Atom H1c diagnostic:log invokes that route to
+							// Mountain.dev.log. Confirms whether each post-nav page reload
+							// enters result.main, what workspace the new page reads, and
+							// how many extensions survive to the workbench registry after
+							// boot completes.
 							Content = Content.replace(
 								"result.main(configuration)",
-								`performance.mark("land:wb:main");try{await result.main(configuration);performance.mark("land:wb:mainDone")}catch(_e){performance.mark("land:wb:mainError")}`,
+								[
+									`performance.mark("land:wb:main");`,
+									`try{`,
+									`const _L=(tag,msg,...extras)=>{try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"diagnostic:log",params:[tag,msg,...extras]});}catch{}};`,
+									`_L("wb:boot","pre-main href="+location.href+" search="+location.search,{folderUri:configuration?.folderUri??null,workspace:configuration?.workspace??null,windowId:configuration?.windowId??null});`,
+									`await result.main(configuration);`,
+									`performance.mark("land:wb:mainDone");`,
+									`_L("wb:boot","post-main completed","reloadCount="+(performance.getEntriesByType?performance.getEntriesByType("navigation")?.length??-1:-1));`,
+									// Probe the workbench's DI container for the ExtensionService
+									// one event loop later (give microtasks time to settle) and
+									// report how many extensions registered + active.
+									`setTimeout(()=>{try{const W=globalThis;const MP=W.__monacoPostBoot??null;const reg=(W.monaco&&W.monaco.extensions)||null;_L("wb:boot","ext-registry-probe",{monacoExtensionsApi:!!reg,postBootHook:!!MP,pluginApiKeys:reg?Object.keys(reg):null});}catch(e){_L("wb:boot","ext-registry-probe-error",String(e));}},1500);`,
+									`}catch(_e){performance.mark("land:wb:mainError");`,
+									`try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"diagnostic:log",params:["wb:boot","main-threw",String(_e?.message||_e),String(_e?.stack||"").slice(0,400)]});}catch{}`,
+									`}`,
+								].join(""),
 							);
 
 							await writeFile(WorkbenchJS, Content, "utf-8");
@@ -556,10 +755,7 @@ export default defineConfig({
 							"node_modules",
 							Pkg,
 						);
-						const FallbackSource = resolve(
-							VSCodeNodeModules,
-							Pkg,
-						);
+						const FallbackSource = resolve(VSCodeNodeModules, Pkg);
 						const Destination = join(
 							TargetDir,
 							"Static/Application/node_modules",

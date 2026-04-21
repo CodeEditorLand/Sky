@@ -13,12 +13,14 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
+import type { Dirent } from "node:fs";
 import {
 	copyFile,
 	cp,
 	mkdir,
 	readdir,
 	readFile,
+	stat,
 	writeFile,
 } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -786,35 +788,33 @@ export default defineConfig({
 					//   Source Map "…main.js.map" has SyntaxError:
 					//   Unrecognized token '<'
 					// for every such file on every page load.
+					// Use the top-of-file static `readdir` / `stat` / `readFile` /
+					// `writeFile` bindings — dynamic `await import("node:fs/promises")`
+					// here crashes with "Vite module runner has been closed" because
+					// this runs inside astro:build:done, after Vite tears down its
+					// ModuleRunner. Static imports survive the teardown; dynamic ones
+					// re-enter the runner and throw.
 					const StripDanglingSourceMaps = async (Root: string): Promise<number> => {
 						let Stripped = 0;
-						const { readdir: _readdir, stat: _stat } = await import("node:fs/promises");
 						const Walk = async (Dir: string): Promise<void> => {
-							let Entries: string[] = [];
+							let Entries: Dirent[] = [];
 							try {
-								Entries = await _readdir(Dir);
+								Entries = await readdir(Dir, { withFileTypes: true });
 							} catch {
 								return;
 							}
 							for (const Entry of Entries) {
-								const Full = join(Dir, Entry);
-								let Info;
-								try {
-									Info = await _stat(Full);
-								} catch {
-									continue;
-								}
-								if (Info.isDirectory()) {
+								const Full = join(Dir, Entry.name);
+								if (Entry.isDirectory()) {
 									await Walk(Full);
 									continue;
 								}
-								if (!Entry.endsWith(".js")) continue;
+								if (!Entry.name.endsWith(".js")) continue;
 								try {
-									await _stat(`${Full}.map`);
-									// Map exists — leave the reference intact.
+									await stat(`${Full}.map`);
 									continue;
 								} catch {
-									// No sibling map. Strip the trailing comment if present.
+									// No sibling map — strip the trailing comment.
 								}
 								try {
 									const Content = await readFile(Full, "utf-8");

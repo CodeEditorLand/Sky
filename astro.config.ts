@@ -23,6 +23,7 @@ import {
 	stat,
 	writeFile,
 } from "node:fs/promises";
+import { request } from "node:https";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -440,7 +441,10 @@ export default defineConfig({
 								// doesn't gate channel access on window
 								// restoration.
 								await writeFile(
-									join(SharedProcessDir, "sharedProcessService.js"),
+									join(
+										SharedProcessDir,
+										"sharedProcessService.js",
+									),
 									[
 										`import { TauriMainProcessService } from '../../../../platform/ipc/electron-browser/TauriMainProcessService.js';`,
 										``,
@@ -794,12 +798,16 @@ export default defineConfig({
 					// this runs inside astro:build:done, after Vite tears down its
 					// ModuleRunner. Static imports survive the teardown; dynamic ones
 					// re-enter the runner and throw.
-					const StripDanglingSourceMaps = async (Root: string): Promise<number> => {
+					const StripDanglingSourceMaps = async (
+						Root: string,
+					): Promise<number> => {
 						let Stripped = 0;
 						const Walk = async (Dir: string): Promise<void> => {
 							let Entries: Dirent[] = [];
 							try {
-								Entries = await readdir(Dir, { withFileTypes: true });
+								Entries = await readdir(Dir, {
+									withFileTypes: true,
+								});
 							} catch {
 								return;
 							}
@@ -817,13 +825,20 @@ export default defineConfig({
 									// No sibling map — strip the trailing comment.
 								}
 								try {
-									const Content = await readFile(Full, "utf-8");
+									const Content = await readFile(
+										Full,
+										"utf-8",
+									);
 									const Rewritten = Content.replace(
 										/\n?\/\/[#@][ \t]*sourceMappingURL=[^\n]*\n?$/,
 										"\n",
 									);
 									if (Rewritten !== Content) {
-										await writeFile(Full, Rewritten, "utf-8");
+										await writeFile(
+											Full,
+											Rewritten,
+											"utf-8",
+										);
 										Stripped++;
 									}
 								} catch {
@@ -884,52 +899,65 @@ export default defineConfig({
 					// Primary: .build/extensions/ (compiled via gulp compile-extensions-build)
 					// Fallback: extensions/ (source - themes, snippets, grammars work uncompiled)
 					// Mountain scans Static/Application/extensions/ at startup.
-					const ExtensionsTarget = join(
-						TargetDir,
-						"Static/Application/extensions",
-					);
-					const ExtensionsSources = [
-						resolve(
-							process.cwd(),
-							"../../Dependency/Microsoft/Dependency/Editor/.build/extensions",
-						),
-						resolve(
-							process.cwd(),
-							"../../Dependency/Microsoft/Dependency/Editor/extensions",
-						),
-					];
-					let ExtensionsCopied = false;
-					for (const ExtensionsSource of ExtensionsSources) {
-						try {
-							const ExtDirs = await readdir(ExtensionsSource);
-							let Copied = 0;
-							for (const Ext of ExtDirs) {
-								const Source = join(ExtensionsSource, Ext);
-								const PkgPath = join(Source, "package.json");
-								try {
-									await readFile(PkgPath);
-									const Dest = join(ExtensionsTarget, Ext);
-									await cp(Source, Dest, { recursive: true });
-									Copied++;
-								} catch {
-									// Skip dirs without package.json or broken extensions
-								}
-							}
-							if (Copied > 0) {
-								console.log(
-									`[CopyVSCode] Step 13: Copied ${Copied} built-in extensions from ${ExtensionsSource}`,
-								);
-								ExtensionsCopied = true;
-								break;
-							}
-						} catch {
-							// Source dir not found, try next
-						}
-					}
-					if (!ExtensionsCopied) {
-						console.warn(
-							"[CopyVSCode] Step 13: No built-in extensions found",
+					//
+					// Atom J2: `debug-electron-minimal` / `release-electron-minimal`
+					// profiles set `LAND_SKIP_BUILTIN_EXTENSIONS=true` so the
+					// shipping bundle excludes every bundled extension. Mountain's
+					// Scanner observes the same flag (Atom J3) and returns early
+					// for the built-in fallback paths, so the runtime matches the
+					// zero-on-disk state.
+					if (process.env["LAND_SKIP_BUILTIN_EXTENSIONS"] === "true") {
+						console.log(
+							"[CopyVSCode] Step 13: LAND_SKIP_BUILTIN_EXTENSIONS=true — skipping built-in extension copy",
 						);
+					} else {
+						const ExtensionsTarget = join(
+							TargetDir,
+							"Static/Application/extensions",
+						);
+						const ExtensionsSources = [
+							resolve(
+								process.cwd(),
+								"../../Dependency/Microsoft/Dependency/Editor/.build/extensions",
+							),
+							resolve(
+								process.cwd(),
+								"../../Dependency/Microsoft/Dependency/Editor/extensions",
+							),
+						];
+						let ExtensionsCopied = false;
+						for (const ExtensionsSource of ExtensionsSources) {
+							try {
+								const ExtDirs = await readdir(ExtensionsSource);
+								let Copied = 0;
+								for (const Ext of ExtDirs) {
+									const Source = join(ExtensionsSource, Ext);
+									const PkgPath = join(Source, "package.json");
+									try {
+										await readFile(PkgPath);
+										const Dest = join(ExtensionsTarget, Ext);
+										await cp(Source, Dest, { recursive: true });
+										Copied++;
+									} catch {
+										// Skip dirs without package.json or broken extensions
+									}
+								}
+								if (Copied > 0) {
+									console.log(
+										`[CopyVSCode] Step 13: Copied ${Copied} built-in extensions from ${ExtensionsSource}`,
+									);
+									ExtensionsCopied = true;
+									break;
+								}
+							} catch {
+								// Source dir not found, try next
+							}
+						}
+						if (!ExtensionsCopied) {
+							console.warn(
+								"[CopyVSCode] Step 13: No built-in extensions found",
+							);
+						}
 					}
 
 					// Step 14: Patch extensionsScannerService (node/) to fetch
@@ -1112,10 +1140,12 @@ export { ExtensionsScannerService, IExtensionsScannerService };
 					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 
-					// PostHog build telemetry - debug only, skipped in production
+					// PostHog build telemetry - debug only, skipped in production.
+					// Uses top-level static `request` import; dynamic imports fail
+					// here because the Vite module runner has been closed by the
+					// time astro:build:done fires.
 					if (process.env["NODE_ENV"] !== "production") {
 						try {
-							const { request } = await import("node:https");
 							const Body = JSON.stringify({
 								api_key:
 									"phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",

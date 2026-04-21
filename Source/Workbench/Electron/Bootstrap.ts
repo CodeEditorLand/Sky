@@ -1,6 +1,16 @@
 /**
  * Effect-TS bootstrap for Electron workbench (A3).
  * Zero console.* output. Results captured via performance.mark().
+ *
+ * Atom N2: when `LAND_ENABLE_WIND` is false at build time, the Wind
+ * bootstrap is replaced with a single performance-mark so the workbench
+ * loads the native VS Code stack with no Effect-TS service layer on top.
+ * Useful for "Mountain + bare workbench" integration tests and for the
+ * smallest shippable surface where gRPC/Tauri IPC isn't desired.
+ *
+ * Vite inlines `import.meta.env.LAND_ENABLE_WIND` at build time — the
+ * inline comparison drops the entire import chain when the flag is
+ * `"false"`, so tree-shaking removes the Wind bundle from production.
  */
 
 interface BootstrapStage {
@@ -16,30 +26,42 @@ interface BootstrapResult {
 	error?: unknown;
 }
 
-try {
-	performance.mark("land:bootstrap:start");
+if (import.meta.env["LAND_ENABLE_WIND"] === "false") {
+	performance.mark("land:bootstrap:skipped-wind-disabled");
+} else {
+	try {
+		performance.mark("land:bootstrap:start");
 
-	const { runBootstrap } =
-		await import("@codeeditorland/wind/Target/Effect/Bootstrap");
-	const { Effect } = await import("effect");
+		const { runBootstrap } = await import(
+			"@codeeditorland/wind/Target/Effect/Bootstrap"
+		);
+		const { Effect } = await import("effect");
 
-	const BootstrapResult: BootstrapResult = await Effect.runPromise(
-		runBootstrap({
-			skipHealthCheck: true,
-			debugMode: true,
-		}),
-	);
+		const BootstrapResult: BootstrapResult = await Effect.runPromise(
+			runBootstrap({
+				skipHealthCheck: true,
+				debugMode: true,
+			}),
+		);
 
-	performance.mark("land:bootstrap:done", {
-		detail: {
-			success: BootstrapResult.success,
-			duration: BootstrapResult.totalDuration,
-			stages: BootstrapResult.stages.map((S: BootstrapStage) => `${S.stageName}:${S.success ? "ok" : "fail"}:${S.duration}ms`),
-		},
-	});
-	performance.measure("land:bootstrap", "land:bootstrap:start", "land:bootstrap:done");
-} catch {
-	performance.mark("land:bootstrap:error");
+		performance.mark("land:bootstrap:done", {
+			detail: {
+				success: BootstrapResult.success,
+				duration: BootstrapResult.totalDuration,
+				stages: BootstrapResult.stages.map(
+					(S: BootstrapStage) =>
+						`${S.stageName}:${S.success ? "ok" : "fail"}:${S.duration}ms`,
+				),
+			},
+		});
+		performance.measure(
+			"land:bootstrap",
+			"land:bootstrap:start",
+			"land:bootstrap:done",
+		);
+	} catch {
+		performance.mark("land:bootstrap:error");
+	}
 }
 
 export default {};

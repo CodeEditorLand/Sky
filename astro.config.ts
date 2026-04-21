@@ -1205,14 +1205,24 @@ export { ExtensionsScannerService, IExtensionsScannerService };
 		// sees the same values Cocoon does. Vite substitutes these at
 		// build time; missing values fall through to Utility/Tier.ts's
 		// PascalCase defaults.
-		define: Object.fromEntries(
-			Object.entries(process.env)
-				.filter(([Key]) => Key.startsWith("Tier"))
-				.map(([Key, Value]) => [
-					`import.meta.env.${Key}`,
-					JSON.stringify(Value),
-				]),
-		),
+		//
+		// Atom N2: additionally mirror `LAND_ENABLE_WIND` so Sky's
+		// Electron/BrowserProxy bootstrap can drop the Wind import chain
+		// entirely when the flag is false. Defaults to `"true"` so the
+		// Wind layer loads for every profile that doesn't opt out.
+		define: {
+			...Object.fromEntries(
+				Object.entries(process.env)
+					.filter(([Key]) => Key.startsWith("Tier"))
+					.map(([Key, Value]) => [
+						`import.meta.env.${Key}`,
+						JSON.stringify(Value),
+					]),
+			),
+			"import.meta.env.LAND_ENABLE_WIND": JSON.stringify(
+				process.env["LAND_ENABLE_WIND"] ?? "true",
+			),
+		},
 
 		build: {
 			rollupOptions: {

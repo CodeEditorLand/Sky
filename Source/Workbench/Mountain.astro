@@ -66,6 +66,45 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 					);
 					await InstallSkyBridge();
 					performance.mark("land:mountain:skybridge:installed");
+
+					// Atom P3: signal Mountain that the workbench is
+					// interactive so `Restored` / `Eventually` phases don't
+					// rely on Mountain's 8s/23s fallback timers. Mountain
+					// rejects backwards/same-phase advances so calling this
+					// after the fallback fired is harmless. The Tauri IPC
+					// is loaded dynamically because the workbench boot runs
+					// in a plain `<script type="module">` context without a
+					// pre-resolved bundle.
+					try {
+						const TauriModule = await import(
+							"@tauri-apps/api/core"
+						);
+						await TauriModule.invoke("mountain_ipc_invoke", {
+							command: "lifecycle:advancePhase",
+							args: [3],
+						});
+						performance.mark("land:mountain:phase:restored");
+						setTimeout(async () => {
+							try {
+								await TauriModule.invoke(
+									"mountain_ipc_invoke",
+									{
+										command: "lifecycle:advancePhase",
+										args: [4],
+									},
+								);
+								performance.mark(
+									"land:mountain:phase:eventually",
+								);
+							} catch {
+								performance.mark(
+									"land:mountain:phase:eventually:error",
+								);
+							}
+						}, 2000);
+					} catch {
+						performance.mark("land:mountain:phase:error");
+					}
 				} catch {
 					performance.mark("land:mountain:skybridge:error");
 				}

@@ -153,10 +153,23 @@ interface BufferedMark {
 // Dropping here instead means the warning never fires AND the
 // PostHog dashboard gets a single "dropped=N" reporting event
 // per window so volume loss is visible.
+//
+// Exceptions share the posthog-js `$exception` event-name slot, so a
+// single workbench boot's worth of CSP refusals / console.error /
+// unhandledrejection callbacks used to blow straight through the
+// 10 / 10 s cap. Throttle them by a stable signature (first 200 chars
+// of the message) so unique exceptions still reach PostHog while
+// bursts of the *same* exception collapse into one.
 const ThrottleWindowMs = 10_000;
 const ThrottleLimitPerName = Math.max(1, PostHogMaxEventsPerSecond * 2);
+const ExceptionThrottleLimitPerSignature = Math.max(1, ThrottleLimitPerName);
 const ThrottleCounters = new Map<string, { Count: number; ResetAt: number }>();
 const ThrottleDropped = new Map<string, number>();
+const ExceptionCounters = new Map<
+	string,
+	{ Count: number; ResetAt: number }
+>();
+const ExceptionDropped = new Map<string, number>();
 
 const ShouldThrottle = (Name: string): boolean => {
 	const Now = Date.now();
@@ -176,19 +189,58 @@ const ShouldThrottle = (Name: string): boolean => {
 	return false;
 };
 
+// Build a stable signature for an exception. Uses the first 200 chars of the
+// message (or the `String(Error)` fallback) so identical errors from
+// different call sites still collapse onto one counter. Avoids stack-trace
+// fingerprinting because addresses / minified names drift between builds.
+const ExceptionSignature = (Error: unknown): string => {
+	if (Error && typeof Error === "object" && "message" in Error) {
+		const Message = String((Error as { message: unknown }).message ?? "");
+		return Message.slice(0, 200) || "unknown";
+	}
+	return String(Error).slice(0, 200) || "unknown";
+};
+
+const ShouldThrottleException = (Signature: string): boolean => {
+	const Now = Date.now();
+	const Entry = ExceptionCounters.get(Signature);
+	if (!Entry || Entry.ResetAt <= Now) {
+		ExceptionCounters.set(Signature, {
+			Count: 1,
+			ResetAt: Now + ThrottleWindowMs,
+		});
+		return false;
+	}
+	Entry.Count += 1;
+	if (Entry.Count > ExceptionThrottleLimitPerSignature) {
+		ExceptionDropped.set(
+			Signature,
+			(ExceptionDropped.get(Signature) ?? 0) + 1,
+		);
+		return true;
+	}
+	return false;
+};
+
 const DrainThrottleMetrics = (PH: any): void => {
-	if (ThrottleDropped.size === 0) return;
+	if (ThrottleDropped.size === 0 && ExceptionDropped.size === 0) return;
 	const Summary: Record<string, number> = {};
 	for (const [Name, Count] of ThrottleDropped.entries()) {
 		Summary[Name] = Count;
 	}
 	ThrottleDropped.clear();
+	const ExceptionSummary: Record<string, number> = {};
+	for (const [Signature, Count] of ExceptionDropped.entries()) {
+		ExceptionSummary[Signature] = Count;
+	}
+	ExceptionDropped.clear();
 	// Single event per window - counted as one against the
 	// throttle itself, so always safe under the limit.
 	try {
 		PH.capture?.("land:sky:throttle-dropped", {
 			$component: "sky",
 			dropped: Summary,
+			dropped_exceptions: ExceptionSummary,
 			window_ms: ThrottleWindowMs,
 		});
 	} catch {}
@@ -211,9 +263,17 @@ const Initialize = async (): Promise<void> => {
 			Error: unknown,
 			Properties?: Record<string, unknown>,
 		) => {
-			// Errors pass through unthrottled - they're already rare
-			// and signal-rich, and the dashboard deduplicates by
-			// $exception_type anyway.
+			// Exceptions share the posthog-js `$exception` event-name
+			// slot for the purposes of its internal limiter, so a
+			// bursty stream (workbench boot produces dozens of
+			// duplicate CSP refusals, hook callbacks, etc.) used to
+			// blow through the 10/10 s cap and surface as
+			// "ignored due to client rate limiting" in the webview
+			// console. Collapse by message signature here so unique
+			// exceptions still reach PostHog and bursts of the same
+			// error show up as a single `throttle-dropped` summary.
+			const Signature = ExceptionSignature(Error);
+			if (ShouldThrottleException(Signature)) return;
 			return Raw.captureException(Error, Properties);
 		},
 	};

@@ -13,27 +13,20 @@
  */
 
 try {
-	// 1. Process Polyfill - Node.js process object
-	await import("@codeeditorland/wind/Target/Polyfills/ProcessPolyfill");
-
-	// 2. File Protocol Shim - vscode-file:// protocol handling
-	await import("@codeeditorland/wind/Target/Polyfills/FileProtocolShim");
-
-	// 3. File System Polyfill - fs module
-	await import("@codeeditorland/wind/Target/Polyfills/FileSystemPolyfill");
-
-	// 4. IPC Renderer Shim - Electron IPC communication
-	await import("@codeeditorland/wind/Target/Polyfills/IPCRendererShim");
-
-	// 5. Child Process Polyfill - child_process module
-	await import("@codeeditorland/wind/Target/Polyfills/ChildProcessPolyfill");
-
-	// 6. Native Module Polyfill - native module loading
-	await import("@codeeditorland/wind/Target/Polyfills/NativeModulePolyfill");
-
-	// 7. Shared Process Proxy - Shared process communication
-	await import("@codeeditorland/wind/Target/Polyfills/SharedProcessProxy");
-} catch (error: unknown) {
-}
+	// Single source of truth for polyfills is now `Element/Output/
+	// Source/Polyfill/*`. Wind's `Wind/Source/Polyfills/*` are thin re-
+	// exports of the same modules kept around so Cocoon and any lingering
+	// VS Code imports continue to resolve; importing through Output
+	// directly here means a polyfill fix (e.g. the colon-prefix
+	// `MountainIPCInvoke` routing) lands in one place and every tier
+	// picks it up on rebuild.
+	await import("@codeeditorland/output/Polyfill/ProcessPolyfill");
+	await import("@codeeditorland/output/Polyfill/FileProtocolShim");
+	await import("@codeeditorland/output/Polyfill/FileSystemPolyfill");
+	await import("@codeeditorland/output/Polyfill/IPCRendererShim");
+	await import("@codeeditorland/output/Polyfill/ChildProcessPolyfill");
+	await import("@codeeditorland/output/Polyfill/NativeModulePolyfill");
+	await import("@codeeditorland/output/Polyfill/SharedProcessProxy");
+} catch (_Error: unknown) {}
 
 export default {};

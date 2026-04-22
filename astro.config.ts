@@ -793,7 +793,7 @@ export default defineConfig({
 					//   Unrecognized token '<'
 					// for every such file on every page load.
 					// Use the top-of-file static `readdir` / `stat` / `readFile` /
-					// `writeFile` bindings — dynamic `await import("node:fs/promises")`
+					// `writeFile` bindings - dynamic `await import("node:fs/promises")`
 					// here crashes with "Vite module runner has been closed" because
 					// this runs inside astro:build:done, after Vite tears down its
 					// ModuleRunner. Static imports survive the teardown; dynamic ones
@@ -822,7 +822,7 @@ export default defineConfig({
 									await stat(`${Full}.map`);
 									continue;
 								} catch {
-									// No sibling map — strip the trailing comment.
+									// No sibling map - strip the trailing comment.
 								}
 								try {
 									const Content = await readFile(
@@ -908,7 +908,7 @@ export default defineConfig({
 					// zero-on-disk state.
 					if (process.env["LAND_SKIP_BUILTIN_EXTENSIONS"] === "true") {
 						console.log(
-							"[CopyVSCode] Step 13: LAND_SKIP_BUILTIN_EXTENSIONS=true — skipping built-in extension copy",
+							"[CopyVSCode] Step 13: LAND_SKIP_BUILTIN_EXTENSIONS=true - skipping built-in extension copy",
 						);
 					} else {
 						const ExtensionsTarget = join(

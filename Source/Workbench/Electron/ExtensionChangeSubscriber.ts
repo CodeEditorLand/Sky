@@ -3,7 +3,7 @@
  * @description
  * Subscribes to Mountain's `sky://extensions/installed` + `…/uninstalled`
  * events and forwards each change to the VS Code workbench's extension
- * registry so the sidebar refreshes live after a VSIX install/uninstall —
+ * registry so the sidebar refreshes live after a VSIX install/uninstall -
  * no workbench reload required.
  *
  * Design note: Wind exposes the merged typed stream as
@@ -18,7 +18,7 @@
  *      when available. The hook isn't always present (browser / kernel
  *      profiles omit it); when missing we just log and move on.
  *
- * No-op when `LAND_ENABLE_WIND === "false"` — if the Wind runtime is
+ * No-op when `LAND_ENABLE_WIND === "false"` - if the Wind runtime is
  * not loaded there's no IPC to subscribe to.
  */
 
@@ -52,7 +52,7 @@ const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
 		try {
 			void RefreshFn();
 		} catch {
-			// Best-effort only — the workbench will self-heal on next render.
+			// Best-effort only - the workbench will self-heal on next render.
 		}
 	}
 };
@@ -86,7 +86,7 @@ export default async (): Promise<void> => {
 			);
 		});
 
-		// Fire-and-forget — the stream runs until the webview unloads.
+		// Fire-and-forget - the stream runs until the webview unloads.
 		Effect.runFork(Subscription as never);
 
 		performance.mark("land:extensions:subscriber:started");

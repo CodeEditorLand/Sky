@@ -8,7 +8,7 @@
  * Useful for "Mountain + bare workbench" integration tests and for the
  * smallest shippable surface where gRPC/Tauri IPC isn't desired.
  *
- * Vite inlines `import.meta.env.LAND_ENABLE_WIND` at build time — the
+ * Vite inlines `import.meta.env.LAND_ENABLE_WIND` at build time - the
  * inline comparison drops the entire import chain when the flag is
  * `"false"`, so tree-shaking removes the Wind bundle from production.
  */
@@ -61,7 +61,7 @@ if (import.meta.env["LAND_ENABLE_WIND"] === "false") {
 		);
 
 		// Wave 7: subscribe to Mountain's extension install/uninstall events
-		// so the sidebar refreshes live after a VSIX install (K2/K3) — no
+		// so the sidebar refreshes live after a VSIX install (K2/K3) - no
 		// workbench reload required. Fire-and-forget; the subscriber logs
 		// its own performance.mark on start / error / skipped states.
 		const { default: StartExtensionSubscriber } = await import(

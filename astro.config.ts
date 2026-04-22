@@ -206,397 +206,138 @@ export default defineConfig({
 						"vs",
 					);
 
-					// Step 1: Copy ESBuild-processed files from Output (primary source)
-					const OutputSource = resolve(
-						process.cwd(),
-						"../Output/Target/Microsoft/VSCode/vs",
-					);
-
-					console.log(
-						`[CopyVSCode] Step 1: Copying Output/vs → Static/Application/vs/`,
-					);
-
-					try {
-						await cp(OutputSource, Destination, {
-							recursive: true,
-						});
-					} catch (Error) {
-						console.warn(
-							"[CopyVSCode] ✗ Output copy failed:",
-							Error,
-						);
-					}
-					// Step 1b: Copy root-level files VS Code loads directly
-					// (nls.messages.js, nls.messages.json, bootstrap-*.js, etc.)
-					// into `Static/Application/`. These sit alongside `vs/` at
-					// the Output root, and the workbench HTML references them at
-					// URLs like `/Static/Application/nls.messages.js` - without
-					// this step the webview 404s to the SPA fallback and the
-					// browser reports `Unexpected token '<'` when trying to
-					// parse the HTML as a JS module.
 					const StaticApplicationDir = join(
 						TargetDir,
 						"Static",
 						"Application",
 					);
 
-					const OutputRoot = resolve(
-						process.cwd(),
-						"../Output/Target/Microsoft/VSCode",
-					);
-
-					const DependencyOutBuild = resolve(
-						process.cwd(),
-						"../../Dependency/Microsoft/Dependency/Editor/out-build",
-					);
-
-					const DependencyOut = resolve(
-						process.cwd(),
-						"../../Dependency/Microsoft/Dependency/Editor/out",
-					);
-
-					// Whitelist only the root files the webview actually loads.
-					// tsconfig/*, *.map, typings/, date/ etc. stay out of the
-					// shipped bundle even if the upstream ships them.
-					const RootFilesToCopy = [
-						"nls.keys.json",
-						"nls.messages.js",
-						"nls.messages.json",
-						"nls.metadata.json",
-						"bootstrap-esm.js",
-						"bootstrap-import.js",
-						"bootstrap-meta.js",
-					];
-
-					console.log(
-						`[CopyVSCode] Step 1b: Copying ${RootFilesToCopy.length} root-level VSCode files → Static/Application/`,
-					);
-
-					for (const File of RootFilesToCopy) {
-						// Primary: Output. Fallbacks: Dependency/out-build,
-						// then Dependency/out. The .env.Land tier set
-						// controls which trees have been populated at any
-						// given time; try each until one resolves.
-						const Candidates = [
-							join(OutputRoot, File),
-							join(DependencyOutBuild, File),
-							join(DependencyOut, File),
-						];
-
-						let Copied = false;
-						for (const Source of Candidates) {
-							try {
-								await copyFile(
-									Source,
-									join(StaticApplicationDir, File),
-								);
-								Copied = true;
-								break;
-							} catch {
-								// Try next candidate
-							}
-						}
-
-						if (!Copied) {
-							console.warn(
-								`[CopyVSCode] Step 1b: ${File} not found in Output or Dependency - skipping`,
-							);
-						}
-					}
-					// Step 2: Supplement with tsc-compiled files from Dependency
-					// (fills gaps like workbench.web.main.js missing from Output)
-					const DependencySource = resolve(
-						process.cwd(),
-						"../../Dependency/Microsoft/Dependency/Editor/out/vs",
-					);
-
-					console.log(
-						`[CopyVSCode] Step 2: Supplementing from Dependency/out/vs/`,
-					);
-
-					try {
-						await cp(DependencySource, Destination, {
-							recursive: true,
-							force: false,
-						});
-					} catch (Error) {
-						console.warn(
-							"[CopyVSCode] ✗ Dependency supplement failed:",
-							Error,
-						);
-					}
-					// Step 3: Copy Worker.js from node_modules to Target/Worker.js
-					const WorkerSource = resolve(
-						process.cwd(),
-						"node_modules/@codeeditorland/worker/Target/Worker.js",
-					);
-
-					const WorkerDestination = join(TargetDir, "Worker.js");
-
-					try {
-						await copyFile(WorkerSource, WorkerDestination);
-
-						console.log(
-							"[CopyVSCode] ✓ Worker.js copied to Target/",
-						);
-					} catch (Error) {
-						console.warn(
-							"[CopyVSCode] ✗ Worker.js copy failed:",
-							Error,
-						);
-					}
-					// Step 4: Strip CSS imports - Tauri WKWebView has no service worker
-					// interception for Tauri embedded assets, so CSS module imports in
-					// VS Code's JS files must be removed before embedding.
-					// (The Worker/CSS interception handles the browser/PWA context.)
-					// Matches: import "./foo.css"; or import './bar.css'
-					const CSSImport =
-						/^import\s+(['"])([^'"]+\.css)\1\s*;?\s*$/gm;
-
-					async function StripCSSImports(Dir: string): Promise<void> {
-						let Entries;
-
-						try {
-							Entries = await readdir(Dir, {
-								withFileTypes: true,
-							});
-						} catch {
-							return;
-						}
-						await Promise.all(
-							Entries.map(async (Entry) => {
-								const Full = join(Dir, Entry.name);
-
-								if (Entry.isDirectory()) {
-									await StripCSSImports(Full);
-								} else if (Entry.name.endsWith(".js")) {
-									try {
-										const Content = await readFile(
-											Full,
-											"utf-8",
-										);
-
-										if (CSSImport.test(Content)) {
-											CSSImport.lastIndex = 0;
-
-											// Replace with _LOAD_CSS_WORKER call so CSS is
-											// injected as a <link> element instead of being
-											// imported as a JS module (which fails with
-											// 'text/css is not a valid MIME type').
-											// import.meta.url resolves the relative path to
-											// the correct absolute /Static/Application/vs/ URL.
-											await writeFile(
-												Full,
-												Content.replace(
-													CSSImport,
-													(_m, _q, Path) =>
-														`window._LOAD_CSS_WORKER?.(new URL("${Path}",import.meta.url).pathname);`,
-												),
-												"utf-8",
-											);
-										}
-									} catch {
-										/* skip */
-									}
-								}
-							}),
-						);
-					}
-					console.log(
-						"[CopyVSCode] Step 4: Stripping CSS imports from Static/Application/vs/",
-					);
-
-					await StripCSSImports(Destination);
-
-					// Step 5: No JS patching needed.
-					// VSCODE_DEV=true in Wind's process.env + _VSCODE_USE_RELATIVE_IMPORTS=true
-					// in Base.astro makes the Electron workbench use relative import paths
-					// that resolve against http://localhost instead of vscode-file://.
-					// The native vscode-file:// Rust handler (Scheme.rs) covers
-					// non-module requests (fetch, images, JSON).
-
-					// Step 6: Inject __name shim into extension host iframe.
-					// The blob worker created by this HTML doesn't have the
-					// __name global that Dependency/out files expect.
-					const ExtHostIframe = join(
-						Destination,
-						"workbench",
-						"services",
-						"extensions",
-						"worker",
-						"webWorkerExtensionHostIframe.html",
-					);
-
-					try {
-						const HTML = await readFile(ExtHostIframe, "utf-8");
-
-						const NameShim = `var __defProp=Object.defineProperty;var __name=(t,v)=>__defProp(t,"name",{value:v,configurable:true});`;
-
-						// Inject into the blob content (before the first globalThis._VSCODE line)
-						const PatchedHTML = HTML.replace(
-							"`/*extensionHostWorker*/`,",
-							"`/*extensionHostWorker*/${NameShim}`,",
-						);
-
-						if (PatchedHTML !== HTML) {
-							await writeFile(
-								ExtHostIframe,
-								PatchedHTML,
-								"utf-8",
-							);
-
-							console.log(
-								"[CopyVSCode] Step 6: Injected __name shim into ext host iframe",
-							);
-						}
-					} catch {
-						// May not exist yet
-					}
-
-					// Step 7: When Electron=true, replace ElectronIPCMainProcessService
-					// with TauriMainProcessService that routes channel.call() directly
-					// through Tauri invoke to Mountain's WindServiceHandlers.
+					// -------------------------------------------------
+					// Delegated pipeline (Steps 1, 1b, 2, 3, 4, 6, 7,
+					// 7b, 10, 11, 11b, 12, 14)
+					// -------------------------------------------------
+					// Every patch / inject / copy step that used to live
+					// inline below is now a standalone plugin under
+					// `Element/Output/Source/Plugin/`. Sky just feeds the
+					// absolute paths of the tree roots to `BuildPipeline`
+					// and drives it with `ApplyPlugins`. The returned
+					// summary is logged so the per-step counters still
+					// land in the build log (same `[CopyVSCode]` prefix
+					// Sky's old inline code used).
 					//
-					// ESM wrapper approach: copy the compiled service as a separate
-					// module and write a 1-line re-export wrapper. This avoids
-					// inlining esbuild helpers (__defProp/__name) and regex stripping.
-					if (process.env["Electron"] === "true") {
-						const IPCDir = join(
-							Destination,
-							"platform",
-							"ipc",
-							"electron-browser",
-						);
-
-						try {
-							// Source from Output (consolidated) first, fall back to Wind
-							const OutputServicePath = resolve(
+					// What stays inline below:
+					//   Step 8  - workbench.js error surfacing + config
+					//             backfill (Mountain-schema coupled)
+					//   Step 8b - same block as Step 8 (config defaults)
+					//   Step 9  - desktop.main.js checkpoint logging
+					//   Step 13 - built-in extension copy + npm install
+					//             (no esbuild-plugin lifecycle hook
+					//             supports spawning `npm install`)
+					const Pipeline: OutputPlugin[] = BuildPipeline({
+						VSOutput: {
+							From: resolve(
+								process.cwd(),
+								"../Output/Target/Microsoft/VSCode/vs",
+							),
+							To: Destination,
+						},
+						VSRootFiles: {
+							OutputRoot: resolve(
+								process.cwd(),
+								"../Output/Target/Microsoft/VSCode",
+							),
+							DependencyOutBuild: resolve(
+								process.cwd(),
+								"../../Dependency/Microsoft/Dependency/Editor/out-build",
+							),
+							DependencyOut: resolve(
+								process.cwd(),
+								"../../Dependency/Microsoft/Dependency/Editor/out",
+							),
+							Destination: StaticApplicationDir,
+						},
+						Supplement: {
+							From: resolve(
+								process.cwd(),
+								"../../Dependency/Microsoft/Dependency/Editor/out/vs",
+							),
+							To: Destination,
+						},
+						Worker: {
+							From: resolve(
+								process.cwd(),
+								"node_modules/@codeeditorland/worker/Target/Worker.js",
+							),
+							To: join(TargetDir, "Worker.js"),
+						},
+						NodeModules: {
+							LocalRoot: resolve(process.cwd(), "node_modules"),
+							DependencyRoot: resolve(
+								process.cwd(),
+								"../../Dependency/Microsoft/Dependency/Editor/node_modules",
+							),
+							Destination: join(
+								TargetDir,
+								"Static/Application/node_modules",
+							),
+						},
+						Addons: {
+							Destination: join(
+								TargetDir,
+								"Static/Application/node_modules",
+							),
+						},
+						TauriMainProcessService: {
+							OutputService: resolve(
 								process.cwd(),
 								"node_modules/@codeeditorland/output/Configuration/Service/TauriMainProcessService.js",
-							);
-							const WindServicePath = resolve(
+							),
+							WindService: resolve(
 								process.cwd(),
 								"node_modules/@codeeditorland/wind/Target/Service/TauriMainProcessService.js",
-							);
-
-							let TauriServiceSource: string;
-							try {
-								await readFile(OutputServicePath);
-								TauriServiceSource = OutputServicePath;
-								console.log(
-									"[CopyVSCode] Step 7: Using Output/Configuration/Service/TauriMainProcessService.js",
-								);
-							} catch {
-								TauriServiceSource = WindServicePath;
-								console.log(
-									"[CopyVSCode] Step 7: Falling back to Wind/Target/Service/TauriMainProcessService.js",
-								);
-							}
-
-							// Copy the compiled service as a separate module
-							await copyFile(
-								TauriServiceSource,
-								join(IPCDir, "TauriMainProcessService.js"),
-							);
-
-							// Strip sourceMappingURL to prevent 404 → HTML → JSON parse error
-							const ServiceJS = await readFile(
-								join(IPCDir, "TauriMainProcessService.js"),
-								"utf-8",
-							);
-							if (ServiceJS.includes("sourceMappingURL")) {
-								await writeFile(
-									join(IPCDir, "TauriMainProcessService.js"),
-									ServiceJS.replace(
-										/\/\/# sourceMappingURL=.*/g,
-										"",
-									),
-									"utf-8",
-								);
-							}
-
-							// Replace mainProcessService.js with a minimal ESM re-export
-							await writeFile(
-								join(IPCDir, "mainProcessService.js"),
-								`export { TauriMainProcessService as ElectronIPCMainProcessService } from './TauriMainProcessService.js';\n`,
-								"utf-8",
-							);
-
-							console.log(
-								"[CopyVSCode] Step 7: Replaced ElectronIPCMainProcessService with TauriMainProcessService (ESM wrapper)",
-							);
-
-							// Step 7b: Replace sharedProcessService.js too.
-							// The Extensions sidebar queries
-							// `sharedProcessService.getChannel('extensions')`
-							// (see `extensionManagementServerService.ts:35`
-							// in VS Code's electron-browser source - it's the
-							// channel ExtensionManagementChannelClient wraps).
-							// Land has no Electron shared process, so the
-							// shipped SharedProcessService tries
-							// `acquirePort(...)` → hangs forever → the
-							// @builtin sidebar stays empty despite 94
-							// extensions being scanned. Substituting
-							// `TauriMainProcessService` here routes every
-							// `getChannel(name)` through the same
-							// `ChannelRouteMap` that already backs the main
-							// process - `extensions` maps to Mountain's
-							// `extensions:*` handler family (getAll /
-							// getInstalled / scanSystemExtensions / …).
-							const SharedProcessDir = join(
+							),
+							Destination: join(
 								Destination,
-								"workbench",
-								"services",
-								"sharedProcess",
+								"platform",
+								"ipc",
 								"electron-browser",
-							);
-							try {
-								// The original service exports
-								// `{ SharedProcessService }` with a ctor
-								// `(windowId, logService)` and a
-								// `notifyRestored()` method. Our replacement
-								// extends TauriMainProcessService (which
-								// provides `getChannel`) and stubs the
-								// restore-barrier API as a no-op - Land
-								// doesn't gate channel access on window
-								// restoration.
-								await writeFile(
-									join(
-										SharedProcessDir,
-										"sharedProcessService.js",
-									),
-									[
-										`import { TauriMainProcessService } from '../../../../platform/ipc/electron-browser/TauriMainProcessService.js';`,
-										``,
-										`class SharedProcessService extends TauriMainProcessService {`,
-										`  constructor(windowId, _logService) { super(windowId); }`,
-										`  notifyRestored() { /* Land has no shared process; channels go direct to Mountain */ }`,
-										`  async getConnection() { return this; /* self-satisfy the IPC Client shape */ }`,
-										`}`,
-										``,
-										`export { SharedProcessService };`,
-										`export default SharedProcessService;`,
-										``,
-									].join("\n"),
-									"utf-8",
-								);
+								"TauriMainProcessService.js",
+							),
+						},
+					});
 
-								console.log(
-									"[CopyVSCode] Step 7b: Replaced SharedProcessService with TauriMainProcessService-backed shim (unblocks @builtin Extensions sidebar)",
-								);
-							} catch (Error) {
-								console.warn(
-									"[CopyVSCode] Step 7b: SharedProcessService replacement failed:",
-									Error,
-								);
-							}
-						} catch (Error) {
-							console.warn(
-								"[CopyVSCode] Step 7: TauriMainProcessService replacement failed:",
-								Error,
-							);
-						}
-					}
+					await ApplyPlugins({
+						Plugins: Pipeline,
+						Roots: [
+							{ Path: StaticApplicationDir, Role: "app" },
+						],
+						Log: (Message) =>
+							console.log(`[CopyVSCode] ${Message}`),
+					});
+					StepMark("pipeline");
+
+					// -------------------------------------------------
+					// Sky-inline (non-movable) Steps 8, 8b, 9, 13
+					// -------------------------------------------------
+					// These four steps cannot move into `Output/Plugin/*`
+					// in this pass:
+					//
+					//   Step 8  - workbench.js error surfacing
+					//   Step 8b - config-backfill with Mountain-specific
+					//             defaults (`colorScheme`, profile URIs,
+					//             `detectedProfiles`, etc.) - requires
+					//             knowledge of Mountain's IPC schema,
+					//             which does not belong in Output.
+					//   Step 9  - desktop.main.js perf-mark checkpoints
+					//             (CP1..CP6) - Mountain-specific
+					//             instrumentation.
+					//   Step 13 - built-in extension copy + `npm install`
+					//             spawn - esbuild plugins have no post-
+					//             build external-command hook.
+					//
+					// Follow-up work is tracked in
+					// `.claude/plans/unified-juggling-squirrel.md` under
+					// the "Out of scope for this pass" section.
 
 					// Step 8: When Electron=true, patch workbench.js to surface
 					// errors from the async IIFE. The original code does NOT await
@@ -706,14 +447,44 @@ export default defineConfig({
 									`performance.mark("land:wb:main");`,
 									`try{`,
 									`const _L=(tag,msg,...extras)=>{try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"diagnostic:log",params:[tag,msg,...extras]});}catch{}};`,
+									// Phase advance lives here rather than in a top-
+									// level Astro `<script type="module">` because
+									// Astro/Vite bundles every module block in
+									// Mountain.astro into a single hoisted chunk; one
+									// top-level `await import(WorkbenchUrl)` later in
+									// the chunk stalls everything and defers the
+									// advance calls past Mountain's 8 s / 23 s
+									// fallback timers. This block is injected
+									// verbatim into workbench.js and runs inside its
+									// own async IIFE, so nothing else can block it.
+									// Mountain rejects backwards / same-phase
+									// advances, so a duplicate from Mountain.astro
+									// is safe.
+									`const _A=(phase)=>{try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"lifecycle:advancePhase",params:[phase]}).catch(()=>{performance.mark("land:wb:phase:"+phase+":error");});performance.mark("land:wb:phase:"+phase+":sent");}catch{performance.mark("land:wb:phase:"+phase+":threw");}};`,
 									`_L("wb:boot","pre-main href="+location.href+" search="+location.search,{folderUri:configuration?.folderUri??null,workspace:configuration?.workspace??null,windowId:configuration?.windowId??null});`,
+									// Phase 3 (Restored): workbench DOM mount +
+									// first paint are imminent. Fire before main()
+									// so Mountain stops its 8 s fallback timer.
+									`_A(3);`,
 									`await result.main(configuration);`,
 									`performance.mark("land:wb:mainDone");`,
 									`_L("wb:boot","post-main completed","reloadCount="+(performance.getEntriesByType?performance.getEntriesByType("navigation")?.length??-1:-1));`,
-									// Probe the workbench's DI container for the ExtensionService
-									// one event loop later (give microtasks time to settle) and
-									// report how many extensions registered + active.
-									`setTimeout(()=>{try{const W=globalThis;const MP=W.__monacoPostBoot??null;const reg=(W.monaco&&W.monaco.extensions)||null;_L("wb:boot","ext-registry-probe",{monacoExtensionsApi:!!reg,postBootHook:!!MP,pluginApiKeys:reg?Object.keys(reg):null});}catch(e){_L("wb:boot","ext-registry-probe-error",String(e));}},1500);`,
+									// Phase 4 (Eventually): long-tail background
+									// work. Delay lets paint settle before
+									// Mountain schedules anything aggressive.
+									`setTimeout(()=>_A(4),1500);`,
+									// `monaco.extensions` was never exposed on the
+									// global in modern VS Code (the workbench keeps
+									// its ExtensionService inside the DI container,
+									// not under `globalThis.monaco`), so the old
+									// ext-registry-probe always reported
+									// `monacoExtensionsApi:false` regardless of
+									// whether extensions actually registered. It was
+									// useful once to rule out "maybe the API is
+									// there"; now it's pure noise in every boot
+									// log. Opt-in via env-driven define in
+									// astro.config.ts if the probe is ever needed
+									// again.
 									`}catch(_e){performance.mark("land:wb:mainError");`,
 									`try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"diagnostic:log",params:["wb:boot","main-threw",String(_e?.message||_e),String(_e?.stack||"").slice(0,400)]});}catch{}`,
 									`}`,
@@ -792,228 +563,6 @@ export default defineConfig({
 							);
 						}
 					}
-
-					// Step 10: When Electron=true, replace workbench.desktop.main.js
-					// static imports with sequential dynamic imports that log progress.
-					// Static imports of 3385 modules overwhelm WKWebView's module loader.
-					if (process.env["Electron"] === "true") {
-						const DesktopBarrelJS = join(
-							Destination,
-							"workbench",
-							"workbench.desktop.main.js",
-						);
-						try {
-							const Content = await readFile(
-								DesktopBarrelJS,
-								"utf-8",
-							);
-							// Extract side-effect import paths: import './foo.js';
-							const SideEffectImports: string[] = [];
-							const SideEffectRE =
-								/^import\s+['"]([^'"]+)['"]\s*;?\s*$/gm;
-							let Match;
-							while (
-								(Match = SideEffectRE.exec(Content)) !== null
-							) {
-								SideEffectImports.push(Match[1]);
-							}
-							// Build: static named imports at top, then dynamic side-effect
-							// imports, then registerSingleton + export at bottom.
-							const Lines = [
-								`// Sequential dynamic import loader (Step 10)`,
-								`import { registerSingleton } from '../platform/instantiation/common/extensions.js';`,
-								`import { IUserDataInitializationService, UserDataInitializationService } from './services/userData/browser/userDataInit.js';`,
-								`import { SyncDescriptor } from '../platform/instantiation/common/descriptors.js';`,
-								``,
-								`console.log("[workbench.desktop.main] Loading ${SideEffectImports.length} modules sequentially...");`,
-								`const _t0 = performance.now();`,
-								`let _n = 0;`,
-								...SideEffectImports.map(
-									(Path: string, I: number) =>
-										`try{await import('${Path}');_n++;${I % 10 === 0 ? `console.log("[workbench.desktop.main] "+_n+"/${SideEffectImports.length}: ${Path}");` : ""}}catch(_e){console.error("[workbench.desktop.main] FAILED #${I}: ${Path}",_e)}`,
-								),
-								`console.log("[workbench.desktop.main] Done: "+_n+"/${SideEffectImports.length} in "+(performance.now()-_t0).toFixed(0)+"ms");`,
-								``,
-								`registerSingleton(IUserDataInitializationService, new SyncDescriptor(UserDataInitializationService, [[]], true));`,
-								`export { main } from './electron-browser/desktop.main.js';`,
-							];
-							await writeFile(
-								DesktopBarrelJS,
-								Lines.join("\n"),
-								"utf-8",
-							);
-							console.log(
-								`[CopyVSCode] Step 10: Replaced ${SideEffectImports.length} static imports with sequential dynamic imports`,
-							);
-						} catch (Error) {
-							console.warn(
-								"[CopyVSCode] Step 10: dynamic import replacement failed:",
-								Error,
-							);
-						}
-					}
-
-					// Step 11: Copy @xterm and other VS Code node_modules
-					// VS Code's importAMDNodeModule loads from
-					// /Static/Application/node_modules/@xterm/xterm/lib/xterm.js
-					const NodeModulesToCopy = [
-						"@xterm/xterm",
-						"@xterm/addon-clipboard",
-						"@xterm/addon-image",
-						"@xterm/addon-ligatures",
-						"@xterm/addon-search",
-						"@xterm/addon-serialize",
-						"@xterm/addon-unicode11",
-						"@xterm/addon-webgl",
-						"@vscode/vscode-languagedetection",
-						"vscode-textmate",
-						"vscode-oniguruma",
-					];
-
-					const VSCodeNodeModules = resolve(
-						process.cwd(),
-						"../../Dependency/Microsoft/Dependency/Editor/node_modules",
-					);
-
-					for (const Pkg of NodeModulesToCopy) {
-						const Source = resolve(
-							process.cwd(),
-							"node_modules",
-							Pkg,
-						);
-						const FallbackSource = resolve(VSCodeNodeModules, Pkg);
-						const Destination = join(
-							TargetDir,
-							"Static/Application/node_modules",
-							Pkg,
-						);
-						try {
-							await cp(Source, Destination, {
-								recursive: true,
-							});
-						} catch {
-							try {
-								await cp(FallbackSource, Destination, {
-									recursive: true,
-								});
-							} catch {
-								// Package not installed in either location
-							}
-						}
-					}
-					console.log(
-						"[CopyVSCode] Step 11: Copied node_modules for terminal + language detection",
-					);
-
-					// Step 11b (Atom I8): strip dangling `//# sourceMappingURL=…`
-					// comments from copied JS files whose sibling `.map` was not
-					// shipped. Without this the webview fetches the missing map,
-					// gets a 404 HTML page, and Safari surfaces
-					//   Source Map "…main.js.map" has SyntaxError:
-					//   Unrecognized token '<'
-					// for every such file on every page load.
-					// Use the top-of-file static `readdir` / `stat` / `readFile` /
-					// `writeFile` bindings - dynamic `await import("node:fs/promises")`
-					// here crashes with "Vite module runner has been closed" because
-					// this runs inside astro:build:done, after Vite tears down its
-					// ModuleRunner. Static imports survive the teardown; dynamic ones
-					// re-enter the runner and throw.
-					const StripDanglingSourceMaps = async (
-						Root: string,
-					): Promise<number> => {
-						let Stripped = 0;
-						const Walk = async (Dir: string): Promise<void> => {
-							let Entries: Dirent[] = [];
-							try {
-								Entries = await readdir(Dir, {
-									withFileTypes: true,
-								});
-							} catch {
-								return;
-							}
-							for (const Entry of Entries) {
-								const Full = join(Dir, Entry.name);
-								if (Entry.isDirectory()) {
-									await Walk(Full);
-									continue;
-								}
-								if (!Entry.name.endsWith(".js")) continue;
-								try {
-									await stat(`${Full}.map`);
-									continue;
-								} catch {
-									// No sibling map - strip the trailing comment.
-								}
-								try {
-									const Content = await readFile(
-										Full,
-										"utf-8",
-									);
-									const Rewritten = Content.replace(
-										/\n?\/\/[#@][ \t]*sourceMappingURL=[^\n]*\n?$/,
-										"\n",
-									);
-									if (Rewritten !== Content) {
-										await writeFile(
-											Full,
-											Rewritten,
-											"utf-8",
-										);
-										Stripped++;
-									}
-								} catch {
-									// Best-effort; skip files we can't read.
-								}
-							}
-						};
-						await Walk(Root);
-						return Stripped;
-					};
-					for (const Pkg of NodeModulesToCopy) {
-						const PkgRoot = join(
-							TargetDir,
-							"Static/Application/node_modules",
-							Pkg,
-						);
-						const Stripped = await StripDanglingSourceMaps(PkgRoot);
-						if (Stripped > 0) {
-							console.log(
-								`[CopyVSCode] Step 11b: Stripped ${Stripped} dangling sourceMappingURL comment(s) in ${Pkg}`,
-							);
-						}
-					}
-
-					// Step 12: Create stubs for unpublished xterm addons.
-					// VS Code's xtermAddonImporter.ts references @xterm/addon-progress
-					// but the package doesn't exist on npm yet. Without a stub, the
-					// AMD loader gets a 404 → HTML → SyntaxError. Provide a no-op.
-					// VS Code's amdX loader uses define() not ESM import.
-					const StubAddons: Record<string, string> = {
-						"@xterm/addon-progress":
-							"define([],function(){var n=function(){};var P=function(){this.activate=n;this.dispose=n;this.onChange=function(){return{dispose:n}}};return{ProgressAddon:P}})",
-					};
-					for (const [Pkg, Code] of Object.entries(StubAddons)) {
-						const StubDir = join(
-							TargetDir,
-							"Static/Application/node_modules",
-							Pkg,
-							"lib",
-						);
-						try {
-							await mkdir(StubDir, { recursive: true });
-							const FileName = Pkg.split("/").pop()!;
-							await writeFile(
-								join(StubDir, `${FileName}.js`),
-								Code,
-								"utf-8",
-							);
-						} catch {
-							// Non-critical
-						}
-					}
-					console.log(
-						"[CopyVSCode] Step 12: Created stubs for unpublished addons",
-					);
 
 					// Step 13: Copy built-in extensions.
 					// Primary: .build/extensions/ (compiled via gulp compile-extensions-build)
@@ -1128,193 +677,30 @@ export default defineConfig({
 							}
 						}
 						if (BundleWarnings.length > 0) {
-							for (const Warning of BundleWarnings) {
+							// Missing browser bundles are the normal state when
+							// the Electron profile is the primary target - the
+							// warning only matters when someone is explicitly
+							// working on the browser workbench. Gate behind
+							// `LAND_WARN_MISSING_BROWSER_BUNDLES=true` so the
+							// default build output stays clean; opt in by
+							// exporting the flag in the shell or
+							// `.env.Land.Local`. Preserve the call-to-action at
+							// the end so the opt-in output is self-explanatory.
+							if (
+								process.env["LAND_WARN_MISSING_BROWSER_BUNDLES"] === "true"
+							) {
+								for (const Warning of BundleWarnings) {
+									console.warn(
+										`[CopyVSCode] Step 13: bundle warning - ${Warning}`,
+									);
+								}
 								console.warn(
-									`[CopyVSCode] Step 13: bundle warning - ${Warning}`,
+									`[CopyVSCode] Step 13: run 'npm run compile-web-extensions-build' in Dependency/Microsoft/Dependency/Editor/ to generate missing browser bundles`,
 								);
 							}
-							console.warn(
-								`[CopyVSCode] Step 13: run 'npm run compile-web-extensions-build' in Dependency/Microsoft/Dependency/Editor/ to generate missing browser bundles`,
-							);
 						}
 					}
 
-					// Step 14: Patch extensionsScannerService (node/) to fetch
-					// extensions from Mountain via IPC instead of reading from disk.
-					// The webview has no filesystem access, so the scanner can't read
-					// builtinExtensionsPath. Instead, we override scanSystemExtensions
-					// to call extensions:getAll via TauriMainProcessService.
-					try {
-						const ScannerPath = join(
-							TargetDir,
-							"Static/Application/vs/workbench/services/extensions/electron-browser/extensionsScannerService.js",
-						);
-						await writeFile(
-							ScannerPath,
-							`import { URI } from '../../../../base/common/uri.js';
-import { IExtensionsScannerService } from '../../../../platform/extensionManagement/common/extensionsScannerService.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { Emitter } from '../../../../base/common/event.js';
-
-const _t = (Tag, Detail) => { try { performance.mark('land:exthost:' + Tag, Detail ? { detail: Detail } : undefined); } catch {} };
-const _w = (...Args) => { try { console.warn('[Land Scanner]', ...Args); } catch {} };
-
-class ExtensionsScannerService {
-	constructor(logService) {
-		this._logService = logService;
-		this.userExtensionsLocation = URI.file('/extensions');
-		this._onDidChangeCache = new Emitter();
-		this.onDidChangeCache = this._onDidChangeCache.event;
-		_t('scanner:construct');
-		_w('Constructed');
-	}
-
-	async _fetchFromMountain() {
-		_t('scanner:fetch:start');
-		try {
-			const Invoke = globalThis.__TAURI__?.core?.invoke ?? globalThis.__TAURI__?.invoke;
-			if (typeof Invoke !== 'function') {
-				_t('scanner:fetch:no-tauri');
-				_w('No Tauri invoke available');
-				return [];
-			}
-			const RawResult = await Invoke('MountainIPCInvoke', {
-				method: 'extensions:getAll',
-				params: [],
-			});
-			let Extensions = Array.isArray(RawResult) ? RawResult : [];
-			_t('scanner:fetch:result', { count: Extensions.length, type: typeof RawResult, isArray: Array.isArray(RawResult) });
-			_w('IPC returned', Extensions.length, 'extensions');
-
-			// Mountain may still be scanning on first window open. Retry up to 5 times.
-			if (Extensions.length === 0) {
-				for (let Retry = 1; Retry <= 5; Retry++) {
-					_w('0 extensions, retry', Retry, '/5 in 1000ms');
-					await new Promise(R => setTimeout(R, 1000));
-					const RetryResult = await Invoke('MountainIPCInvoke', { method: 'extensions:getAll', params: [] });
-					Extensions = Array.isArray(RetryResult) ? RetryResult : [];
-					_t('scanner:fetch:retry', { retry: Retry, count: Extensions.length });
-					_w('Retry', Retry, 'returned', Extensions.length, 'extensions');
-					if (Extensions.length > 0) break;
-				}
-			}
-			if (Extensions.length === 0) return [];
-
-			const Mapped = [];
-			let Errors = 0;
-			for (let I = 0; I < Extensions.length; I++) {
-				const ext = Extensions[I];
-				try {
-					const location = ext.extensionLocation
-						? (typeof ext.extensionLocation === 'string' ? URI.parse(ext.extensionLocation) : URI.revive(ext.extensionLocation))
-						: URI.file('/extensions/' + (ext.name || 'unknown'));
-					const id = ext.identifier?.value
-						|| (ext.publisher ? ext.publisher + '.' + ext.name : ext.name)
-						|| 'unknown';
-					Mapped.push({
-						type: 0,
-						identifier: { id },
-						manifest: {
-							name: ext.name || '',
-							publisher: ext.publisher || '',
-							version: ext.version || '0.0.0',
-							engines: ext.engines || { vscode: '*' },
-							main: ext.main || undefined,
-							browser: ext.browser || undefined,
-							activationEvents: ext.activationEvents || [],
-							contributes: ext.contributes || {},
-							extensionDependencies: [],
-							extensionPack: [],
-							enabledApiProposals: [],
-						},
-						location,
-						isBuiltin: true,
-						targetPlatform: 'undefined',
-						isValid: true,
-						validationMessages: [],
-					});
-				} catch (e) {
-					Errors++;
-					if (Errors <= 3) _w('Map error for ext', I, ':', String(e).slice(0, 100));
-				}
-			}
-			_t('scanner:fetch:mapped', { mapped: Mapped.length, errors: Errors });
-			_w('Mapped', Mapped.length, 'extensions,', Errors, 'errors');
-			if (Mapped.length > 0) {
-				_w('First:', Mapped[0].identifier.id, 'name:', Mapped[0].manifest.name, 'pub:', Mapped[0].manifest.publisher, 'loc:', Mapped[0].location?.toString?.()?.slice(0, 80));
-			}
-			return Mapped;
-		} catch (e) {
-			_t('scanner:fetch:error', { message: String(e).slice(0, 200) });
-			_w('Fetch error:', String(e).slice(0, 200));
-			return [];
-		}
-	}
-
-	async scanAllExtensions(systemScanOptions, userScanOptions) {
-		_t('scanner:scanAll:start');
-		const sys = await this.scanSystemExtensions(systemScanOptions);
-		const usr = await this.scanUserExtensions(userScanOptions);
-		const all = [...sys, ...usr];
-		_t('scanner:scanAll:done', { system: sys.length, user: usr.length, total: all.length });
-		_w('scanAll:', sys.length, 'system +', usr.length, 'user =', all.length);
-		return all;
-	}
-
-	async scanSystemExtensions(scanOptions) {
-		_t('scanner:scanSystem:start');
-		const result = await this._fetchFromMountain();
-		_t('scanner:scanSystem:done', { count: result.length });
-		_w('scanSystemExtensions returning', result.length);
-		return result;
-	}
-
-	async scanUserExtensions(scanOptions) {
-		_t('scanner:scanUser:start');
-		_w('scanUserExtensions returning 0');
-		return [];
-	}
-
-	getTargetPlatform() { return Promise.resolve('undefined'); }
-	getProductVersion() { return { version: '0.0.1', date: undefined }; }
-	async scanAllUserExtensions(scanOptions) { return []; }
-	async scanExtensionsUnderDevelopment(existingExtensions, scanOptions) { _t('scanner:scanDev'); return []; }
-	async scanExistingExtension(extensionLocation, extensionType, scanOptions) { return null; }
-	async scanOneOrMultipleExtensions(extensionLocation, extensionType, scanOptions) { return []; }
-	async scanMetadata(extensionLocation) { return undefined; }
-	async updateMetadata(extensionLocation, metadata) { return undefined; }
-	async initializeDefaultProfileExtensions() { _t('scanner:initDefaults'); }
-}
-
-// DI decorators must be defined before use
-var __decorate = function(decorators, target, key, desc) {
-	var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-	if (typeof Reflect === 'object' && typeof Reflect.decorate === 'function') r = Reflect.decorate(decorators, target, key, desc);
-	else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-	return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __param = function(paramIndex, decorator) {
-	return function(target, key) { decorator(target, key, paramIndex); };
-};
-ExtensionsScannerService = __decorate([
-	__param(0, ILogService)
-], ExtensionsScannerService);
-
-registerSingleton(IExtensionsScannerService, ExtensionsScannerService, InstantiationType.Delayed);
-export { ExtensionsScannerService, IExtensionsScannerService };
-`,
-							"utf-8",
-						);
-						console.log(
-							"[CopyVSCode] Step 14: Patched extensionsScannerService (IPC override)",
-						);
-					} catch (Error) {
-						console.warn(
-							"[CopyVSCode] Step 14: extensionsScannerService patch failed:",
-							Error,
-						);
-					}
 
 					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");

@@ -30,6 +30,7 @@
  *   sky://ui/show-message-request  → shows a dialog/notification
  */
 
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 // ============================================================================
@@ -244,6 +245,28 @@ export async function InstallSkyBridge(): Promise<void> {
 		Cleanups.push(Unlisten);
 	};
 
+	// Atom Q1: resolve UI requests via Mountain's `ResolveUIRequest` Tauri
+	// command (registered in CommandRegister). Mountain emits
+	// `sky://ui/show-*-request` with shape `{ RequestIdentifier, Payload }`
+	// and waits on a oneshot keyed by RequestIdentifier. We MUST send back a
+	// ResolveUIRequest invocation with the exact same identifier or the
+	// 300s timeout in UserInterfaceProvider fires. Declared here so every
+	// listener below can reference it.
+	const ResolveUiRequest = (
+		RequestIdentifier: string,
+		Result: unknown,
+	): Promise<void> =>
+		invoke<void>("ResolveUIRequest", {
+			RequestID: RequestIdentifier,
+			Result,
+		}).catch((Error) => {
+			console.warn(
+				"[SkyBridge] ResolveUIRequest failed",
+				RequestIdentifier,
+				Error,
+			);
+		});
+
 	// ---- Editor ----
 	await Register("sky://editor/openDocument", ({ uri, viewColumn }: any) => {
 		const Wb = GetWorkbench();
@@ -269,6 +292,85 @@ export async function InstallSkyBridge(): Promise<void> {
 			?.commands.executeCommand("workbench.action.files.saveAll")
 			.catch(() => {});
 	});
+
+	// Atom T1: workspace.applyEdit - round-trip reply. Mountain's request
+	// carries `{ RequestIdentifier, Payload }` and blocks the extension's
+	// awaited promise until we resolve.
+	await Register(
+		"sky://workspace/applyEdit",
+		async ({ RequestIdentifier, Payload }: any) => {
+			if (!RequestIdentifier) return;
+			try {
+				const Wb = GetWorkbench();
+				const Edits = Payload?.edits ?? Payload ?? [];
+				if (Wb && Edits) {
+					await Wb.commands.executeCommand(
+						"workbench.action.applyThemeFromFile",
+						Edits,
+					);
+				}
+				void ResolveUiRequest(RequestIdentifier, true);
+			} catch (Error) {
+				console.warn("[SkyBridge] applyEdit failed", Error);
+				void ResolveUiRequest(RequestIdentifier, false);
+			}
+		},
+	);
+
+	// Atom T1: window.showTextDocument - round-trip reply with a
+	// minimal TextEditor-shaped acknowledgement (`{ uri, viewColumn }`).
+	// Extensions chaining editor-scoped operations will see undefined for
+	// properties we don't synthesise yet; tracking that enrichment
+	// separately as T2.
+	await Register(
+		"sky://window/showTextDocument",
+		async (RawPayload: any) => {
+			const RequestIdentifier = RawPayload?.RequestIdentifier;
+			const Payload = RawPayload?.Payload ?? RawPayload;
+			const UriValue =
+				Payload?.[0]?.uri ??
+				Payload?.uri ??
+				Payload?.[0] ??
+				null;
+			const ViewColumn =
+				Payload?.[1]?.viewColumn ??
+				Payload?.viewColumn ??
+				Payload?.[1] ??
+				null;
+			try {
+				const Wb = GetWorkbench();
+				if (Wb && UriValue) {
+					await Wb.commands.executeCommand(
+						"vscode.open",
+						{
+							$mid: 1,
+							path: typeof UriValue === "string" ? UriValue : UriValue?.path,
+							scheme:
+								(typeof UriValue === "string"
+									? UriValue
+									: (UriValue?.scheme ?? "")
+								).startsWith?.("file://") ||
+								UriValue?.scheme === "file"
+									? "file"
+									: "untitled",
+						},
+						ViewColumn,
+					);
+				}
+				if (RequestIdentifier) {
+					void ResolveUiRequest(RequestIdentifier, {
+						uri: UriValue,
+						viewColumn: ViewColumn,
+					});
+				}
+			} catch (Error) {
+				console.warn("[SkyBridge] showTextDocument failed", Error);
+				if (RequestIdentifier) {
+					void ResolveUiRequest(RequestIdentifier, null);
+				}
+			}
+		},
+	);
 
 	await Register("sky://editor/applyEdits", ({ edits }: any) => {
 		if (!Array.isArray(edits) || !edits.length) return;
@@ -696,43 +798,163 @@ export async function InstallSkyBridge(): Promise<void> {
 	});
 
 	// ---- UI dialogs / notifications ----
+	// Atom Q1: Mountain emits this for *every* showMessage call regardless
+	// of whether actions are provided. Two shapes land here:
+	//   Legacy/passive : { severity, message, actions }
+	//   Promise/pending: { RequestIdentifier, Payload: { Severity, Message, Options } }
+	// The Promise shape carries a RequestIdentifier; the resolve path mirrors
+	// the quick-pick / input-box flow.
 	await Register(
 		"sky://ui/show-message-request",
-		({ severity, message, actions }: any) => {
-			ShowNotification(severity ?? "info", message ?? "", actions);
+		(RawPayload: any) => {
+			if (RawPayload?.RequestIdentifier) {
+				const Inner = RawPayload.Payload ?? {};
+				const Severity =
+					Inner?.Severity ?? Inner?.severity ?? "info";
+				const Message = Inner?.Message ?? Inner?.message ?? "";
+				const Options = Inner?.Options ?? Inner?.options ?? {};
+				const Actions: Array<{ title: string }> = Array.isArray(
+					Options?.Actions ?? Options?.actions,
+				)
+					? (Options?.Actions ?? Options?.actions)
+					: [];
+				if (Actions.length === 0) {
+					ShowNotification(Severity, Message, []);
+					void ResolveUiRequest(
+						RawPayload.RequestIdentifier,
+						null,
+					);
+					return;
+				}
+				let Picked: string | null = null;
+				if (Actions.length === 1) {
+					if (window.confirm(`${Message}\n\n(${Actions[0].title})`)) {
+						Picked = Actions[0].title;
+					}
+				} else {
+					const Choice = window.prompt(
+						`${Message}\n\nChoose: ${Actions.map(
+							(A) => A.title,
+						).join(" / ")}`,
+						Actions[0].title,
+					);
+					if (
+						Choice &&
+						Actions.some((A) => A.title === Choice)
+					) {
+						Picked = Choice;
+					}
+				}
+				void ResolveUiRequest(RawPayload.RequestIdentifier, Picked);
+				return;
+			}
+			// Legacy passive shape - still used by telemetry / toast channels.
+			ShowNotification(
+				RawPayload?.severity ?? "info",
+				RawPayload?.message ?? "",
+				RawPayload?.actions,
+			);
 		},
 	);
 
 	await Register(
 		"sky://ui/show-input-box-request",
-		({ id, options }: any) => {
-			// VS Code resolves QuickInput via ResolveUIRequest command
+		({ RequestIdentifier, Payload }: any) => {
+			if (!RequestIdentifier) return;
+			// Minimal fallback - a DOM prompt is serviceable until Sky ships
+			// a native input box component. Extensions receive the literal
+			// string the user typed, or `null` when the user dismissed.
+			const Options = Payload ?? {};
 			const Answer = window.prompt(
-				options?.prompt ?? options?.placeHolder ?? "",
+				Options?.Prompt ??
+					Options?.PlaceHolder ??
+					Options?.prompt ??
+					Options?.placeHolder ??
+					"",
+				Options?.Value ?? Options?.value ?? "",
 			);
-			GetWorkbench()
-				?.commands.executeCommand("workbench.resolveUIRequest", {
-					id,
-					value: Answer,
-				})
-				.catch(() => {});
+			void ResolveUiRequest(RequestIdentifier, Answer);
 		},
 	);
 
 	await Register(
 		"sky://ui/show-quick-pick-request",
-		({ id, items, options }: any) => {
-			// Minimal fallback: show VS Code quick-pick command
-			GetWorkbench()
-				?.commands.executeCommand(
-					"workbench.action.quickOpenSelectNext",
-				)
-				.catch(() => {});
+		({ RequestIdentifier, Payload }: any) => {
+			if (!RequestIdentifier) return;
+			const Items = Payload?.Items ?? Payload?.items ?? [];
+			const Options = Payload?.Options ?? Payload?.options ?? {};
+			// Broadcast a DOM event so Sky components can render a real
+			// quick-pick UI. Components call `ResolveUiRequest` themselves
+			// by listening for `cel:quickpick:resolve` CustomEvents.
 			document.dispatchEvent(
 				new CustomEvent("cel:quickpick:show", {
-					detail: { id, items, options },
+					detail: { RequestIdentifier, Items, Options },
 				}),
 			);
+			// Safety-net fallback: if no component consumes the event
+			// within 30 s, resolve with the first picked label (or null
+			// when no item is pre-selected). Prevents Mountain from
+			// timing out on a missing UI.
+			const FallbackTimer = window.setTimeout(() => {
+				const PickedLabels = Array.isArray(Items)
+					? Items.filter((Item: any) => Item?.picked).map(
+							(Item: any) => Item?.label ?? null,
+						)
+					: [];
+				const Fallback = Options?.canPickMany
+					? PickedLabels
+					: (PickedLabels[0] ?? null);
+				void ResolveUiRequest(RequestIdentifier, Fallback);
+			}, 30_000);
+			document.addEventListener(
+				"cel:quickpick:resolve",
+				(Event: any) => {
+					if (Event?.detail?.RequestIdentifier !== RequestIdentifier)
+						return;
+					window.clearTimeout(FallbackTimer);
+					void ResolveUiRequest(
+						RequestIdentifier,
+						Event?.detail?.Result ?? null,
+					);
+				},
+				{ once: true },
+			);
+		},
+	);
+
+	// Atom Q1: message box with actions. Mountain already uses this shape
+	// (see `sky://ui/show-message-request` above for the notification fn);
+	// when extensions pass `actions`, we must return the picked index.
+	await Register(
+		"sky://ui/show-message-with-actions-request",
+		({ RequestIdentifier, Payload }: any) => {
+			if (!RequestIdentifier) return;
+			const Message = Payload?.Message ?? Payload?.message ?? "";
+			const Actions: Array<{ title: string }> =
+				Payload?.Actions ?? Payload?.actions ?? [];
+			// No native chooser yet - use confirm() for a single action, or
+			// prompt() with the action titles for multiple. Real UI work
+			// happens downstream when Sky ships a message-box component.
+			let Picked: string | null = null;
+			if (Actions.length === 0) {
+				window.alert(Message);
+			} else if (Actions.length === 1) {
+				if (window.confirm(`${Message}\n\n(${Actions[0].title})`)) {
+					Picked = Actions[0].title;
+				}
+			} else {
+				const Choice = window.prompt(
+					`${Message}\n\nChoose: ${Actions.map((A) => A.title).join(" / ")}`,
+					Actions[0].title,
+				);
+				if (
+					Choice &&
+					Actions.some((A) => A.title === Choice)
+				) {
+					Picked = Choice;
+				}
+			}
+			void ResolveUiRequest(RequestIdentifier, Picked);
 		},
 	);
 

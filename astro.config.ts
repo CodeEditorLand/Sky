@@ -23,6 +23,8 @@ import {
 	stat,
 	writeFile,
 } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { request } from "node:https";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,6 +35,109 @@ import { defineConfig } from "astro/config";
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
 import { External, Host, Link, On } from "./Source/Function/Debug";
+
+// -----------------------------------------------------------------------------
+// EXTENSION DEP INSTALLER (Atom S1)
+// -----------------------------------------------------------------------------
+// Runs `npm install --production` inside a copied extension when its
+// package.json declares runtime `dependencies` and `node_modules/` is
+// absent or empty. Also reports when an extension's `browser/` entrypoint
+// has no compiled bundle - a common result of running `gulp
+// compile-extensions-build` without `compile-web-extensions-build`.
+//
+// Kept deliberately at single-extension granularity so the per-extension
+// output is readable and a single bad package.json doesn't fail the whole
+// build. `Promise.all` with a semaphore is overkill for ~10 extensions
+// with runtime deps (most built-ins webpack-bundle and have none).
+// -----------------------------------------------------------------------------
+type InstallExtensionDepsOutcome = {
+	Installed: number;
+	BundleWarning?: string;
+};
+
+const InstallExtensionDeps = async (
+	ExtensionDirectory: string,
+	PackageJsonRaw: string,
+): Promise<InstallExtensionDepsOutcome> => {
+	let Pkg: Record<string, unknown>;
+	try {
+		Pkg = JSON.parse(PackageJsonRaw);
+	} catch {
+		return { Installed: 0 };
+	}
+
+	const Dependencies = (Pkg["dependencies"] as
+		| Record<string, string>
+		| undefined) ?? {};
+	const DependencyCount = Object.keys(Dependencies).length;
+
+	// Surface a warning when a web-worker entrypoint lives in the manifest
+	// but the compiled browser bundle is missing.
+	let BundleWarning: string | undefined;
+	const Browser = Pkg["browser"] as string | undefined;
+	if (Browser) {
+		const BrowserBundle = join(ExtensionDirectory, Browser);
+		if (!existsSync(BrowserBundle)) {
+			BundleWarning = `browser entrypoint ${Browser} does not resolve`;
+		}
+	}
+
+	if (DependencyCount === 0) {
+		return { Installed: 0, BundleWarning };
+	}
+
+	const NodeModulesPath = join(ExtensionDirectory, "node_modules");
+	if (existsSync(NodeModulesPath)) {
+		// Already populated - trust the source tree's cached install.
+		return { Installed: 0, BundleWarning };
+	}
+
+	const InstallOutcome = await RunNpmInstall(ExtensionDirectory);
+	return {
+		Installed: InstallOutcome ? DependencyCount : 0,
+		BundleWarning,
+	};
+};
+
+const RunNpmInstall = (Cwd: string): Promise<boolean> =>
+	new Promise((ResolvePromise) => {
+		const Child = spawn(
+			"npm",
+			[
+				"install",
+				"--production",
+				"--no-audit",
+				"--no-fund",
+				"--no-save",
+				"--ignore-scripts",
+				"--silent",
+			],
+			{
+				cwd: Cwd,
+				stdio: ["ignore", "pipe", "pipe"],
+				env: { ...process.env, npm_config_loglevel: "error" },
+			},
+		);
+		let Stderr = "";
+		Child.stderr?.on("data", (Chunk) => {
+			Stderr += String(Chunk);
+		});
+		Child.on("error", () => {
+			ResolvePromise(false);
+		});
+		Child.on("close", (Code) => {
+			if (Code === 0) {
+				ResolvePromise(true);
+			} else {
+				console.warn(
+					`[CopyVSCode] Step 13: npm install exited ${Code} in ${Cwd}${
+						Stderr ? `: ${Stderr.trim().slice(0, 200)}` : ""
+					}`,
+				);
+				ResolvePromise(false);
+			}
+		});
+	});
 
 // -----------------------------------------------------------------------------
 // ASTRO CONFIGURATION
@@ -926,6 +1031,20 @@ export default defineConfig({
 							),
 						];
 						let ExtensionsCopied = false;
+						// Atom S1: auto-install runtime deps into each
+						// copied extension so Cocoon doesn't crash on
+						// `require('byline')` etc. when the source tree
+						// omitted `node_modules/`. Toggle via
+						// `LAND_AUTO_INSTALL_EXTENSION_DEPS=false` for CI
+						// runs that pre-populate the cache.
+						const AutoInstallDeps =
+							process.env["LAND_AUTO_INSTALL_EXTENSION_DEPS"] !==
+							"false";
+						const InstallLog: Array<{
+							Name: string;
+							Installed: number;
+						}> = [];
+						const BundleWarnings: string[] = [];
 						for (const ExtensionsSource of ExtensionsSources) {
 							try {
 								const ExtDirs = await readdir(ExtensionsSource);
@@ -934,10 +1053,31 @@ export default defineConfig({
 									const Source = join(ExtensionsSource, Ext);
 									const PkgPath = join(Source, "package.json");
 									try {
-										await readFile(PkgPath);
+										const PkgRaw = await readFile(
+											PkgPath,
+											"utf8",
+										);
 										const Dest = join(ExtensionsTarget, Ext);
 										await cp(Source, Dest, { recursive: true });
 										Copied++;
+
+										if (AutoInstallDeps) {
+											const Outcome = await InstallExtensionDeps(
+												Dest,
+												PkgRaw,
+											);
+											if (Outcome.Installed > 0) {
+												InstallLog.push({
+													Name: Ext,
+													Installed: Outcome.Installed,
+												});
+											}
+											if (Outcome.BundleWarning) {
+												BundleWarnings.push(
+													`${Ext}: ${Outcome.BundleWarning}`,
+												);
+											}
+										}
 									} catch {
 										// Skip dirs without package.json or broken extensions
 									}
@@ -956,6 +1096,30 @@ export default defineConfig({
 						if (!ExtensionsCopied) {
 							console.warn(
 								"[CopyVSCode] Step 13: No built-in extensions found",
+							);
+						}
+						if (InstallLog.length > 0) {
+							const Total = InstallLog.reduce(
+								(Sum, Item) => Sum + Item.Installed,
+								0,
+							);
+							console.log(
+								`[CopyVSCode] Step 13: Auto-installed runtime deps for ${InstallLog.length} extension(s), ${Total} packages total`,
+							);
+							for (const Item of InstallLog) {
+								console.log(
+									`[CopyVSCode] Step 13:   - ${Item.Name} (${Item.Installed} packages)`,
+								);
+							}
+						}
+						if (BundleWarnings.length > 0) {
+							for (const Warning of BundleWarnings) {
+								console.warn(
+									`[CopyVSCode] Step 13: bundle warning - ${Warning}`,
+								);
+							}
+							console.warn(
+								`[CopyVSCode] Step 13: run 'npm run compile-web-extensions-build' in Dependency/Microsoft/Dependency/Editor/ to generate missing browser bundles`,
 							);
 						}
 					}
@@ -1221,6 +1385,45 @@ export { ExtensionsScannerService, IExtensionsScannerService };
 			),
 			"import.meta.env.LAND_ENABLE_WIND": JSON.stringify(
 				process.env["LAND_ENABLE_WIND"] ?? "true",
+			),
+			// Atom PH1: mirror `.env.Land.PostHog` into the Sky bundle so
+			// PostHogBridge.ts reads one source of truth. Default key ships
+			// when `.env.Land.PostHog` is absent so a fresh clone still
+			// reports to the Land project.
+			"import.meta.env.LAND_POSTHOG_KEY": JSON.stringify(
+				process.env["LAND_POSTHOG_KEY"] ??
+					"phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
+			),
+			"import.meta.env.LAND_POSTHOG_HOST": JSON.stringify(
+				process.env["LAND_POSTHOG_HOST"] ??
+					"https://eu.i.posthog.com",
+			),
+			"import.meta.env.LAND_POSTHOG_SKY_ENABLED": JSON.stringify(
+				process.env["LAND_POSTHOG_SKY_ENABLED"] ?? "true",
+			),
+			"import.meta.env.LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND":
+				JSON.stringify(
+					process.env[
+						"LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND"
+					] ?? "5",
+				),
+			"import.meta.env.LAND_POSTHOG_SKY_BATCH_WINDOW_MS":
+				JSON.stringify(
+					process.env["LAND_POSTHOG_SKY_BATCH_WINDOW_MS"] ??
+						"3000",
+				),
+			"import.meta.env.LAND_POSTHOG_SKY_BATCH_MAX": JSON.stringify(
+				process.env["LAND_POSTHOG_SKY_BATCH_MAX"] ?? "20",
+			),
+			"import.meta.env.LAND_POSTHOG_SESSION_RECORDING":
+				JSON.stringify(
+					process.env["LAND_POSTHOG_SESSION_RECORDING"] ?? "false",
+				),
+			"import.meta.env.LAND_POSTHOG_SURVEYS": JSON.stringify(
+				process.env["LAND_POSTHOG_SURVEYS"] ?? "false",
+			),
+			"import.meta.env.LAND_POSTHOG_DISTINCT_ID": JSON.stringify(
+				process.env["LAND_POSTHOG_DISTINCT_ID"] ?? "",
 			),
 		},
 

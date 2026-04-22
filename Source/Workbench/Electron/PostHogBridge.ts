@@ -20,15 +20,46 @@
  * Errors always sent immediately via captureException.
  */
 
-const PostHogAPIKey = "phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA";
-const PostHogHost = "https://eu.i.posthog.com";
+// Atom PH1: read configuration from `import.meta.env` injection set by
+// astro.config.ts `vite.define`. Hardcoded fallback keeps a fresh clone
+// working before `.env.Land.PostHog` is sourced.
+const PostHogAPIKey =
+	((import.meta.env as any).LAND_POSTHOG_KEY as string | undefined) ??
+	"phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA";
+const PostHogHost =
+	((import.meta.env as any).LAND_POSTHOG_HOST as string | undefined) ??
+	"https://eu.i.posthog.com";
+const PostHogEnabled =
+	((import.meta.env as any).LAND_POSTHOG_SKY_ENABLED as string | undefined) !==
+	"false";
+// Atom PH2: Sky was hitting PostHog's built-in rate limiter (observed as
+// `[PostHog.js] This capture call is ignored due to client rate limiting.`
+// in the webview console). Apply our own rate cap + a larger batch window
+// so we stay under the client-side limit without dropping the error path.
+const PostHogMaxEventsPerSecond = Number(
+	(import.meta.env as any).LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND ?? "5",
+);
+const PostHogBatchWindowMs = Number(
+	(import.meta.env as any).LAND_POSTHOG_SKY_BATCH_WINDOW_MS ?? "3000",
+);
+const PostHogBatchMax = Number(
+	(import.meta.env as any).LAND_POSTHOG_SKY_BATCH_MAX ?? "20",
+);
+const PostHogDistinctIdSeed =
+	((import.meta.env as any).LAND_POSTHOG_DISTINCT_ID as string | undefined) ??
+	"";
 
 const LoadPostHog = async (): Promise<any> => {
+	if (!PostHogEnabled) return null;
 	try {
 		if ((window as any).posthog) return (window as any).posthog;
+		const AssetsHost = PostHogHost.replace(
+			"://",
+			"://",
+		).replace("//eu.i.", "//eu-assets.i.").replace("//us.i.", "//us-assets.i.");
 		return await new Promise((Resolve) => {
 			const Script = document.createElement("script");
-			Script.src = "https://eu-assets.i.posthog.com/static/array.js";
+			Script.src = `${AssetsHost}/static/array.js`;
 			Script.async = true;
 			Script.onload = () => {
 				const PH = (window as any).posthog;
@@ -38,13 +69,35 @@ const LoadPostHog = async (): Promise<any> => {
 						autocapture: false,
 						capture_pageview: false,
 						capture_pageleave: false,
-						disable_session_recording: true,
-						disable_surveys: true,
+						disable_session_recording:
+							(import.meta.env as any)
+								.LAND_POSTHOG_SESSION_RECORDING === "true"
+								? false
+								: true,
+						disable_surveys:
+							(import.meta.env as any).LAND_POSTHOG_SURVEYS ===
+							"true"
+								? false
+								: true,
 						advanced_disable_decide: true,
 						disable_external_dependency_loading: true,
 						persistence: "memory",
+						// Atom PH2: reduce client-side rate-limit pressure.
+						// posthog-js enforces a request rate internally;
+						// these settings keep us well below its cap so the
+						// `ignored due to client rate limiting` warning
+						// stops firing.
+						rate_limiting: {
+							events_per_second: PostHogMaxEventsPerSecond,
+							events_burst_limit: Math.max(
+								10,
+								PostHogMaxEventsPerSecond * 2,
+							),
+						},
 						bootstrap: {
-							distinctID: `land-dev-${Date.now()}`,
+							distinctID: PostHogDistinctIdSeed
+								? PostHogDistinctIdSeed
+								: `land-dev-${Date.now()}`,
 						},
 						loaded: (Instance: any) => {
 							Instance.register({
@@ -52,6 +105,7 @@ const LoadPostHog = async (): Promise<any> => {
 								$app_version: "0.0.1",
 								$build_mode: "debug",
 								$platform: navigator.platform,
+								$tier: "sky",
 							});
 							Resolve(Instance);
 						},
@@ -99,7 +153,7 @@ const Initialize = async (): Promise<void> => {
 	// Per-component buffers - flushed independently
 	const Buffers = new Map<string, BufferedMark[]>();
 	const Timers = new Map<string, ReturnType<typeof setTimeout>>();
-	const MaxPerFlush = 10; // Stay well under 64KB per request
+	const MaxPerFlush = PostHogBatchMax;
 
 	const FlushComponent = (Component: string) => {
 		Timers.delete(Component);
@@ -133,7 +187,10 @@ const Initialize = async (): Promise<void> => {
 		Buffers.get(Component)!.push(Mark);
 
 		if (!Timers.has(Component)) {
-			Timers.set(Component, setTimeout(() => FlushComponent(Component), 2000));
+			Timers.set(
+				Component,
+				setTimeout(() => FlushComponent(Component), PostHogBatchWindowMs),
+			);
 		}
 	};
 

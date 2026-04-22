@@ -13,14 +13,10 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Dirent } from "node:fs";
 import {
-	copyFile,
 	cp,
-	mkdir,
 	readdir,
 	readFile,
-	stat,
 	writeFile,
 } from "node:fs/promises";
 import { spawn } from "node:child_process";
@@ -35,6 +31,25 @@ import { defineConfig } from "astro/config";
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
 import { External, Host, Link, On } from "./Source/Function/Debug";
+
+// -----------------------------------------------------------------------------
+// OUTPUT PLUGIN PIPELINE
+// -----------------------------------------------------------------------------
+// Every "Step N:" block this file used to run inline now lives as a
+// standalone plugin in `Element/Output/Source/Plugin/`. `BuildPipeline`
+// returns the default ordered array (7 file-copy + 7 text-transform
+// plugins); `ApplyPlugins` walks the configured roots and applies them.
+// The four genuinely Sky-specific patches that could not move (Steps 8 /
+// 8b / 9 / 13 - see banners below) stay inline here, each with a comment
+// linking back to the blocker.
+//
+// Rest compatibility: every plugin is a pure data object (or a factory
+// returning one) with a language-agnostic `Transform` / `Copy` payload.
+// The Rest compiler will consume the same modules once its plugin API is
+// wired up - no duplication or rewrite needed.
+import type { Plugin as OutputPlugin } from "@codeeditorland/output/Plugin/Type";
+import ApplyPlugins from "@codeeditorland/output/Plugin/Apply";
+import BuildPipeline from "@codeeditorland/output/Plugin/Index";
 
 // -----------------------------------------------------------------------------
 // EXTENSION DEP INSTALLER (Atom S1)

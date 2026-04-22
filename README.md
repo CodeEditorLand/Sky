@@ -102,7 +102,7 @@ presentation.
 | **`Astro` Components** | Declarative UI building blocks composing the editor interface, from activity bar to status bar.                                          |
 | **`Tauri` Webview**    | Runtime environment where `Sky` executes, providing access to `Tauri` APIs and OS integration.                                          |
 | **`Wind` Integration** | Consumes `Wind`'s `Effect-TS` services for file operations, dialogs, configuration, and state management.                               |
-| **Workbench Variants** | Three approaches (A1–A3) for loading `VS Code`'s core editor components: Browser, Mountain (recommended), and Electron.               |
+| **Workbench Variants** | Three approaches (A1-A3) for loading `VS Code`'s core editor components: Browser, Mountain (recommended), and Electron.               |
 | **Page Routing**       | Manages navigation between `index` (default), `Browser`, `BrowserProxy`, `Electron`, `Mountain`, and `Isolation` pages.                 |
 | **Event Handling**     | Listens for `Tauri` events from `Mountain` to update UI state (terminal output, SCM updates, configuration changes).                     |
 

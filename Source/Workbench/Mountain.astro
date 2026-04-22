@@ -14,6 +14,70 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 	<NLS />
 	<TelemetryBridge />
 
+	<!-- Phase Advance - fires BEFORE the workbench import so it is
+	     not blocked by the main workbench script and is not wiped
+	     by a subsequent Window.navigate() folder-open reload.
+
+	     Mountain broadcasts each phase change over
+	     `sky://lifecycle/phaseChanged`; the workbench (once it
+	     eventually loads) subscribes and gates long-running work.
+	     If Mountain never hears from Sky, its fallback timers fire
+	     at +8s (Restored) and +23s (Eventually), which the dev log
+	     surfaces as `[Lifecycle] [Fallback] Sky did not advance
+	     within …`. That delay is harmless in the abstract, but it
+	     masks real issues and pushes everything gated on phase 3 /
+	     4 out by seconds. -->
+	<script type="module">
+		performance.mark("land:mountain:phase:script:start");
+		const PhaseInvoke =
+			globalThis.__TAURI_INTERNALS__?.invoke ??
+			globalThis.__TAURI__?.invoke ??
+			globalThis.__TAURI__?.core?.invoke ??
+			null;
+		if (!PhaseInvoke) {
+			performance.mark("land:mountain:phase:invoke-unavailable");
+			console.warn(
+				"[Mountain.astro] Tauri invoke not available; phase advance skipped",
+			);
+		} else {
+			// Tauri command `MountainIPCInvoke` signature is
+			// `(method: String, params: Value)` - NOT `(command,
+			// args)`. Mismatched param names cause silent
+			// deserialisation failure and Mountain falls back to its
+			// 8s / 23s phase timers. All Wind / Output / astro
+			// diagnostic call-sites use `{ method, params }` - this
+			// block must match.
+			const Advance = (PhaseNumber) =>
+				PhaseInvoke("MountainIPCInvoke", {
+					method: "lifecycle:advancePhase",
+					params: [PhaseNumber],
+				}).catch((Error) => {
+					console.warn(
+						`[Mountain.astro] advancePhase(${PhaseNumber}) failed:`,
+						Error,
+					);
+					performance.mark(
+						`land:mountain:phase:${PhaseNumber}:error`,
+					);
+				});
+			// Phase 3 = Restored: workbench DOM is attached and
+			// first-paint is imminent. Fire early - Mountain rejects
+			// backwards / same-phase advances, so races are safe.
+			Advance(3).then(() =>
+				performance.mark("land:mountain:phase:restored"),
+			);
+			// Phase 4 = Eventually: long tail background work can
+			// start. Delayed so Mountain sees a monotonic 3 → 4
+			// progression even if both invokes enqueue near-
+			// simultaneously.
+			setTimeout(() => {
+				Advance(4).then(() =>
+					performance.mark("land:mountain:phase:eventually"),
+				);
+			}, 1500);
+		}
+	</script>
+
 	<!-- Wind Preload -->
 	<script type="module">
 		performance.mark("land:mountain:preload:start");
@@ -59,6 +123,12 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 			await import(WorkbenchUrl);
 			performance.mark("land:mountain:workbench:loaded");
 
+			// SkyBridge install is timed after the workbench has a
+			// chance to mount - 1s is enough for the first-paint
+			// DOM, before the workbench typically fires its folder-
+			// open navigate. Phase advance lives in its own script
+			// block above so it doesn't depend on this reaching
+			// here.
 			setTimeout(async () => {
 				try {
 					const { InstallSkyBridge } = await import(
@@ -66,49 +136,14 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 					);
 					await InstallSkyBridge();
 					performance.mark("land:mountain:skybridge:installed");
-
-					// Atom P3: signal Mountain that the workbench is
-					// interactive so `Restored` / `Eventually` phases don't
-					// rely on Mountain's 8s/23s fallback timers. Mountain
-					// rejects backwards/same-phase advances so calling this
-					// after the fallback fired is harmless. The Tauri IPC
-					// is loaded dynamically because the workbench boot runs
-					// in a plain `<script type="module">` context without a
-					// pre-resolved bundle.
-					try {
-						const TauriModule = await import(
-							"@tauri-apps/api/core"
-						);
-						await TauriModule.invoke("mountain_ipc_invoke", {
-							command: "lifecycle:advancePhase",
-							args: [3],
-						});
-						performance.mark("land:mountain:phase:restored");
-						setTimeout(async () => {
-							try {
-								await TauriModule.invoke(
-									"mountain_ipc_invoke",
-									{
-										command: "lifecycle:advancePhase",
-										args: [4],
-									},
-								);
-								performance.mark(
-									"land:mountain:phase:eventually",
-								);
-							} catch {
-								performance.mark(
-									"land:mountain:phase:eventually:error",
-								);
-							}
-						}, 2000);
-					} catch {
-						performance.mark("land:mountain:phase:error");
-					}
-				} catch {
+				} catch (Error) {
+					console.warn(
+						"[Mountain.astro] InstallSkyBridge failed:",
+						Error,
+					);
 					performance.mark("land:mountain:skybridge:error");
 				}
-			}, 2000);
+			}, 1000);
 		} catch {
 			performance.mark("land:mountain:workbench:error");
 		}

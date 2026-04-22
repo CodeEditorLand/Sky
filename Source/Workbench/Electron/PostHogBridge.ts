@@ -146,9 +146,86 @@ interface BufferedMark {
 	Detail: unknown;
 }
 
+// Client-side throttle. posthog-js's CDN `array.js` ignores the
+// `rate_limiting` config option; its internal limiter caps at
+// 10 events per event-name per 10 s and silently drops overflow
+// with the `ignored due to client rate limiting` console warning.
+// Dropping here instead means the warning never fires AND the
+// PostHog dashboard gets a single "dropped=N" reporting event
+// per window so volume loss is visible.
+const ThrottleWindowMs = 10_000;
+const ThrottleLimitPerName = Math.max(1, PostHogMaxEventsPerSecond * 2);
+const ThrottleCounters = new Map<string, { Count: number; ResetAt: number }>();
+const ThrottleDropped = new Map<string, number>();
+
+const ShouldThrottle = (Name: string): boolean => {
+	const Now = Date.now();
+	const Entry = ThrottleCounters.get(Name);
+	if (!Entry || Entry.ResetAt <= Now) {
+		ThrottleCounters.set(Name, {
+			Count: 1,
+			ResetAt: Now + ThrottleWindowMs,
+		});
+		return false;
+	}
+	Entry.Count += 1;
+	if (Entry.Count > ThrottleLimitPerName) {
+		ThrottleDropped.set(Name, (ThrottleDropped.get(Name) ?? 0) + 1);
+		return true;
+	}
+	return false;
+};
+
+const DrainThrottleMetrics = (PH: any): void => {
+	if (ThrottleDropped.size === 0) return;
+	const Summary: Record<string, number> = {};
+	for (const [Name, Count] of ThrottleDropped.entries()) {
+		Summary[Name] = Count;
+	}
+	ThrottleDropped.clear();
+	// Single event per window - counted as one against the
+	// throttle itself, so always safe under the limit.
+	try {
+		PH.capture?.("land:sky:throttle-dropped", {
+			$component: "sky",
+			dropped: Summary,
+			window_ms: ThrottleWindowMs,
+		});
+	} catch {}
+};
+
 const Initialize = async (): Promise<void> => {
-	const PH = await LoadPostHog();
-	if (!PH) return;
+	const Raw = await LoadPostHog();
+	if (!Raw) return;
+
+	// Wrap `capture` + `captureException` with the throttle so every
+	// consumer in this module (and anywhere else that uses the
+	// returned `PH` handle) gets the same drop semantics.
+	const PH: any = {
+		...Raw,
+		capture: (Name: string, Properties?: Record<string, unknown>) => {
+			if (ShouldThrottle(Name)) return;
+			return Raw.capture(Name, Properties);
+		},
+		captureException: (
+			Error: unknown,
+			Properties?: Record<string, unknown>,
+		) => {
+			// Errors pass through unthrottled - they're already rare
+			// and signal-rich, and the dashboard deduplicates by
+			// $exception_type anyway.
+			return Raw.captureException(Error, Properties);
+		},
+	};
+
+	// Periodic drain of dropped-event counters so the PostHog
+	// dashboard sees *that* we dropped events even when every
+	// capture of the affected name was rate-limited.
+	const DrainTimer = setInterval(
+		() => DrainThrottleMetrics(Raw),
+		ThrottleWindowMs,
+	);
+	(DrainTimer as unknown as { unref?: () => void }).unref?.();
 
 	// Per-component buffers - flushed independently
 	const Buffers = new Map<string, BufferedMark[]>();

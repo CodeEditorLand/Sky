@@ -771,6 +771,61 @@ export async function InstallSkyBridge(): Promise<void> {
 		});
 	}
 
+	// ---- Tree-view data bridge ----
+	// Consumer for `cel:tree-view:create` - without this listener the fan-out
+	// above re-dispatches the event but nothing downstream listens, so every
+	// registered view logs `consumer-present=false` (F1.1 in HANDOFF §-10).
+	// The listener primes the viewer by requesting the root children through
+	// Mountain's `tree:getChildren` invoke - Mountain forwards to Cocoon's
+	// `$provideTreeChildren` and returns `{ items: [...] }`. We re-dispatch
+	// the children on `cel:tree-view:items` so any renderer shim can pick
+	// them up without an extra round-trip.
+	if (typeof document !== "undefined") {
+		document.addEventListener("cel:tree-view:create", (Event: Event) => {
+			const Detail = (Event as CustomEvent).detail as
+				| { viewId?: string; extensionId?: string }
+				| undefined;
+			const ViewId = Detail?.viewId ?? "";
+			if (!ViewId) return;
+			invoke<{ items?: unknown[] }>("MountainIPCInvoke", {
+				method: "tree:getChildren",
+				params: [{ viewId: ViewId, treeItemHandle: "" }],
+			})
+				.then((Response) => {
+					const Items = Array.isArray(Response?.items)
+						? Response.items
+						: [];
+					document.dispatchEvent(
+						new CustomEvent("cel:tree-view:items", {
+							detail: {
+								viewId: ViewId,
+								parent: "",
+								items: Items,
+							},
+						}),
+					);
+					try {
+						invoke<void>("RenderDevLog", {
+							Tag: "tree-view",
+							Message: `[TreeView] bridge-items view=${ViewId} count=${Items.length}`,
+							tag: "tree-view",
+							message: `[TreeView] bridge-items view=${ViewId} count=${Items.length}`,
+						}).catch(() => {});
+					} catch {}
+				})
+				.catch((Error) => {
+					try {
+						invoke<void>("RenderDevLog", {
+							Tag: "tree-view",
+							Message: `[TreeView] bridge-error view=${ViewId} err=${String(Error)}`,
+							tag: "tree-view",
+							message: `[TreeView] bridge-error view=${ViewId} err=${String(Error)}`,
+						}).catch(() => {});
+					} catch {}
+				});
+		});
+	}
+
 	// ---- Extension-host debug service ----
 	// Workbench reload/close triggered from the extension host debug
 	// service (`vscode.debug.onDidReceiveDebugSessionCustomEvent` flow).

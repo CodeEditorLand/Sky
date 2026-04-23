@@ -334,11 +334,6 @@ export default defineConfig({
 					//   Step 13 - built-in extension copy + `npm install`
 					//             spawn - esbuild plugins have no post-
 					//             build external-command hook.
-					//
-					// Follow-up work is tracked in
-					// `.claude/plans/unified-juggling-squirrel.md` under
-					// the "Out of scope for this pass" section.
-
 					// Step 8: When Electron=true, patch workbench.js to surface
 					// errors from the async IIFE. The original code does NOT await
 					// result.main(configuration) and has no unhandledrejection

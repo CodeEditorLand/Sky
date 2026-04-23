@@ -33,6 +33,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
+// Single source of truth for Mountain → Sky event URIs. Importing from
+// the Wind package avoids maintaining a parallel string table here and
+// catches drift against Mountain's Rust `SkyEvent` enum at type-check
+// time (Wind's TS table is the TS mirror of Common/IPC/SkyEvent.rs).
+import SkyEvent from "@codeeditorland/wind/Target/IPC/SkyEvent.js";
+
 // ============================================================================
 // VS Code workbench accessor
 // ============================================================================
@@ -599,23 +605,26 @@ export async function InstallSkyBridge(): Promise<void> {
 
 	// ---- Status bar ----
 	// Extensions that call `vscode.window.createStatusBarItem(...)` fan
-	// `statusBar.update` through Mountain to `sky://status-bar/update`, and
+	// `statusBar.update` through Mountain to `sky://statusbar/update`, and
 	// `setStatusBarMessage` through `statusBar.message` →
-	// `sky://status-bar/message`. Sky re-dispatches both as DOM events so
-	// the workbench's status-bar component can subscribe in one place.
-	await Register("sky://status-bar/update", (Payload: any) => {
+	// `sky://statusbar/set-message`. Sky re-dispatches both as DOM events
+	// so the workbench's status-bar component can subscribe in one place.
+	// The canonical wire prefix is `sky://statusbar/` (no hyphen); the
+	// earlier `sky://status-bar/…` fork was a listener-only mismatch with
+	// no Mountain emitter and has been retired.
+	await Register("sky://statusbar/update", (Payload: any) => {
 		document.dispatchEvent(
-			new CustomEvent("cel:status-bar:update", { detail: Payload }),
+			new CustomEvent("cel:statusbar:update", { detail: Payload }),
 		);
 	});
-	await Register("sky://status-bar/dispose", (Payload: any) => {
+	await Register("sky://statusbar/dispose", (Payload: any) => {
 		document.dispatchEvent(
-			new CustomEvent("cel:status-bar:dispose", { detail: Payload }),
+			new CustomEvent("cel:statusbar:dispose", { detail: Payload }),
 		);
 	});
-	await Register("sky://status-bar/message", (Payload: any) => {
+	await Register("sky://statusbar/set-message", (Payload: any) => {
 		document.dispatchEvent(
-			new CustomEvent("cel:status-bar:message", { detail: Payload }),
+			new CustomEvent("cel:statusbar:set-message", { detail: Payload }),
 		);
 	});
 
@@ -646,39 +655,42 @@ export async function InstallSkyBridge(): Promise<void> {
 	// Round up the remaining `sky://` channels Mountain already emits so
 	// every event has a DOM listener downstream. Each arm re-dispatches
 	// on `cel:<prefix>:<action>` so consumers never need a Tauri listener
-	// of their own.
-	for (const [Channel, DomEvent] of [
-		["sky://diagnostics/changed", "cel:diagnostics:changed"],
-		["sky://theme/change", "cel:theme:change"],
-		["sky://tree-view/dispose", "cel:tree-view:dispose"],
-		["sky://tree-view/create", "cel:tree-view:create"],
-		["sky://test/registered", "cel:test:registered"],
-		["sky://scm/provider/added", "cel:scm:provider-added"],
-		["sky://scm/provider/removed", "cel:scm:provider-removed"],
-		["sky://documents/open", "cel:documents:open"],
-		["sky://documents/saved", "cel:documents:saved"],
-		["sky://debug/stop", "cel:debug:stop"],
-		["sky://debug/addBreakpoints", "cel:debug:addBreakpoints"],
-		["sky://debug/removeBreakpoints", "cel:debug:removeBreakpoints"],
-		["sky://debug/consoleAppend", "cel:debug:consoleAppend"],
-		["sky://terminal/closed", "cel:terminal:closed"],
-		["sky://terminal/opened", "cel:terminal:opened"],
-		["sky://native/openExternal", "cel:native:openExternal"],
-		["sky://task/terminate", "cel:task:terminate"],
-		["sky://editor/applyEdits", "cel:editor:applyEdits"],
-		["sky://editor/openDocument", "cel:editor:openDocument"],
-		["sky://editor/saveAll", "cel:editor:saveAll"],
-		["sky://output/replace", "cel:output:replace"],
-		["sky://output/reveal", "cel:output:reveal"],
-		["sky://statusbar/create", "cel:statusbar:create"],
-		["sky://statusbar/dispose", "cel:statusbar:dispose"],
-		["sky://statusbar/dispose-entry", "cel:statusbar:dispose-entry"],
-		["sky://statusbar/set-entry", "cel:statusbar:set-entry"],
-		["sky://webview/setHtml", "cel:webview:setHtml"],
-	] as const) {
+	// of their own. Channels are sourced from the Wind `SkyEvent` table -
+	// the single source of truth that mirrors Mountain's Rust enum - so a
+	// renamed variant either compiles or breaks type-check, never silently
+	// fails at runtime.
+	const ChannelToDomEvent = (Channel: string): string =>
+		Channel.replace(/^sky:\/\//, "cel:").replace(/\//g, ":");
+	const FanOut = [
+		SkyEvent.DiagnosticsChanged,
+		SkyEvent.ThemeChange,
+		SkyEvent.TreeViewDispose,
+		SkyEvent.TreeViewCreate,
+		SkyEvent.TestRegistered,
+		SkyEvent.SCMProviderAdded,
+		SkyEvent.SCMProviderRemoved,
+		SkyEvent.DocumentsOpen,
+		SkyEvent.DocumentsSaved,
+		SkyEvent.DebugStop,
+		SkyEvent.TerminalClosed,
+		SkyEvent.TerminalOpened,
+		SkyEvent.NativeOpenExternal,
+		SkyEvent.TaskTerminate,
+		SkyEvent.EditorApplyEdits,
+		SkyEvent.EditorOpenDocument,
+		SkyEvent.EditorSaveAll,
+		SkyEvent.OutputReplace,
+		SkyEvent.OutputReveal,
+		SkyEvent.StatusBarCreate,
+		SkyEvent.StatusBarDispose,
+		SkyEvent.StatusBarDisposeEntry,
+		SkyEvent.StatusBarSetEntry,
+		SkyEvent.WebviewSetHTML,
+	] as const;
+	for (const Channel of FanOut) {
 		await Register(Channel, (Payload: any) => {
 			document.dispatchEvent(
-				new CustomEvent(DomEvent, { detail: Payload }),
+				new CustomEvent(ChannelToDomEvent(Channel), { detail: Payload }),
 			);
 		});
 	}
@@ -698,15 +710,12 @@ export async function InstallSkyBridge(): Promise<void> {
 	});
 
 	// ---- Webview extensions ----
-	// Extension-initiated webview metadata/content updates. Covers
-	// setTitle, setIconPath, setHtml so every webview panel stays in sync.
-	for (const Action of ["setTitle", "setIconPath", "setHtml"]) {
-		await Register(`sky://webview/${Action}`, (Payload: any) => {
-			document.dispatchEvent(
-				new CustomEvent(`cel:webview:${Action}`, { detail: Payload }),
-			);
-		});
-	}
+	// Extension-initiated webview content updates. The canonical channel
+	// is the kebab-case `sky://webview/set-html` (see `SkyEvent.ts` for
+	// the single source of truth). The earlier camelCase fan-out over
+	// `setTitle`/`setIconPath`/`setHtml` had no matching Mountain emitter
+	// for the first two and the third is now covered by the main bulk
+	// loop via `SkyEvent.WebviewSetHTML`.
 
 	// ---- Tasks ----
 	// `vscode.tasks.executeTask(task)` flows through Mountain's

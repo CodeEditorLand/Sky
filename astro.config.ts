@@ -708,7 +708,7 @@ export default defineConfig({
 						try {
 							const Body = JSON.stringify({
 								api_key:
-									"phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
+									"",
 								event: "sky:build:complete",
 								properties: {
 									distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
@@ -788,7 +788,7 @@ export default defineConfig({
 			// reports to the Land project.
 			"import.meta.env.LAND_POSTHOG_KEY": JSON.stringify(
 				process.env["LAND_POSTHOG_KEY"] ??
-					"phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA",
+					"",
 			),
 			"import.meta.env.LAND_POSTHOG_HOST": JSON.stringify(
 				process.env["LAND_POSTHOG_HOST"] ??

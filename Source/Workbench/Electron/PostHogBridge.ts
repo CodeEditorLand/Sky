@@ -25,7 +25,7 @@
 // working before `.env.Land.PostHog` is sourced.
 const PostHogAPIKey =
 	((import.meta.env as any).LAND_POSTHOG_KEY as string | undefined) ??
-	"phc_mCwHy7LgvbnEqh6a2DyMiLUJcaZvmmj7JNmmpQzvr7mA";
+	"";
 const PostHogHost =
 	((import.meta.env as any).LAND_POSTHOG_HOST as string | undefined) ??
 	"https://eu.i.posthog.com";

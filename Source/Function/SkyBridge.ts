@@ -33,6 +33,75 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
+// Track which `cel:*` CustomEvents have at least one consumer so we
+// can report a `consumer-present` flag on every dispatch under the
+// `cel-dispatch` tag.
+//
+// Tracking is best-effort. In WebKit/Safari, DOM prototype methods
+// like `Document.prototype.addEventListener` are defined as
+// non-writable properties on the instance; reassigning
+// `document.addEventListener` throws `TypeError: Attempted to assign
+// to readonly property` in strict mode (ES modules are strict), which
+// crashes the entire Sky bundle at load and takes the workbench down
+// with a cascade of unhandled rejections. We wrap the install in
+// `try/catch` so a failed install degrades to `consumer-present=?`
+// reporting instead of breaking boot. SSR is also skipped via the
+// `typeof document !== "undefined"` guard because Astro imports
+// SkyBridge during pre-render.
+const _CelConsumers = new Set<string>();
+const _HasDOM =
+	typeof globalThis !== "undefined" &&
+	typeof (globalThis as any).document !== "undefined";
+let _CelTrackingActive = false;
+if (_HasDOM && !(globalThis as any).__LAND_CEL_TRACK__) {
+	try {
+		const TargetDocument = (globalThis as any).document as Document;
+		const OriginalAdd = TargetDocument.addEventListener.bind(TargetDocument);
+		// Install via `Object.defineProperty` on the prototype, with
+		// `configurable: true` so we can cleanly replace the method.
+		// If the runtime rejects the redefinition we catch and fall
+		// back to untracked mode - the tag still fires, just without
+		// the consumer-present flag.
+		Object.defineProperty(TargetDocument, "addEventListener", {
+			configurable: true,
+			writable: true,
+			value: function PatchedAdd(
+				Type: string,
+				Listener: EventListenerOrEventListenerObject | null,
+				Options?: boolean | AddEventListenerOptions,
+			) {
+				if (typeof Type === "string" && Type.startsWith("cel:")) {
+					_CelConsumers.add(Type);
+				}
+				return OriginalAdd(Type, Listener as EventListener, Options);
+			},
+		});
+		(globalThis as any).__LAND_CEL_TRACK__ = true;
+		_CelTrackingActive = true;
+	} catch {
+		_CelTrackingActive = false;
+	}
+}
+
+// Mirror a `cel-dispatch` line into Mountain's dev-log file sink via
+// the RenderDevLog Tauri command. Fire-and-forget. Silent when no
+// Tauri invoke is available (SSR or plain web preview). When the
+// addEventListener wrap couldn't be installed (readonly property,
+// rare), the `consumer-present` field reports `?` so the tag still
+// yields useful traffic data without lying about consumer state.
+const _CelDispatchLog = (DomEvent: string, HasConsumer: boolean): void => {
+	if (!_HasDOM) return;
+	const Flag = _CelTrackingActive ? String(HasConsumer) : "?";
+	try {
+		invoke<void>("RenderDevLog", {
+			Tag: "cel-dispatch",
+			Message: `[CelDispatch] event=${DomEvent} consumer-present=${Flag}`,
+			tag: "cel-dispatch",
+			message: `[CelDispatch] event=${DomEvent} consumer-present=${Flag}`,
+		}).catch(() => {});
+	} catch {}
+};
+
 // Single source of truth for Mountain → Sky event URIs. Importing from
 // the Wind package avoids maintaining a parallel string table here and
 // catches drift against Mountain's Rust `SkyEvent` enum at type-check
@@ -689,9 +758,16 @@ export async function InstallSkyBridge(): Promise<void> {
 	] as const;
 	for (const Channel of FanOut) {
 		await Register(Channel, (Payload: any) => {
+			const DomEvent = ChannelToDomEvent(Channel);
 			document.dispatchEvent(
-				new CustomEvent(ChannelToDomEvent(Channel), { detail: Payload }),
+				new CustomEvent(DomEvent, { detail: Payload }),
 			);
+			// `cel-dispatch` tag: surfaces whether this CustomEvent has
+			// any consumer registered. Orphans (consumer-present=false)
+			// are F1.1 indicators - Mountain's emit reaches the DOM
+			// but nothing in the workbench listens, so the event
+			// effectively vanishes.
+			_CelDispatchLog(DomEvent, _CelConsumers.has(DomEvent));
 		});
 	}
 

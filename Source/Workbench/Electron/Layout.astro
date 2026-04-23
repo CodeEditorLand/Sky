@@ -7,8 +7,15 @@
  * 2. Polyfills - augments process/fs/ipc (depends on #1)
  * 3. Bootstrap - Effect-TS service init (depends on #1)
  * 4. Workbench - loads electron-browser/workbench.js (depends on #1-3)
+ * 5. SkyBridge - subscribes to Mountain's `cel:*` Tauri events and fans
+ *    them into the workbench's tree-view / SCM / debug / extensions
+ *    consumers. Without this installed, every panel Mountain emits an
+ *    event for paints empty on first frame and re-renders with data
+ *    asynchronously - visible as the "tree-views flash empty then pop"
+ *    flicker reported on the Electron profile. Mountain.astro already
+ *    runs this step; the Electron layout was missing it.
  *
- * All four are chained in a single <script type="module"> so that
+ * All five are chained in a single <script type="module"> so that
  * each `await import()` completes before the next begins.
  */
 
@@ -20,7 +27,7 @@ import TelemetryBridge from "../TelemetryBridge.astro";
 	<NLS />
 	<TelemetryBridge />
 
-	<!-- Sequential: Preload → Polyfills → Bootstrap → Workbench -->
+	<!-- Sequential: Preload → Polyfills → Bootstrap → Workbench → SkyBridge -->
 	<script type="module">
 		// 1. Wind Preload - must complete first (sets window.vscode)
 		await import("./WindPreload.js");
@@ -33,5 +40,22 @@ import TelemetryBridge from "../TelemetryBridge.astro";
 
 		// 4. Electron Workbench - depends on everything above
 		await import("./Workbench.js");
+
+		// 5. SkyBridge - Tauri event consumer for `cel:tree-view:create`,
+		//    `cel:scm:create`, `cel:debug:*`, etc. No `setTimeout` - the
+		//    await chain above guarantees the workbench has finished its
+		//    `await import()` by this point, so consumers wire up before
+		//    the workbench starts pumping events to empty listeners.
+		try {
+			const { InstallSkyBridge } = await import(
+				"@codeeditorland/sky/Source/Function/SkyBridge"
+			);
+			await InstallSkyBridge();
+			performance.mark("land:electron:skybridge:installed");
+		} catch (Error) {
+			performance.mark("land:electron:skybridge:error");
+			// eslint-disable-next-line no-console
+			console.warn("[Electron/Layout.astro] InstallSkyBridge failed:", Error);
+		}
 	</script>
 </Fragment>

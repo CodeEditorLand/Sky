@@ -15,9 +15,14 @@
  *   sky://output/clear           → clears an output channel
  *   sky://output/show            → shows the output panel
  *   sky://output/dispose         → removes an output channel
- *   sky://statusbar/create       → creates a status bar item
- *   sky://statusbar/update       → updates text of a status bar item
- *   sky://statusbar/dispose      → removes a status bar item
+ *   sky://statusbar/update       → IStatusbarService.addEntry / accessor.update
+ *   sky://statusbar/set-entry    → alias of /update (fast-text path)
+ *   sky://statusbar/dispose      → accessor.dispose
+ *   sky://statusbar/dispose-entry → alias of /dispose
+ *   sky://statusbar/set-message  → fan-out to cel:statusbar:set-message
+ *   sky://command/execute        → ICommandService.executeCommand
+ *   sky://command/register       → CommandsRegistry.registerCommand
+ *   sky://command/unregister     → disposable.dispose
  *   sky://progress/start         → shows a progress notification
  *   sky://progress/update        → updates progress message/increment
  *   sky://progress/complete      → dismisses the progress notification
@@ -123,6 +128,43 @@ function GetWorkbench(): {
 	env: { openUri(target: unknown): Promise<boolean> };
 } | null {
 	return (window as any).__CEL_WORKBENCH__ ?? null;
+}
+
+// Concrete workbench service handles written by the Output transform
+// plugin `ExposeWorkbenchAccessor.ts` at `globalThis.__CEL_SERVICES__`.
+// Resolved inside web.main.js right after `workbench.startup()` so the
+// DI container has populated every `createDecorator`-registered service.
+// Method surfaces (`addEntry`, `executeCommand`, `registerCommand`) are
+// stable public API and survive the mangler pass.
+interface CelStatusbarEntryAccessor {
+	update(entry: unknown): void;
+	dispose(): void;
+}
+interface CelStatusbarService {
+	addEntry(
+		entry: unknown,
+		id: string,
+		alignment: number,
+		priority?: number,
+	): CelStatusbarEntryAccessor;
+}
+interface CelCommandService {
+	executeCommand<T = unknown>(id: string, ...args: unknown[]): Promise<T>;
+}
+interface CelCommandRegistry {
+	registerCommand(
+		id: string,
+		handler: (...args: unknown[]) => unknown,
+	): { dispose(): void };
+}
+interface CelServices {
+	Statusbar: CelStatusbarService;
+	Commands: CelCommandService;
+	CommandRegistry: CelCommandRegistry;
+}
+
+function GetServices(): CelServices | null {
+	return (window as any).__CEL_SERVICES__ ?? null;
 }
 
 // ============================================================================
@@ -467,14 +509,159 @@ export async function InstallSkyBridge(): Promise<void> {
 	});
 
 	// ---- Status Bar ----
-	// Stock VS Code's workbench owns the `.statusbar` DOM. Extension-
-	// contributed items arrive here from Mountain; we drop them until
-	// `MainThreadStatusBar.$setEntry` is routed into the workbench's
-	// `IStatusbarService`. See the comment block above the removed
-	// `EnsureFallbackStatusBar` helper for the history.
-	await Register("sky://statusbar/create", (_Payload: any) => {});
-	await Register("sky://statusbar/update", (_Payload: any) => {});
-	await Register("sky://statusbar/dispose", (_Payload: any) => {});
+	// Cocoon's `vscode.window.createStatusBarItem(...)` fans via
+	// `statusBar.{update,dispose}` through Mountain's StatusBarLifecycle
+	// notification onto `sky://statusbar/{update,dispose}`, and
+	// `setStatusBarMessage` / direct `StatusBarItem.text =` writes onto
+	// `sky://statusbar/set-entry` via SetStatusBarText. Wire all three
+	// into the native `IStatusbarService` exposed by the workbench
+	// accessor transform, so extension-contributed items render in the
+	// same `.statusbar` DOM as stock items. The DOM CustomEvent fan-out
+	// below (`cel:statusbar:*`) remains for any Sky-side component that
+	// wants to mirror the state in a side panel.
+	//
+	// Alignment mapping follows VS Code's `StatusbarAlignment` enum:
+	// LEFT=0, RIGHT=1 - the accessor takes it as a number. We accept
+	// both string and numeric forms from Cocoon since extensions
+	// supply whichever their dts typed as.
+	const StatusbarAccessors = new Map<string, CelStatusbarEntryAccessor>();
+	const BuildEntry = (Payload: any) => ({
+		name: Payload?.name ?? Payload?.extension ?? "extension",
+		text: Payload?.text ?? "",
+		tooltip: Payload?.tooltip,
+		command: Payload?.command,
+		ariaLabel: Payload?.accessibilityInformation?.label ?? Payload?.text ?? "",
+		role: Payload?.accessibilityInformation?.role,
+		backgroundColor: Payload?.backgroundColor,
+		color: Payload?.color,
+	});
+	const AlignmentToNumber = (Raw: any): number => {
+		if (Raw === 0 || Raw === 1) return Raw;
+		if (Raw === "right" || Raw === "RIGHT") return 1;
+		return 0;
+	};
+	const SetOrUpdateEntry = (Payload: any) => {
+		const Services = GetServices();
+		if (!Services?.Statusbar) return;
+		const Id = String(
+			Payload?.id ?? Payload?.handle ?? Payload?.entryId ?? "",
+		);
+		if (!Id) return;
+		const Existing = StatusbarAccessors.get(Id);
+		if (Existing) {
+			try {
+				Existing.update(BuildEntry(Payload));
+			} catch (Error) {
+				console.warn("[SkyBridge] statusbar update failed", Id, Error);
+			}
+			return;
+		}
+		try {
+			const Accessor = Services.Statusbar.addEntry(
+				BuildEntry(Payload),
+				Id,
+				AlignmentToNumber(Payload?.alignment),
+				typeof Payload?.priority === "number"
+					? Payload.priority
+					: undefined,
+			);
+			StatusbarAccessors.set(Id, Accessor);
+		} catch (Error) {
+			console.warn("[SkyBridge] statusbar addEntry failed", Id, Error);
+		}
+	};
+	const DisposeEntry = (Payload: any) => {
+		const Id = String(
+			Payload?.id ?? Payload?.handle ?? Payload?.entryId ?? "",
+		);
+		if (!Id) return;
+		const Accessor = StatusbarAccessors.get(Id);
+		if (Accessor) {
+			try {
+				Accessor.dispose();
+			} catch {}
+			StatusbarAccessors.delete(Id);
+		}
+	};
+	await Register("sky://statusbar/update", SetOrUpdateEntry);
+	await Register("sky://statusbar/set-entry", SetOrUpdateEntry);
+	await Register("sky://statusbar/dispose", DisposeEntry);
+	await Register("sky://statusbar/dispose-entry", DisposeEntry);
+
+	// ---- Commands ----
+	// Bridge Cocoon → workbench command invocations. `sky://command/execute`
+	// calls through `ICommandService.executeCommand(id, ...args)` and
+	// resolves the UI request with the result (or null on failure) so the
+	// extension's awaited promise in Cocoon unblocks. `sky://command/register`
+	// registers an extension-contributed command into the stock
+	// `CommandsRegistry`; invocation from the command palette or another
+	// extension proxies back into Cocoon via `ResolveUIRequest` with
+	// `{ cid, args }`. Unregister disposes the registration.
+	const RegisteredCommands = new Map<string, { dispose(): void }>();
+	await Register(
+		"sky://command/execute",
+		async (RawPayload: any) => {
+			const Services = GetServices();
+			if (!Services?.Commands) return;
+			const RequestIdentifier = RawPayload?.RequestIdentifier;
+			const Payload = RawPayload?.Payload ?? RawPayload;
+			const Id = String(Payload?.id ?? Payload?.commandId ?? "");
+			const Arguments = Array.isArray(Payload?.args) ? Payload.args : [];
+			try {
+				const Result = await Services.Commands.executeCommand(
+					Id,
+					...Arguments,
+				);
+				if (RequestIdentifier) {
+					void ResolveUiRequest(RequestIdentifier, Result ?? null);
+				}
+			} catch (Error) {
+				console.warn("[SkyBridge] command execute failed", Id, Error);
+				if (RequestIdentifier) {
+					void ResolveUiRequest(RequestIdentifier, null);
+				}
+			}
+		},
+	);
+	await Register("sky://command/register", (Payload: any) => {
+		const Services = GetServices();
+		if (!Services?.CommandRegistry) return;
+		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
+		if (!Id) return;
+		if (RegisteredCommands.has(Id)) return;
+		try {
+			const Disposable = Services.CommandRegistry.registerCommand(
+				Id,
+				(...AllArguments: unknown[]) => {
+					// `CommandsRegistry.registerCommand` passes an accessor
+					// as the first arg followed by the caller's args. The
+					// accessor is the workbench ServicesAccessor - extensions
+					// running in Cocoon can't consume it, so we strip it and
+					// forward the remaining positional args back for the
+					// extension handler to receive via $executeContributedCommand.
+					const CallerArguments = AllArguments.slice(1);
+					return invoke("ResolveUIRequest", {
+						RequestID: `command:${Id}`,
+						Result: { cid: Id, args: CallerArguments },
+					}).catch(() => undefined);
+				},
+			);
+			RegisteredCommands.set(Id, Disposable);
+		} catch (Error) {
+			console.warn("[SkyBridge] command register failed", Id, Error);
+		}
+	});
+	await Register("sky://command/unregister", (Payload: any) => {
+		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
+		if (!Id) return;
+		const Disposable = RegisteredCommands.get(Id);
+		if (Disposable) {
+			try {
+				Disposable.dispose();
+			} catch {}
+			RegisteredCommands.delete(Id);
+		}
+	});
 
 	// ---- SCM bridge (diagnostic only) ----
 	// Mountain emits `sky://scm/{register,unregister,updateGroup}` when
@@ -669,25 +856,14 @@ export async function InstallSkyBridge(): Promise<void> {
 		);
 	});
 
-	// ---- Status bar ----
-	// Extensions that call `vscode.window.createStatusBarItem(...)` fan
-	// `statusBar.update` through Mountain to `sky://statusbar/update`, and
-	// `setStatusBarMessage` through `statusBar.message` →
-	// `sky://statusbar/set-message`. Sky re-dispatches both as DOM events
-	// so the workbench's status-bar component can subscribe in one place.
-	// The canonical wire prefix is `sky://statusbar/` (no hyphen); the
-	// earlier `sky://status-bar/…` fork was a listener-only mismatch with
-	// no Mountain emitter and has been retired.
-	await Register("sky://statusbar/update", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:statusbar:update", { detail: Payload }),
-		);
-	});
-	await Register("sky://statusbar/dispose", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:statusbar:dispose", { detail: Payload }),
-		);
-	});
+	// ---- Status bar messages ----
+	// `vscode.window.setStatusBarMessage(text, timeout?)` is the ephemeral
+	// text-left-side API, separate from the StatusBarItem lifecycle handled
+	// above. Mountain emits `sky://statusbar/set-message` via
+	// `StatusBarMessage.rs`. We fan it out as a DOM CustomEvent for
+	// Sky-side observers - the workbench's own MainThreadStatusBar
+	// already paints ephemeral messages through its own path when
+	// extensions call `$setStatusBarMessage`, so we don't dual-route.
 	await Register("sky://statusbar/set-message", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:statusbar:set-message", { detail: Payload }),

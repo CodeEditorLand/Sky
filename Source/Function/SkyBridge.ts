@@ -151,6 +151,19 @@ function GetOrCreateChannel(Id: string, Name?: string): string[] {
 // Status bar DOM bridge
 // ============================================================================
 
+/**
+ * Strip VS Code codicon syntax (`$(name)`, `$(name~spin)`) from a status
+ * bar text string. Stock workbench substitutes these for glyphs from the
+ * codicon font; our bridge doesn't parse them, so without stripping the
+ * literal `$(sync~spin)` + raw Unicode placeholder codepoints render as
+ * "weird emojis" in the fallback bar. Empty result keeps the item slot
+ * but no text - better than garbled output.
+ */
+function StripCodicons(Text: string): string {
+	if (!Text) return Text;
+	return Text.replace(/\$\([^)]+\)\s*/g, "").trim();
+}
+
 function GetOrCreateStatusBarItem(Id: string): HTMLElement {
 	const DomId = `cel-statusbar-${CSS.escape(Id)}`;
 	let El = document.getElementById(DomId);
@@ -160,15 +173,15 @@ function GetOrCreateStatusBarItem(Id: string): HTMLElement {
 		El.className = "cel-statusbar-item";
 		El.style.cssText =
 			"display:inline-flex;align-items:center;padding:0 6px;font-size:12px;cursor:default;white-space:nowrap;";
-		// Append to VS Code's status bar if present, otherwise a fallback bar
-		const VsStatusBar =
-			document.querySelector(".statusbar") ??
-			document.querySelector('[role="status"]');
-		if (VsStatusBar) {
-			VsStatusBar.appendChild(El);
-		} else {
-			EnsureFallbackStatusBar().appendChild(El);
-		}
+		// Always use the dedicated fallback bar - NEVER append to stock
+		// VS Code's `.statusbar`. Stock workbench owns that DOM and the
+		// `StatusbarService` renders its native items (language mode,
+		// line/col, encoding, EOL) into it; injecting bridge-routed
+		// extension items mixes two rendering systems and produces the
+		// "not the default status bar" appearance. Bridge items live in
+		// a separate fallback bar that workbench doesn't manage, so the
+		// two coexist without conflict.
+		EnsureFallbackStatusBar().appendChild(El);
 	}
 	return El;
 }
@@ -489,14 +502,20 @@ export async function InstallSkyBridge(): Promise<void> {
 	});
 
 	// ---- Status Bar ----
+	// Text passes through `StripCodicons` first so extension strings
+	// like `$(sync~spin) Syncing...` render as `Syncing...` instead of
+	// the raw dollar-paren + unmapped codicon-font glyph placeholders.
+	// Items are appended to the separate fallback bar (never into stock
+	// VS Code's `.statusbar`) so the native workbench status bar stays
+	// untouched and renders its default items normally.
 	await Register("sky://statusbar/create", ({ id, text }: any) => {
 		const El = GetOrCreateStatusBarItem(id);
-		El.textContent = text ?? "";
+		El.textContent = StripCodicons(text ?? "");
 	});
 
 	await Register("sky://statusbar/update", ({ id, text, visible }: any) => {
 		const El = GetOrCreateStatusBarItem(id);
-		if (text !== undefined) El.textContent = text;
+		if (text !== undefined) El.textContent = StripCodicons(text);
 		if (visible !== undefined)
 			El.style.display = visible ? "inline-flex" : "none";
 	});

@@ -166,11 +166,33 @@ interface CelSearchService {
 		provider: unknown,
 	): { dispose(): void };
 }
+// `ITreeView` from `vs/workbench/common/views`. Only the shape Sky
+// actually writes to (`dataProvider`) is typed - the rest is optional
+// read-only metadata the stock pane handles.
+interface CelTreeView {
+	dataProvider:
+		| undefined
+		| {
+				getChildren(element?: {
+					handle?: string;
+				}): Promise<unknown[] | undefined>;
+				isTreeEmpty?: boolean;
+		  };
+	title?: string;
+	description?: string | undefined;
+	message?: string | undefined;
+	refresh?(
+		treeItems?: readonly unknown[],
+		checkboxesChanged?: readonly unknown[],
+	): Promise<void>;
+}
 interface CelServices {
 	Statusbar: CelStatusbarService;
 	Commands: CelCommandService;
 	CommandRegistry: CelCommandRegistry;
 	Search: CelSearchService;
+	Views?: unknown;
+	TreeViewByViewId?: (viewId: string) => CelTreeView | null;
 }
 
 function GetServices(): CelServices | null {
@@ -1095,6 +1117,7 @@ export async function InstallSkyBridge(): Promise<void> {
 		SkyEvent.ThemeChange,
 		SkyEvent.TreeViewDispose,
 		SkyEvent.TreeViewCreate,
+		SkyEvent.TreeViewRefresh,
 		SkyEvent.TestRegistered,
 		SkyEvent.SCMProviderAdded,
 		SkyEvent.SCMProviderRemoved,
@@ -1132,57 +1155,217 @@ export async function InstallSkyBridge(): Promise<void> {
 	}
 
 	// ---- Tree-view data bridge ----
-	// Consumer for `cel:tree-view:create` - without this listener the fan-out
-	// above re-dispatches the event but nothing downstream listens, so every
-	// registered view logs `consumer-present=false` (F1.1 in HANDOFF §-10).
-	// The listener primes the viewer by requesting the root children through
-	// Mountain's `tree:getChildren` invoke - Mountain forwards to Cocoon's
-	// `$provideTreeChildren` and returns `{ items: [...] }`. We re-dispatch
-	// the children on `cel:tree-view:items` so any renderer shim can pick
-	// them up without an extra round-trip.
+	// Two-way wire so extension-registered tree views actually render:
+	//
+	//  1. **Native data provider attach**: workbench renders a tree view
+	//     only when `treeView.dataProvider` is non-undefined. Stock VS
+	//     Code sets this in `MainThreadTreeViews.$registerTreeViewDataProvider`
+	//     via the ExtHostContext RPC - we don't have that channel yet
+	//     (Track A bring-up from the coverage matrix), so we attach a
+	//     data provider here that calls `tree:getChildren` via
+	//     `MountainIPCInvoke`. `__CEL_SERVICES__.TreeViewByViewId(id)` is
+	//     exposed by the Output transform plugin - it returns the same
+	//     `ITreeView` the stock mainThread accesses via
+	//     `Registry.as(ViewsRegistry).getView(id).treeView`.
+	//
+	//  2. **CustomEvent fan-out** (existing): the `cel:tree-view:items`
+	//     DOM event stays so any Sky/Astro observer (side-panel mirror,
+	//     diagnostic inspector) can react without going through the
+	//     workbench tree rendering pipeline.
+	//
+	// If the view is registered BEFORE the tree descriptor is mounted,
+	// `TreeViewByViewId` returns null - retry on microtask + rAF (covers
+	// both async workbench init and the pane-is-collapsed-so-not-yet-mounted
+	// case). After 5 retries spaced 150 ms apart we give up and rely on
+	// whatever `$refresh` the extension issues next to re-trigger us.
 	if (typeof document !== "undefined") {
+		// Map Cocoon's `{handle, label: string, isCollapsed, icon: string}`
+		// wire shape (from `RequestRoutingHandler.$provideTreeChildren`)
+		// into the workbench's `ITreeItem` shape. The fields the tree
+		// renderer actually reads are `handle`, `collapsibleState`, and
+		// `label: { label: string }`. Icons can be promoted to `iconPath`
+		// once Mountain starts returning URI components - keep the
+		// field name `icon` exposed on the extended shape so side-panel
+		// observers can still use it.
+		const ToTreeItem = (
+			Raw: unknown,
+			Fallback: { ViewId: string; ParentHandle: string; Index: number },
+		) => {
+			const Wire = (Raw ?? {}) as Record<string, unknown>;
+			const Handle =
+				typeof Wire.handle === "string" && Wire.handle.length > 0
+					? Wire.handle
+					: `${Fallback.ViewId}/${Fallback.ParentHandle || "root"}/${Fallback.Index}`;
+			const Label =
+				typeof Wire.label === "string"
+					? { label: Wire.label }
+					: (Wire.label as { label?: string } | undefined)?.label
+						? (Wire.label as { label: string })
+						: { label: "" };
+			const CollapsibleState =
+				Wire.isCollapsed === true
+					? 1
+					: typeof Wire.collapsibleState === "number"
+						? Wire.collapsibleState
+						: 0;
+			// Pass through the full set of fields Cocoon's wire DTO
+			// carries. Any field the workbench tree renderer doesn't
+			// read is ignored silently; keeping them lets side-panel
+			// mirrors (diagnostic inspectors, test harnesses) see the
+			// same content the built-in tree does.
+			const Description =
+				typeof Wire.description === "string" ? Wire.description : undefined;
+			const Tooltip =
+				typeof Wire.tooltip === "string" ? Wire.tooltip : undefined;
+			const ContextValue =
+				typeof Wire.contextValue === "string" ? Wire.contextValue : undefined;
+			return {
+				handle: Handle,
+				collapsibleState: CollapsibleState,
+				label: Label,
+				icon:
+					typeof Wire.icon === "string" && Wire.icon.length > 0
+						? Wire.icon
+						: undefined,
+				description: Description,
+				tooltip: Tooltip,
+				resourceUri: Wire.resourceUri,
+				contextValue: ContextValue,
+				command: Wire.command,
+				accessibilityInformation: Wire.accessibilityInformation,
+			};
+		};
+		const ProvideChildren = async (
+			ViewId: string,
+			Element?: { handle?: string },
+		): Promise<unknown[]> => {
+			try {
+				const Response = (await invoke("MountainIPCInvoke", {
+					method: "tree:getChildren",
+					params: [
+						{
+							viewId: ViewId,
+							treeItemHandle: Element?.handle ?? "",
+						},
+					],
+				})) as { items?: unknown[] };
+				const RawItems = Array.isArray(Response?.items)
+					? Response.items
+					: [];
+				const ParentHandle = Element?.handle ?? "";
+				const Items = RawItems.map((Raw, Index) =>
+					ToTreeItem(Raw, {
+						ViewId,
+						ParentHandle,
+						Index,
+					}),
+				);
+				// Dual-emit: DOM CustomEvent for Sky-side observers
+				// (same shape as the workbench tree renderer sees so
+				// mirror panels don't need a second conversion).
+				document.dispatchEvent(
+					new CustomEvent("cel:tree-view:items", {
+						detail: {
+							viewId: ViewId,
+							parent: ParentHandle,
+							items: Items,
+						},
+					}),
+				);
+				return Items;
+			} catch (Error) {
+				invoke("RenderDevLog", {
+					Tag: "tree-view",
+					Message: `[TreeView] bridge-error view=${ViewId} err=${String(Error)}`,
+					tag: "tree-view",
+					message: `[TreeView] bridge-error view=${ViewId} err=${String(Error)}`,
+				}).catch(() => {});
+				return [];
+			}
+		};
+		const AttachDataProvider = (ViewId: string, Retries: number): void => {
+			const Services = GetServices();
+			const GetTreeView = Services?.TreeViewByViewId;
+			const TreeView =
+				typeof GetTreeView === "function" ? GetTreeView(ViewId) : null;
+			if (!TreeView) {
+				if (Retries <= 0) {
+					invoke("RenderDevLog", {
+						Tag: "tree-view",
+						Message: `[TreeView] attach-give-up view=${ViewId} (no workbench tree descriptor)`,
+						tag: "tree-view",
+						message: `[TreeView] attach-give-up view=${ViewId} (no workbench tree descriptor)`,
+					}).catch(() => {});
+					return;
+				}
+				setTimeout(() => AttachDataProvider(ViewId, Retries - 1), 150);
+				return;
+			}
+			if (TreeView.dataProvider) {
+				// Already wired (e.g. by a prior register for the same id
+				// during a reload). Keep the existing provider to respect
+				// any extension that registered their own.
+				return;
+			}
+			TreeView.dataProvider = {
+				async getChildren(Element?: { handle?: string }) {
+					const Items = await ProvideChildren(ViewId, Element);
+					return Items as any[];
+				},
+			};
+			invoke("RenderDevLog", {
+				Tag: "tree-view",
+				Message: `[TreeView] attach-ok view=${ViewId}`,
+				tag: "tree-view",
+				message: `[TreeView] attach-ok view=${ViewId}`,
+			}).catch(() => {});
+		};
 		document.addEventListener("cel:tree-view:create", (Event: Event) => {
 			const Detail = (Event as CustomEvent).detail as
 				| { viewId?: string; extensionId?: string }
 				| undefined;
 			const ViewId = Detail?.viewId ?? "";
 			if (!ViewId) return;
-			invoke<{ items?: unknown[] }>("MountainIPCInvoke", {
-				method: "tree:getChildren",
-				params: [{ viewId: ViewId, treeItemHandle: "" }],
-			})
-				.then((Response) => {
-					const Items = Array.isArray(Response?.items)
-						? Response.items
-						: [];
-					document.dispatchEvent(
-						new CustomEvent("cel:tree-view:items", {
-							detail: {
-								viewId: ViewId,
-								parent: "",
-								items: Items,
-							},
-						}),
-					);
-					try {
-						invoke<void>("RenderDevLog", {
-							Tag: "tree-view",
-							Message: `[TreeView] bridge-items view=${ViewId} count=${Items.length}`,
-							tag: "tree-view",
-							message: `[TreeView] bridge-items view=${ViewId} count=${Items.length}`,
-						}).catch(() => {});
-					} catch {}
-				})
-				.catch((Error) => {
-					try {
-						invoke<void>("RenderDevLog", {
-							Tag: "tree-view",
-							Message: `[TreeView] bridge-error view=${ViewId} err=${String(Error)}`,
-							tag: "tree-view",
-							message: `[TreeView] bridge-error view=${ViewId} err=${String(Error)}`,
-						}).catch(() => {});
-					} catch {}
-				});
+			AttachDataProvider(ViewId, 5);
+			// Prime the DOM fan-out with the initial children too so
+			// side-panel shims that mirror tree state don't need to wait
+			// for a user-triggered expand.
+			void ProvideChildren(ViewId, undefined);
+		});
+
+		// `cel:tree-view:refresh` - extension called `treeView.refresh()` or
+		// fired `onDidChangeTreeData`. Workbench re-queries `getChildren`
+		// via the provider we attached above when we call `treeView.refresh()`.
+		document.addEventListener("cel:tree-view:refresh", (Event: Event) => {
+			const Detail = (Event as CustomEvent).detail as
+				| { viewId?: string }
+				| undefined;
+			const ViewId = Detail?.viewId ?? "";
+			if (!ViewId) return;
+			const Services = GetServices();
+			const TreeView = Services?.TreeViewByViewId?.(ViewId);
+			if (TreeView?.refresh) {
+				TreeView.refresh().catch(() => {});
+			}
+			// Also re-prime the Sky observers.
+			void ProvideChildren(ViewId, undefined);
+		});
+
+		// `cel:tree-view:dispose` - extension disposed its tree data
+		// provider. Clear the native pane's dataProvider so the workbench
+		// falls back to the empty-state message. The pane stays registered
+		// (ViewsRegistry keeps it) - dispose only detaches the provider.
+		document.addEventListener("cel:tree-view:dispose", (Event: Event) => {
+			const Detail = (Event as CustomEvent).detail as
+				| { viewId?: string; handle?: string | number }
+				| undefined;
+			const ViewId = Detail?.viewId ?? "";
+			if (!ViewId) return;
+			const Services = GetServices();
+			const TreeView = Services?.TreeViewByViewId?.(ViewId);
+			if (TreeView && TreeView.dataProvider !== undefined) {
+				TreeView.dataProvider = undefined;
+			}
 		});
 	}
 

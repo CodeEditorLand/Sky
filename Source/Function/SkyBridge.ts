@@ -157,10 +157,20 @@ interface CelCommandRegistry {
 		handler: (...args: unknown[]) => unknown,
 	): { dispose(): void };
 }
+interface CelSearchService {
+	// `SearchProviderType`: file=0, text=1, aiText=2. Schema is the URI
+	// scheme the provider answers for - "file" for local workspace content.
+	registerSearchResultProvider(
+		scheme: string,
+		type: number,
+		provider: unknown,
+	): { dispose(): void };
+}
 interface CelServices {
 	Statusbar: CelStatusbarService;
 	Commands: CelCommandService;
 	CommandRegistry: CelCommandRegistry;
+	Search: CelSearchService;
 }
 
 function GetServices(): CelServices | null {
@@ -662,6 +672,183 @@ export async function InstallSkyBridge(): Promise<void> {
 			RegisteredCommands.delete(Id);
 		}
 	});
+
+	// ---- Search result provider (Land-native) ----
+	//
+	// Stock VS Code web's `RemoteSearchService` constructs a
+	// `LocalFileSearchWorkerClient` which calls
+	// `HTMLFileSystemProvider.getHandle(folderUri)` to obtain a File System
+	// Access API directory handle. Land's filesystem goes through Mountain
+	// over Tauri IPC, not the browser's FSA API, so the handle resolve
+	// returns `undefined` and the search viewlet silently returns zero
+	// results. The fix: register a provider that routes to Mountain's
+	// existing `search:findFiles` / `search:findInFiles` handlers via
+	// `MountainIPCInvoke`. Registered for the `file` scheme under both
+	// SearchProviderType.file (0) and SearchProviderType.text (1) so both
+	// the Search viewlet text queries and file-name filter hit it.
+	//
+	// Registration is best-effort - if `__CEL_SERVICES__.Search` isn't
+	// populated yet (workbench still booting), wait for the
+	// `cel:workbench-ready` event fired by ExposeWorkbenchAccessor.
+	const RegisterLandSearchProvider = () => {
+		const Services = GetServices();
+		if (!Services?.Search?.registerSearchResultProvider) return false;
+
+		// Extract the single-folder root URI from a query - Mountain's
+		// search handlers take the active workspace folder, not a set.
+		// Multi-root queries fan out over each folder; first one wins for
+		// now (Land's scanner is single-root in the debug profile).
+		const FolderFromQuery = (Query: any): string | null => {
+			const Folder =
+				Query?.folderQueries?.[0]?.folder ?? Query?.folder ?? null;
+			if (!Folder) return null;
+			if (typeof Folder === "string") return Folder;
+			const Path = Folder?.fsPath ?? Folder?.path ?? "";
+			return Path || null;
+		};
+
+		// Translate a raw Mountain hit into the `IFileMatch` shape the
+		// workbench renderer expects. `resource` must carry `$mid:1`
+		// so VS Code's `URI.revive()` path restores it.
+		const MatchFromHit = (Hit: any) => {
+			const Raw = String(Hit?.uri ?? "");
+			const OsPath = Raw.replace(/^file:\/\//, "");
+			const Line = Number(Hit?.lineNumber ?? 1);
+			const Preview = String(Hit?.preview ?? "");
+			return {
+				resource: { $mid: 1, path: OsPath, scheme: "file" },
+				results: [
+					{
+						preview: { text: Preview, matches: [] },
+						ranges: [
+							{
+								startLineNumber: Line,
+								startColumn: 1,
+								endLineNumber: Line,
+								endColumn: Math.max(1, Preview.length + 1),
+							},
+						],
+					},
+				],
+			};
+		};
+
+		const Provider = {
+			getAIName: async () => undefined,
+			textSearch: async (
+				Query: any,
+				OnProgress?: (Item: unknown) => void,
+				_Token?: unknown,
+			) => {
+				const Pattern = String(Query?.contentPattern?.pattern ?? "");
+				if (!Pattern) {
+					return { results: [], messages: [], limitHit: false };
+				}
+				const IsRegex = Boolean(Query?.contentPattern?.isRegExp);
+				const IsCaseSensitive = Boolean(
+					Query?.contentPattern?.isCaseSensitive,
+				);
+				const IsWordMatch = Boolean(Query?.contentPattern?.isWordMatch);
+				const Include =
+					Object.keys(Query?.includePattern ?? {})[0] ?? "**";
+				const Exclude = Object.keys(Query?.excludePattern ?? {})[0] ?? "";
+				const MaxResults = Number(Query?.maxResults ?? 1000);
+				try {
+					const Raw = (await invoke("MountainIPCInvoke", {
+						method: "search:findInFiles",
+						params: [
+							Pattern,
+							IsRegex,
+							IsCaseSensitive,
+							IsWordMatch,
+							Include,
+							Exclude,
+							MaxResults,
+						],
+					})) as any[];
+					const Results: any[] = [];
+					for (const Hit of Raw ?? []) {
+						const Match = MatchFromHit(Hit);
+						OnProgress?.(Match);
+						Results.push(Match);
+					}
+					return {
+						results: Results,
+						messages: [],
+						limitHit: Results.length >= MaxResults,
+					};
+				} catch (Error) {
+					console.warn("[SkyBridge] textSearch failed", Error);
+					return { results: [], messages: [], limitHit: false };
+				}
+			},
+			fileSearch: async (Query: any, _Token?: unknown) => {
+				// IFileQuery.filePattern is the user's typed filename
+				// fragment (e.g. "set" matches "settings.ts"). Mountain's
+				// `search:findFiles` takes a glob, so wrap the fragment
+				// as `**/<pattern>*` to get prefix-substring matching -
+				// a close approximation to VS Code's fuzzy file matcher.
+				const Raw = String(Query?.filePattern ?? "").trim();
+				const FolderRoot = FolderFromQuery(Query);
+				const Glob = Raw
+					? `**/*${Raw}*`
+					: Object.keys(Query?.includePattern ?? {})[0] ?? "**";
+				const MaxResults = Number(Query?.maxResults ?? 500);
+				try {
+					const Files = (await invoke("MountainIPCInvoke", {
+						method: "search:findFiles",
+						params: [Glob, MaxResults],
+					})) as string[];
+					const Results = (Files ?? []).map((Uri) => ({
+						resource: {
+							$mid: 1,
+							path: String(Uri).replace(/^file:\/\//, ""),
+							scheme: "file",
+						},
+					}));
+					// Suppress unused warning - FolderRoot would be used
+					// by a multi-folder fan-out that we don't need yet.
+					void FolderRoot;
+					return {
+						results: Results,
+						messages: [],
+						limitHit: Results.length >= MaxResults,
+					};
+				} catch (Error) {
+					console.warn("[SkyBridge] fileSearch failed", Error);
+					return { results: [], messages: [], limitHit: false };
+				}
+			},
+			clearCache: async (_Key: string) => undefined,
+		};
+
+		try {
+			Services.Search.registerSearchResultProvider("file", 0, Provider); // file
+			Services.Search.registerSearchResultProvider("file", 1, Provider); // text
+			return true;
+		} catch (Error) {
+			console.warn(
+				"[SkyBridge] registerSearchResultProvider failed",
+				Error,
+			);
+			return false;
+		}
+	};
+
+	if (!RegisterLandSearchProvider()) {
+		const OnReady = () => {
+			window.removeEventListener(
+				"cel:workbench-ready",
+				OnReady as EventListener,
+			);
+			RegisterLandSearchProvider();
+		};
+		window.addEventListener(
+			"cel:workbench-ready",
+			OnReady as EventListener,
+			{ once: true },
+		);
+	}
 
 	// ---- SCM bridge (diagnostic only) ----
 	// Mountain emits `sky://scm/{register,unregister,updateGroup}` when

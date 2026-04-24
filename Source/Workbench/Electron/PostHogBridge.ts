@@ -163,6 +163,20 @@ interface BufferedMark {
 const ThrottleWindowMs = 10_000;
 const ThrottleLimitPerName = Math.max(1, PostHogMaxEventsPerSecond * 2);
 const ExceptionThrottleLimitPerSignature = Math.max(1, ThrottleLimitPerName);
+// Global exception cap. posthog-js's CDN `array.js` enforces a hard
+// 10 events / 10 s per event-name limit on `$exception` - all our
+// `captureException` calls share that single slot regardless of
+// signature. Without a *global* counter we can still flood the cap by
+// firing 11 unique signatures × 1 each. Cap total exception captures
+// to a value safely below posthog-js's own limit (7/10 s by default),
+// leaving a margin for the `throttle-dropped` summary event and any
+// explicit `PH.capture("land:*")` calls that happen to share the slot.
+const ExceptionGlobalLimit = Math.max(
+	1,
+	Number(
+		(import.meta.env as any).LAND_POSTHOG_SKY_EXCEPTION_GLOBAL_LIMIT ?? "7",
+	),
+);
 const ThrottleCounters = new Map<string, { Count: number; ResetAt: number }>();
 const ThrottleDropped = new Map<string, number>();
 const ExceptionCounters = new Map<
@@ -170,6 +184,9 @@ const ExceptionCounters = new Map<
 	{ Count: number; ResetAt: number }
 >();
 const ExceptionDropped = new Map<string, number>();
+let ExceptionGlobalCount = 0;
+let ExceptionGlobalResetAt = 0;
+let ExceptionGlobalDropped = 0;
 
 const ShouldThrottle = (Name: string): boolean => {
 	const Now = Date.now();
@@ -203,6 +220,19 @@ const ExceptionSignature = (Error: unknown): string => {
 
 const ShouldThrottleException = (Signature: string): boolean => {
 	const Now = Date.now();
+	// Global exception cap first - posthog-js's `$exception` slot fills
+	// up regardless of signature, so a diverse-error boot can still
+	// blow through the CDN limiter unless the *total* is capped.
+	if (ExceptionGlobalResetAt <= Now) {
+		ExceptionGlobalCount = 1;
+		ExceptionGlobalResetAt = Now + ThrottleWindowMs;
+	} else {
+		ExceptionGlobalCount += 1;
+		if (ExceptionGlobalCount > ExceptionGlobalLimit) {
+			ExceptionGlobalDropped += 1;
+			return true;
+		}
+	}
 	const Entry = ExceptionCounters.get(Signature);
 	if (!Entry || Entry.ResetAt <= Now) {
 		ExceptionCounters.set(Signature, {
@@ -223,7 +253,13 @@ const ShouldThrottleException = (Signature: string): boolean => {
 };
 
 const DrainThrottleMetrics = (PH: any): void => {
-	if (ThrottleDropped.size === 0 && ExceptionDropped.size === 0) return;
+	if (
+		ThrottleDropped.size === 0 &&
+		ExceptionDropped.size === 0 &&
+		ExceptionGlobalDropped === 0
+	) {
+		return;
+	}
 	const Summary: Record<string, number> = {};
 	for (const [Name, Count] of ThrottleDropped.entries()) {
 		Summary[Name] = Count;
@@ -234,6 +270,8 @@ const DrainThrottleMetrics = (PH: any): void => {
 		ExceptionSummary[Signature] = Count;
 	}
 	ExceptionDropped.clear();
+	const GlobalDropped = ExceptionGlobalDropped;
+	ExceptionGlobalDropped = 0;
 	// Single event per window - counted as one against the
 	// throttle itself, so always safe under the limit.
 	try {
@@ -241,6 +279,8 @@ const DrainThrottleMetrics = (PH: any): void => {
 			$component: "sky",
 			dropped: Summary,
 			dropped_exceptions: ExceptionSummary,
+			dropped_exceptions_global: GlobalDropped,
+			exception_global_limit: ExceptionGlobalLimit,
 			window_ms: ThrottleWindowMs,
 		});
 	} catch {}

@@ -13,6 +13,13 @@ import Layout from "../Function/Markup/Base.astro";
 import { Bust, On } from "../Function/Shared";
 import ElectronWorkbench from "../Workbench/Electron/Layout.astro";
 
+// Environment detection. `Bundle=true` is set by build profiles that
+// resolve worker scripts via npm-package imports (Vite-bundled into a
+// single chunk per page); `Bundle=false` profiles serve them as
+// separately-fetched static assets at `/Worker/*.js`. The conditional
+// below preserves both shapes.
+const Bundle = process.env["Bundle"] === "true";
+
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 ---
 
@@ -203,43 +210,47 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 	<!--
 		Worker Scripts.
 
-		In stock Astro the `Bundle ? ... : ...` branches above used to
-		differ: bundle mode wrapped three `import` statements inside a
-		single processed `<script>` block, which Astro/Vite would then
-		hoist into a single bundled chunk. That collapsed three
-		independently-ordered files into one async module and Astro made
-		no document-order guarantee against the separate
-		`ElectronWorkbench` script that immediately follows. Result: the
-		workbench bootstrap could begin before `Worker/CSS/Load.js` or
-		`Worker/Policy.js` had run, manifesting as
-		`SyntaxError: Unexpected token '<'` on `nls.messages.js` and
-		`'text/css' is not a valid JavaScript MIME type` on workbench.js.
+		`Bundle=true` profiles resolve the three worker modules via
+		npm-package imports - Astro/Vite bundles them into a single
+		chunk for the page. `Bundle=false` profiles fetch each as a
+		separate static asset under `/Worker/*.js`.
 
-		Both modes now use `<script is:inline type="module" src=...>`
-		per script, in the same order. Browsers natively serialise
-		execution of multiple module scripts in document order while
-		permitting parallel fetch, so each Worker module finishes
-		evaluating before the next begins. Astro can no longer flatten
-		the chain because each tag is `is:inline` with a literal `src`,
-		bypassing Vite's bundler entirely.
+		Either way, ordering MUST be CSS Load → Policy → Register: the
+		Trusted Types policy `Policy.js` registers must exist before
+		`Register.js` calls `navigator.serviceWorker.register()` with a
+		`TrustedScriptURL`, and `_LOAD_CSS_WORKER` from Load.js has to
+		be installed before any later code might call it. In the bundle
+		path we rely on declaration order inside the bundled chunk; in
+		the non-bundle path we rely on the browser's
+		document-order-execute-modules guarantee.
 	-->
-	<script
-		is:inline
-		type="module"
-		src={Bust("/Worker/CSS/Load.js")}
-	/>
-
-	<script
-		is:inline
-		type="module"
-		src={Bust("/Worker/Policy.js")}
-	/>
-
-	<script
-		is:inline
-		type="module"
-		src={Bust("/Worker/Register.js")}
-	/>
+	{
+		Bundle ? (
+			<script>
+				import "@codeeditorland/worker/Target/Worker/CSS/Load.js";
+				import "@codeeditorland/worker/Target/Worker/Policy.js";
+				import "@codeeditorland/worker/Target/Worker/Register.js";
+			</script>
+		) : (
+			<Fragment>
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/CSS/Load.js")}
+				/>
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/Policy.js")}
+				/>
+				<script
+					is:inline
+					type="module"
+					src={Bust("/Worker/Register.js")}
+				/>
+			</Fragment>
+		)
+	}
 
 	<ElectronWorkbench />
 </Layout>

@@ -1283,24 +1283,34 @@ export async function InstallSkyBridge(): Promise<void> {
 				return [];
 			}
 		};
-		const AttachDataProvider = (ViewId: string, Retries: number): void => {
+		// Pending attaches: views whose extension contributes the
+		// `viewsRegistry` registration AFTER our `cel:tree-view:create`
+		// event fires (gitlens, clangd, dependencies all hit this -
+		// their views activate ~3-5 s into boot, well after the original
+		// 750 ms retry window expired). Each attempt-attach call adds to
+		// this set on miss and removes on success; whenever ANY view
+		// successfully attaches, we replay the pending set (the
+		// workbench tree-views service is now wired - other pending
+		// views likely just have to be looked up).
+		const PendingAttaches = new Set<string>();
+
+		const RetryPendingAttaches = (): void => {
+			if (PendingAttaches.size === 0) return;
 			const Services = GetServices();
-			const GetTreeView = Services?.TreeViewByViewId;
-			const TreeView =
-				typeof GetTreeView === "function" ? GetTreeView(ViewId) : null;
-			if (!TreeView) {
-				if (Retries <= 0) {
-					invoke("RenderDevLog", {
-						Tag: "tree-view",
-						Message: `[TreeView] attach-give-up view=${ViewId} (no workbench tree descriptor)`,
-						tag: "tree-view",
-						message: `[TreeView] attach-give-up view=${ViewId} (no workbench tree descriptor)`,
-					}).catch(() => {});
-					return;
+			if (!Services?.TreeViewByViewId) return;
+			for (const ViewId of [...PendingAttaches]) {
+				const TreeView = Services.TreeViewByViewId(ViewId);
+				if (TreeView) {
+					PendingAttaches.delete(ViewId);
+					AttachToDescriptor(ViewId, TreeView);
 				}
-				setTimeout(() => AttachDataProvider(ViewId, Retries - 1), 150);
-				return;
 			}
+		};
+
+		const AttachToDescriptor = (
+			ViewId: string,
+			TreeView: NonNullable<ReturnType<NonNullable<CelServices["TreeViewByViewId"]>>>,
+		): void => {
 			if (TreeView.dataProvider) {
 				// Already wired (e.g. by a prior register for the same id
 				// during a reload). Keep the existing provider to respect
@@ -1319,6 +1329,48 @@ export async function InstallSkyBridge(): Promise<void> {
 				tag: "tree-view",
 				message: `[TreeView] attach-ok view=${ViewId}`,
 			}).catch(() => {});
+			// First successful attach can mean the workbench bridge has
+			// finally wired up its `TreeViewByViewId` map. Sweep any
+			// pending attachers - cheap (~one HashMap lookup each) and
+			// rescues the views whose retry budget hadn't quite expired.
+			RetryPendingAttaches();
+		};
+
+		// Exponential-ish backoff with a generous total budget. Stock
+		// VS Code's view contributions register within ~3 s of extension
+		// activation; gitlens / clangd / heavy extensions stretch that
+		// to ~5 s. Total budget here is ~10 s across 12 retries; the
+		// last ~half are 1 s apart so we don't keep firing setTimeouts
+		// indefinitely. After budget exhaustion we register in
+		// `PendingAttaches` so any later successful attach can sweep
+		// the still-missing entries.
+		const AttachBackoffSchedule:number[] = [
+			100, 200, 400, 600, 800, 1000, 1000, 1000, 1500, 1500, 1500, 1500,
+		];
+
+		const AttachDataProvider = (ViewId: string, Step: number): void => {
+			const Services = GetServices();
+			const GetTreeView = Services?.TreeViewByViewId;
+			const TreeView =
+				typeof GetTreeView === "function" ? GetTreeView(ViewId) : null;
+			if (!TreeView) {
+				if (Step >= AttachBackoffSchedule.length) {
+					PendingAttaches.add(ViewId);
+					invoke("RenderDevLog", {
+						Tag: "tree-view",
+						Message: `[TreeView] attach-pending view=${ViewId} (queued for late workbench wiring)`,
+						tag: "tree-view",
+						message: `[TreeView] attach-pending view=${ViewId} (queued for late workbench wiring)`,
+					}).catch(() => {});
+					return;
+				}
+				setTimeout(
+					() => AttachDataProvider(ViewId, Step + 1),
+					AttachBackoffSchedule[Step] ?? 1500,
+				);
+				return;
+			}
+			AttachToDescriptor(ViewId, TreeView);
 		};
 		document.addEventListener("cel:tree-view:create", (Event: Event) => {
 			const Detail = (Event as CustomEvent).detail as
@@ -1326,7 +1378,7 @@ export async function InstallSkyBridge(): Promise<void> {
 				| undefined;
 			const ViewId = Detail?.viewId ?? "";
 			if (!ViewId) return;
-			AttachDataProvider(ViewId, 5);
+			AttachDataProvider(ViewId, 0);
 			// Prime the DOM fan-out with the initial children too so
 			// side-panel shims that mirror tree state don't need to wait
 			// for a user-triggered expand.

@@ -13,9 +13,6 @@ import Layout from "../Function/Markup/Base.astro";
 import { Bust, On } from "../Function/Shared";
 import ElectronWorkbench from "../Workbench/Electron/Layout.astro";
 
-// Environment detection
-const Bundle = process.env["Bundle"] === "true";
-
 const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 ---
 
@@ -203,42 +200,46 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 		globalThis.__BOOTSTRAP_DEBUG__ = On;
 	</script>
 
-	<!-- Worker Scripts -->
-	{
-		Bundle ? (
-			<Fragment>
-				<script>
-					import "@codeeditorland/worker/Target/Worker/CSS/Load.js";
-					import "@codeeditorland/worker/Target/Worker/Policy.js";
-					import "@codeeditorland/worker/Target/Worker/Register.js";
-				</script>
+	<!--
+		Worker Scripts.
 
-				<ElectronWorkbench />
-			</Fragment>
-		) : (
-			<Fragment>
-				<script
-					is:inline
-					type="module"
-					src={Bust("/Worker/CSS/Load.js")}
-					defer
-				/>
+		In stock Astro the `Bundle ? ... : ...` branches above used to
+		differ: bundle mode wrapped three `import` statements inside a
+		single processed `<script>` block, which Astro/Vite would then
+		hoist into a single bundled chunk. That collapsed three
+		independently-ordered files into one async module and Astro made
+		no document-order guarantee against the separate
+		`ElectronWorkbench` script that immediately follows. Result: the
+		workbench bootstrap could begin before `Worker/CSS/Load.js` or
+		`Worker/Policy.js` had run, manifesting as
+		`SyntaxError: Unexpected token '<'` on `nls.messages.js` and
+		`'text/css' is not a valid JavaScript MIME type` on workbench.js.
 
-				<script
-					is:inline
-					type="module"
-					src={Bust("/Worker/Policy.js")}
-				/>
+		Both modes now use `<script is:inline type="module" src=...>`
+		per script, in the same order. Browsers natively serialise
+		execution of multiple module scripts in document order while
+		permitting parallel fetch, so each Worker module finishes
+		evaluating before the next begins. Astro can no longer flatten
+		the chain because each tag is `is:inline` with a literal `src`,
+		bypassing Vite's bundler entirely.
+	-->
+	<script
+		is:inline
+		type="module"
+		src={Bust("/Worker/CSS/Load.js")}
+	/>
 
-				<script
-					is:inline
-					type="module"
-					src={Bust("/Worker/Register.js")}
-					defer
-				/>
+	<script
+		is:inline
+		type="module"
+		src={Bust("/Worker/Policy.js")}
+	/>
 
-				<ElectronWorkbench />
-			</Fragment>
-		)
-	}
+	<script
+		is:inline
+		type="module"
+		src={Bust("/Worker/Register.js")}
+	/>
+
+	<ElectronWorkbench />
 </Layout>

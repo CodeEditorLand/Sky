@@ -1444,7 +1444,9 @@ export async function InstallSkyBridge(): Promise<void> {
 			};
 			const Repository = Services.SCM.registerSCMProvider(Provider);
 			const ScmHandleNumber: number | undefined =
-				typeof Payload?.handle === "number" ? Payload.handle : undefined;
+				typeof Payload?.handle === "number"
+					? Payload.handle
+					: undefined;
 			const Shim: CelSCMShim = {
 				Provider,
 				Repository,
@@ -1473,7 +1475,8 @@ export async function InstallSkyBridge(): Promise<void> {
 				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-scm")) {
 					(W.console || console).warn(
 						`[Sky:CEL-SCM] registerSCMProvider failed for "${ScmId}": ${
-							(Error as { message?: string })?.message ?? String(Error)
+							(Error as { message?: string })?.message ??
+							String(Error)
 						}`,
 					);
 				}
@@ -1615,7 +1618,8 @@ export async function InstallSkyBridge(): Promise<void> {
 				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-scm")) {
 					(W.console || console).warn(
 						`[Sky:CEL-SCM] registerGroup failed for "${GroupId}": ${
-							(Error as { message?: string })?.message ?? String(Error)
+							(Error as { message?: string })?.message ??
+							String(Error)
 						}`,
 					);
 				}
@@ -2363,30 +2367,38 @@ export async function InstallSkyBridge(): Promise<void> {
 		);
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
-			if (!Services?.CustomEditor?.registerCustomEditorCapabilities) return;
+			if (!Services?.CustomEditor?.registerCustomEditorCapabilities)
+				return;
 			const Args = Array.isArray(Payload?.args) ? Payload.args : [];
 			const ViewType: string = String(Args[1] ?? "");
 			const Options =
 				typeof Args[2] === "object" && Args[2] !== null
 					? (Args[2] as Record<string, unknown>)
 					: {};
-			if (!ViewType || CustomEditorCapabilityHandles.has(ViewType)) return;
-			const Disposable = Services.CustomEditor.registerCustomEditorCapabilities(
-				ViewType,
-				{
-					supportsMultipleEditorsPerDocument: Boolean(
-						Options.supportsMultipleEditorsPerDocument,
-					),
-				},
-			);
+			if (!ViewType || CustomEditorCapabilityHandles.has(ViewType))
+				return;
+			const Disposable =
+				Services.CustomEditor.registerCustomEditorCapabilities(
+					ViewType,
+					{
+						supportsMultipleEditorsPerDocument: Boolean(
+							Options.supportsMultipleEditorsPerDocument,
+						),
+					},
+				);
 			CustomEditorCapabilityHandles.set(ViewType, Disposable);
 		} catch (Error) {
 			try {
 				const W = globalThis as any;
-				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-customeditor")) {
+				if (
+					W?.process?.env?.LAND_DEV_LOG?.includes?.(
+						"cel-customeditor",
+					)
+				) {
 					(W.console || console).warn(
 						`[Sky:CEL-CustomEditor] registerCapability failed: ${
-							(Error as { message?: string })?.message ?? String(Error)
+							(Error as { message?: string })?.message ??
+							String(Error)
 						}`,
 					);
 				}

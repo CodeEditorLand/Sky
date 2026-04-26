@@ -186,6 +186,42 @@ interface CelTreeView {
 		checkboxesChanged?: readonly unknown[],
 	): Promise<void>;
 }
+/**
+ * Stock VS Code `URI` class shape. Only the methods Sky-side bridges
+ * actually invoke are typed; everything else flows through the workbench
+ * as opaque. The full class lives at
+ * `vs/base/common/uri.js` in the renderer bundle and is exposed on
+ * `__CEL_SERVICES__.URI` by `ExposeWorkbenchAccessor`.
+ */
+interface CelUriCtor {
+	file(path: string): CelUri;
+	parse(value: string, strict?: boolean): CelUri;
+	from(components: {
+		scheme: string;
+		authority?: string;
+		path?: string;
+		query?: string;
+		fragment?: string;
+	}): CelUri;
+	revive(value: unknown): CelUri;
+}
+interface CelUri {
+	readonly scheme: string;
+	readonly authority: string;
+	readonly path: string;
+	readonly query: string;
+	readonly fragment: string;
+	readonly fsPath: string;
+	with(change: {
+		scheme?: string;
+		authority?: string;
+		path?: string;
+		query?: string;
+		fragment?: string;
+	}): CelUri;
+	toString(skipEncoding?: boolean): string;
+	toJSON(): unknown;
+}
 interface CelServices {
 	Statusbar: CelStatusbarService;
 	Commands: CelCommandService;
@@ -193,6 +229,7 @@ interface CelServices {
 	Search: CelSearchService;
 	Views?: unknown;
 	TreeViewByViewId?: (viewId: string) => CelTreeView | null;
+	URI?: CelUriCtor;
 }
 
 function GetServices(): CelServices | null {
@@ -729,16 +766,42 @@ export async function InstallSkyBridge(): Promise<void> {
 			return Path || null;
 		};
 
+		// `URI` lookup is re-resolved at every result construction so a
+		// SkyBridge that registered before `__CEL_SERVICES__.URI` was
+		// bound (event-rescue path runs before the URI patch lands) can
+		// pick it up on the first actual search call rather than being
+		// stuck with the boot-time snapshot. Cheap - single property
+		// read per result row.
+		//
+		// The provider is registered IN-PROCESS in the workbench, NOT
+		// through the extension-host RPC bridge - so the workbench
+		// never calls `URI.revive(...)` on what we return. It dedups
+		// results via `getComparisonKey(uri)` which is `uri.with({...})`
+		// plus `.toString()`. Returning a raw `URIComponents` POJO
+		// (`{ $mid:1, path, scheme }`) throws
+		// `uri.with is not a function` at the first dedup check.
+		const MakeFileUri = (
+			FsPath: string,
+		): CelUri | { scheme: string; path: string; fsPath: string } => {
+			const Ctor = GetServices()?.URI;
+			if (Ctor) return Ctor.file(FsPath);
+			// Last-resort fallback when `__CEL_SERVICES__.URI` somehow
+			// missed the patch. The result is a POJO with the right
+			// shape but no `.with()` - the workbench will still throw
+			// on dedup, just gracefully now (no `$mid:1` because that
+			// implies revive should be called and isn't here).
+			return { scheme: "file", path: FsPath, fsPath: FsPath };
+		};
+
 		// Translate a raw Mountain hit into the `IFileMatch` shape the
-		// workbench renderer expects. `resource` must carry `$mid:1`
-		// so VS Code's `URI.revive()` path restores it.
+		// workbench renderer expects.
 		const MatchFromHit = (Hit: any) => {
 			const Raw = String(Hit?.uri ?? "");
 			const OsPath = Raw.replace(/^file:\/\//, "");
 			const Line = Number(Hit?.lineNumber ?? 1);
 			const Preview = String(Hit?.preview ?? "");
 			return {
-				resource: { $mid: 1, path: OsPath, scheme: "file" },
+				resource: MakeFileUri(OsPath),
 				results: [
 					{
 						preview: { text: Preview, matches: [] },
@@ -834,11 +897,9 @@ export async function InstallSkyBridge(): Promise<void> {
 						params: [Glob, MaxResults],
 					})) as string[];
 					const Results = (Files ?? []).map((Uri) => ({
-						resource: {
-							$mid: 1,
-							path: String(Uri).replace(/^file:\/\//, ""),
-							scheme: "file",
-						},
+						resource: MakeFileUri(
+							String(Uri).replace(/^file:\/\//, ""),
+						),
 					}));
 					// Suppress unused warning - FolderRoot would be used
 					// by a multi-folder fan-out that we don't need yet.

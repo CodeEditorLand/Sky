@@ -874,28 +874,67 @@ export async function InstallSkyBridge(): Promise<void> {
 			return { scheme: "file", path: FsPath, fsPath: FsPath };
 		};
 
-		// Translate a raw Mountain hit into the `IFileMatch` shape the
-		// workbench renderer expects.
+		// Translate a raw Mountain hit into the workbench's `IFileMatch`
+		// shape.
+		//
+		// **Wire shape**: Mountain's `SearchProvider::TextSearch` (in
+		// `Mountain/Source/Environment/SearchProvider.rs::TextSearch`)
+		// returns one entry per FILE that contained matches:
+		//
+		// ```json
+		// [
+		//   {
+		//     "resource": "file:///abs/path.ts",
+		//     "matches": [
+		//       { "preview": "line text", "line_number": 42 },
+		//       { "preview": "another",   "line_number": 51 }
+		//     ]
+		//   },
+		//   ...
+		// ]
+		// ```
+		//
+		// **Workbench shape**: `IFileMatch` is one entry per file with
+		// `results[]` carrying every per-line match (`preview` + range).
+		// The previous adapter read `Hit.uri` / `Hit.lineNumber` /
+		// `Hit.preview` (flat per-hit shape) - none of those fields
+		// exist in Mountain's response, so every search produced
+		// `resource = MakeFileUri("")` and an empty results array. The
+		// workbench's dedup map saw N "matches in <empty path>" rows
+		// and merged them away to nothing visible.
 		const MatchFromHit = (Hit: any) => {
-			const Raw = String(Hit?.uri ?? "");
+			const Raw = String(Hit?.resource ?? Hit?.uri ?? "");
 			const OsPath = Raw.replace(/^file:\/\//, "");
-			const Line = Number(Hit?.lineNumber ?? 1);
-			const Preview = String(Hit?.preview ?? "");
+			const PerLineMatches: Array<{ preview: string; lineNumber: number }> =
+				Array.isArray(Hit?.matches)
+					? Hit.matches.map((Inner: any) => ({
+							preview: String(Inner?.preview ?? ""),
+							lineNumber: Number(
+								Inner?.line_number ?? Inner?.lineNumber ?? 1,
+							),
+						}))
+					: // Backwards-compat: also accept a flat per-hit shape
+						// `{ uri, lineNumber, preview }` so any future Mountain
+						// path that returns flat hits continues to work.
+						[
+							{
+								preview: String(Hit?.preview ?? ""),
+								lineNumber: Number(Hit?.lineNumber ?? Hit?.line_number ?? 1),
+							},
+						];
 			return {
 				resource: MakeFileUri(OsPath),
-				results: [
-					{
-						preview: { text: Preview, matches: [] },
-						ranges: [
-							{
-								startLineNumber: Line,
-								startColumn: 1,
-								endLineNumber: Line,
-								endColumn: Math.max(1, Preview.length + 1),
-							},
-						],
-					},
-				],
+				results: PerLineMatches.map((M) => ({
+					preview: { text: M.preview, matches: [] },
+					ranges: [
+						{
+							startLineNumber: M.lineNumber,
+							startColumn: 1,
+							endLineNumber: M.lineNumber,
+							endColumn: Math.max(1, M.preview.length + 1),
+						},
+					],
+				})),
 			};
 		};
 
@@ -973,9 +1012,16 @@ export async function InstallSkyBridge(): Promise<void> {
 					message: `[SkyBridge] fileSearch invoked pattern="${Raw}" glob="${Glob}" max=${MaxResults}`,
 				}).catch(() => {});
 				try {
+					// Positional contract for `search:findFiles` (see
+					// `Mountain/Source/IPC/WindServiceHandlers/Search.rs::handle_search_find_files`):
+					//   [include, exclude?, max?, useIgnore?, followSymlinks?]
+					// `null` for exclude is required - dropping it shifts
+					// `MaxResults` into the exclude slot which the
+					// glob-extractor then ignores, leaving max defaulted
+					// to 10000 instead of the requested cap.
 					const Files = (await invoke("MountainIPCInvoke", {
 						method: "search:findFiles",
-						params: [Glob, MaxResults],
+						params: [Glob, null, MaxResults],
 					})) as string[];
 					const Results = (Files ?? []).map((Uri) => ({
 						resource: MakeFileUri(

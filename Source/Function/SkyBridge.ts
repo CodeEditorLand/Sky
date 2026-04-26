@@ -35,6 +35,11 @@
  *   sky://ui/show-message-request  → shows a dialog/notification
  */
 
+// Single source of truth for Mountain → Sky event URIs. Importing from
+// the Wind package avoids maintaining a parallel string table here and
+// catches drift against Mountain's Rust `SkyEvent` enum at type-check
+// time (Wind's TS table is the TS mirror of Common/IPC/SkyEvent.rs).
+import SkyEvent from "@codeeditorland/wind/Target/IPC/SkyEvent.js";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
@@ -61,7 +66,8 @@ let _CelTrackingActive = false;
 if (_HasDOM && !(globalThis as any).__LAND_CEL_TRACK__) {
 	try {
 		const TargetDocument = (globalThis as any).document as Document;
-		const OriginalAdd = TargetDocument.addEventListener.bind(TargetDocument);
+		const OriginalAdd =
+			TargetDocument.addEventListener.bind(TargetDocument);
 		// Install via `Object.defineProperty` on the prototype, with
 		// `configurable: true` so we can cleanly replace the method.
 		// If the runtime rejects the redefinition we catch and fall
@@ -106,12 +112,6 @@ const _CelDispatchLog = (DomEvent: string, HasConsumer: boolean): void => {
 		}).catch(() => {});
 	} catch {}
 };
-
-// Single source of truth for Mountain → Sky event URIs. Importing from
-// the Wind package avoids maintaining a parallel string table here and
-// catches drift against Mountain's Rust `SkyEvent` enum at type-check
-// time (Wind's TS table is the TS mirror of Common/IPC/SkyEvent.rs).
-import SkyEvent from "@codeeditorland/wind/Target/IPC/SkyEvent.js";
 
 // ============================================================================
 // VS Code workbench accessor
@@ -234,6 +234,62 @@ interface CelServices {
 
 function GetServices(): CelServices | null {
 	return (window as any).__CEL_SERVICES__ ?? null;
+}
+
+// Probe `__CEL_SERVICES__` shape once after services-ready fires. The
+// Output transform plugin `ExposeWorkbenchAccessor.ts` populates each
+// service handle inside a `try`-IIFE; a contrib that fails to resolve
+// (rare but observed for `IDebugService` in the headless web profile)
+// silently drops to `null`. Without this probe, the Sky-side SCM /
+// Debug / CustomEditor bridges silently no-op without telling anyone
+// why. Logs once to the renderer console (visible in DevTools) on the
+// first `cel:services-ready` fire; subsequent listeners are unaffected.
+{
+	const ProbeServices = (): void => {
+		const S = GetServices() as Record<string, unknown> | null;
+		if (!S) {
+			try {
+				console.warn("[Sky:CEL] __CEL_SERVICES__ missing on probe");
+			} catch {}
+			return;
+		}
+		const Keys = [
+			"Statusbar",
+			"Commands",
+			"CommandRegistry",
+			"Search",
+			"Views",
+			"URI",
+			"TreeViewByViewId",
+			"SCM",
+			"Debug",
+			"CustomEditor",
+			"Emitter",
+			"Disposable",
+			"ToDisposable",
+			"Models",
+			"Languages",
+		];
+		const Shape = Keys.map(
+			(K) => `${K}=${S[K] == null ? "null" : typeof S[K]}`,
+		).join(" ");
+		try {
+			console.log(`[Sky:CEL] services-ready ${Shape}`);
+		} catch {}
+	};
+	if (typeof window !== "undefined") {
+		// If services already ready by the time this module loads, probe
+		// immediately. Otherwise wait for the event.
+		if ((window as any).__CEL_SERVICES__) {
+			ProbeServices();
+		} else {
+			window.addEventListener(
+				"cel:services-ready",
+				() => ProbeServices(),
+				{ once: true },
+			);
+		}
+	}
 }
 
 // ============================================================================
@@ -578,44 +634,38 @@ export async function InstallSkyBridge(): Promise<void> {
 	// Extensions chaining editor-scoped operations will see undefined for
 	// properties we don't synthesise yet; tracking that enrichment
 	// separately as T2.
-	await Register(
-		"sky://window/showTextDocument",
-		async (RawPayload: any) => {
-			const RequestIdentifier = RawPayload?.RequestIdentifier;
-			const Payload = RawPayload?.Payload ?? RawPayload;
-			const UriValue =
-				Payload?.[0]?.uri ??
-				Payload?.uri ??
-				Payload?.[0] ??
-				null;
-			const ViewColumn =
-				Payload?.[1]?.viewColumn ??
-				Payload?.viewColumn ??
-				Payload?.[1] ??
-				null;
-			try {
-				const Wb = GetWorkbench();
-				if (Wb && UriValue) {
-					await Wb.commands.executeCommand(
-						"vscode.open",
-						BuildOpenArg(UriValue),
-						ViewColumn,
-					);
-				}
-				if (RequestIdentifier) {
-					void ResolveUiRequest(RequestIdentifier, {
-						uri: UriValue,
-						viewColumn: ViewColumn,
-					});
-				}
-			} catch (Error) {
-				console.warn("[SkyBridge] showTextDocument failed", Error);
-				if (RequestIdentifier) {
-					void ResolveUiRequest(RequestIdentifier, null);
-				}
+	await Register("sky://window/showTextDocument", async (RawPayload: any) => {
+		const RequestIdentifier = RawPayload?.RequestIdentifier;
+		const Payload = RawPayload?.Payload ?? RawPayload;
+		const UriValue =
+			Payload?.[0]?.uri ?? Payload?.uri ?? Payload?.[0] ?? null;
+		const ViewColumn =
+			Payload?.[1]?.viewColumn ??
+			Payload?.viewColumn ??
+			Payload?.[1] ??
+			null;
+		try {
+			const Wb = GetWorkbench();
+			if (Wb && UriValue) {
+				await Wb.commands.executeCommand(
+					"vscode.open",
+					BuildOpenArg(UriValue),
+					ViewColumn,
+				);
 			}
-		},
-	);
+			if (RequestIdentifier) {
+				void ResolveUiRequest(RequestIdentifier, {
+					uri: UriValue,
+					viewColumn: ViewColumn,
+				});
+			}
+		} catch (Error) {
+			console.warn("[SkyBridge] showTextDocument failed", Error);
+			if (RequestIdentifier) {
+				void ResolveUiRequest(RequestIdentifier, null);
+			}
+		}
+	});
 
 	await Register("sky://editor/applyEdits", ({ edits }: any) => {
 		if (!Array.isArray(edits) || !edits.length) return;
@@ -680,7 +730,8 @@ export async function InstallSkyBridge(): Promise<void> {
 		text: Payload?.text ?? "",
 		tooltip: Payload?.tooltip,
 		command: Payload?.command,
-		ariaLabel: Payload?.accessibilityInformation?.label ?? Payload?.text ?? "",
+		ariaLabel:
+			Payload?.accessibilityInformation?.label ?? Payload?.text ?? "",
 		role: Payload?.accessibilityInformation?.role,
 		backgroundColor: Payload?.backgroundColor,
 		color: Payload?.color,
@@ -748,31 +799,28 @@ export async function InstallSkyBridge(): Promise<void> {
 	// extension proxies back into Cocoon via `ResolveUIRequest` with
 	// `{ cid, args }`. Unregister disposes the registration.
 	const RegisteredCommands = new Map<string, { dispose(): void }>();
-	await Register(
-		"sky://command/execute",
-		async (RawPayload: any) => {
-			const Services = GetServices();
-			if (!Services?.Commands) return;
-			const RequestIdentifier = RawPayload?.RequestIdentifier;
-			const Payload = RawPayload?.Payload ?? RawPayload;
-			const Id = String(Payload?.id ?? Payload?.commandId ?? "");
-			const Arguments = Array.isArray(Payload?.args) ? Payload.args : [];
-			try {
-				const Result = await Services.Commands.executeCommand(
-					Id,
-					...Arguments,
-				);
-				if (RequestIdentifier) {
-					void ResolveUiRequest(RequestIdentifier, Result ?? null);
-				}
-			} catch (Error) {
-				console.warn("[SkyBridge] command execute failed", Id, Error);
-				if (RequestIdentifier) {
-					void ResolveUiRequest(RequestIdentifier, null);
-				}
+	await Register("sky://command/execute", async (RawPayload: any) => {
+		const Services = GetServices();
+		if (!Services?.Commands) return;
+		const RequestIdentifier = RawPayload?.RequestIdentifier;
+		const Payload = RawPayload?.Payload ?? RawPayload;
+		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
+		const Arguments = Array.isArray(Payload?.args) ? Payload.args : [];
+		try {
+			const Result = await Services.Commands.executeCommand(
+				Id,
+				...Arguments,
+			);
+			if (RequestIdentifier) {
+				void ResolveUiRequest(RequestIdentifier, Result ?? null);
 			}
-		},
-	);
+		} catch (Error) {
+			console.warn("[SkyBridge] command execute failed", Id, Error);
+			if (RequestIdentifier) {
+				void ResolveUiRequest(RequestIdentifier, null);
+			}
+		}
+	});
 	await Register("sky://command/register", (Payload: any) => {
 		const Services = GetServices();
 		if (!Services?.CommandRegistry) return;
@@ -929,7 +977,9 @@ export async function InstallSkyBridge(): Promise<void> {
 					[
 						{
 							preview: String(Hit?.preview ?? ""),
-							lineNumber: Number(Hit?.lineNumber ?? Hit?.line_number ?? 1),
+							lineNumber: Number(
+								Hit?.lineNumber ?? Hit?.line_number ?? 1,
+							),
 							columns: [],
 						},
 					];
@@ -956,7 +1006,10 @@ export async function InstallSkyBridge(): Promise<void> {
 										startLineNumber: M.lineNumber,
 										startColumn: 1,
 										endLineNumber: M.lineNumber,
-										endColumn: Math.max(1, M.preview.length + 1),
+										endColumn: Math.max(
+											1,
+											M.preview.length + 1,
+										),
 									},
 								];
 					// `preview.matches` is the SAME range list but
@@ -1005,7 +1058,8 @@ export async function InstallSkyBridge(): Promise<void> {
 				const IsWordMatch = Boolean(Query?.contentPattern?.isWordMatch);
 				const Include =
 					Object.keys(Query?.includePattern ?? {})[0] ?? "**";
-				const Exclude = Object.keys(Query?.excludePattern ?? {})[0] ?? "";
+				const Exclude =
+					Object.keys(Query?.excludePattern ?? {})[0] ?? "";
 				const MaxResults = Number(Query?.maxResults ?? 1000);
 				try {
 					const Raw = (await invoke("MountainIPCInvoke", {
@@ -1046,7 +1100,7 @@ export async function InstallSkyBridge(): Promise<void> {
 				const FolderRoot = FolderFromQuery(Query);
 				const Glob = Raw
 					? `**/*${Raw}*`
-					: Object.keys(Query?.includePattern ?? {})[0] ?? "**";
+					: (Object.keys(Query?.includePattern ?? {})[0] ?? "**");
 				const MaxResults = Number(Query?.maxResults ?? 500);
 				invoke("RenderDevLog", {
 					Tag: "search",
@@ -1092,9 +1146,11 @@ export async function InstallSkyBridge(): Promise<void> {
 			Services.Search.registerSearchResultProvider("file", 1, Provider); // text
 			invoke("RenderDevLog", {
 				Tag: "search",
-				Message: "[SkyBridge] search provider registered (file scheme, types 0+1)",
+				Message:
+					"[SkyBridge] search provider registered (file scheme, types 0+1)",
 				tag: "search",
-				message: "[SkyBridge] search provider registered (file scheme, types 0+1)",
+				message:
+					"[SkyBridge] search provider registered (file scheme, types 0+1)",
 			}).catch(() => {});
 			return true;
 		} catch (Error) {
@@ -1111,9 +1167,11 @@ export async function InstallSkyBridge(): Promise<void> {
 	if (!RegisterLandSearchProvider()) {
 		invoke("RenderDevLog", {
 			Tag: "search",
-			Message: "[SkyBridge] search provider register-immediate failed; arming retry chain",
+			Message:
+				"[SkyBridge] search provider register-immediate failed; arming retry chain",
 			tag: "search",
-			message: "[SkyBridge] search provider register-immediate failed; arming retry chain",
+			message:
+				"[SkyBridge] search provider register-immediate failed; arming retry chain",
 		}).catch(() => {});
 
 		// Three rescue paths run in parallel, whichever wins first
@@ -1132,16 +1190,22 @@ export async function InstallSkyBridge(): Promise<void> {
 		//    path can dispatch to force a re-attempt (e.g. when the
 		//    search viewlet is first opened).
 		let SearchRegistered = false;
-		const RetrySchedule:number[] = [
+		const RetrySchedule: number[] = [
 			50, 100, 200, 400, 800, 1000, 1500, 1500, 1500, 1500,
 		];
 		let RetryStep = 0;
-		const TryRegister = (Origin:string):boolean => {
+		const TryRegister = (Origin: string): boolean => {
 			if (SearchRegistered) return true;
 			if (!RegisterLandSearchProvider()) return false;
 			SearchRegistered = true;
-			window.removeEventListener("cel:workbench-ready", EventRetry as EventListener);
-			window.removeEventListener("cel:services-ready", EventRetry as EventListener);
+			window.removeEventListener(
+				"cel:workbench-ready",
+				EventRetry as EventListener,
+			);
+			window.removeEventListener(
+				"cel:services-ready",
+				EventRetry as EventListener,
+			);
 			invoke("RenderDevLog", {
 				Tag: "search",
 				Message: `[SkyBridge] search provider registered via ${Origin}`,
@@ -1150,23 +1214,38 @@ export async function InstallSkyBridge(): Promise<void> {
 			}).catch(() => {});
 			return true;
 		};
-		const EventRetry = () => { TryRegister("event"); };
+		const EventRetry = () => {
+			TryRegister("event");
+		};
 		const PollRetry = () => {
 			if (TryRegister("poll")) return;
 			if (RetryStep >= RetrySchedule.length) {
 				invoke("RenderDevLog", {
 					Tag: "search",
-					Message: "[SkyBridge] search provider register-poll budget exhausted; search will return empty until a manual cel:request-search-register event fires",
+					Message:
+						"[SkyBridge] search provider register-poll budget exhausted; search will return empty until a manual cel:request-search-register event fires",
 					tag: "search",
-					message: "[SkyBridge] search provider register-poll budget exhausted; search will return empty until a manual cel:request-search-register event fires",
+					message:
+						"[SkyBridge] search provider register-poll budget exhausted; search will return empty until a manual cel:request-search-register event fires",
 				}).catch(() => {});
 				return;
 			}
 			setTimeout(PollRetry, RetrySchedule[RetryStep++] ?? 1500);
 		};
-		window.addEventListener("cel:workbench-ready", EventRetry as EventListener, { once: true });
-		window.addEventListener("cel:services-ready", EventRetry as EventListener, { once: true });
-		window.addEventListener("cel:request-search-register", EventRetry as EventListener);
+		window.addEventListener(
+			"cel:workbench-ready",
+			EventRetry as EventListener,
+			{ once: true },
+		);
+		window.addEventListener(
+			"cel:services-ready",
+			EventRetry as EventListener,
+			{ once: true },
+		);
+		window.addEventListener(
+			"cel:request-search-register",
+			EventRetry as EventListener,
+		);
 		setTimeout(PollRetry, RetrySchedule[RetryStep++] ?? 50);
 	}
 
@@ -1180,20 +1259,426 @@ export async function InstallSkyBridge(): Promise<void> {
 	// and the `sky-emit` DevLog tag stops reporting "0 listeners" drops -
 	// the `cel:scm:*` CustomEvents fan out for any Sky-side component
 	// that wants to mirror SCM state in its own UI.
+	// SCM channels - Mountain emits these from the
+	// `RegisterScmProvider` / `RegisterScmResourceGroup` / `UpdateScmGroup`
+	// / `UnregisterScmProvider` notification atoms whenever Cocoon
+	// forwards an extension's `vscode.scm.*` call. The bridge fans them
+	// out as DOM CustomEvents so any Sky-side viewlet that wants to
+	// mirror SCM state can subscribe to `cel:scm:*` without depending
+	// on Tauri's event listener directly.
+	//
+	// In addition, when `__CEL_SERVICES__.SCM` is available (i.e. the
+	// stock workbench's `ISCMService` was successfully resolved by the
+	// `ExposeWorkbenchAccessor` Output transform), we register the
+	// provider against the live workbench service so the SCM viewlet
+	// renders natively. The shim provider is intentionally minimal:
+	// the workbench expects observable-backed fields and emitter-backed
+	// events, but populating them with real values right away would
+	// require deeper integration with the extension's resource state.
+	// A null-safe fallback keeps the bridge stable even when the
+	// services facade is missing or the registration throws.
+	type CelSCMGroupShim = {
+		GroupHandle: string;
+		GroupId: string;
+		ResourceStates: any[];
+		Group: any;
+		ChangeEmitter: any;
+		ChangeResourcesEmitter: any;
+	};
+	type CelSCMShim = {
+		Provider: any;
+		Repository: any;
+		ScmHandle: number | undefined;
+		Groups: Map<string, CelSCMGroupShim>;
+		ResourceGroupsEmitter: any;
+	};
+	const ScmShimRegistry = new Map<string, CelSCMShim>();
+	const ScmShimByHandle = new Map<number, CelSCMShim>();
+
+	// Build a minimal `ISCMResource` from a Cocoon-side resource state
+	// payload. Cocoon's `ScmNamespace.ts` passes the raw `resourceStates`
+	// array verbatim from the extension's `sourceControl.resourceStates =
+	// [...]` setter; entries can be either `vscode.SourceControlResourceState`
+	// objects (richer shape with `decorations`/`command`/`contextValue`)
+	// or simple `{ resourceUri }` shapes from older extensions. We pull
+	// `sourceUri` and stash whatever else is present without requiring it.
+	const BuildScmResource = (
+		Services: any,
+		Group: any,
+		Raw: any,
+	): any | null => {
+		const UriField =
+			Raw?.resourceUri ?? Raw?.sourceUri ?? Raw?.uri ?? Raw?.path;
+		let SourceUri: any = null;
+		if (UriField && typeof UriField === "object") {
+			// Cocoon's URI hydration may already have produced a
+			// real `URI`-shaped object; if not, reconstruct via
+			// `URI.from`. POJOs with `{scheme,path,...}` work via
+			// `URI.from`, raw strings via `URI.parse`.
+			if (typeof UriField.with === "function") {
+				SourceUri = UriField;
+			} else if (typeof UriField.scheme === "string") {
+				SourceUri = Services.URI.from(UriField);
+			} else if (typeof UriField.toString === "function") {
+				try {
+					SourceUri = Services.URI.parse(UriField.toString());
+				} catch {
+					SourceUri = null;
+				}
+			}
+		} else if (typeof UriField === "string") {
+			try {
+				SourceUri = Services.URI.parse(UriField);
+			} catch {
+				SourceUri = null;
+			}
+		}
+		if (!SourceUri) return null;
+		const Decorations = Raw?.decorations ?? {};
+		return {
+			sourceUri: SourceUri,
+			resourceGroup: Group,
+			decorations: {
+				icon: Decorations.iconPath ?? Decorations.icon,
+				iconDark: Decorations.iconDarkPath ?? Decorations.iconDark,
+				tooltip: Decorations.tooltip,
+				strikeThrough: Decorations.strikeThrough,
+				faded: Decorations.faded,
+				letter: Decorations.letter,
+				color: Decorations.color,
+			},
+			contextValue: Raw?.contextValue,
+			command: Raw?.command,
+			multiDiffEditorOriginalUri: Raw?.multiDiffEditorOriginalUri,
+			multiDiffEditorModifiedUri: Raw?.multiDiffEditorModifiedUri,
+		};
+	};
+
+	const TryRegisterScmProvider = (Payload: any): void => {
+		const Services: any = (globalThis as any).__CEL_SERVICES__;
+		if (!Services || !Services.SCM || !Services.URI || !Services.Emitter)
+			return;
+		const ScmId: string = String(Payload?.scmId ?? Payload?.id ?? "");
+		if (!ScmId) return;
+		if (ScmShimRegistry.has(ScmId)) return;
+		try {
+			const RootUri =
+				typeof Payload?.rootUri === "string" &&
+				Payload.rootUri.length > 0
+					? Services.URI.parse(Payload.rootUri)
+					: undefined;
+
+			// Build a real `ITextModel` for the inputBox via
+			// `IModelService.createModel`. Workbench's
+			// `MainThreadSCMProvider` constructor reads
+			// `inputBoxTextModel.uri` and binds editor commands to
+			// the model identity, so a `null` placeholder makes
+			// `registerSCMProvider` throw. We use a `cel-scm-input:`
+			// scheme so we don't collide with the workbench's
+			// built-in `SCMInputBoxContentProvider` (registered for
+			// `vscode-source-control:` only when `MainThreadSCM`
+			// instantiates - which only happens with a live
+			// extension-host RPC channel; not the case here).
+			let InputModel: any = null;
+			if (Services.Models && Services.URI) {
+				const InputUri = Services.URI.from({
+					scheme: "cel-scm-input",
+					path: `/${ScmId}/input`,
+				});
+				const Existing = Services.Models.getModel
+					? Services.Models.getModel(InputUri)
+					: null;
+				if (Existing) {
+					InputModel = Existing;
+				} else {
+					const LanguageSelection =
+						Services.Languages && Services.Languages.createById
+							? Services.Languages.createById("scminput")
+							: null;
+					InputModel = Services.Models.createModel(
+						"",
+						LanguageSelection,
+						InputUri,
+					);
+				}
+			}
+
+			const ChangeEmitter = new Services.Emitter();
+			const ResourceGroupsEmitter = new Services.Emitter();
+			const ResourcesEmitter = new Services.Emitter();
+			// `provider.groups` is a live list backed by our `Groups`
+			// map; the workbench's SCM panel iterates it on every
+			// `onDidChangeResourceGroups` fire to rebuild the tree.
+			// Returning a cached array reference would break the
+			// re-render heuristic, so build a fresh array each get.
+			const ProviderGroupsList: any[] = [];
+			const Provider = {
+				id: ScmId,
+				providerId: ScmId,
+				label: String(Payload?.label ?? ScmId),
+				name: String(Payload?.label ?? ScmId),
+				rootUri: RootUri,
+				get groups() {
+					return ProviderGroupsList;
+				},
+				onDidChange: ChangeEmitter.event,
+				onDidChangeResourceGroups: ResourceGroupsEmitter.event,
+				onDidChangeResources: ResourcesEmitter.event,
+				count: { get: () => 0 } as any,
+				commitTemplate: { get: () => "" } as any,
+				contextValue: { get: () => undefined } as any,
+				artifactProvider: { get: () => undefined } as any,
+				historyProvider: { get: () => undefined } as any,
+				actionButton: { get: () => undefined } as any,
+				statusBarCommands: { get: () => [] } as any,
+				inputBoxTextModel: InputModel,
+				getOriginalResource: async () => null,
+				dispose: () => {
+					ChangeEmitter.dispose?.();
+					ResourceGroupsEmitter.dispose?.();
+					ResourcesEmitter.dispose?.();
+					try {
+						InputModel?.dispose?.();
+					} catch {}
+				},
+			};
+			const Repository = Services.SCM.registerSCMProvider(Provider);
+			const ScmHandleNumber: number | undefined =
+				typeof Payload?.handle === "number" ? Payload.handle : undefined;
+			const Shim: CelSCMShim = {
+				Provider,
+				Repository,
+				ScmHandle: ScmHandleNumber,
+				Groups: new Map(),
+				ResourceGroupsEmitter,
+			};
+			ScmShimRegistry.set(ScmId, Shim);
+			if (ScmHandleNumber !== undefined) {
+				ScmShimByHandle.set(ScmHandleNumber, Shim);
+			}
+			// Keep `ProviderGroupsList` reachable from the shim so
+			// the registerGroup handler can mutate it in place.
+			(Shim as any).ProviderGroupsList = ProviderGroupsList;
+		} catch (Error) {
+			// Workbench rejected the shim provider (e.g. ITextModel
+			// could not be created on this profile, or `IModelService`
+			// failed to resolve). Silently fall back to the
+			// CustomEvent path - any Sky-side component listening on
+			// `cel:scm:register` still gets the data. The
+			// `LAND_DEV_LOG=cel-scm` gate surfaces the underlying
+			// reason without spamming the renderer console on every
+			// register.
+			try {
+				const W = globalThis as any;
+				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-scm")) {
+					(W.console || console).warn(
+						`[Sky:CEL-SCM] registerSCMProvider failed for "${ScmId}": ${
+							(Error as { message?: string })?.message ?? String(Error)
+						}`,
+					);
+				}
+			} catch {}
+		}
+	};
+
+	const TryUnregisterScmProvider = (Payload: any): void => {
+		const ScmId: string = String(Payload?.scmId ?? Payload?.id ?? "");
+		if (!ScmId) return;
+		const Entry = ScmShimRegistry.get(ScmId);
+		if (!Entry) return;
+		try {
+			Entry.Repository?.dispose?.();
+			Entry.Provider?.dispose?.();
+		} catch {}
+		ScmShimRegistry.delete(ScmId);
+		if (Entry.ScmHandle !== undefined) {
+			ScmShimByHandle.delete(Entry.ScmHandle);
+		}
+	};
+
+	// Match the wire payload's `scmHandle` (numeric, from
+	// `RegisterScmResourceGroup.rs:78`) against our registry. Falls
+	// back to a linear scan when the payload only carries `scmId`.
+	const ResolveScmShim = (Payload: any): CelSCMShim | null => {
+		const Handle = Payload?.scmHandle;
+		if (typeof Handle === "number") {
+			const ByHandle = ScmShimByHandle.get(Handle);
+			if (ByHandle) return ByHandle;
+		}
+		const ScmId = Payload?.scmId ?? Payload?.providerId;
+		if (typeof ScmId === "string") {
+			const ById = ScmShimRegistry.get(ScmId);
+			if (ById) return ById;
+		}
+		return null;
+	};
+
+	const TryRegisterScmGroup = (Payload: any): void => {
+		const Services: any = (globalThis as any).__CEL_SERVICES__;
+		if (!Services || !Services.Emitter || !Services.URI) return;
+		const Shim = ResolveScmShim(Payload);
+		if (!Shim) return;
+		const GroupHandle: string = String(Payload?.groupHandle ?? "");
+		const GroupId: string = String(Payload?.groupId ?? "");
+		if (!GroupHandle || !GroupId) return;
+		if (Shim.Groups.has(GroupHandle)) return;
+		try {
+			const ChangeEmitter = new Services.Emitter();
+			const ChangeResourcesEmitter = new Services.Emitter();
+			const Group: any = {
+				id: GroupId,
+				label: String(Payload?.label ?? GroupId),
+				resources: [] as any[],
+				features: { hideWhenEmpty: false },
+				contextValue: undefined,
+				hideWhenEmpty: false,
+				multiDiffEditorEnableViewChanges: false,
+				onDidChange: ChangeEmitter.event,
+				onDidChangeResources: ChangeResourcesEmitter.event,
+				get provider() {
+					return Shim.Provider;
+				},
+				// `resourceTree` is consulted by the workbench's
+				// hierarchical view mode (and by some flat-mode code
+				// paths that pre-build the tree even when not
+				// rendering it). Lazy-build a real `ResourceTree`
+				// instance from the workbench's exposed class so the
+				// panel can render either hierarchical or flat
+				// without throwing. Cache per-group so repeat reads
+				// don't rebuild on every tick.
+				_resourceTree: null as any,
+				get resourceTree() {
+					const Self: any = this;
+					if (Self._resourceTree) return Self._resourceTree;
+					const Svc: any =
+						(globalThis as any).__CEL_SERVICES__ ?? Services;
+					const ResourceTreeCtor = Svc?.ResourceTree;
+					const ExtUri =
+						Svc?.UriIdentity?.extUri ??
+						(Svc?.URI ? { isEqual: () => false } : null);
+					const TreeRoot =
+						(Shim.Provider?.rootUri as any) ||
+						(Svc?.URI?.file ? Svc.URI.file("/") : null);
+					if (!ResourceTreeCtor || !TreeRoot) return null;
+					try {
+						Self._resourceTree = new ResourceTreeCtor(
+							Self,
+							TreeRoot,
+							ExtUri,
+						);
+						for (const Resource of Self.resources) {
+							try {
+								Self._resourceTree.add(
+									Resource.sourceUri,
+									Resource,
+								);
+							} catch {
+								// One bad resource shouldn't take down
+								// the whole tree.
+							}
+						}
+						return Self._resourceTree;
+					} catch {
+						return null;
+					}
+				},
+				splice: (
+					Start: number,
+					DeleteCount: number,
+					ToInsert: any[],
+				) => {
+					(Group.resources as any[]).splice(
+						Start,
+						DeleteCount,
+						...ToInsert,
+					);
+					// Invalidate tree cache so next read rebuilds it
+					// against the updated `resources` array.
+					(Group as any)._resourceTree = null;
+					ChangeResourcesEmitter.fire();
+				},
+			};
+			const GroupShim: CelSCMGroupShim = {
+				GroupHandle,
+				GroupId,
+				ResourceStates: [],
+				Group,
+				ChangeEmitter,
+				ChangeResourcesEmitter,
+			};
+			Shim.Groups.set(GroupHandle, GroupShim);
+			(Shim as any).ProviderGroupsList.push(Group);
+			Shim.ResourceGroupsEmitter.fire();
+		} catch (Error) {
+			try {
+				const W = globalThis as any;
+				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-scm")) {
+					(W.console || console).warn(
+						`[Sky:CEL-SCM] registerGroup failed for "${GroupId}": ${
+							(Error as { message?: string })?.message ?? String(Error)
+						}`,
+					);
+				}
+			} catch {}
+		}
+	};
+
+	const TryUpdateScmGroup = (Payload: any): void => {
+		const Services: any = (globalThis as any).__CEL_SERVICES__;
+		if (!Services || !Services.URI) return;
+		const Shim = ResolveScmShim(Payload);
+		if (!Shim) return;
+		const GroupHandle: string = String(Payload?.groupHandle ?? "");
+		const GroupId: string = String(Payload?.groupId ?? "");
+		// Mountain emits both `groupHandle` (canonical) and `groupId`
+		// (split form). Prefer handle lookup; fall back to id-scan.
+		let Group: CelSCMGroupShim | undefined =
+			GroupHandle && Shim.Groups.get(GroupHandle);
+		if (!Group && GroupId) {
+			for (const Candidate of Shim.Groups.values()) {
+				if (Candidate.GroupId === GroupId) {
+					Group = Candidate;
+					break;
+				}
+			}
+		}
+		if (!Group) return;
+		const RawStates = Array.isArray(Payload?.resourceStates)
+			? Payload.resourceStates
+			: [];
+		const Resources = RawStates.map((Raw: any) =>
+			BuildScmResource(Services, Group!.Group, Raw),
+		).filter((R: any): R is any => R !== null);
+		// `splice` updates the live array + fires the panel's
+		// re-render hook in one go. Replacing the contents in
+		// place preserves array identity for any cached refs.
+		Group.Group.splice(0, Group.Group.resources.length, Resources);
+		Group.ResourceStates = RawStates;
+	};
+
 	await Register("sky://scm/register", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:register", { detail: Payload }),
 		);
+		TryRegisterScmProvider(Payload);
+	});
+	await Register("sky://scm/registerGroup", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:scm:registerGroup", { detail: Payload }),
+		);
+		TryRegisterScmGroup(Payload);
 	});
 	await Register("sky://scm/unregister", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:unregister", { detail: Payload }),
 		);
+		TryUnregisterScmProvider(Payload);
 	});
 	await Register("sky://scm/updateGroup", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:updateGroup", { detail: Payload }),
 		);
+		TryUpdateScmGroup(Payload);
 	});
 
 	// ---- Progress ----
@@ -1244,16 +1729,13 @@ export async function InstallSkyBridge(): Promise<void> {
 	// DOM `CustomEvent` so the terminal React/Astro components subscribe
 	// through the same `document.addEventListener("cel:terminal:*")`
 	// interface they use for resize.
-	await Register(
-		"sky://terminal/create",
-		({ id, name, pid }: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:terminal:create", {
-					detail: { id, name, pid },
-				}),
-			);
-		},
-	);
+	await Register("sky://terminal/create", ({ id, name, pid }: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:terminal:create", {
+				detail: { id, name, pid },
+			}),
+		);
+	});
 
 	await Register("sky://terminal/data", ({ id, data }: any) => {
 		document.dispatchEvent(
@@ -1307,16 +1789,13 @@ export async function InstallSkyBridge(): Promise<void> {
 			}),
 		);
 	});
-	await Register(
-		"sky://notification/progress-update",
-		(Payload: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:notification:progress-update", {
-					detail: Payload,
-				}),
-			);
-		},
-	);
+	await Register("sky://notification/progress-update", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:notification:progress-update", {
+				detail: Payload,
+			}),
+		);
+	});
 	await Register("sky://notification/progress-end", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:notification:progress-end", {
@@ -1380,16 +1859,13 @@ export async function InstallSkyBridge(): Promise<void> {
 	// ---- Languages ----
 	// `vscode.languages.setTextDocumentLanguage(doc, languageId)` flows
 	// through Mountain's `languages.setDocumentLanguage` notification.
-	await Register(
-		"sky://languages/setDocumentLanguage",
-		(Payload: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:languages:setDocumentLanguage", {
-					detail: Payload,
-				}),
-			);
-		},
-	);
+	await Register("sky://languages/setDocumentLanguage", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:languages:setDocumentLanguage", {
+				detail: Payload,
+			}),
+		);
+	});
 	// `setLanguageConfiguration` fires when an extension's activation
 	// installs brackets, wordPattern, indentationRules, etc. Monaco
 	// applies them via `monaco.languages.setLanguageConfiguration` in the
@@ -1512,11 +1988,15 @@ export async function InstallSkyBridge(): Promise<void> {
 			// mirrors (diagnostic inspectors, test harnesses) see the
 			// same content the built-in tree does.
 			const Description =
-				typeof Wire.description === "string" ? Wire.description : undefined;
+				typeof Wire.description === "string"
+					? Wire.description
+					: undefined;
 			const Tooltip =
 				typeof Wire.tooltip === "string" ? Wire.tooltip : undefined;
 			const ContextValue =
-				typeof Wire.contextValue === "string" ? Wire.contextValue : undefined;
+				typeof Wire.contextValue === "string"
+					? Wire.contextValue
+					: undefined;
 			return {
 				handle: Handle,
 				collapsibleState: CollapsibleState,
@@ -1607,7 +2087,9 @@ export async function InstallSkyBridge(): Promise<void> {
 
 		const AttachToDescriptor = (
 			ViewId: string,
-			TreeView: NonNullable<ReturnType<NonNullable<CelServices["TreeViewByViewId"]>>>,
+			TreeView: NonNullable<
+				ReturnType<NonNullable<CelServices["TreeViewByViewId"]>>
+			>,
 		): void => {
 			if (TreeView.dataProvider) {
 				// Already wired (e.g. by a prior register for the same id
@@ -1642,7 +2124,7 @@ export async function InstallSkyBridge(): Promise<void> {
 		// indefinitely. After budget exhaustion we register in
 		// `PendingAttaches` so any later successful attach can sweep
 		// the still-missing entries.
-		const AttachBackoffSchedule:number[] = [
+		const AttachBackoffSchedule: number[] = [
 			100, 200, 400, 600, 800, 1000, 1000, 1000, 1500, 1500, 1500, 1500,
 		];
 
@@ -1730,6 +2212,42 @@ export async function InstallSkyBridge(): Promise<void> {
 	await Register("sky://exthost/debug-close", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:exthost:debug-close", { detail: Payload }),
+		);
+	});
+
+	// ---- Debug session lifecycle ----
+	// Mountain's `DebugProvider::StartDebugging` / `StopDebugging` mirror
+	// each session-state transition over these channels so the debug
+	// toolbar, call-stack panel, and breakpoints view can react without
+	// waiting on the typed `__CEL_SERVICES__.Debug` snapshot to refresh.
+	// The forwarded payload matches the `vscode.DebugSession`-shaped
+	// dictionary the renderer expects ({ sessionId, type, configuration }).
+	await Register("sky://debug/sessionStart", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:sessionStart", { detail: Payload }),
+		);
+	});
+	await Register("sky://debug/sessionEnd", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:sessionEnd", { detail: Payload }),
+		);
+	});
+	// `addBreakpoints` / `removeBreakpoints` / `consoleAppend` arrive on
+	// `sky://debug/<suffix>` because `DebugLifecycle.rs` strips the
+	// `debug.` prefix from the Cocoon notification method.
+	await Register("sky://debug/addBreakpoints", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:addBreakpoints", { detail: Payload }),
+		);
+	});
+	await Register("sky://debug/removeBreakpoints", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:removeBreakpoints", { detail: Payload }),
+		);
+	});
+	await Register("sky://debug/consoleAppend", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:consoleAppend", { detail: Payload }),
 		);
 	});
 
@@ -1825,6 +2343,80 @@ export async function InstallSkyBridge(): Promise<void> {
 		);
 	});
 
+	// ---- Custom editors ----
+	// Mountain emits `sky://webview/registerCustomEditor` with payload
+	// `{ method: "webview.registerCustomEditor", handle: <number>,
+	//    args: [Handle, ViewType, Options] }` from
+	// `Track/Effect/CreateEffectForRequest/Webview.rs:42`. We fan out
+	// the CustomEvent for any Sky-side observer, then register the
+	// viewType with the workbench's `ICustomEditorService` so the
+	// "Open With..." menu surfaces it. The save reverse-RPC
+	// (workbench → provider) requires deeper `ICustomEditorModelManager`
+	// wiring and is deferred - the registration capability alone is
+	// what makes the viewType discoverable in the editor picker.
+	const CustomEditorCapabilityHandles = new Map<string, any>();
+	await Register("sky://webview/registerCustomEditor", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:registerCustomEditor", {
+				detail: Payload,
+			}),
+		);
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			if (!Services?.CustomEditor?.registerCustomEditorCapabilities) return;
+			const Args = Array.isArray(Payload?.args) ? Payload.args : [];
+			const ViewType: string = String(Args[1] ?? "");
+			const Options =
+				typeof Args[2] === "object" && Args[2] !== null
+					? (Args[2] as Record<string, unknown>)
+					: {};
+			if (!ViewType || CustomEditorCapabilityHandles.has(ViewType)) return;
+			const Disposable = Services.CustomEditor.registerCustomEditorCapabilities(
+				ViewType,
+				{
+					supportsMultipleEditorsPerDocument: Boolean(
+						Options.supportsMultipleEditorsPerDocument,
+					),
+				},
+			);
+			CustomEditorCapabilityHandles.set(ViewType, Disposable);
+		} catch (Error) {
+			try {
+				const W = globalThis as any;
+				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-customeditor")) {
+					(W.console || console).warn(
+						`[Sky:CEL-CustomEditor] registerCapability failed: ${
+							(Error as { message?: string })?.message ?? String(Error)
+						}`,
+					);
+				}
+			} catch {}
+		}
+	});
+	await Register("sky://webview/unregisterCustomEditor", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:unregisterCustomEditor", {
+				detail: Payload,
+			}),
+		);
+		try {
+			const Args = Array.isArray(Payload?.args) ? Payload.args : [];
+			// `webview.unregisterCustomEditor` takes only the handle, not
+			// the viewType - dispose every capability we registered for
+			// this Cocoon process. There's no reverse handle→viewType
+			// index because the registration payload doesn't expose the
+			// handle in a form we tracked, so dispose-all is the safe
+			// fallback when Cocoon shuts down.
+			void Args;
+			for (const [, Disposable] of CustomEditorCapabilityHandles) {
+				try {
+					Disposable?.dispose?.();
+				} catch {}
+			}
+			CustomEditorCapabilityHandles.clear();
+		} catch {}
+	});
+
 	// ---- Native ----
 	await Register("sky://native/openExternal", ({ url }: any) => {
 		if (url) window.open(url, "_blank", "noopener,noreferrer");
@@ -1837,58 +2429,48 @@ export async function InstallSkyBridge(): Promise<void> {
 	//   Promise/pending: { RequestIdentifier, Payload: { Severity, Message, Options } }
 	// The Promise shape carries a RequestIdentifier; the resolve path mirrors
 	// the quick-pick / input-box flow.
-	await Register(
-		"sky://ui/show-message-request",
-		(RawPayload: any) => {
-			if (RawPayload?.RequestIdentifier) {
-				const Inner = RawPayload.Payload ?? {};
-				const Severity =
-					Inner?.Severity ?? Inner?.severity ?? "info";
-				const Message = Inner?.Message ?? Inner?.message ?? "";
-				const Options = Inner?.Options ?? Inner?.options ?? {};
-				const Actions: Array<{ title: string }> = Array.isArray(
-					Options?.Actions ?? Options?.actions,
-				)
-					? (Options?.Actions ?? Options?.actions)
-					: [];
-				if (Actions.length === 0) {
-					ShowNotification(Severity, Message, []);
-					void ResolveUiRequest(
-						RawPayload.RequestIdentifier,
-						null,
-					);
-					return;
-				}
-				let Picked: string | null = null;
-				if (Actions.length === 1) {
-					if (window.confirm(`${Message}\n\n(${Actions[0].title})`)) {
-						Picked = Actions[0].title;
-					}
-				} else {
-					const Choice = window.prompt(
-						`${Message}\n\nChoose: ${Actions.map(
-							(A) => A.title,
-						).join(" / ")}`,
-						Actions[0].title,
-					);
-					if (
-						Choice &&
-						Actions.some((A) => A.title === Choice)
-					) {
-						Picked = Choice;
-					}
-				}
-				void ResolveUiRequest(RawPayload.RequestIdentifier, Picked);
+	await Register("sky://ui/show-message-request", (RawPayload: any) => {
+		if (RawPayload?.RequestIdentifier) {
+			const Inner = RawPayload.Payload ?? {};
+			const Severity = Inner?.Severity ?? Inner?.severity ?? "info";
+			const Message = Inner?.Message ?? Inner?.message ?? "";
+			const Options = Inner?.Options ?? Inner?.options ?? {};
+			const Actions: Array<{ title: string }> = Array.isArray(
+				Options?.Actions ?? Options?.actions,
+			)
+				? (Options?.Actions ?? Options?.actions)
+				: [];
+			if (Actions.length === 0) {
+				ShowNotification(Severity, Message, []);
+				void ResolveUiRequest(RawPayload.RequestIdentifier, null);
 				return;
 			}
-			// Legacy passive shape - still used by telemetry / toast channels.
-			ShowNotification(
-				RawPayload?.severity ?? "info",
-				RawPayload?.message ?? "",
-				RawPayload?.actions,
-			);
-		},
-	);
+			let Picked: string | null = null;
+			if (Actions.length === 1) {
+				if (window.confirm(`${Message}\n\n(${Actions[0].title})`)) {
+					Picked = Actions[0].title;
+				}
+			} else {
+				const Choice = window.prompt(
+					`${Message}\n\nChoose: ${Actions.map((A) => A.title).join(
+						" / ",
+					)}`,
+					Actions[0].title,
+				);
+				if (Choice && Actions.some((A) => A.title === Choice)) {
+					Picked = Choice;
+				}
+			}
+			void ResolveUiRequest(RawPayload.RequestIdentifier, Picked);
+			return;
+		}
+		// Legacy passive shape - still used by telemetry / toast channels.
+		ShowNotification(
+			RawPayload?.severity ?? "info",
+			RawPayload?.message ?? "",
+			RawPayload?.actions,
+		);
+	});
 
 	await Register(
 		"sky://ui/show-input-box-request",
@@ -1980,10 +2562,7 @@ export async function InstallSkyBridge(): Promise<void> {
 					`${Message}\n\nChoose: ${Actions.map((A) => A.title).join(" / ")}`,
 					Actions[0].title,
 				);
-				if (
-					Choice &&
-					Actions.some((A) => A.title === Choice)
-				) {
+				if (Choice && Actions.some((A) => A.title === Choice)) {
 					Picked = Choice;
 				}
 			}

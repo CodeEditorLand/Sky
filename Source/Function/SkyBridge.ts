@@ -237,6 +237,106 @@ function GetServices(): CelServices | null {
 }
 
 // ============================================================================
+// URI helpers for command arguments
+// ============================================================================
+//
+// Stock VS Code commands like `vscode.open` accept either a real `URI`
+// instance OR a `URIComponents` POJO with `$mid:1` (the workbench's
+// `URI.revive(...)` lifts those at the boundary). We prefer the real
+// class when available because:
+//
+//   1. In-process consumers (search dedup Map, command palette quick
+//      pick) call `uri.with(...)` / `uri.toString()` directly without
+//      going through `revive` - same root cause as the search-provider
+//      `uri.with is not a function` bug.
+//   2. Round-tripping a real URI through serialisation is loss-free,
+//      while a POJO has to be rebuilt by every consumer.
+//
+// `BuildOpenArg` accepts whatever the caller gives us (string,
+// pre-built URI instance, plain UriComponents, or a workspace-folder
+// shape with `.uri` nested) and produces a real URI when the bundled
+// class is available. Fallback POJO retains `$mid:1` so the few code
+// paths that DO call `revive` still work.
+function BuildOpenArg(Source: unknown): unknown {
+	const Ctor = GetServices()?.URI;
+	const ExtractParts = (
+		Value: unknown,
+	): {
+		Scheme: string;
+		Authority: string;
+		Path: string;
+		Query: string;
+		Fragment: string;
+	} | null => {
+		if (Value == null) return null;
+		if (typeof Value === "string") {
+			const Trimmed = Value.trim();
+			if (!Trimmed) return null;
+			if (Trimmed.includes("://")) {
+				try {
+					const Parsed = new URL(Trimmed);
+					return {
+						Scheme: Parsed.protocol.replace(/:$/, ""),
+						Authority: Parsed.host,
+						Path: decodeURIComponent(Parsed.pathname),
+						Query: Parsed.search.replace(/^\?/, ""),
+						Fragment: Parsed.hash.replace(/^#/, ""),
+					};
+				} catch {
+					return null;
+				}
+			}
+			return {
+				Scheme: "file",
+				Authority: "",
+				Path: Trimmed,
+				Query: "",
+				Fragment: "",
+			};
+		}
+		if (typeof Value !== "object") return null;
+		const Holder = Value as Record<string, unknown>;
+		// Workspace-folder-style nested shape.
+		if (Holder["uri"] && typeof Holder["uri"] === "object") {
+			return ExtractParts(Holder["uri"]);
+		}
+		const Scheme = String(Holder["scheme"] ?? "file");
+		const Path = String(Holder["path"] ?? Holder["fsPath"] ?? "");
+		if (!Path) return null;
+		return {
+			Scheme,
+			Authority: String(Holder["authority"] ?? ""),
+			Path,
+			Query: String(Holder["query"] ?? ""),
+			Fragment: String(Holder["fragment"] ?? ""),
+		};
+	};
+	const Parts = ExtractParts(Source);
+	if (!Parts) return Source;
+	if (Ctor) {
+		try {
+			return Ctor.from({
+				scheme: Parts.Scheme,
+				authority: Parts.Authority,
+				path: Parts.Path,
+				query: Parts.Query,
+				fragment: Parts.Fragment,
+			});
+		} catch {
+			// Fall through to POJO.
+		}
+	}
+	return {
+		$mid: 1,
+		scheme: Parts.Scheme,
+		authority: Parts.Authority,
+		path: Parts.Path,
+		query: Parts.Query,
+		fragment: Parts.Fragment,
+	};
+}
+
+// ============================================================================
 // Output channel state (local mirror of Mountain's channel registry)
 // ============================================================================
 
@@ -436,15 +536,7 @@ export async function InstallSkyBridge(): Promise<void> {
 		const Wb = GetWorkbench();
 		if (!Wb) return;
 		Wb.commands
-			.executeCommand(
-				"vscode.open",
-				{
-					$mid: 1,
-					path: uri,
-					scheme: uri.startsWith("file://") ? "file" : "untitled",
-				},
-				viewColumn,
-			)
+			.executeCommand("vscode.open", BuildOpenArg(uri), viewColumn)
 			.catch(() => {
 				// Fallback: generic open
 				Wb.env.openUri({ path: uri }).catch(() => {});
@@ -506,18 +598,7 @@ export async function InstallSkyBridge(): Promise<void> {
 				if (Wb && UriValue) {
 					await Wb.commands.executeCommand(
 						"vscode.open",
-						{
-							$mid: 1,
-							path: typeof UriValue === "string" ? UriValue : UriValue?.path,
-							scheme:
-								(typeof UriValue === "string"
-									? UriValue
-									: (UriValue?.scheme ?? "")
-								).startsWith?.("file://") ||
-								UriValue?.scheme === "file"
-									? "file"
-									: "untitled",
-						},
+						BuildOpenArg(UriValue),
 						ViewColumn,
 					);
 				}

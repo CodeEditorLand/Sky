@@ -12,6 +12,7 @@
 import Layout from "../Function/Markup/Base.astro";
 import { Bust, On } from "../Function/Shared";
 import ElectronWorkbench from "../Workbench/Electron/Layout.astro";
+import WorkerBundleImports from "../Workbench/Electron/WorkerBundleImports.astro";
 
 // Environment detection. `Bundle=true` is set by build profiles that
 // resolve worker scripts via npm-package imports (Vite-bundled into a
@@ -207,30 +208,9 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 		globalThis.__BOOTSTRAP_DEBUG__ = On;
 	</script>
 
-	<!--
-		Worker Scripts.
-
-		`Bundle=true` profiles resolve the three worker modules via
-		npm-package imports - Astro/Vite bundles them into a single
-		chunk for the page. `Bundle=false` profiles fetch each as a
-		separate static asset under `/Worker/*.js`.
-
-		Either way, ordering MUST be CSS Load → Policy → Register: the
-		Trusted Types policy `Policy.js` registers must exist before
-		`Register.js` calls `navigator.serviceWorker.register()` with a
-		`TrustedScriptURL`, and `_LOAD_CSS_WORKER` from Load.js has to
-		be installed before any later code might call it. In the bundle
-		path we rely on declaration order inside the bundled chunk; in
-		the non-bundle path we rely on the browser's
-		document-order-execute-modules guarantee.
-	-->
 	{
 		Bundle ? (
-			<script>
-				import "@codeeditorland/worker/Target/Worker/CSS/Load.js";
-				import "@codeeditorland/worker/Target/Worker/Policy.js";
-				import "@codeeditorland/worker/Target/Worker/Register.js";
-			</script>
+			<WorkerBundleImports />
 		) : (
 			<Fragment>
 				<script

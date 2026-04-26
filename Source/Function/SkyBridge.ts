@@ -763,6 +763,12 @@ export async function InstallSkyBridge(): Promise<void> {
 				_Token?: unknown,
 			) => {
 				const Pattern = String(Query?.contentPattern?.pattern ?? "");
+				invoke("RenderDevLog", {
+					Tag: "search",
+					Message: `[SkyBridge] textSearch invoked pattern="${Pattern}" folders=${Query?.folderQueries?.length ?? 0}`,
+					tag: "search",
+					message: `[SkyBridge] textSearch invoked pattern="${Pattern}" folders=${Query?.folderQueries?.length ?? 0}`,
+				}).catch(() => {});
 				if (!Pattern) {
 					return { results: [], messages: [], limitHit: false };
 				}
@@ -816,6 +822,12 @@ export async function InstallSkyBridge(): Promise<void> {
 					? `**/*${Raw}*`
 					: Object.keys(Query?.includePattern ?? {})[0] ?? "**";
 				const MaxResults = Number(Query?.maxResults ?? 500);
+				invoke("RenderDevLog", {
+					Tag: "search",
+					Message: `[SkyBridge] fileSearch invoked pattern="${Raw}" glob="${Glob}" max=${MaxResults}`,
+					tag: "search",
+					message: `[SkyBridge] fileSearch invoked pattern="${Raw}" glob="${Glob}" max=${MaxResults}`,
+				}).catch(() => {});
 				try {
 					const Files = (await invoke("MountainIPCInvoke", {
 						method: "search:findFiles",
@@ -847,29 +859,84 @@ export async function InstallSkyBridge(): Promise<void> {
 		try {
 			Services.Search.registerSearchResultProvider("file", 0, Provider); // file
 			Services.Search.registerSearchResultProvider("file", 1, Provider); // text
+			invoke("RenderDevLog", {
+				Tag: "search",
+				Message: "[SkyBridge] search provider registered (file scheme, types 0+1)",
+				tag: "search",
+				message: "[SkyBridge] search provider registered (file scheme, types 0+1)",
+			}).catch(() => {});
 			return true;
 		} catch (Error) {
-			console.warn(
-				"[SkyBridge] registerSearchResultProvider failed",
-				Error,
-			);
+			invoke("RenderDevLog", {
+				Tag: "search",
+				Message: `[SkyBridge] registerSearchResultProvider threw: ${String(Error)}`,
+				tag: "search",
+				message: `[SkyBridge] registerSearchResultProvider threw: ${String(Error)}`,
+			}).catch(() => {});
 			return false;
 		}
 	};
 
 	if (!RegisterLandSearchProvider()) {
-		const OnReady = () => {
-			window.removeEventListener(
-				"cel:workbench-ready",
-				OnReady as EventListener,
-			);
-			RegisterLandSearchProvider();
+		invoke("RenderDevLog", {
+			Tag: "search",
+			Message: "[SkyBridge] search provider register-immediate failed; arming retry chain",
+			tag: "search",
+			message: "[SkyBridge] search provider register-immediate failed; arming retry chain",
+		}).catch(() => {});
+
+		// Three rescue paths run in parallel, whichever wins first
+		// removes the others:
+		//
+		// 1. Event listeners for `cel:workbench-ready` (web profile) and
+		//    `cel:services-ready` (both profiles). These may have fired
+		//    BEFORE SkyBridge mounted (the workbench bootstrap can
+		//    complete before InstallSkyBridge resolves), in which case
+		//    the listener is too late and the schedule below saves us.
+		// 2. Exponential-ish polling schedule that re-attempts every
+		//    `t` ms until a poll succeeds or the budget runs out.
+		//    Bounded to ~10 s total so a genuinely-broken bridge fails
+		//    closed instead of polling forever.
+		// 3. Manual `cel:request-search-register` event any later code
+		//    path can dispatch to force a re-attempt (e.g. when the
+		//    search viewlet is first opened).
+		let SearchRegistered = false;
+		const RetrySchedule:number[] = [
+			50, 100, 200, 400, 800, 1000, 1500, 1500, 1500, 1500,
+		];
+		let RetryStep = 0;
+		const TryRegister = (Origin:string):boolean => {
+			if (SearchRegistered) return true;
+			if (!RegisterLandSearchProvider()) return false;
+			SearchRegistered = true;
+			window.removeEventListener("cel:workbench-ready", EventRetry as EventListener);
+			window.removeEventListener("cel:services-ready", EventRetry as EventListener);
+			invoke("RenderDevLog", {
+				Tag: "search",
+				Message: `[SkyBridge] search provider registered via ${Origin}`,
+				tag: "search",
+				message: `[SkyBridge] search provider registered via ${Origin}`,
+			}).catch(() => {});
+			return true;
 		};
-		window.addEventListener(
-			"cel:workbench-ready",
-			OnReady as EventListener,
-			{ once: true },
-		);
+		const EventRetry = () => { TryRegister("event"); };
+		const PollRetry = () => {
+			if (TryRegister("poll")) return;
+			if (RetryStep >= RetrySchedule.length) {
+				invoke("RenderDevLog", {
+					Tag: "search",
+					Message: "[SkyBridge] search provider register-poll budget exhausted; search will return empty until a manual cel:request-search-register event fires",
+					tag: "search",
+					message: "[SkyBridge] search provider register-poll budget exhausted; search will return empty until a manual cel:request-search-register event fires",
+				}).catch(() => {});
+				return;
+			}
+			setTimeout(PollRetry, RetrySchedule[RetryStep++] ?? 1500);
+		};
+		window.addEventListener("cel:workbench-ready", EventRetry as EventListener, { once: true });
+		window.addEventListener("cel:services-ready", EventRetry as EventListener, { once: true });
+		window.addEventListener("cel:request-search-register", EventRetry as EventListener);
+		setTimeout(PollRetry, RetrySchedule[RetryStep++] ?? 50);
 	}
 
 	// ---- SCM bridge (diagnostic only) ----

@@ -1,0 +1,26 @@
+---
+/**
+ * WorkerBundleImports - bundle-mode worker script entry.
+ *
+ * Pulled out of `pages/Electron.astro` because Astro's processed
+ * `<script>` blocks (no `is:inline`) cannot live inside a JSX ternary -
+ * the compiler hoists them at parse time, which a runtime conditional
+ * defeats. Wrapping the same imports in a dedicated Astro component
+ * lets the page-level conditional select WHICH component to render
+ * while each component's own `<script>` is unconditional from the
+ * compiler's POV. Astro/Vite then bundles all three imports into a
+ * single chunk and emits one `<script type="module" src=...>` for the
+ * page in `Bundle=true` profiles.
+ *
+ * Order MUST be CSS Load (installs `_LOAD_CSS_WORKER`) → Policy
+ * (registers TrustedTypes policy) → Register (calls
+ * `navigator.serviceWorker.register` using the policy). Reordering
+ * breaks SW registration in WKWebView under TrustedTypes enforcement.
+ */
+---
+
+<script>
+	import "@codeeditorland/worker/Target/Worker/CSS/Load.js";
+	import "@codeeditorland/worker/Target/Worker/Policy.js";
+	import "@codeeditorland/worker/Target/Worker/Register.js";
+</script>

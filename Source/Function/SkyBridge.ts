@@ -905,36 +905,79 @@ export async function InstallSkyBridge(): Promise<void> {
 		const MatchFromHit = (Hit: any) => {
 			const Raw = String(Hit?.resource ?? Hit?.uri ?? "");
 			const OsPath = Raw.replace(/^file:\/\//, "");
-			const PerLineMatches: Array<{ preview: string; lineNumber: number }> =
-				Array.isArray(Hit?.matches)
-					? Hit.matches.map((Inner: any) => ({
-							preview: String(Inner?.preview ?? ""),
-							lineNumber: Number(
-								Inner?.line_number ?? Inner?.lineNumber ?? 1,
-							),
-						}))
-					: // Backwards-compat: also accept a flat per-hit shape
-						// `{ uri, lineNumber, preview }` so any future Mountain
-						// path that returns flat hits continues to work.
-						[
-							{
-								preview: String(Hit?.preview ?? ""),
-								lineNumber: Number(Hit?.lineNumber ?? Hit?.line_number ?? 1),
-							},
-						];
+			type LineHit = {
+				preview: string;
+				lineNumber: number;
+				columns: Array<{ start: number; end: number }>;
+			};
+			const PerLineMatches: LineHit[] = Array.isArray(Hit?.matches)
+				? Hit.matches.map((Inner: any) => ({
+						preview: String(Inner?.preview ?? ""),
+						lineNumber: Number(
+							Inner?.line_number ?? Inner?.lineNumber ?? 1,
+						),
+						columns: Array.isArray(Inner?.columns)
+							? Inner.columns.map((C: any) => ({
+									start: Number(C?.start ?? 0),
+									end: Number(C?.end ?? 0),
+								}))
+							: [],
+					}))
+				: // Backwards-compat: also accept a flat per-hit shape
+					// `{ uri, lineNumber, preview }` for any future Mountain
+					// path that returns flat hits.
+					[
+						{
+							preview: String(Hit?.preview ?? ""),
+							lineNumber: Number(Hit?.lineNumber ?? Hit?.line_number ?? 1),
+							columns: [],
+						},
+					];
 			return {
 				resource: MakeFileUri(OsPath),
-				results: PerLineMatches.map((M) => ({
-					preview: { text: M.preview, matches: [] },
-					ranges: [
-						{
-							startLineNumber: M.lineNumber,
-							startColumn: 1,
-							endLineNumber: M.lineNumber,
-							endColumn: Math.max(1, M.preview.length + 1),
-						},
-					],
-				})),
+				results: PerLineMatches.map((M) => {
+					// VS Code's `ISearchRange`: 1-based for line, 0-based
+					// for column. Mountain's columns array is already
+					// 0-based UTF-8 char offsets within the preview line.
+					// When Mountain didn't supply columns (older ripgrep
+					// path or zero-width match), highlight the whole
+					// line so the user still sees the row but without
+					// a sub-line underline.
+					const Ranges =
+						M.columns.length > 0
+							? M.columns.map((C) => ({
+									startLineNumber: M.lineNumber,
+									startColumn: C.start + 1,
+									endLineNumber: M.lineNumber,
+									endColumn: C.end + 1,
+								}))
+							: [
+									{
+										startLineNumber: M.lineNumber,
+										startColumn: 1,
+										endLineNumber: M.lineNumber,
+										endColumn: Math.max(1, M.preview.length + 1),
+									},
+								];
+					// `preview.matches` is the SAME range list but
+					// translated into preview-local coordinates (line 1,
+					// column relative to preview start). Without this the
+					// renderer shows the row but no matched-substring
+					// highlight inside the line.
+					const PreviewMatches =
+						M.columns.length > 0
+							? M.columns.map((C) => ({
+									startLineNumber: 1,
+									startColumn: C.start + 1,
+									endLineNumber: 1,
+									endColumn: C.end + 1,
+								}))
+							: [];
+					return {
+						preview: { text: M.preview, matches: PreviewMatches },
+						ranges: Ranges,
+					};
+				}),
 			};
 		};
 

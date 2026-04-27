@@ -2387,6 +2387,102 @@ export async function InstallSkyBridge(): Promise<void> {
 		);
 	});
 
+	// ---- Webview views (sidebar/panel webview content) ----
+	// `vscode.window.registerWebviewViewProvider(viewId, provider)` from
+	// an extension flows: Cocoon `WindowNamespace.ts:883` issues
+	// `webview.registerView` RPC → Mountain
+	// `Track/Effect/CreateEffectForRequest/Webview.rs:24` matches the
+	// method, emits `sky://webview/registerView` with payload
+	// `{ method, handle, args: [Handle, ViewId] }`. Without a Sky
+	// listener the registration is invisible to the workbench's
+	// `IWebviewViewService` registry, so when the user clicks an
+	// extension's activity-bar icon the panel sits empty - the
+	// resolver chain never fires. Register a workbench resolver here
+	// that, when the workbench calls `resolve(webview, ct)`, posts a
+	// `webview.resolveView` reverse-RPC back through Cocoon's
+	// `RequestRoutingHandler.ts:294` which fans out to
+	// `Provider.resolveWebviewView(view, ctx)` and the extension
+	// populates `view.webview.html`.
+	const WebviewViewResolvers = new Map<string, number>();
+	await Register("sky://webview/registerView", (Payload: any) => {
+		const Args = Array.isArray(Payload?.args) ? Payload.args : [];
+		const Handle = Args[0] ?? Payload?.handle;
+		const ViewId: string = String(Args[1] ?? Payload?.viewId ?? "");
+		if (!ViewId) return;
+		WebviewViewResolvers.set(ViewId, Number(Handle));
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:registerView", {
+				detail: { handle: Handle, viewId: ViewId, payload: Payload },
+			}),
+		);
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			if (!Services?.WebviewViews?.register) return;
+			Services.WebviewViews.register(ViewId, {
+				resolve: async (WebviewView: any, _Cancellation: any) => {
+					// Bridge the workbench-supplied WebviewView into a
+					// Cocoon-visible reference. The extension's
+					// `resolveWebviewView(view, ctx)` callback runs in
+					// Cocoon and sets `view.webview.html = '<html>'`,
+					// `view.webview.postMessage(msg)`, etc. These calls
+					// can't cross the IPC boundary directly because the
+					// real `view.webview` is a workbench-internal object.
+					// Park the workbench view in a window-scoped registry
+					// keyed by viewId; when Cocoon's provider populates
+					// `view.webview.html` the webview sends a
+					// `webview.setHtml` notification that Mountain
+					// forwards to `sky://webview/set-html` - a future
+					// listener can match by viewId and apply the html
+					// to the parked workbench view.
+					try {
+						const Registry: Map<string, any> =
+							((globalThis as any).__CEL_WEBVIEW_VIEWS__ ??=
+								new Map());
+						Registry.set(ViewId, WebviewView);
+					} catch (_e) {
+						/* ignore */
+					}
+					// Trigger the Cocoon provider's resolveWebviewView
+					// callback by dispatching a `webview.resolveView`
+					// request via Mountain → Cocoon. Failure logs to
+					// dev-log but doesn't surface - the workbench's
+					// resolver promise must still resolve so the panel
+					// pane unblocks.
+					try {
+						const Invoke =
+							(globalThis as any).__TAURI__?.core?.invoke ??
+							(globalThis as any).__TAURI__?.invoke;
+						if (typeof Invoke === "function") {
+							await Invoke("MountainIPCInvoke", {
+								method: "cocoon:request",
+								params: [
+									"webview.resolveView",
+									{ handle: Handle, viewId: ViewId },
+								],
+							}).catch(() => null);
+						}
+					} catch (_e) {
+						/* swallow */
+					}
+				},
+			});
+		} catch (_e) {
+			/* swallow - workbench DI not yet resolved */
+		}
+	});
+
+	await Register("sky://webview/unregisterView", (Payload: any) => {
+		const Args = Array.isArray(Payload?.args) ? Payload.args : [];
+		const Handle = Args[0] ?? Payload?.handle;
+		const ViewId: string = String(Args[1] ?? Payload?.viewId ?? "");
+		if (ViewId) WebviewViewResolvers.delete(ViewId);
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:unregisterView", {
+				detail: { handle: Handle, viewId: ViewId, payload: Payload },
+			}),
+		);
+	});
+
 	// ---- Custom editors ----
 	// Mountain emits `sky://webview/registerCustomEditor` with payload
 	// `{ method: "webview.registerCustomEditor", handle: <number>,

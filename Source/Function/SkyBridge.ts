@@ -2255,6 +2255,30 @@ export async function InstallSkyBridge(): Promise<void> {
 		);
 	});
 
+	// Forward parsed DAP frames from the spawned debug-adapter's stdout
+	// (Mountain `Environment/DebugProvider.rs::StartDebugging` stdout-reader
+	// task) into a `cel:debug:dap-message` DOM event. The workbench's
+	// `RawDebugSession` correlates responses by `request_seq`; routing the
+	// raw `{ sessionId, message }` shape here lets a future RawDebugSession
+	// shim subscribe and forward without re-implementing DAP framing.
+	await Register("sky://debug/dap-message", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:dap-message", { detail: Payload }),
+		);
+	});
+
+	// Custom editor save lifecycle: Mountain emits `sky://customEditor/saved`
+	// after `OnSaveCustomDocument` reverse-RPC succeeds. Workbench's dirty-
+	// indicator already updates from the `IFileService.writeFile` flow the
+	// extension drives, but observers (gitlens diff overlays, change-tracking
+	// surfaces) listen on `cel:customEditor:saved` for the explicit
+	// "extension save callback completed" signal.
+	await Register("sky://customEditor/saved", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:customEditor:saved", { detail: Payload }),
+		);
+	});
+
 	// ---- Webview extensions ----
 	// Extension-initiated webview content updates. The canonical channel
 	// is the kebab-case `sky://webview/set-html` (see `SkyEvent.ts` for

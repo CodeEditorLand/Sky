@@ -49,6 +49,15 @@ const PostHogDistinctIdSeed =
 	((import.meta.env as any).LAND_POSTHOG_DISTINCT_ID as string | undefined) ??
 	"";
 
+const GetOrCreateSkyIdentifier = (): string => {
+	const StorageKey = "land-posthog-id";
+	const Existing = localStorage.getItem(StorageKey);
+	if (Existing) return Existing;
+	const Generated = `land-dev-sky-${Math.random().toString(36).slice(2, 10)}`;
+	localStorage.setItem(StorageKey, Generated);
+	return Generated;
+};
+
 const LoadPostHog = async (): Promise<any> => {
 	if (!PostHogEnabled) return null;
 	try {
@@ -97,7 +106,7 @@ const LoadPostHog = async (): Promise<any> => {
 						bootstrap: {
 							distinctID: PostHogDistinctIdSeed
 								? PostHogDistinctIdSeed
-								: `land-dev-${Date.now()}`,
+								: GetOrCreateSkyIdentifier(),
 						},
 						loaded: (Instance: any) => {
 							Instance.register({

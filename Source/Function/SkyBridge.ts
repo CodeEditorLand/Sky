@@ -2316,6 +2316,32 @@ export async function InstallSkyBridge(): Promise<void> {
 		}
 	});
 
+	// Webview-view metadata: Cocoon `view.title = X` / `view.description
+	// = X` / `view.badge = X` setters fire `webview.updateView`
+	// notification with `{handle, viewId, title, description, badge}`.
+	// Apply each non-null field to the parked workbench `WebviewView`.
+	// `null` is the proxy's "explicitly unset" wire form (TS undefined
+	// doesn't survive JSON), so treat null as no-change.
+	await Register("sky://webview/updateView", (Payload: any) => {
+		const ViewId: string = String(Payload?.viewId ?? "");
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:updateView", { detail: Payload }),
+		);
+		if (!ViewId) return;
+		const Registry: Map<string, any> | undefined =
+			(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+		const ParkedView = Registry?.get(ViewId);
+		if (!ParkedView) return;
+		try {
+			if (Payload?.title != null) ParkedView.title = String(Payload.title);
+			if (Payload?.description != null)
+				ParkedView.description = String(Payload.description);
+			if (Payload?.badge != null) ParkedView.badge = Payload.badge;
+		} catch (_e) {
+			/* swallow */
+		}
+	});
+
 	// Webview-view post-message bridge: Cocoon `view.webview.postMessage(msg)`
 	// fires `webview.postMessage` notification with `{handle, viewId,
 	// message}`. The general `sky://webview/post-message` listener
@@ -2486,9 +2512,8 @@ export async function InstallSkyBridge(): Promise<void> {
 					// keyed by viewId; when Cocoon's provider populates
 					// `view.webview.html` the webview sends a
 					// `webview.setHtml` notification that Mountain
-					// forwards to `sky://webview/set-html` - a future
-					// listener can match by viewId and apply the html
-					// to the parked workbench view.
+					// forwards to `sky://webview/set-html` - a listener
+					// downstream applies the html to this parked view.
 					try {
 						const Registry: Map<string, any> =
 							((globalThis as any).__CEL_WEBVIEW_VIEWS__ ??=
@@ -2496,6 +2521,64 @@ export async function InstallSkyBridge(): Promise<void> {
 						Registry.set(ViewId, WebviewView);
 					} catch (_e) {
 						/* ignore */
+					}
+					// Forward workbench → extension events into Cocoon's
+					// notification stream. Each subscribe returns a
+					// disposable; the workbench will dispose the View
+					// when the panel goes away which triggers `onDispose`
+					// here, where we send the dispose notification AND
+					// drop the registry entry so subsequent setHtml
+					// calls don't paint into a dead view.
+					const Notify = (Method: string, Payload: any) => {
+						try {
+							const Invoke =
+								(globalThis as any).__TAURI__?.core?.invoke ??
+								(globalThis as any).__TAURI__?.invoke;
+							if (typeof Invoke !== "function") return;
+							Invoke("MountainIPCInvoke", {
+								method: "cocoon:notify",
+								params: [Method, Payload],
+							}).catch(() => null);
+						} catch (_e) {
+							/* swallow */
+						}
+					};
+					try {
+						WebviewView.webview?.onDidReceiveMessage?.(
+							(Message: unknown) => {
+								Notify("webview.message", {
+									handle: Handle,
+									viewId: ViewId,
+									message: Message,
+								});
+							},
+						);
+					} catch (_e) {
+						/* swallow */
+					}
+					try {
+						WebviewView.onDidChangeVisibility?.(() => {
+							Notify("webview.viewState", {
+								handle: Handle,
+								viewId: ViewId,
+								visible: !!WebviewView.visible,
+							});
+						});
+					} catch (_e) {
+						/* swallow */
+					}
+					try {
+						WebviewView.onDispose?.(() => {
+							Notify("webview.dispose", {
+								handle: Handle,
+								viewId: ViewId,
+							});
+							const Registry: Map<string, any> | undefined =
+								(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+							Registry?.delete(ViewId);
+						});
+					} catch (_e) {
+						/* swallow */
 					}
 					// Trigger the Cocoon provider's resolveWebviewView
 					// callback by dispatching a `webview.resolveView`

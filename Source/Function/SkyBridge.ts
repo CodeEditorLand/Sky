@@ -2330,12 +2330,28 @@ export async function InstallSkyBridge(): Promise<void> {
 	}
 
 	// ---- Webview ----
+	// `sky://webview/message` carries the workbench-RPC shape
+	// `{ panelId, method, params }` (Mountain `RPC/CocoonService/mod.rs`
+	// `webview.postMessage` arm). The raw extension `postMessage` path
+	// (gRPC `OnDidReceiveMessage` + `PostWebviewMessage`) emits the
+	// `{ handle, message }` shape on `sky://webview/post-message`.
 	await Register(
 		"sky://webview/message",
 		({ panelId, method, params }: any) => {
 			document.dispatchEvent(
 				new CustomEvent("cel:webview:message", {
 					detail: { panelId, method, params },
+				}),
+			);
+		},
+	);
+
+	await Register(
+		"sky://webview/post-message",
+		({ handle, message }: any) => {
+			document.dispatchEvent(
+				new CustomEvent("cel:webview:post-message", {
+					detail: { handle, message },
 				}),
 			);
 		},

@@ -2286,6 +2286,61 @@ export async function InstallSkyBridge(): Promise<void> {
 	// `setTitle`/`setIconPath`/`setHtml` had no matching Mountain emitter
 	// for the first two and the third is now covered by the main bulk
 	// loop via `SkyEvent.WebviewSetHTML`.
+	//
+	// Webview-view html-bridge: when a Cocoon-side
+	// `resolveWebviewView` callback sets `view.webview.html = X`,
+	// `WindowNamespace.ts:WebviewViewBuilders` fires
+	// `webview.setHtml` notification with `{handle, viewId, html}`.
+	// Mountain's `WebviewLifecycle.rs` re-emits as `sky://webview/set-html`.
+	// Look up the parked workbench `WebviewView` (pinned by
+	// `sky://webview/registerView` listener at registration time) by
+	// viewId and apply the html to its real `webview.html` setter so
+	// the panel paints. Falls back to `cel:webview:set-html` DOM event
+	// for any Sky-side observer that wants the raw payload.
+	await Register("sky://webview/set-html", (Payload: any) => {
+		const ViewId: string = String(Payload?.viewId ?? "");
+		const Html: string = String(Payload?.html ?? "");
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:set-html", { detail: Payload }),
+		);
+		if (!ViewId) return;
+		const Registry: Map<string, any> | undefined =
+			(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+		const ParkedView = Registry?.get(ViewId);
+		if (!ParkedView?.webview) return;
+		try {
+			ParkedView.webview.html = Html;
+		} catch (_e) {
+			/* swallow - workbench WebviewView may have been disposed
+			   between resolveWebviewView completion and this callback */
+		}
+	});
+
+	// Webview-view post-message bridge: Cocoon `view.webview.postMessage(msg)`
+	// fires `webview.postMessage` notification with `{handle, viewId,
+	// message}`. The general `sky://webview/post-message` listener
+	// (registered above for raw extension postMessage) dispatches a
+	// `cel:webview:post-message` DOM event regardless. Forward into
+	// the parked workbench view's webview when a viewId match exists.
+	await Register("sky://webview/postMessage", (Payload: any) => {
+		const ViewId: string = String(Payload?.viewId ?? "");
+		const Message = Payload?.message;
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:post-message", {
+				detail: { ...Payload, viewId: ViewId, message: Message },
+			}),
+		);
+		if (!ViewId) return;
+		const Registry: Map<string, any> | undefined =
+			(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+		const ParkedView = Registry?.get(ViewId);
+		if (!ParkedView?.webview?.postMessage) return;
+		try {
+			ParkedView.webview.postMessage(Message);
+		} catch (_e) {
+			/* swallow */
+		}
+	});
 
 	// ---- Tasks ----
 	// `vscode.tasks.executeTask(task)` flows through Mountain's

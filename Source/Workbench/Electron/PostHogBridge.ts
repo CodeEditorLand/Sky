@@ -332,6 +332,49 @@ const Initialize = async (): Promise<void> => {
 	);
 	(DrainTimer as unknown as { unref?: () => void }).unref?.();
 
+	// Wire up Output's polyfill telemetry hook. The polyfills load
+	// long before this bridge runs, so they install
+	// `globalThis.__LAND_POLYFILL_TELEMETRY__` early as a no-op and we
+	// swap in a real handler here. Categories are kept low-cardinality
+	// (e.g. `ipc.fire-and-forget`, `polyfill.install`) so the
+	// `$exception` slot can be grouped sensibly in PostHog. The detail
+	// payload is passed through under `polyfill_*` properties so it
+	// doesn't collide with PH's reserved `$exception_*` keys.
+	const PolyfillTelemetry = (
+		globalThis as {
+			__LAND_POLYFILL_TELEMETRY__?: {
+				Set: (
+					H: (
+						Category: string,
+						Error: unknown,
+						Detail?: Record<string, unknown>,
+					) => void,
+				) => void;
+			};
+		}
+	).__LAND_POLYFILL_TELEMETRY__;
+	PolyfillTelemetry?.Set((Category, RawError, Detail) => {
+		const ErrorObj =
+			RawError instanceof Error
+				? RawError
+				: new Error(
+						typeof RawError === "string"
+							? RawError
+							: `polyfill[${Category}] failure`,
+					);
+		const Properties: Record<string, unknown> = {
+			polyfill_category: Category,
+			$exception_type: `land:polyfill:${Category}`,
+			$exception_origin: "polyfill",
+		};
+		if (Detail) {
+			for (const [Key, Value] of Object.entries(Detail)) {
+				Properties[`polyfill_${Key.toLowerCase()}`] = Value;
+			}
+		}
+		PH.captureException(ErrorObj, Properties);
+	});
+
 	// Per-component buffers - flushed independently
 	const Buffers = new Map<string, BufferedMark[]>();
 	const Timers = new Map<string, ReturnType<typeof setTimeout>>();

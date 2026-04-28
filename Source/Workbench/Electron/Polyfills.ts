@@ -14,12 +14,16 @@
 
 try {
 	// Single source of truth for polyfills is now `Element/Output/
-	// Source/Polyfill/*`. Wind's `Wind/Source/Polyfills/*` are thin re-
-	// exports of the same modules kept around so Cocoon and any lingering
-	// VS Code imports continue to resolve; importing through Output
-	// directly here means a polyfill fix (e.g. the colon-prefix
-	// `MountainIPCInvoke` routing) lands in one place and every tier
-	// picks it up on rebuild.
+	// Source/Polyfill/*`. Importing through Output directly here means a
+	// polyfill fix (e.g. the colon-prefix `MountainIPCInvoke` routing)
+	// lands in one place and every tier picks it up on rebuild.
+	//
+	// Telemetry MUST load first - it installs
+	// `globalThis.__LAND_POLYFILL_TELEMETRY__` which the other polyfills
+	// reference from their silent catches. Sky's `PostHogBridge.ts`
+	// later wires a real handler via `Set(...)`; before that, calls are
+	// no-op'd.
+	await import("@codeeditorland/output/Configuration/Polyfill/Telemetry.js");
 	await import("@codeeditorland/output/Configuration/Polyfill/ProcessPolyfill.js");
 	await import("@codeeditorland/output/Configuration/Polyfill/FileProtocolShim.js");
 	await import("@codeeditorland/output/Configuration/Polyfill/FileSystemPolyfill.js");

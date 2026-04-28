@@ -1932,6 +1932,49 @@ export async function InstallSkyBridge(): Promise<void> {
 		});
 	}
 
+	// ---- Diagnostics → IMarkerService bridge ----
+	// Mountain emits `sky://diagnostics/changed` after each `Diagnostic.Set`
+	// from Cocoon's `vscode.languages.createDiagnosticCollection().set(...)`.
+	// Without a renderer-side consumer that pushes into the workbench's
+	// `IMarkerService`, the data lands in Mountain's `DiagnosticsMap` but
+	// the editor never paints red squiggles and the Problems panel stays
+	// empty - every language extension's compile errors / lint warnings /
+	// type errors are invisible.
+	//
+	// Payload shape (from `DiagnosticProvider.SetDiagnostics`): `{ owner,
+	// changedURIs: [{ uri, markers }] }`. We translate per-URI marker
+	// arrays into `IMarkerService.changeOne(owner, URI, markers)` calls.
+	// `Markers.changeOne` REPLACES the marker set for that URI under the
+	// given owner - matching VS Code's `MainThreadDiagnostics` behaviour
+	// where each `set()` call overwrites the previous diagnostic state.
+	await Register("sky://diagnostics/changed", (Payload: any) => {
+		const Services = GetServices();
+		const Markers = (Services as any)?.Markers;
+		const URICtor = (Services as any)?.URI;
+		if (!Markers?.changeOne || !URICtor) return;
+		const Owner = String(Payload?.owner ?? "");
+		const Changed = Array.isArray(Payload?.changedURIs)
+			? Payload.changedURIs
+			: [];
+		for (const Entry of Changed) {
+			try {
+				const Uri = Entry?.uri;
+				const Markers_ = Array.isArray(Entry?.markers) ? Entry.markers : [];
+				if (!Uri) continue;
+				const RealUri =
+					typeof Uri === "string"
+						? URICtor.parse(Uri)
+						: Uri && typeof (Uri as any).with === "function"
+							? Uri
+							: URICtor.from(Uri);
+				Markers.changeOne(Owner, RealUri, Markers_);
+			} catch (Error) {
+				// Swallow - one bad entry must not stop the rest.
+				void Error;
+			}
+		}
+	});
+
 	// ---- Tree-view data bridge ----
 	// Two-way wire so extension-registered tree views actually render:
 	//

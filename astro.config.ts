@@ -876,6 +876,21 @@ export default defineConfig({
 		},
 
 		build: {
+			// Never inline assets as `data:` URLs. Output's `StripCSSImport`
+			// transform rewrites `import "./foo.css"` to
+			// `_LOAD_CSS_WORKER(new URL("./foo.css", import.meta.url).pathname)`.
+			// Vite recognises the `new URL(literal, import.meta.url)` pattern
+			// and, by default, inlines small assets as
+			// `data:text/css;base64,...` URLs. The runtime call
+			// `new URL("data:text/css;...", base).pathname` then strips the
+			// `data:` scheme and yields a bare `text/css;base64,...` string,
+			// which `_LOAD_CSS_WORKER` tries to fetch as a path and the
+			// browser 404s with `non CSS MIME types are not allowed in
+			// strict mode`. Setting `assetsInlineLimit: 0` forces every
+			// referenced CSS asset to emit as a hashed file under `_astro/`
+			// where the runtime worker can fetch it the same way it does
+			// for larger CSS chunks.
+			assetsInlineLimit: 0,
 			rollupOptions: {
 				// Bundled-workbench Rollup inputs. When `Pack`
 				// is empty this map is empty and Astro's auto-generated page

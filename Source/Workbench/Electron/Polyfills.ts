@@ -20,13 +20,13 @@ try {
 	// directly here means a polyfill fix (e.g. the colon-prefix
 	// `MountainIPCInvoke` routing) lands in one place and every tier
 	// picks it up on rebuild.
-	await import("@codeeditorland/output/Polyfill/ProcessPolyfill");
-	await import("@codeeditorland/output/Polyfill/FileProtocolShim");
-	await import("@codeeditorland/output/Polyfill/FileSystemPolyfill");
-	await import("@codeeditorland/output/Polyfill/IPCRendererShim");
-	await import("@codeeditorland/output/Polyfill/ChildProcessPolyfill");
-	await import("@codeeditorland/output/Polyfill/NativeModulePolyfill");
-	await import("@codeeditorland/output/Polyfill/SharedProcessProxy");
+	await import("@codeeditorland/output/Configuration/Polyfill/ProcessPolyfill.js");
+	await import("@codeeditorland/output/Configuration/Polyfill/FileProtocolShim.js");
+	await import("@codeeditorland/output/Configuration/Polyfill/FileSystemPolyfill.js");
+	await import("@codeeditorland/output/Configuration/Polyfill/IPCRendererShim.js");
+	await import("@codeeditorland/output/Configuration/Polyfill/ChildProcessPolyfill.js");
+	await import("@codeeditorland/output/Configuration/Polyfill/NativeModulePolyfill.js");
+	await import("@codeeditorland/output/Configuration/Polyfill/SharedProcessProxy.js");
 } catch (_Error: unknown) {}
 
 export default {};

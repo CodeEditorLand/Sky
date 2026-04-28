@@ -2,7 +2,7 @@
  * Build-baked OTEL bridge.
  *
  * Guarded by import.meta.env.DEV - Vite dead-code-eliminates in production.
- * No runtime SDK, no window.__LAND_DEV_LOG checks.
+ * No runtime SDK, no window.__Trace checks.
  *
  * How it works:
  * 1. PerformanceObserver watches all `land:*` marks and measures

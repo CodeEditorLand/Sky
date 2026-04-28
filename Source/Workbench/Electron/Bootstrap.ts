@@ -2,13 +2,13 @@
  * Effect-TS bootstrap for Electron workbench (A3).
  * Zero console.* output. Results captured via performance.mark().
  *
- * Atom N2: when `LAND_ENABLE_WIND` is false at build time, the Wind
+ * Atom N2: when `Render` is false at build time, the Wind
  * bootstrap is replaced with a single performance-mark so the workbench
  * loads the native VS Code stack with no Effect-TS service layer on top.
  * Useful for "Mountain + bare workbench" integration tests and for the
  * smallest shippable surface where gRPC/Tauri IPC isn't desired.
  *
- * Vite inlines `import.meta.env.LAND_ENABLE_WIND` at build time - the
+ * Vite inlines `import.meta.env.Render` at build time - the
  * inline comparison drops the entire import chain when the flag is
  * `"false"`, so tree-shaking removes the Wind bundle from production.
  */
@@ -26,7 +26,7 @@ interface BootstrapResult {
 	error?: unknown;
 }
 
-if (import.meta.env["LAND_ENABLE_WIND"] === "false") {
+if (import.meta.env["Render"] === "false") {
 	performance.mark("land:bootstrap:skipped-wind-disabled");
 } else {
 	try {

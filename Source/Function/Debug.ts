@@ -27,7 +27,7 @@ export const Host =
 // Used in optimizeDeps.exclude
 export const Link = [
 	"@codeeditorland/output",
-	"@codeeditorland/output/vs",
+	"@codeeditorland/output/Target/Microsoft/VSCode/vs",
 	"monaco-editor",
 ];
 

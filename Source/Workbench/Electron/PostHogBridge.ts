@@ -24,12 +24,12 @@
 // astro.config.ts `vite.define`. Hardcoded fallback keeps a fresh clone
 // working before `.env.Land.PostHog` is sourced.
 const PostHogAPIKey =
-	((import.meta.env as any).LAND_POSTHOG_KEY as string | undefined) ?? "";
+	((import.meta.env as any).Authorize as string | undefined) ?? "";
 const PostHogHost =
-	((import.meta.env as any).LAND_POSTHOG_HOST as string | undefined) ??
+	((import.meta.env as any).Beam as string | undefined) ??
 	"https://eu.i.posthog.com";
 const PostHogEnabled =
-	((import.meta.env as any).LAND_POSTHOG_SKY_ENABLED as
+	((import.meta.env as any).Report as
 		| string
 		| undefined) !== "false";
 // Atom PH2: Sky was hitting PostHog's built-in rate limiter (observed as
@@ -37,16 +37,16 @@ const PostHogEnabled =
 // in the webview console). Apply our own rate cap + a larger batch window
 // so we stay under the client-side limit without dropping the error path.
 const PostHogMaxEventsPerSecond = Number(
-	(import.meta.env as any).LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND ?? "5",
+	(import.meta.env as any).Throttle ?? "5",
 );
 const PostHogBatchWindowMs = Number(
-	(import.meta.env as any).LAND_POSTHOG_SKY_BATCH_WINDOW_MS ?? "3000",
+	(import.meta.env as any).Buffer ?? "3000",
 );
 const PostHogBatchMax = Number(
-	(import.meta.env as any).LAND_POSTHOG_SKY_BATCH_MAX ?? "20",
+	(import.meta.env as any).Batch ?? "20",
 );
 const PostHogDistinctIdSeed =
-	((import.meta.env as any).LAND_POSTHOG_DISTINCT_ID as string | undefined) ??
+	((import.meta.env as any).Brand as string | undefined) ??
 	"";
 
 const GetOrCreateSkyIdentifier = (): string => {
@@ -79,11 +79,11 @@ const LoadPostHog = async (): Promise<any> => {
 						capture_pageleave: false,
 						disable_session_recording:
 							(import.meta.env as any)
-								.LAND_POSTHOG_SESSION_RECORDING === "true"
+								.Replay === "true"
 								? false
 								: true,
 						disable_surveys:
-							(import.meta.env as any).LAND_POSTHOG_SURVEYS ===
+							(import.meta.env as any).Ask ===
 							"true"
 								? false
 								: true,
@@ -182,7 +182,7 @@ const ExceptionThrottleLimitPerSignature = Math.max(1, ThrottleLimitPerName);
 const ExceptionGlobalLimit = Math.max(
 	1,
 	Number(
-		(import.meta.env as any).LAND_POSTHOG_SKY_EXCEPTION_GLOBAL_LIMIT ?? "7",
+		(import.meta.env as any).Cap ?? "7",
 	),
 );
 const ThrottleCounters = new Map<string, { Count: number; ResetAt: number }>();
@@ -491,7 +491,7 @@ const Initialize = async (): Promise<void> => {
 	};
 
 	// === VS Code error hook ===
-	(window as any)._LAND_ERROR_HOOK = (Error: unknown) => {
+	(window as any)._Catch = (Error: unknown) => {
 		const Message =
 			Error instanceof globalThis.Error ? Error.message : String(Error);
 		PH.captureException(

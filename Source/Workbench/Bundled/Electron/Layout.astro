@@ -2,17 +2,20 @@
 /**
  * Bundled Electron Workbench Layout.
  *
- * Loads the Vite/Astro-bundled entry. Vite resolves
- * `./Entry.ts` through Rollup, hashes the output, and emits the
- * resulting JS / CSS under Sky/Target/Static/Bundled/Electron/.
+ * Loads the Vite/Astro-bundled entry. Vite resolves `./Entry.ts`
+ * through Rollup, hashes the output, and the resulting JS / CSS
+ * land under Sky/Target/_astro/workbench-[hash].{js,css}.
  *
- * Unlike the non-bundled `Workbench/Electron/Layout.astro`, this layout
- * does NOT chain Wind Preload / Polyfills / Bootstrap / Workbench /
- * SkyBridge - the bundled entry is a single Rollup graph root, and
- * the auxiliary preload chain is not required for the load-time
- * benchmark this profile targets. Re-introduce them once the bundled
- * tree is functional and we move from "measure cold load" to "wire up
- * the runtime" .
+ * Same Preload -> Polyfills -> Bootstrap chain as the non-bundled
+ * ../Electron/Layout.astro, only the workbench step is bundled. The
+ * chain is required because VS Code's workbench module reads
+ * globalThis.process / window.vscode / etc. before its own module
+ * code runs - without the polyfills it crashes with
+ *   `TypeError: undefined is not an object (evaluating 'p.process')`.
+ *
+ * SkyBridge is wired after the bundled workbench import resolves so
+ * its Tauri event consumers attach before the workbench starts
+ * pumping events.
  */
 
 import NLS from "../../NLS.astro";
@@ -23,7 +26,23 @@ import TelemetryBridge from "../../TelemetryBridge.astro";
 	<NLS />
 	<TelemetryBridge />
 
-	<script>
-		import "./Entry";
+	<!-- Sequential: Preload -> Polyfills -> Bootstrap -> Entry (bundled workbench) -> SkyBridge -->
+	<script type="module">
+		await import("../../Electron/WindPreload.js");
+		await import("../../Electron/Polyfills.js");
+		await import("../../Electron/Bootstrap.js");
+		await import("./Entry.js");
+
+		try {
+			const { InstallSkyBridge } = await import(
+				"@codeeditorland/sky/Source/Function/SkyBridge"
+			);
+			await InstallSkyBridge();
+			performance.mark("land:bundled:electron:skybridge:installed");
+		} catch (Error) {
+			performance.mark("land:bundled:electron:skybridge:error");
+			// eslint-disable-next-line no-console
+			console.warn("[Bundled/Electron/Layout.astro] InstallSkyBridge failed:", Error);
+		}
 	</script>
 </Fragment>

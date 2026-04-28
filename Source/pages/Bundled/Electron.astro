@@ -4,10 +4,10 @@
  *
  * Route: /Bundled/Electron
  *
- * Active when the build profile sets `BUNDLED_WORKBENCHES=electron`
- * (or `BUNDLED_WORKBENCHES="electron ..."` for the all-variants pass).
- * `LAND_BUNDLED_BOOT=true` tells Mountain's Sky-redirect to prefer this
- * route over /Electron for the matching workbench.
+ * Active when the build profile sets `Pack=Electron` (or
+ * `Pack="Electron ..."` for the all-variants pass). `Boot=true`
+ * tells the Sky-redirect logic to prefer this route over /Electron
+ * for the matching workbench.
  *
  * The route ALWAYS exists - it's gated at module-graph level by Vite's
  * input map in astro.config.ts. When the profile does not bundle the

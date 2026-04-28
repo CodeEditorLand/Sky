@@ -63,7 +63,7 @@ const _HasDOM =
 	typeof globalThis !== "undefined" &&
 	typeof (globalThis as any).document !== "undefined";
 let _CelTrackingActive = false;
-if (_HasDOM && !(globalThis as any).__LAND_CEL_TRACK__) {
+if (_HasDOM && !(globalThis as any).__Track) {
 	try {
 		const TargetDocument = (globalThis as any).document as Document;
 		const OriginalAdd =
@@ -87,7 +87,7 @@ if (_HasDOM && !(globalThis as any).__LAND_CEL_TRACK__) {
 				return OriginalAdd(Type, Listener as EventListener, Options);
 			},
 		});
-		(globalThis as any).__LAND_CEL_TRACK__ = true;
+		(globalThis as any).__Track = true;
 		_CelTrackingActive = true;
 	} catch {
 		_CelTrackingActive = false;
@@ -1467,12 +1467,12 @@ export async function InstallSkyBridge(): Promise<void> {
 			// failed to resolve). Silently fall back to the
 			// CustomEvent path - any Sky-side component listening on
 			// `cel:scm:register` still gets the data. The
-			// `LAND_DEV_LOG=cel-scm` gate surfaces the underlying
+			// `Trace=cel-scm` gate surfaces the underlying
 			// reason without spamming the renderer console on every
 			// register.
 			try {
 				const W = globalThis as any;
-				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-scm")) {
+				if (W?.process?.env?.Trace?.includes?.("cel-scm")) {
 					(W.console || console).warn(
 						`[Sky:CEL-SCM] registerSCMProvider failed for "${ScmId}": ${
 							(Error as { message?: string })?.message ??
@@ -1615,7 +1615,7 @@ export async function InstallSkyBridge(): Promise<void> {
 		} catch (Error) {
 			try {
 				const W = globalThis as any;
-				if (W?.process?.env?.LAND_DEV_LOG?.includes?.("cel-scm")) {
+				if (W?.process?.env?.Trace?.includes?.("cel-scm")) {
 					(W.console || console).warn(
 						`[Sky:CEL-SCM] registerGroup failed for "${GroupId}": ${
 							(Error as { message?: string })?.message ??
@@ -2664,7 +2664,7 @@ export async function InstallSkyBridge(): Promise<void> {
 			try {
 				const W = globalThis as any;
 				if (
-					W?.process?.env?.LAND_DEV_LOG?.includes?.(
+					W?.process?.env?.Trace?.includes?.(
 						"cel-customeditor",
 					)
 				) {

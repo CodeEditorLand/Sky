@@ -20,8 +20,8 @@ import { request } from "node:https";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import ApplyPlugins from "@codeeditorland/output/Plugin/Apply";
-import BuildPipeline from "@codeeditorland/output/Plugin/Index";
+import ApplyPlugins from "@codeeditorland/output/Configuration/Plugin/Apply.js";
+import BuildPipeline from "@codeeditorland/output/Configuration/Plugin/Index.js";
 // -----------------------------------------------------------------------------
 // OUTPUT PLUGIN PIPELINE
 // -----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ import BuildPipeline from "@codeeditorland/output/Plugin/Index";
 // returning one) with a language-agnostic `Transform` / `Copy` payload.
 // The Rest compiler will consume the same modules once its plugin API is
 // wired up - no duplication or rewrite needed.
-import type { Plugin as OutputPlugin } from "@codeeditorland/output/Plugin/Type";
+import type { Plugin as OutputPlugin } from "@codeeditorland/output/Configuration/Plugin/Type.js";
 import { defineConfig } from "astro/config";
 
 // -----------------------------------------------------------------------------
@@ -49,31 +49,31 @@ import { External, Host, Link, On } from "./Source/Function/Debug";
 // BUNDLED-WORKBENCH INPUTS
 // -----------------------------------------------------------------------------
 // Read by the release-*-bundled / debug-*-bundled profiles in
-// `Maintain/{Release,Debug}/Build.sh`. Each variant name maps to a
+// `Maintain/{Release,Debug}/Build.sh`. The `Pack` env var is a
+// space-separated list of workbench variants. Each variant maps to a
 // Rollup input entry pointing at its `Source/Workbench/Bundled/<Variant>/
 // Entry.ts`, which in turn `await import()`s the matching VS Code
 // workbench module. Vite's native pipeline handles CSS extraction,
 // chunk dedup, and tree-shake. Output lands under
-// `Sky/Target/<BundledOutputDir>/<Variant>/workbench-[hash].js`. The
+// `Sky/Target/Static/Bundled/<Variant>/workbench-[hash].js`. The
 // existing `Static/Application/` tree (produced by the Output plugin
 // pipeline in `astro:build:done` below) is unchanged.
 //
-// When `BUNDLED_WORKBENCHES` is empty (every other profile), the
-// bundled-input map is empty and the `vs/**` external rules below
-// stay in effect - existing builds are byte-for-byte identical.
+// When `Pack` is empty (every other profile), the bundled-input map is
+// empty and the `vs/**` external rules below stay in effect - existing
+// builds are byte-for-byte identical.
 // -----------------------------------------------------------------------------
 const BundledVariants = ["electron", "browser", "sessions", "workbench"] as const;
 type BundledVariant = (typeof BundledVariants)[number];
 
-const BundledList = (process.env["BUNDLED_WORKBENCHES"] ?? "")
+const BundledList = (process.env["Pack"] ?? "")
 	.split(/\s+/)
 	.map((Name) => Name.trim().toLowerCase())
 	.filter((Name): Name is BundledVariant =>
 		(BundledVariants as readonly string[]).includes(Name),
 	);
 
-const BundledOutputDir =
-	process.env["LAND_BUNDLED_OUTPUT_DIR"] ?? "Static/Bundled";
+const BundledOutputDir = "Static/Bundled";
 
 const BundledActive = BundledList.length > 0;
 
@@ -611,16 +611,16 @@ export default defineConfig({
 					// Mountain scans Static/Application/extensions/ at startup.
 					//
 					// Atom J2: `debug-electron-minimal` / `release-electron-minimal`
-					// profiles set `LAND_SKIP_BUILTIN_EXTENSIONS=true` so the
+					// profiles set `Skip=true` so the
 					// shipping bundle excludes every bundled extension. Mountain's
 					// Scanner observes the same flag (Atom J3) and returns early
 					// for the built-in fallback paths, so the runtime matches the
 					// zero-on-disk state.
 					if (
-						process.env["LAND_SKIP_BUILTIN_EXTENSIONS"] === "true"
+						process.env["Skip"] === "true"
 					) {
 						console.log(
-							"[CopyVSCode] Step 13: LAND_SKIP_BUILTIN_EXTENSIONS=true - skipping built-in extension copy",
+							"[CopyVSCode] Step 13: Skip=true - skipping built-in extension copy",
 						);
 					} else {
 						const ExtensionsTarget = join(
@@ -642,10 +642,10 @@ export default defineConfig({
 						// copied extension so Cocoon doesn't crash on
 						// `require('byline')` etc. when the source tree
 						// omitted `node_modules/`. Toggle via
-						// `LAND_AUTO_INSTALL_EXTENSION_DEPS=false` for CI
+						// `Install=false` for CI
 						// runs that pre-populate the cache.
 						const AutoInstallDeps =
-							process.env["LAND_AUTO_INSTALL_EXTENSION_DEPS"] !==
+							process.env["Install"] !==
 							"false";
 						const InstallLog: Array<{
 							Name: string;
@@ -734,14 +734,14 @@ export default defineConfig({
 							// the Electron profile is the primary target - the
 							// warning only matters when someone is explicitly
 							// working on the browser workbench. Gate behind
-							// `LAND_WARN_MISSING_BROWSER_BUNDLES=true` so the
+							// `Warn=true` so the
 							// default build output stays clean; opt in by
 							// exporting the flag in the shell or
 							// `.env.Land.Local`. Preserve the call-to-action at
 							// the end so the opt-in output is self-explanatory.
 							if (
 								process.env[
-									"LAND_WARN_MISSING_BROWSER_BUNDLES"
+									"Warn"
 								] === "true"
 							) {
 								for (const Warning of BundleWarnings) {
@@ -824,7 +824,7 @@ export default defineConfig({
 		// build time; missing values fall through to Utility/Tier.ts's
 		// PascalCase defaults.
 		//
-		// Atom N2: additionally mirror `LAND_ENABLE_WIND` so Sky's
+		// Atom N2: additionally mirror `Render` so Sky's
 		// Electron/BrowserProxy bootstrap can drop the Wind import chain
 		// entirely when the flag is false. Defaults to `"true"` so the
 		// Wind layer loads for every profile that doesn't opt out.
@@ -837,47 +837,47 @@ export default defineConfig({
 						JSON.stringify(Value),
 					]),
 			),
-			"import.meta.env.LAND_ENABLE_WIND": JSON.stringify(
-				process.env["LAND_ENABLE_WIND"] ?? "true",
+			"import.meta.env.Render": JSON.stringify(
+				process.env["Render"] ?? "true",
 			),
 			// Atom PH1: mirror `.env.Land.PostHog` into the Sky bundle so
 			// PostHogBridge.ts reads one source of truth. Default key ships
 			// when `.env.Land.PostHog` is absent so a fresh clone still
 			// reports to the Land project.
-			"import.meta.env.LAND_POSTHOG_KEY": JSON.stringify(
-				process.env["LAND_POSTHOG_KEY"] ?? "",
+			"import.meta.env.Authorize": JSON.stringify(
+				process.env["Authorize"] ?? "",
 			),
-			"import.meta.env.LAND_POSTHOG_HOST": JSON.stringify(
-				process.env["LAND_POSTHOG_HOST"] ?? "https://eu.i.posthog.com",
+			"import.meta.env.Beam": JSON.stringify(
+				process.env["Beam"] ?? "https://eu.i.posthog.com",
 			),
-			"import.meta.env.LAND_POSTHOG_SKY_ENABLED": JSON.stringify(
-				process.env["LAND_POSTHOG_SKY_ENABLED"] ?? "true",
+			"import.meta.env.Report": JSON.stringify(
+				process.env["Report"] ?? "true",
 			),
-			"import.meta.env.LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND":
+			"import.meta.env.Throttle":
 				JSON.stringify(
-					process.env["LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND"] ??
+					process.env["Throttle"] ??
 						"5",
 				),
-			"import.meta.env.LAND_POSTHOG_SKY_BATCH_WINDOW_MS": JSON.stringify(
-				process.env["LAND_POSTHOG_SKY_BATCH_WINDOW_MS"] ?? "3000",
+			"import.meta.env.Buffer": JSON.stringify(
+				process.env["Buffer"] ?? "3000",
 			),
-			"import.meta.env.LAND_POSTHOG_SKY_BATCH_MAX": JSON.stringify(
-				process.env["LAND_POSTHOG_SKY_BATCH_MAX"] ?? "20",
+			"import.meta.env.Batch": JSON.stringify(
+				process.env["Batch"] ?? "20",
 			),
-			"import.meta.env.LAND_POSTHOG_SESSION_RECORDING": JSON.stringify(
-				process.env["LAND_POSTHOG_SESSION_RECORDING"] ?? "false",
+			"import.meta.env.Replay": JSON.stringify(
+				process.env["Replay"] ?? "false",
 			),
-			"import.meta.env.LAND_POSTHOG_SURVEYS": JSON.stringify(
-				process.env["LAND_POSTHOG_SURVEYS"] ?? "false",
+			"import.meta.env.Ask": JSON.stringify(
+				process.env["Ask"] ?? "false",
 			),
-			"import.meta.env.LAND_POSTHOG_DISTINCT_ID": JSON.stringify(
-				process.env["LAND_POSTHOG_DISTINCT_ID"] ?? "",
+			"import.meta.env.Brand": JSON.stringify(
+				process.env["Brand"] ?? "",
 			),
 		},
 
 		build: {
 			rollupOptions: {
-				// Bundled-workbench Rollup inputs. When `BUNDLED_WORKBENCHES`
+				// Bundled-workbench Rollup inputs. When `Pack`
 				// is empty this map is empty and Astro's auto-generated page
 				// inputs are used unchanged.
 				...(BundledActive ? { input: BundledInputs } : {}),
@@ -905,8 +905,10 @@ export default defineConfig({
 							// Absolute browser URL paths (/vs/...) - Rollup treats / as filesystem,
 							// but these are real browser URLs served at runtime. Mark external.
 							id.startsWith("/vs/") ||
-							// Package specifier - catches @codeeditorland/output/vs/**
-							id.startsWith("@codeeditorland/output/vs/") ||
+							// Package specifier - catches @codeeditorland/output/Target/Microsoft/VSCode/vs/**
+							id.startsWith(
+								"@codeeditorland/output/Target/Microsoft/VSCode/vs/",
+							) ||
 							// Resolved absolute path (after symlink + package.json exports map)
 							id.includes(
 								"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",

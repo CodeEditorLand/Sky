@@ -20,6 +20,10 @@ import Layout from "../Function/Markup/Base.astro";
 import { Bust, On } from "../Function/Shared";
 import BrowserWorkbench from "../Workbench/Browser.astro";
 import BrowserProxyWorkbench from "../Workbench/BrowserProxy/Layout.astro";
+import BundledBrowserWorkbench from "../Workbench/Bundled/Browser/Layout.astro";
+import BundledElectronWorkbench from "../Workbench/Bundled/Electron/Layout.astro";
+import BundledSessionsWorkbench from "../Workbench/Bundled/Sessions/Layout.astro";
+import BundledWorkbenchWorkbench from "../Workbench/Bundled/Workbench/Layout.astro";
 import DefaultWorkbench from "../Workbench/Default.astro";
 import ElectronWorkbench from "../Workbench/Electron/Layout.astro";
 import MountainWorkbench from "../Workbench/Mountain.astro";
@@ -29,6 +33,17 @@ const Bundle = process.env["Bundle"] === "true";
 const Mountain = process.env["Mountain"] === "true";
 const Electron = process.env["Electron"] === "true";
 const BrowserProxy = process.env["BrowserProxy"] === "true";
+
+// Bundled-workbench gating. When `Boot=true` and the
+// active workbench has a matching variant in `Pack`,
+// render the Vite/Astro-bundled Layout instead of the dynamic-import
+// path. Both env vars are set by the release-*-bundled / debug-*-
+// bundled profiles in `Maintain/{Release,Debug}/Build.sh`.
+const BundledBoot = process.env["Boot"] === "true";
+const BundledList = (process.env["Pack"] ?? "")
+	.split(/\s+/)
+	.map((Name) => Name.trim().toLowerCase())
+	.filter(Boolean);
 
 // Determine workbench type (default to Browser if nothing specified)
 // Mountain uses the Electron workbench - it has the full IPC chain
@@ -40,6 +55,18 @@ const WorkbenchType =
 		: BrowserProxy
 			? "BrowserProxy"
 			: "Browser"; // Default, not null
+
+// Pick a bundled variant only when boot-flag is on AND the active
+// WorkbenchType has a corresponding entry in Pack.
+// Mountain maps to the `electron` bundled variant (same workbench
+// shape - Mountain is Electron-style with a different IPC backend).
+const BundledVariant =
+	BundledBoot &&
+	(WorkbenchType === "Electron" || WorkbenchType === "Browser"
+		? BundledList.includes(WorkbenchType.toLowerCase())
+			? WorkbenchType.toLowerCase()
+			: null
+		: null);
 
 // Determine embedder identifier
 const EmbedderId = Electron || Mountain ? "desktop" : "browser";
@@ -274,7 +301,15 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					import "@codeeditorland/worker/Target/Worker/Register.js";
 				</script>
 
-				{WorkbenchType === "Electron" ? (
+				{BundledVariant === "electron" ? (
+					<BundledElectronWorkbench />
+				) : BundledVariant === "browser" ? (
+					<BundledBrowserWorkbench />
+				) : BundledVariant === "sessions" ? (
+					<BundledSessionsWorkbench />
+				) : BundledVariant === "workbench" ? (
+					<BundledWorkbenchWorkbench />
+				) : WorkbenchType === "Electron" ? (
 					<ElectronWorkbench />
 				) : WorkbenchType === "Mountain" ? (
 					<MountainWorkbench />

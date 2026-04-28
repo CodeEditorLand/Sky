@@ -18,7 +18,7 @@
  *      when available. The hook isn't always present (browser / kernel
  *      profiles omit it); when missing we just log and move on.
  *
- * No-op when `LAND_ENABLE_WIND === "false"` - if the Wind runtime is
+ * No-op when `Render === "false"` - if the Wind runtime is
  * not loaded there's no IPC to subscribe to.
  */
 
@@ -60,7 +60,7 @@ const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
 };
 
 export default async (): Promise<void> => {
-	if (import.meta.env["LAND_ENABLE_WIND"] === "false") {
+	if (import.meta.env["Render"] === "false") {
 		performance.mark("land:extensions:subscriber:skipped-wind-disabled");
 		return;
 	}

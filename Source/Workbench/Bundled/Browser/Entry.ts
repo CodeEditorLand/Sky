@@ -28,7 +28,7 @@ if (typeof (globalThis as never as { __name?: unknown }).__name !== "function") 
 performance.mark("land:bundled:browser:start");
 
 await import(
-	"@codeeditorland/output/vs/code/browser/workbench/workbench"
+	"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js"
 );
 
 performance.mark("land:bundled:browser:imported");

@@ -877,20 +877,23 @@ export default defineConfig({
 
 		build: {
 			// Never inline assets as `data:` URLs. Output's `StripCSSImport`
-			// transform rewrites `import "./foo.css"` to
-			// `_LOAD_CSS_WORKER(new URL("./foo.css", import.meta.url).pathname)`.
-			// Vite recognises the `new URL(literal, import.meta.url)` pattern
-			// and, by default, inlines small assets as
-			// `data:text/css;base64,...` URLs. The runtime call
-			// `new URL("data:text/css;...", base).pathname` then strips the
-			// `data:` scheme and yields a bare `text/css;base64,...` string,
-			// which `_LOAD_CSS_WORKER` tries to fetch as a path and the
-			// browser 404s with `non CSS MIME types are not allowed in
-			// strict mode`. Setting `assetsInlineLimit: 0` forces every
-			// referenced CSS asset to emit as a hashed file under `_astro/`
-			// where the runtime worker can fetch it the same way it does
-			// for larger CSS chunks.
+			// transform (now skipped for the bundled tree, see
+			// `Output/Source/ApplyPipeline.ts`) used to rewrite
+			// `import "./foo.css"` into a `_LOAD_CSS_WORKER(new URL(
+			// "./foo.css", import.meta.url).pathname)` call. Vite would
+			// recognise the `new URL(literal, import.meta.url)` pattern
+			// and inline small assets as `data:text/css;base64,...` URLs,
+			// then the runtime call would strip the `data:` scheme and
+			// fail. Keeping `assetsInlineLimit: 0` defensively even though
+			// the transform path is no longer the primary one.
 			assetsInlineLimit: 0,
+			// Fold every CSS module into one bundled file (per entry).
+			// Default Vite behaviour code-splits CSS per dynamic import,
+			// emitting ~75+ individual `_astro/*.css` chunks. With
+			// `cssCodeSplit: false` Vite concatenates all CSS reachable
+			// from the bundled workbench entry into a single hashed
+			// `*.css` file the runtime loads once.
+			cssCodeSplit: false,
 			rollupOptions: {
 				// Bundled-workbench Rollup inputs. When `Pack`
 				// is empty this map is empty and Astro's auto-generated page
@@ -939,6 +942,33 @@ export default defineConfig({
 				output: {
 					// Preserve dynamic URL imports in VSCode worker files
 					hoistTransitiveImports: false,
+					// Fold every VS Code module reachable from the bundled
+					// workbench entry into a single chunk. Without this,
+					// Rollup auto-splits at static-import boundaries and
+					// emits ~60 separate chunks (the largest is the
+					// node-named one Rollup elects as "main"). With this,
+					// one big `workbench-[hash].js` lands and the runtime
+					// fetches a single JS asset instead of waterfalling
+					// through dozens. Astro page scripts (NLS,
+					// TelemetryBridge, Bootstrap, SkyBridge) are left to
+					// default chunking - they have different lifecycles
+					// from the workbench and shouldn't share a chunk.
+					manualChunks: BundledActive
+						? (id: string) => {
+								if (
+									id.includes(
+										"/Output/Target/Microsoft/VSCode/",
+									) ||
+									id.includes(
+										"\\Output\\Target\\Microsoft\\VSCode\\",
+									) ||
+									id.includes("/Workbench/Bundled/")
+								) {
+									return "workbench";
+								}
+								return null;
+							}
+						: undefined,
 					// Route bundled entries to `${BundledOutputDir}/<Variant>/
 					// workbench-[hash].js`; everything else keeps the existing
 					// `app.js` / `[name]-[hash].js` shape.

@@ -902,11 +902,39 @@ export default defineConfig({
 				treeshake: {
 					// Preserve all side effects in the worker package so Register.js
 					// SW registration code is not eliminated by Rollup.
-					moduleSideEffects: (Id: string) =>
-						Id.includes("@codeeditorland/worker") ||
-						Id.includes("Element/Worker")
-							? true
-							: "no-external",
+					//
+					// VS Code's modules (under `@codeeditorland/output/Target/
+					// Microsoft/VSCode/`) are FULL of side-effect static
+					// initialisers - class-static event emitters
+					// (`_onWillInstantiateEditorPane = new Emitter(...)`),
+					// global registries (`Registry.add(...)`), DI singleton
+					// registrations (`registerSingleton(...)`). Rollup's
+					// default `"no-external"` is too aggressive: it can
+					// prune imports that look unused statically but whose
+					// side-effect init populates a registry the workbench
+					// depends on at runtime. Mark every VS Code module as
+					// having side effects so Rollup preserves the init
+					// order verbatim.
+					moduleSideEffects: (Id: string) => {
+						if (
+							Id.includes("@codeeditorland/worker") ||
+							Id.includes("Element/Worker")
+						) {
+							return true;
+						}
+						if (
+							BundledActive &&
+							(Id.includes(
+								"/Output/Target/Microsoft/VSCode/",
+							) ||
+								Id.includes(
+									"\\Output\\Target\\Microsoft\\VSCode\\",
+								))
+						) {
+							return true;
+						}
+						return "no-external";
+					},
 				},
 				external: [
 					...External,
@@ -942,33 +970,26 @@ export default defineConfig({
 				output: {
 					// Preserve dynamic URL imports in VSCode worker files
 					hoistTransitiveImports: false,
-					// Fold every VS Code module reachable from the bundled
-					// workbench entry into a single chunk. Without this,
-					// Rollup auto-splits at static-import boundaries and
-					// emits ~60 separate chunks (the largest is the
-					// node-named one Rollup elects as "main"). With this,
-					// one big `workbench-[hash].js` lands and the runtime
-					// fetches a single JS asset instead of waterfalling
-					// through dozens. Astro page scripts (NLS,
-					// TelemetryBridge, Bootstrap, SkyBridge) are left to
-					// default chunking - they have different lifecycles
-					// from the workbench and shouldn't share a chunk.
-					manualChunks: BundledActive
-						? (id: string) => {
-								if (
-									id.includes(
-										"/Output/Target/Microsoft/VSCode/",
-									) ||
-									id.includes(
-										"\\Output\\Target\\Microsoft\\VSCode\\",
-									) ||
-									id.includes("/Workbench/Bundled/")
-								) {
-									return "workbench";
-								}
-								return null;
-							}
-						: undefined,
+					// No `manualChunks` for the bundled tree. The workbench
+					// loader (`workbench.js`) dynamically imports
+					// `workbench.desktop.main.js` via a literal-string
+					// `await import(...)` (rewritten there by Output's
+					// `RewriteWorkbenchBaseURL` transform). Rollup
+					// auto-splits at that boundary, putting workbench.js's
+					// small sync graph in one chunk and desktop.main.js +
+					// its 1500-module transitive graph in another. The
+					// split is REQUIRED for correct initialisation order:
+					// workbench.js's `load()` function must set up
+					// `_VSCODE_FILE_ROOT`, NLS, and the resolved
+					// configuration BEFORE desktop.main.js's contribs
+					// evaluate (which `isElectron`-check at module-init
+					// time and otherwise mode-detect as "web", skipping
+					// the Electron-side service registrations and breaking
+					// the FS provider chain).
+					//
+					// Forcing all VS Code into one chunk via manualChunks
+					// would defeat the auto-split and re-introduce the
+					// initialisation-order bug.
 					// Route bundled entries to `${BundledOutputDir}/<Variant>/
 					// workbench-[hash].js`; everything else keeps the existing
 					// `app.js` / `[name]-[hash].js` shape.

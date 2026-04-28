@@ -53,30 +53,24 @@
 
 performance.mark("land:bundled:electron:start");
 
-// Pre-import the workbench's desktop entry shim with a LITERAL string so
-// Vite/Rollup follows desktop.main.js's static import graph (~1500
-// modules: contrib/*, services/*, platform/*, base/*, editor/*) and
-// pulls them into the bundled chunk. Without this, only workbench.js
-// + its small synchronous graph land in the bundle (~26 MB), and the
-// workbench loader's runtime `await import(computedURL)` resolves
-// against `/Static/Application/` - re-fetching ~1500 separate files
-// from disk every cold boot.
+// Just load `workbench.js` - its `load()` function (patched by Output's
+// `RewriteWorkbenchBaseURL` transform) does the dynamic import of
+// `workbench.desktop.main.js` itself, AFTER setting up
+// `_VSCODE_FILE_ROOT`, NLS, and the resolved configuration. The
+// transform rewrites the runtime-computed-URL import to a literal-
+// string `await import("../../../workbench/workbench.desktop.main.js")`
+// so Vite/Rollup can statically follow it and bundle the entire
+// desktop graph into a separate chunk that loads on demand.
 //
-// The browser's module cache deduplicates: when workbench.js later
-// runs `await import("vs/workbench/workbench.desktop.main.js")` the
-// resolved URL hits the same cache entry as the static import here,
-// so order-of-execution is preserved (desktop.main.js side-effects
-// happen first, registering DI services; workbench.js then runs
-// `result.main(configuration)` against the registered surface).
-//
-// `workbench.web.main.internal.js` is statically imported by
-// `workbench.web.main.js`, which `workbench.desktop.main.js` shares
-// many modules with - Rollup chunk-deduplicates so we're not paying
-// the import twice.
-await import(
-	"@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/workbench.desktop.main.js"
-);
-
+// We previously pre-imported desktop.main.js here, which broke
+// initialisation order: desktop.main.js evaluates immediately when
+// its chunk loads, but the Electron-side service registrations (Disk
+// FileSystemProvider, NativeHostService, etc.) only fire when
+// `isElectron` returns true, which depends on the process polyfill
+// being live and the workbench config being attached - both done by
+// workbench.js's `load()` chain. Pre-importing meant desktop.main.js
+// evaluated before that setup, mode-detected as "web", skipped every
+// Electron registration, and surfaced as ENOPRO file-system errors.
 await import(
 	"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-browser/workbench/workbench.js"
 );

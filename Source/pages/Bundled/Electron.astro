@@ -1,0 +1,24 @@
+---
+/**
+ * Bundled/Electron.astro - Vite/Astro-bundled Electron workbench route.
+ *
+ * Route: /Bundled/Electron
+ *
+ * Active when the build profile sets `BUNDLED_WORKBENCHES=electron`
+ * (or `BUNDLED_WORKBENCHES="electron ..."` for the all-variants pass).
+ * `LAND_BUNDLED_BOOT=true` tells Mountain's Sky-redirect to prefer this
+ * route over /Electron for the matching workbench.
+ *
+ * The route ALWAYS exists - it's gated at module-graph level by Vite's
+ * input map in astro.config.ts. When the profile does not bundle the
+ * Electron variant, the page renders without the Rollup-emitted entry
+ * (the bundled chunk simply isn't produced).
+ */
+
+import Layout from "../../Function/Markup/Base.astro";
+import BundledElectronLayout from "../../Workbench/Bundled/Electron/Layout.astro";
+---
+
+<Layout>
+	<BundledElectronLayout />
+</Layout>

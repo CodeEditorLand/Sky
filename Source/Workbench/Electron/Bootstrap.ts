@@ -32,9 +32,8 @@ if (import.meta.env["LAND_ENABLE_WIND"] === "false") {
 	try {
 		performance.mark("land:bootstrap:start");
 
-		const { runBootstrap } = await import(
-			"@codeeditorland/wind/Target/Effect/Bootstrap"
-		);
+		const { runBootstrap } =
+			await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 		const { Effect } = await import("effect");
 
 		const BootstrapResult: BootstrapResult = await Effect.runPromise(
@@ -64,9 +63,8 @@ if (import.meta.env["LAND_ENABLE_WIND"] === "false") {
 		// so the sidebar refreshes live after a VSIX install (K2/K3) - no
 		// workbench reload required. Fire-and-forget; the subscriber logs
 		// its own performance.mark on start / error / skipped states.
-		const { default: StartExtensionSubscriber } = await import(
-			"./ExtensionChangeSubscriber.js"
-		);
+		const { default: StartExtensionSubscriber } =
+			await import("./ExtensionChangeSubscriber.js");
 		void StartExtensionSubscriber();
 	} catch {
 		performance.mark("land:bootstrap:error");

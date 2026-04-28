@@ -1,0 +1,18 @@
+---
+/**
+ * Bundled base Workbench Layout.
+ * Counterpart to Bundled/Electron/Layout.astro - see header there.
+ */
+
+import NLS from "../../NLS.astro";
+import TelemetryBridge from "../../TelemetryBridge.astro";
+---
+
+<Fragment>
+	<NLS />
+	<TelemetryBridge />
+
+	<script>
+		import "./Entry";
+	</script>
+</Fragment>

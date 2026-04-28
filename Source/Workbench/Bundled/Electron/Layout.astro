@@ -1,0 +1,29 @@
+---
+/**
+ * Bundled Electron Workbench Layout.
+ *
+ * Loads the Vite/Astro-bundled entry. Vite resolves
+ * `./Entry.ts` through Rollup, hashes the output, and emits the
+ * resulting JS / CSS under Sky/Target/Static/Bundled/Electron/.
+ *
+ * Unlike the non-bundled `Workbench/Electron/Layout.astro`, this layout
+ * does NOT chain Wind Preload / Polyfills / Bootstrap / Workbench /
+ * SkyBridge - the bundled entry is a single Rollup graph root, and
+ * the auxiliary preload chain is not required for the load-time
+ * benchmark this profile targets. Re-introduce them once the bundled
+ * tree is functional and we move from "measure cold load" to "wire up
+ * the runtime" .
+ */
+
+import NLS from "../../NLS.astro";
+import TelemetryBridge from "../../TelemetryBridge.astro";
+---
+
+<Fragment>
+	<NLS />
+	<TelemetryBridge />
+
+	<script>
+		import "./Entry";
+	</script>
+</Fragment>

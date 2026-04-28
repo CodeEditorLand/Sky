@@ -24,14 +24,14 @@
 // astro.config.ts `vite.define`. Hardcoded fallback keeps a fresh clone
 // working before `.env.Land.PostHog` is sourced.
 const PostHogAPIKey =
-	((import.meta.env as any).LAND_POSTHOG_KEY as string | undefined) ??
-	"";
+	((import.meta.env as any).LAND_POSTHOG_KEY as string | undefined) ?? "";
 const PostHogHost =
 	((import.meta.env as any).LAND_POSTHOG_HOST as string | undefined) ??
 	"https://eu.i.posthog.com";
 const PostHogEnabled =
-	((import.meta.env as any).LAND_POSTHOG_SKY_ENABLED as string | undefined) !==
-	"false";
+	((import.meta.env as any).LAND_POSTHOG_SKY_ENABLED as
+		| string
+		| undefined) !== "false";
 // Atom PH2: Sky was hitting PostHog's built-in rate limiter (observed as
 // `[PostHog.js] This capture call is ignored due to client rate limiting.`
 // in the webview console). Apply our own rate cap + a larger batch window
@@ -62,10 +62,9 @@ const LoadPostHog = async (): Promise<any> => {
 	if (!PostHogEnabled) return null;
 	try {
 		if ((window as any).posthog) return (window as any).posthog;
-		const AssetsHost = PostHogHost.replace(
-			"://",
-			"://",
-		).replace("//eu.i.", "//eu-assets.i.").replace("//us.i.", "//us-assets.i.");
+		const AssetsHost = PostHogHost.replace("://", "://")
+			.replace("//eu.i.", "//eu-assets.i.")
+			.replace("//us.i.", "//us-assets.i.");
 		return await new Promise((Resolve) => {
 			const Script = document.createElement("script");
 			Script.src = `${AssetsHost}/static/array.js`;
@@ -188,10 +187,7 @@ const ExceptionGlobalLimit = Math.max(
 );
 const ThrottleCounters = new Map<string, { Count: number; ResetAt: number }>();
 const ThrottleDropped = new Map<string, number>();
-const ExceptionCounters = new Map<
-	string,
-	{ Count: number; ResetAt: number }
->();
+const ExceptionCounters = new Map<string, { Count: number; ResetAt: number }>();
 const ExceptionDropped = new Map<string, number>();
 let ExceptionGlobalCount = 0;
 let ExceptionGlobalResetAt = 0;
@@ -375,7 +371,10 @@ const Initialize = async (): Promise<void> => {
 		if (!Timers.has(Component)) {
 			Timers.set(
 				Component,
-				setTimeout(() => FlushComponent(Component), PostHogBatchWindowMs),
+				setTimeout(
+					() => FlushComponent(Component),
+					PostHogBatchWindowMs,
+				),
 			);
 		}
 	};
@@ -428,16 +427,13 @@ const Initialize = async (): Promise<void> => {
 	// === Error capture: window.onerror ===
 	window.addEventListener("error", (Event) => {
 		if (!Event.message || Event.message === "Script error.") return;
-		PH.captureException(
-			Event.error || new Error(Event.message),
-			{
-				$component: "vscode",
-				$exception_source: Event.filename,
-				$exception_lineno: Event.lineno,
-				$exception_colno: Event.colno,
-				$exception_origin: "window.onerror",
-			},
-		);
+		PH.captureException(Event.error || new Error(Event.message), {
+			$component: "vscode",
+			$exception_source: Event.filename,
+			$exception_lineno: Event.lineno,
+			$exception_colno: Event.colno,
+			$exception_origin: "window.onerror",
+		});
 	});
 
 	// === Error capture: unhandled promise rejections ===
@@ -529,7 +525,10 @@ const Initialize = async (): Promise<void> => {
 					performance.mark("land:resource:error", {
 						detail: {
 							tag: Target.tagName,
-							src: (Target as HTMLScriptElement).src?.slice(0, 200),
+							src: (Target as HTMLScriptElement).src?.slice(
+								0,
+								200,
+							),
 						},
 					});
 				} catch {}

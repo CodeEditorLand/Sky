@@ -88,24 +88,44 @@ const Flush = (): void => {
 						scope: { name: "land.otel.bridge", version: "1.0.0" },
 						spans: Spans.map((S) => {
 							const IsError = S.Name.includes("error");
-							const DetailObj = S.Detail as Record<string, unknown> | undefined;
+							const DetailObj = S.Detail as
+								| Record<string, unknown>
+								| undefined;
 							const Attributes = S.Detail
-								? Object.entries(S.Detail).map(
-										([K, V]) => ({
-											key: K,
-											value: { stringValue: String(V).slice(0, 500) },
-										}),
-									)
+								? Object.entries(S.Detail).map(([K, V]) => ({
+										key: K,
+										value: {
+											stringValue: String(V).slice(
+												0,
+												500,
+											),
+										},
+									}))
 								: [];
 							const Events = IsError
-								? [{
-									name: "exception",
-									timeUnixNano: S.StartTimeUnixNano,
-									attributes: [
-										{ key: "exception.type", value: { stringValue: S.Name } },
-										{ key: "exception.message", value: { stringValue: String(DetailObj?.message || S.Name).slice(0, 500) } },
-									],
-								}]
+								? [
+										{
+											name: "exception",
+											timeUnixNano: S.StartTimeUnixNano,
+											attributes: [
+												{
+													key: "exception.type",
+													value: {
+														stringValue: S.Name,
+													},
+												},
+												{
+													key: "exception.message",
+													value: {
+														stringValue: String(
+															DetailObj?.message ||
+																S.Name,
+														).slice(0, 500),
+													},
+												},
+											],
+										},
+									]
 								: [];
 							return {
 								traceId: TraceId,
@@ -117,7 +137,12 @@ const Flush = (): void => {
 								attributes: Attributes,
 								events: Events,
 								status: IsError
-									? { code: 2, message: String(DetailObj?.message || "").slice(0, 200) }
+									? {
+											code: 2,
+											message: String(
+												DetailObj?.message || "",
+											).slice(0, 200),
+										}
 									: { code: 1 },
 							};
 						}),
@@ -163,7 +188,8 @@ const Observer = new PerformanceObserver((List) => {
 			EndTimeUnixNano: HrTimeNano(Now + Duration),
 			SpanId: MakeSpanId(),
 			Detail:
-				(Entry as any).detail && typeof (Entry as any).detail === "object"
+				(Entry as any).detail &&
+				typeof (Entry as any).detail === "object"
 					? (Entry as any).detail
 					: undefined,
 		});

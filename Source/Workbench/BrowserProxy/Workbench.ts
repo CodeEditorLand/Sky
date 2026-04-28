@@ -21,7 +21,6 @@ try {
 			"__MOUNTAIN_PROXY__"
 		];
 	}, 2000);
-} catch (error: unknown) {
-}
+} catch (error: unknown) {}
 
 export default {};

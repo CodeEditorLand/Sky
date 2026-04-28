@@ -9,7 +9,11 @@ try {
 	performance.mark("land:preload:start");
 	await Install();
 	performance.mark("land:preload:done");
-	performance.measure("land:preload", "land:preload:start", "land:preload:done");
+	performance.measure(
+		"land:preload",
+		"land:preload:start",
+		"land:preload:done",
+	);
 } catch {
 	performance.mark("land:preload:error");
 }

@@ -87,7 +87,11 @@ try {
 	await import(/* @vite-ignore */ WorkbenchUrl);
 
 	performance.mark("land:workbench:imported");
-	performance.measure("land:workbench:import", "land:workbench:start", "land:workbench:imported");
+	performance.measure(
+		"land:workbench:import",
+		"land:workbench:start",
+		"land:workbench:imported",
+	);
 
 	// Diagnostic: poll for workbench render state via performance marks.
 	const CheckIntervals = [2000, 5000, 10000, 20000];

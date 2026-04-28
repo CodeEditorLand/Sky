@@ -2304,8 +2304,8 @@ export async function InstallSkyBridge(): Promise<void> {
 			new CustomEvent("cel:webview:set-html", { detail: Payload }),
 		);
 		if (!ViewId) return;
-		const Registry: Map<string, any> | undefined =
-			(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+		const Registry: Map<string, any> | undefined = (globalThis as any)
+			.__CEL_WEBVIEW_VIEWS__;
 		const ParkedView = Registry?.get(ViewId);
 		if (!ParkedView?.webview) return;
 		try {
@@ -2328,12 +2328,13 @@ export async function InstallSkyBridge(): Promise<void> {
 			new CustomEvent("cel:webview:updateView", { detail: Payload }),
 		);
 		if (!ViewId) return;
-		const Registry: Map<string, any> | undefined =
-			(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+		const Registry: Map<string, any> | undefined = (globalThis as any)
+			.__CEL_WEBVIEW_VIEWS__;
 		const ParkedView = Registry?.get(ViewId);
 		if (!ParkedView) return;
 		try {
-			if (Payload?.title != null) ParkedView.title = String(Payload.title);
+			if (Payload?.title != null)
+				ParkedView.title = String(Payload.title);
 			if (Payload?.description != null)
 				ParkedView.description = String(Payload.description);
 			if (Payload?.badge != null) ParkedView.badge = Payload.badge;
@@ -2357,8 +2358,8 @@ export async function InstallSkyBridge(): Promise<void> {
 			}),
 		);
 		if (!ViewId) return;
-		const Registry: Map<string, any> | undefined =
-			(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+		const Registry: Map<string, any> | undefined = (globalThis as any)
+			.__CEL_WEBVIEW_VIEWS__;
 		const ParkedView = Registry?.get(ViewId);
 		if (!ParkedView?.webview?.postMessage) return;
 		try {
@@ -2451,16 +2452,13 @@ export async function InstallSkyBridge(): Promise<void> {
 		},
 	);
 
-	await Register(
-		"sky://webview/post-message",
-		({ handle, message }: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:webview:post-message", {
-					detail: { handle, message },
-				}),
-			);
-		},
-	);
+	await Register("sky://webview/post-message", ({ handle, message }: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:post-message", {
+				detail: { handle, message },
+			}),
+		);
+	});
 
 	await Register("sky://webview/dispose", ({ panelId }: any) => {
 		document.dispatchEvent(
@@ -2515,9 +2513,9 @@ export async function InstallSkyBridge(): Promise<void> {
 					// forwards to `sky://webview/set-html` - a listener
 					// downstream applies the html to this parked view.
 					try {
-						const Registry: Map<string, any> =
-							((globalThis as any).__CEL_WEBVIEW_VIEWS__ ??=
-								new Map());
+						const Registry: Map<string, any> = ((
+							globalThis as any
+						).__CEL_WEBVIEW_VIEWS__ ??= new Map());
 						Registry.set(ViewId, WebviewView);
 					} catch (_e) {
 						/* ignore */
@@ -2573,8 +2571,9 @@ export async function InstallSkyBridge(): Promise<void> {
 								handle: Handle,
 								viewId: ViewId,
 							});
-							const Registry: Map<string, any> | undefined =
-								(globalThis as any).__CEL_WEBVIEW_VIEWS__;
+							const Registry: Map<string, any> | undefined = (
+								globalThis as any
+							).__CEL_WEBVIEW_VIEWS__;
 							Registry?.delete(ViewId);
 						});
 					} catch (_e) {

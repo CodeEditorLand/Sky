@@ -29,14 +29,12 @@ try {
 	});
 
 	if (bootstrapResult.success) {
-
 		// Log individual stage results
 		bootstrapResult.stages.forEach(function (stage: BootstrapStage) {
 			const status = stage.success ? "✓" : "✗";
 		});
 	} else {
 	}
-} catch (error: unknown) {
-}
+} catch (error: unknown) {}
 
 export default {};

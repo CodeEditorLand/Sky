@@ -13,25 +13,15 @@
  * build context logging to `Element/Sky/Source/Function/Debug.ts`.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-	cp,
-	readdir,
-	readFile,
-	writeFile,
-} from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
+import { cp, readdir, readFile, writeFile } from "node:fs/promises";
 import { request } from "node:https";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { defineConfig } from "astro/config";
-
-// -----------------------------------------------------------------------------
-// IMPORT CONTEXT & TRIGGER DEBUG LOGGING
-// -----------------------------------------------------------------------------
-import { External, Host, Link, On } from "./Source/Function/Debug";
-
+import ApplyPlugins from "@codeeditorland/output/Plugin/Apply";
+import BuildPipeline from "@codeeditorland/output/Plugin/Index";
 // -----------------------------------------------------------------------------
 // OUTPUT PLUGIN PIPELINE
 // -----------------------------------------------------------------------------
@@ -48,8 +38,59 @@ import { External, Host, Link, On } from "./Source/Function/Debug";
 // The Rest compiler will consume the same modules once its plugin API is
 // wired up - no duplication or rewrite needed.
 import type { Plugin as OutputPlugin } from "@codeeditorland/output/Plugin/Type";
-import ApplyPlugins from "@codeeditorland/output/Plugin/Apply";
-import BuildPipeline from "@codeeditorland/output/Plugin/Index";
+import { defineConfig } from "astro/config";
+
+// -----------------------------------------------------------------------------
+// IMPORT CONTEXT & TRIGGER DEBUG LOGGING
+// -----------------------------------------------------------------------------
+import { External, Host, Link, On } from "./Source/Function/Debug";
+
+// -----------------------------------------------------------------------------
+// BUNDLED-WORKBENCH INPUTS
+// -----------------------------------------------------------------------------
+// Read by the release-*-bundled / debug-*-bundled profiles in
+// `Maintain/{Release,Debug}/Build.sh`. Each variant name maps to a
+// Rollup input entry pointing at its `Source/Workbench/Bundled/<Variant>/
+// Entry.ts`, which in turn `await import()`s the matching VS Code
+// workbench module. Vite's native pipeline handles CSS extraction,
+// chunk dedup, and tree-shake. Output lands under
+// `Sky/Target/<BundledOutputDir>/<Variant>/workbench-[hash].js`. The
+// existing `Static/Application/` tree (produced by the Output plugin
+// pipeline in `astro:build:done` below) is unchanged.
+//
+// When `BUNDLED_WORKBENCHES` is empty (every other profile), the
+// bundled-input map is empty and the `vs/**` external rules below
+// stay in effect - existing builds are byte-for-byte identical.
+// -----------------------------------------------------------------------------
+const BundledVariants = ["electron", "browser", "sessions", "workbench"] as const;
+type BundledVariant = (typeof BundledVariants)[number];
+
+const BundledList = (process.env["BUNDLED_WORKBENCHES"] ?? "")
+	.split(/\s+/)
+	.map((Name) => Name.trim().toLowerCase())
+	.filter((Name): Name is BundledVariant =>
+		(BundledVariants as readonly string[]).includes(Name),
+	);
+
+const BundledOutputDir =
+	process.env["LAND_BUNDLED_OUTPUT_DIR"] ?? "Static/Bundled";
+
+const BundledActive = BundledList.length > 0;
+
+const BundledInputs: Record<string, string> = {};
+for (const Variant of BundledList) {
+	const Pascal = Variant[0]!.toUpperCase() + Variant.slice(1);
+	BundledInputs[`Bundled/${Pascal}/workbench`] = resolve(
+		process.cwd(),
+		`Source/Workbench/Bundled/${Pascal}/Entry.ts`,
+	);
+}
+
+if (BundledActive) {
+	console.log(
+		`[Sky/Bundled] Active variants: ${BundledList.join(", ")} -> ${BundledOutputDir}/`,
+	);
+}
 
 // -----------------------------------------------------------------------------
 // EXTENSION DEP INSTALLER (Atom S1)
@@ -81,9 +122,8 @@ const InstallExtensionDeps = async (
 		return { Installed: 0 };
 	}
 
-	const Dependencies = (Pkg["dependencies"] as
-		| Record<string, string>
-		| undefined) ?? {};
+	const Dependencies =
+		(Pkg["dependencies"] as Record<string, string> | undefined) ?? {};
 	const DependencyCount = Object.keys(Dependencies).length;
 
 	// Surface a warning when a web-worker entrypoint lives in the manifest
@@ -304,13 +344,19 @@ export default defineConfig({
 								"TauriMainProcessService.js",
 							),
 						},
+						// Forwarded from Maintain/Release/Build.sh which
+						// exports `PROFILE=release-electron` (or similar).
+						// Switches CSS handling: `release-*` profiles inline
+						// CSS bytes at build time via `InlineCSSImport`;
+						// other profiles use `StripCSSImport` (runtime
+						// `_LOAD_CSS_WORKER`).
+						Profile:
+							process.env["PROFILE"] ?? process.env["Profile"],
 					});
 
 					await ApplyPlugins({
 						Plugins: Pipeline,
-						Roots: [
-							{ Path: StaticApplicationDir, Role: "app" },
-						],
+						Roots: [{ Path: StaticApplicationDir, Role: "app" }],
 						Log: (Message) =>
 							console.log(`[CopyVSCode] ${Message}`),
 					});
@@ -570,7 +616,9 @@ export default defineConfig({
 					// Scanner observes the same flag (Atom J3) and returns early
 					// for the built-in fallback paths, so the runtime matches the
 					// zero-on-disk state.
-					if (process.env["LAND_SKIP_BUILTIN_EXTENSIONS"] === "true") {
+					if (
+						process.env["LAND_SKIP_BUILTIN_EXTENSIONS"] === "true"
+					) {
 						console.log(
 							"[CopyVSCode] Step 13: LAND_SKIP_BUILTIN_EXTENSIONS=true - skipping built-in extension copy",
 						);
@@ -610,25 +658,35 @@ export default defineConfig({
 								let Copied = 0;
 								for (const Ext of ExtDirs) {
 									const Source = join(ExtensionsSource, Ext);
-									const PkgPath = join(Source, "package.json");
+									const PkgPath = join(
+										Source,
+										"package.json",
+									);
 									try {
 										const PkgRaw = await readFile(
 											PkgPath,
 											"utf8",
 										);
-										const Dest = join(ExtensionsTarget, Ext);
-										await cp(Source, Dest, { recursive: true });
+										const Dest = join(
+											ExtensionsTarget,
+											Ext,
+										);
+										await cp(Source, Dest, {
+											recursive: true,
+										});
 										Copied++;
 
 										if (AutoInstallDeps) {
-											const Outcome = await InstallExtensionDeps(
-												Dest,
-												PkgRaw,
-											);
+											const Outcome =
+												await InstallExtensionDeps(
+													Dest,
+													PkgRaw,
+												);
 											if (Outcome.Installed > 0) {
 												InstallLog.push({
 													Name: Ext,
-													Installed: Outcome.Installed,
+													Installed:
+														Outcome.Installed,
 												});
 											}
 											if (Outcome.BundleWarning) {
@@ -682,7 +740,9 @@ export default defineConfig({
 							// `.env.Land.Local`. Preserve the call-to-action at
 							// the end so the opt-in output is self-explanatory.
 							if (
-								process.env["LAND_WARN_MISSING_BROWSER_BUNDLES"] === "true"
+								process.env[
+									"LAND_WARN_MISSING_BROWSER_BUNDLES"
+								] === "true"
 							) {
 								for (const Warning of BundleWarnings) {
 									console.warn(
@@ -696,7 +756,6 @@ export default defineConfig({
 						}
 					}
 
-
 					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 
@@ -707,8 +766,7 @@ export default defineConfig({
 					if (process.env["NODE_ENV"] !== "production") {
 						try {
 							const Body = JSON.stringify({
-								api_key:
-									"",
+								api_key: "",
 								event: "sky:build:complete",
 								properties: {
 									distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
@@ -787,34 +845,28 @@ export default defineConfig({
 			// when `.env.Land.PostHog` is absent so a fresh clone still
 			// reports to the Land project.
 			"import.meta.env.LAND_POSTHOG_KEY": JSON.stringify(
-				process.env["LAND_POSTHOG_KEY"] ??
-					"",
+				process.env["LAND_POSTHOG_KEY"] ?? "",
 			),
 			"import.meta.env.LAND_POSTHOG_HOST": JSON.stringify(
-				process.env["LAND_POSTHOG_HOST"] ??
-					"https://eu.i.posthog.com",
+				process.env["LAND_POSTHOG_HOST"] ?? "https://eu.i.posthog.com",
 			),
 			"import.meta.env.LAND_POSTHOG_SKY_ENABLED": JSON.stringify(
 				process.env["LAND_POSTHOG_SKY_ENABLED"] ?? "true",
 			),
 			"import.meta.env.LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND":
 				JSON.stringify(
-					process.env[
-						"LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND"
-					] ?? "5",
+					process.env["LAND_POSTHOG_SKY_MAX_EVENTS_PER_SECOND"] ??
+						"5",
 				),
-			"import.meta.env.LAND_POSTHOG_SKY_BATCH_WINDOW_MS":
-				JSON.stringify(
-					process.env["LAND_POSTHOG_SKY_BATCH_WINDOW_MS"] ??
-						"3000",
-				),
+			"import.meta.env.LAND_POSTHOG_SKY_BATCH_WINDOW_MS": JSON.stringify(
+				process.env["LAND_POSTHOG_SKY_BATCH_WINDOW_MS"] ?? "3000",
+			),
 			"import.meta.env.LAND_POSTHOG_SKY_BATCH_MAX": JSON.stringify(
 				process.env["LAND_POSTHOG_SKY_BATCH_MAX"] ?? "20",
 			),
-			"import.meta.env.LAND_POSTHOG_SESSION_RECORDING":
-				JSON.stringify(
-					process.env["LAND_POSTHOG_SESSION_RECORDING"] ?? "false",
-				),
+			"import.meta.env.LAND_POSTHOG_SESSION_RECORDING": JSON.stringify(
+				process.env["LAND_POSTHOG_SESSION_RECORDING"] ?? "false",
+			),
 			"import.meta.env.LAND_POSTHOG_SURVEYS": JSON.stringify(
 				process.env["LAND_POSTHOG_SURVEYS"] ?? "false",
 			),
@@ -825,6 +877,10 @@ export default defineConfig({
 
 		build: {
 			rollupOptions: {
+				// Bundled-workbench Rollup inputs. When `BUNDLED_WORKBENCHES`
+				// is empty this map is empty and Astro's auto-generated page
+				// inputs are used unchanged.
+				...(BundledActive ? { input: BundledInputs } : {}),
 				treeshake: {
 					// Preserve all side effects in the worker package so Register.js
 					// SW registration code is not eliminated by Rollup.
@@ -836,32 +892,80 @@ export default defineConfig({
 				},
 				external: [
 					...External,
-					(id: string) =>
-						// Absolute browser URL paths (/vs/...) - Rollup treats / as filesystem,
-						// but these are real browser URLs served at runtime. Mark external.
-						id.startsWith("/vs/") ||
-						// Package specifier - catches @codeeditorland/output/vs/**
-						id.startsWith("@codeeditorland/output/vs/") ||
-						// Resolved absolute path (after symlink + package.json exports map)
-						id.includes(
-							"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
-						) ||
-						id.includes(
-							"\\@codeeditorland\\output\\Target\\Microsoft\\VSCode\\vs\\",
-						) ||
-						id.startsWith("vs/") ||
-						id === "vscode",
+					(id: string) => {
+						// When a bundled-workbench profile is active, let
+						// Rollup pull every `vs/**` import through the module
+						// graph so Vite can extract CSS, dedup chunks, and
+						// tree-shake. Skipping the external rules here is
+						// the entire point of the bundled tree.
+						if (BundledActive) {
+							return id === "vscode";
+						}
+						return (
+							// Absolute browser URL paths (/vs/...) - Rollup treats / as filesystem,
+							// but these are real browser URLs served at runtime. Mark external.
+							id.startsWith("/vs/") ||
+							// Package specifier - catches @codeeditorland/output/vs/**
+							id.startsWith("@codeeditorland/output/vs/") ||
+							// Resolved absolute path (after symlink + package.json exports map)
+							id.includes(
+								"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
+							) ||
+							id.includes(
+								"\\@codeeditorland\\output\\Target\\Microsoft\\VSCode\\vs\\",
+							) ||
+							id.startsWith("vs/") ||
+							id === "vscode"
+						);
+					},
 				],
 				output: {
 					// Preserve dynamic URL imports in VSCode worker files
 					hoistTransitiveImports: false,
-					// Keep module IDs as absolute file URLs to preserve external module references
+					// Route bundled entries to `${BundledOutputDir}/<Variant>/
+					// workbench-[hash].js`; everything else keeps the existing
+					// `app.js` / `[name]-[hash].js` shape.
 					entryFileNames: (chunkInfo) => {
+						if (
+							chunkInfo.name &&
+							chunkInfo.name.startsWith("Bundled/")
+						) {
+							return `${BundledOutputDir}/${chunkInfo.name.replace(
+								/^Bundled\//,
+								"",
+							)}-[hash].js`;
+						}
 						if (chunkInfo.name === "entry") return "app.js";
 
 						return chunkInfo.name
 							? `${chunkInfo.name}-[hash].js`
 							: `app-[hash].js`;
+					},
+					// Route bundled-tree chunk + asset siblings (CSS, etc.)
+					// alongside their entry under `${BundledOutputDir}/`. Vite
+					// emits CSS produced from `import "./foo.css"` as assets;
+					// keep them next to the entry that pulls them in.
+					chunkFileNames: (chunkInfo) => {
+						if (
+							chunkInfo.name &&
+							chunkInfo.name.startsWith("Bundled/")
+						) {
+							return `${BundledOutputDir}/${chunkInfo.name.replace(
+								/^Bundled\//,
+								"",
+							)}-[hash].js`;
+						}
+						return "_astro/[name]-[hash].js";
+					},
+					assetFileNames: (assetInfo) => {
+						const Name = assetInfo.name ?? "";
+						if (
+							BundledActive &&
+							(Name.endsWith(".css") || Name.endsWith(".woff2"))
+						) {
+							return `${BundledOutputDir}/[name]-[hash][extname]`;
+						}
+						return "_astro/[name]-[hash][extname]";
 					},
 				},
 			},

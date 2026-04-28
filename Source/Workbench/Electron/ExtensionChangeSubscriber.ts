@@ -41,7 +41,9 @@ const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
 	);
 
 	const Host = (
-		globalThis as unknown as { readonly __landWorkbench?: WorkbenchRefreshHost }
+		globalThis as unknown as {
+			readonly __landWorkbench?: WorkbenchRefreshHost;
+		}
 	).__landWorkbench;
 
 	const RefreshFn = Host?._servicesAccess?.get?.(
@@ -64,19 +66,16 @@ export default async (): Promise<void> => {
 	}
 
 	try {
-		const Stream = (await import(
-			"@codeeditorland/wind/Target/Effect/Extensions/ChangeStream"
-		)) as {
-			readonly default: unknown;
-		};
+		const Stream =
+			(await import("@codeeditorland/wind/Target/Effect/Extensions/ChangeStream")) as {
+				readonly default: unknown;
+			};
 
 		const { Effect, Stream: EffectStream } = await import("effect");
 
 		const Subscription = Effect.gen(function* () {
 			const Source = (yield* Stream.default as never) as unknown as {
-				readonly pipe: (
-					..._: unknown[]
-				) => unknown;
+				readonly pipe: (..._: unknown[]) => unknown;
 			};
 
 			yield* EffectStream.runForEach(Source, (Change) =>

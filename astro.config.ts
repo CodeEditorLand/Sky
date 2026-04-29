@@ -922,16 +922,37 @@ export default defineConfig({
 						) {
 							return true;
 						}
-						if (
-							BundledActive &&
-							(Id.includes(
-								"/Output/Target/Microsoft/VSCode/",
-							) ||
-								Id.includes(
-									"\\Output\\Target\\Microsoft\\VSCode\\",
-								))
-						) {
-							return true;
+						// VS Code's contribution-point side-effect imports
+						// (`extensions.contribution`, `scm.contribution`,
+						// `files.contribution`, every `*.viewlet.js` …) are
+						// the entire registration mechanism for the workbench
+						// view containers. Rollup's `"no-external"` default
+						// drops imports whose only purpose is the side-
+						// effect, leaving the bundle without an Extensions
+						// view, an SCM view, an Explorer view - the whole
+						// Activity Bar comes up empty even though
+						// `extensions:getInstalled` returns 113 entries.
+						//
+						// Match both shapes Rollup might resolve to:
+						//   - disk path: `/Output/Target/Microsoft/VSCode/`
+						//     (capital O - file walk via `Path:`)
+						//   - package spec: `@codeeditorland/output/Target/
+						//     Microsoft/VSCode/` (lowercase o - exports map)
+						if (BundledActive) {
+							const NormalisedId = Id.replace(/\\/g, "/");
+							if (
+								NormalisedId.includes(
+									"/Output/Target/Microsoft/VSCode/",
+								) ||
+								NormalisedId.includes(
+									"@codeeditorland/output/Target/Microsoft/VSCode/",
+								) ||
+								NormalisedId.includes(
+									"/output/Target/Microsoft/VSCode/",
+								)
+							) {
+								return true;
+							}
 						}
 						return "no-external";
 					},

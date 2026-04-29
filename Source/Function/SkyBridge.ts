@@ -2903,6 +2903,39 @@ export async function InstallSkyBridge(): Promise<void> {
 		Cleanups.forEach((F) => F());
 
 	console.log("[SkyBridge] All sky:// event channels registered");
+
+	// Drain Mountain-side state that fired through `sky://*` emits BEFORE
+	// any of the listeners above were installed. Tauri's `app.emit` is
+	// fire-and-forget - in the bundled-electron profile, extension
+	// activation kicks off ~580 log-lines before the Sky bundle finishes
+	// booting, so every `sky://tree-view/create` and `sky://scm/register`
+	// emitted during that window is dropped before this `Register(...)`
+	// chain installs. Without this replay, extension-contributed views
+	// (gitlens panes, jsdebug trees, SCM provider rows) never bind data
+	// providers and the panels stay empty even though the workbench is
+	// otherwise healthy. The Mountain handler iterates state under
+	// `runtime.ApplicationState.Feature.{TreeViews, Markers}` and re-emits
+	// each entry idempotently (`ScmShimRegistry.has(scmId)` short-
+	// circuits any duplicate registration on the Sky side).
+	try {
+		const Replay = (await invoke("MountainIPCInvoke", {
+			method: "sky:replay-events",
+			params: [],
+		})) as { treeViews?: number; scmProviders?: number } | undefined;
+		invoke("RenderDevLog", {
+			Tag: "sky-emit",
+			Message: `[SkyBridge] replay-events tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0}`,
+			tag: "sky-emit",
+			message: `[SkyBridge] replay-events tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0}`,
+		}).catch(() => {});
+	} catch (Error) {
+		invoke("RenderDevLog", {
+			Tag: "sky-emit",
+			Message: `[SkyBridge] replay-events failed: ${String(Error)}`,
+			tag: "sky-emit",
+			message: `[SkyBridge] replay-events failed: ${String(Error)}`,
+		}).catch(() => {});
+	}
 }
 
 export default InstallSkyBridge;

@@ -2921,12 +2921,19 @@ export async function InstallSkyBridge(): Promise<void> {
 		const Replay = (await invoke("MountainIPCInvoke", {
 			method: "sky:replay-events",
 			params: [],
-		})) as { treeViews?: number; scmProviders?: number } | undefined;
+		})) as
+			| {
+					treeViews?: number;
+					scmProviders?: number;
+					commands?: number;
+			  }
+			| undefined;
+		const Summary = `tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0} commands=${Replay?.commands ?? 0}`;
 		invoke("RenderDevLog", {
 			Tag: "sky-emit",
-			Message: `[SkyBridge] replay-events tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0}`,
+			Message: `[SkyBridge] replay-events ${Summary}`,
 			tag: "sky-emit",
-			message: `[SkyBridge] replay-events tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0}`,
+			message: `[SkyBridge] replay-events ${Summary}`,
 		}).catch(() => {});
 	} catch (Error) {
 		invoke("RenderDevLog", {

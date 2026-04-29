@@ -247,12 +247,41 @@ function GetServices(): CelServices | null {
 {
 	const ProbeServices = (): void => {
 		const S = GetServices() as Record<string, unknown> | null;
+		// Bridge the probe through `MountainIPCInvoke` so the per-key
+		// service shape lands in `Mountain.dev.log` under the
+		// `[diagnostic]` tag. The original `console.log` only surfaces
+		// in DevTools, which is invisible to log dissection - silent
+		// `Markers=null` / `WebviewViews=null` resolutions caused
+		// SkyBridge bridges (Problems-panel push, sidebar webview
+		// resolver) to no-op without any trace anywhere. Use the
+		// pre-bound `__TAURI__.core.invoke` (same surface SkyBridge
+		// already uses below) so we don't re-import.
+		const ToMountain = (Tag: string, Message: string): void => {
+			try {
+				const Inv =
+					(globalThis as any).__TAURI__?.core?.invoke ??
+					(globalThis as any).__TAURI__?.invoke;
+				if (typeof Inv === "function") {
+					Inv("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: [Tag, Message],
+					}).catch(() => {});
+				}
+			} catch {}
+		};
 		if (!S) {
 			try {
 				console.warn("[Sky:CEL] __CEL_SERVICES__ missing on probe");
 			} catch {}
+			ToMountain("cel-services", "__CEL_SERVICES__ missing on probe");
 			return;
 		}
+		// Every `__CEL_SERVICES__` key the workbench transform installs
+		// (see `Output/Source/Plugin/Transform/ExposeWorkbenchAccessor.ts`).
+		// `WebviewViews` and `Markers` are the leverage keys for the
+		// current "panes don't show / Problems empty" symptoms - keep
+		// them in the list even if they look incidental, since the
+		// shape line is the only post-mortem signal we have.
 		const Keys = [
 			"Statusbar",
 			"Commands",
@@ -269,6 +298,10 @@ function GetServices(): CelServices | null {
 			"ToDisposable",
 			"Models",
 			"Languages",
+			"ResourceTree",
+			"UriIdentity",
+			"WebviewViews",
+			"Markers",
 		];
 		const Shape = Keys.map(
 			(K) => `${K}=${S[K] == null ? "null" : typeof S[K]}`,
@@ -276,6 +309,13 @@ function GetServices(): CelServices | null {
 		try {
 			console.log(`[Sky:CEL] services-ready ${Shape}`);
 		} catch {}
+		ToMountain("cel-services", `shape ${Shape}`);
+		// Probe one level deeper for the two services the current bug
+		// hunt depends on, so a `WebviewViews=object` line that is
+		// nonetheless missing `.register` (e.g. a stub that resolved
+		// but isn't the real `WebviewViewService`) still surfaces.
+		const RegisterShape = `WebviewViews.register=${typeof (S["WebviewViews"] as any)?.register} Markers.changeOne=${typeof (S["Markers"] as any)?.changeOne}`;
+		ToMountain("cel-services", RegisterShape);
 	};
 	if (typeof window !== "undefined") {
 		// If services already ready by the time this module loads, probe
@@ -1012,41 +1052,46 @@ export async function InstallSkyBridge(): Promise<void> {
 					// When Mountain didn't supply columns (older ripgrep
 					// path or zero-width match), produce a single full-
 					// line range so the row still renders.
+					// `MatchImpl` (workbench/contrib/search/.../match.ts:31)
+					// indexes `_fullPreviewLines[startLineNumber]` directly,
+					// then +1's both axes when constructing the editor
+					// `Range`. So both `source` and `preview` must be
+					// fully 0-based here. Earlier shape was 1-based on the
+					// preview, which made `previewLines[1]` === undefined
+					// for single-line previews and produced
+					// "undefined is not an object (evaluating
+					// 'this._oneLinePreviewText.substring')". Source was
+					// also off-by-one (line and column too high by 1).
+					const SourceLine = Math.max(0, M.lineNumber - 1);
 					const RangeLocations =
 						M.columns.length > 0
 							? M.columns.map((C) => ({
 									source: {
-										startLineNumber: M.lineNumber,
-										startColumn: C.start + 1,
-										endLineNumber: M.lineNumber,
-										endColumn: C.end + 1,
+										startLineNumber: SourceLine,
+										startColumn: C.start,
+										endLineNumber: SourceLine,
+										endColumn: C.end,
 									},
 									preview: {
-										startLineNumber: 1,
-										startColumn: C.start + 1,
-										endLineNumber: 1,
-										endColumn: C.end + 1,
+										startLineNumber: 0,
+										startColumn: C.start,
+										endLineNumber: 0,
+										endColumn: C.end,
 									},
 								}))
 							: [
 									{
 										source: {
-											startLineNumber: M.lineNumber,
-											startColumn: 1,
-											endLineNumber: M.lineNumber,
-											endColumn: Math.max(
-												1,
-												M.preview.length + 1,
-											),
+											startLineNumber: SourceLine,
+											startColumn: 0,
+											endLineNumber: SourceLine,
+											endColumn: M.preview.length,
 										},
 										preview: {
-											startLineNumber: 1,
-											startColumn: 1,
-											endLineNumber: 1,
-											endColumn: Math.max(
-												1,
-												M.preview.length + 1,
-											),
+											startLineNumber: 0,
+											startColumn: 0,
+											endLineNumber: 0,
+											endColumn: M.preview.length,
 										},
 									},
 								];
@@ -2584,8 +2629,21 @@ export async function InstallSkyBridge(): Promise<void> {
 				detail: { handle: Handle, viewId: ViewId, payload: Payload },
 			}),
 		);
+		// Per-fire trace so the SkyEmit -> Sky-listener bridge is
+		// observable in Mountain.dev.log. The listener used to silently
+		// `return` when `Services?.WebviewViews?.register` was missing,
+		// which made post-mortem indistinguishable from "Sky listener
+		// never fired".
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			const Reg = Services?.WebviewViews?.register;
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"webview-bridge",
+					`registerView viewId=${ViewId} handle=${Handle} hasRegister=${typeof Reg === "function"}`,
+				],
+			}).catch(() => {});
 			if (!Services?.WebviewViews?.register) return;
 			Services.WebviewViews.register(ViewId, {
 				resolve: async (WebviewView: any, _Cancellation: any) => {

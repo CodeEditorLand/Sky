@@ -26,6 +26,39 @@ import TelemetryBridge from "../../TelemetryBridge.astro";
 	<NLS />
 	<TelemetryBridge />
 
+	<!-- Phase advance script - fires BEFORE the workbench import so it
+	     is not blocked by the main workbench script. Mirrors the
+	     equivalent block in `Mountain.astro:30` so the bundled Electron
+	     route doesn't hang at phase 2 / 3 waiting for Mountain's 8s /
+	     23s fallback timers (visible in the log as
+	     `[Lifecycle] [Fallback] Sky did not advance to Restored within
+	     8s ...`). The fallback delay leaves the workbench in a
+	     half-restored render state - editor state-restoration gated on
+	     phase=Restored is deferred, "Eventually" work is deferred -
+	     which surfaces as sluggish UI / heavy-on-the-eye flicker
+	     during the first 8-23 seconds. -->
+	<script type="module">
+		const PhaseInvoke =
+			globalThis.__TAURI_INTERNALS__?.invoke ??
+			globalThis.__TAURI__?.invoke ??
+			globalThis.__TAURI__?.core?.invoke ??
+			null;
+		if (PhaseInvoke) {
+			const Advance = (PhaseNumber) =>
+				PhaseInvoke("MountainIPCInvoke", {
+					method: "lifecycle:advancePhase",
+					params: [PhaseNumber],
+				}).catch(() => {});
+			// Phase 3 = Restored: workbench DOM is attached, first
+			// paint imminent. Mountain rejects same-/backwards-phase
+			// advances, so racing the workbench import is safe.
+			Advance(3);
+			// Phase 4 = Eventually: long-tail background work can
+			// start. Delayed so 3 → 4 stays monotonic.
+			setTimeout(() => Advance(4), 1500);
+		}
+	</script>
+
 	<!-- Sequential: Preload -> Polyfills -> Bootstrap -> Entry (bundled workbench) -> SkyBridge -->
 	<script type="module">
 		await import("../../Electron/WindPreload.js");

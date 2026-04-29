@@ -63,7 +63,12 @@ import { External, Host, Link, On } from "./Source/Function/Debug";
 // empty and the `vs/**` external rules below stay in effect - existing
 // builds are byte-for-byte identical.
 // -----------------------------------------------------------------------------
-const BundledVariants = ["electron", "browser", "sessions", "workbench"] as const;
+const BundledVariants = [
+	"electron",
+	"browser",
+	"sessions",
+	"workbench",
+] as const;
 type BundledVariant = (typeof BundledVariants)[number];
 
 const BundledList = (process.env["Pack"] ?? "")
@@ -616,9 +621,7 @@ export default defineConfig({
 					// Scanner observes the same flag (Atom J3) and returns early
 					// for the built-in fallback paths, so the runtime matches the
 					// zero-on-disk state.
-					if (
-						process.env["Skip"] === "true"
-					) {
+					if (process.env["Skip"] === "true") {
 						console.log(
 							"[CopyVSCode] Step 13: Skip=true - skipping built-in extension copy",
 						);
@@ -645,8 +648,7 @@ export default defineConfig({
 						// `Install=false` for CI
 						// runs that pre-populate the cache.
 						const AutoInstallDeps =
-							process.env["Install"] !==
-							"false";
+							process.env["Install"] !== "false";
 						const InstallLog: Array<{
 							Name: string;
 							Installed: number;
@@ -739,11 +741,7 @@ export default defineConfig({
 							// exporting the flag in the shell or
 							// `.env.Land.Local`. Preserve the call-to-action at
 							// the end so the opt-in output is self-explanatory.
-							if (
-								process.env[
-									"Warn"
-								] === "true"
-							) {
+							if (process.env["Warn"] === "true") {
 								for (const Warning of BundleWarnings) {
 									console.warn(
 										`[CopyVSCode] Step 13: bundle warning - ${Warning}`,
@@ -807,12 +805,22 @@ export default defineConfig({
 		},
 	],
 
-	experimental: {
-		clientPrerender: true,
+	output: "static",
 
-		contentIntellisense: true,
+	experimental: {
+		clientPrerender: false,
+
+		contentIntellisense: false,
 
 		rustCompiler: true,
+
+		queuedRendering: {
+			enabled: false,
+
+			contentCache: false,
+
+			poolSize: 1000,
+		},
 	},
 
 	vite: {
@@ -853,11 +861,9 @@ export default defineConfig({
 			"import.meta.env.Report": JSON.stringify(
 				process.env["Report"] ?? "true",
 			),
-			"import.meta.env.Throttle":
-				JSON.stringify(
-					process.env["Throttle"] ??
-						"5",
-				),
+			"import.meta.env.Throttle": JSON.stringify(
+				process.env["Throttle"] ?? "5",
+			),
 			"import.meta.env.Buffer": JSON.stringify(
 				process.env["Buffer"] ?? "3000",
 			),
@@ -870,9 +876,7 @@ export default defineConfig({
 			"import.meta.env.Ask": JSON.stringify(
 				process.env["Ask"] ?? "false",
 			),
-			"import.meta.env.Brand": JSON.stringify(
-				process.env["Brand"] ?? "",
-			),
+			"import.meta.env.Brand": JSON.stringify(process.env["Brand"] ?? ""),
 		},
 
 		build: {

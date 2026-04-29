@@ -316,6 +316,41 @@ function GetServices(): CelServices | null {
 		// but isn't the real `WebviewViewService`) still surfaces.
 		const RegisterShape = `WebviewViews.register=${typeof (S["WebviewViews"] as any)?.register} Markers.changeOne=${typeof (S["Markers"] as any)?.changeOne}`;
 		ToMountain("cel-services", RegisterShape);
+		// View-registry snapshot. The Output transform's
+		// `ViewRegistrySnapshot()` accessor (added in
+		// `ExposeWorkbenchAccessor.ts`) walks the workbench's
+		// `IViewContainersRegistry` and `IViewsRegistry`, returning
+		// counts + sample IDs. Logged at +5s so the extension-points
+		// pipeline has time to flush. If `containers` is still tiny
+		// (only built-ins like `workbench.view.explorer`) and no
+		// extension-contributed IDs (`roo-cline`, `claude-vscode`,
+		// `gitlens.views.welcome`, ...) appear, the issue is that
+		// extension manifests aren't reaching
+		// `viewsContainersExtensionPoint.setHandler` - meaning the
+		// workbench's `IExtensionService` never received those
+		// extensions' descriptions through the `_registerExtensions`
+		// path. Activity bar stays empty, panels can't open.
+		setTimeout(() => {
+			try {
+				const Snapshot = (S as any)?.ViewRegistrySnapshot?.();
+				if (!Snapshot) {
+					ToMountain(
+						"view-registry",
+						"snapshot accessor missing on __CEL_SERVICES__",
+					);
+					return;
+				}
+				ToMountain(
+					"view-registry",
+					`containers=${Snapshot.containers} views=${Snapshot.views} containerSample=${(Snapshot.containerSample ?? []).join(",")} viewSample=${(Snapshot.viewSample ?? []).join(",")}`,
+				);
+			} catch (Error) {
+				ToMountain(
+					"view-registry",
+					`probe failed: ${(Error as Error)?.message ?? String(Error)}`,
+				);
+			}
+		}, 5000);
 	};
 	if (typeof window !== "undefined") {
 		// If services already ready by the time this module loads, probe
@@ -592,8 +627,38 @@ function ShowNotification(
 /**
  * Install all `sky://` event listeners. Call this AFTER the VS Code
  * workbench has loaded (so `__CEL_WORKBENCH__` is available).
+ *
+ * **Reentrancy:** the function is idempotent. Multiple calls (Astro
+ * view-transition, Tauri webview reload, dev HMR re-import) only attach
+ * the listener set once. Without this guard every double-call doubled
+ * the Tauri `listen()` registrations, so each Mountain emit fired every
+ * `sky://*` handler N times - rendering the same tree view twice,
+ * inserting the same marker twice, painting the same webview twice,
+ * etc. That looked exactly like "the workbench is loading twice" /
+ * "purple overlays / panels not rendering properly" in the renderer.
  */
+let _SkyBridgeInstalled = false;
+let _SkyBridgeInstallPromise: Promise<void> | null = null;
+
 export async function InstallSkyBridge(): Promise<void> {
+	if (_SkyBridgeInstalled) {
+		return;
+	}
+	if (_SkyBridgeInstallPromise) {
+		return _SkyBridgeInstallPromise;
+	}
+	_SkyBridgeInstallPromise = (async () => {
+		try {
+			await _InstallSkyBridgeOnce();
+			_SkyBridgeInstalled = true;
+		} finally {
+			_SkyBridgeInstallPromise = null;
+		}
+	})();
+	return _SkyBridgeInstallPromise;
+}
+
+async function _InstallSkyBridgeOnce(): Promise<void> {
 	const Cleanups: Array<() => void> = [];
 	const Register = async (
 		Channel: string,

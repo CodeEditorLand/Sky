@@ -5,24 +5,6 @@ import Meta from "../Meta.astro";
 <!doctype html>
 <html lang="en" class="no-js" dir="ltr">
 	<head>
-		<!-- Early paint colour. Without this the WKWebView renders its
-		     default white → VS Code's theme CSS → native-titlebar repaint
-		     all in ~200 ms, visible as a purple/fuchsia/white flash on
-		     every Tauri `Window.navigate()` reload (reported as
-		     "overlaying purple windows" + stuttering). Matching VS Code
-		     Dark+ (`#1e1e1e` editor bg, `#d4d4d4` editor fg) keeps the
-		     first paint inside the app's dark band so the flash
-		     disappears. Kept inline so it applies before any external
-		     CSS loads. -->
-		<style is:inline>
-			html,
-			body {
-				background: #1e1e1e;
-				color: #d4d4d4;
-				margin: 0;
-			}
-		</style>
-
 		<script>
 			document.documentElement.classList.remove("no-js");
 

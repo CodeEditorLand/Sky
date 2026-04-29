@@ -2041,11 +2041,24 @@ export async function InstallSkyBridge(): Promise<void> {
 		const Services = GetServices();
 		const Markers = (Services as any)?.Markers;
 		const URICtor = (Services as any)?.URI;
-		if (!Markers?.changeOne || !URICtor) return;
 		const Owner = String(Payload?.owner ?? "");
 		const Changed = Array.isArray(Payload?.changedURIs)
 			? Payload.changedURIs
 			: [];
+		// Per-fire trace - same reasoning as the webview/registerView
+		// listener: a silent early-return on missing services made the
+		// "Problems panel populates with count but stays visually empty"
+		// symptom impossible to triage without DevTools. The
+		// `pushable` field tells us at a glance whether this fire
+		// would have called `changeOne` at all.
+		invoke("MountainIPCInvoke", {
+			method: "diagnostic:log",
+			params: [
+				"markers-bridge",
+				`owner=${Owner} uris=${Changed.length} pushable=${typeof Markers?.changeOne === "function" && !!URICtor}`,
+			],
+		}).catch(() => {});
+		if (!Markers?.changeOne || !URICtor) return;
 		for (const Entry of Changed) {
 			try {
 				const Uri = Entry?.uri;

@@ -986,49 +986,73 @@ export async function InstallSkyBridge(): Promise<void> {
 			return {
 				resource: MakeFileUri(OsPath),
 				results: PerLineMatches.map((M) => {
-					// VS Code's `ISearchRange`: 1-based for line, 0-based
-					// for column. Mountain's columns array is already
-					// 0-based UTF-8 char offsets within the preview line.
+					// VS Code's current `ITextSearchMatch` shape (≥1.92):
+					//   {
+					//     uri?: URI,
+					//     rangeLocations: { source: ISearchRange,
+					//                       preview: ISearchRange }[],
+					//     previewText: string,
+					//   }
+					// The OLD `{preview: {text, matches}, ranges}` shape
+					// was renamed: `preview.text` → `previewText`, and
+					// `preview.matches` + `ranges` collapsed into a single
+					// pair-array `rangeLocations[]`. Stock vscode passes
+					// our matches through `searchResult.add()` which
+					// reads `previewText` + `rangeLocations` and silently
+					// rejects (count-of-zero) entries with the old shape -
+					// which is why the search panel showed 0 results
+					// despite Mountain returning 2560 line-matches.
+					//
+					// `source`: 1-based line, 1-based column - the
+					// position in the original file that matched.
+					// `preview`: 1-based line=1, 1-based column - the
+					// position WITHIN `previewText` for highlight
+					// underlining.
+					//
 					// When Mountain didn't supply columns (older ripgrep
-					// path or zero-width match), highlight the whole
-					// line so the user still sees the row but without
-					// a sub-line underline.
-					const Ranges =
+					// path or zero-width match), produce a single full-
+					// line range so the row still renders.
+					const RangeLocations =
 						M.columns.length > 0
 							? M.columns.map((C) => ({
-									startLineNumber: M.lineNumber,
-									startColumn: C.start + 1,
-									endLineNumber: M.lineNumber,
-									endColumn: C.end + 1,
+									source: {
+										startLineNumber: M.lineNumber,
+										startColumn: C.start + 1,
+										endLineNumber: M.lineNumber,
+										endColumn: C.end + 1,
+									},
+									preview: {
+										startLineNumber: 1,
+										startColumn: C.start + 1,
+										endLineNumber: 1,
+										endColumn: C.end + 1,
+									},
 								}))
 							: [
 									{
-										startLineNumber: M.lineNumber,
-										startColumn: 1,
-										endLineNumber: M.lineNumber,
-										endColumn: Math.max(
-											1,
-											M.preview.length + 1,
-										),
+										source: {
+											startLineNumber: M.lineNumber,
+											startColumn: 1,
+											endLineNumber: M.lineNumber,
+											endColumn: Math.max(
+												1,
+												M.preview.length + 1,
+											),
+										},
+										preview: {
+											startLineNumber: 1,
+											startColumn: 1,
+											endLineNumber: 1,
+											endColumn: Math.max(
+												1,
+												M.preview.length + 1,
+											),
+										},
 									},
 								];
-					// `preview.matches` is the SAME range list but
-					// translated into preview-local coordinates (line 1,
-					// column relative to preview start). Without this the
-					// renderer shows the row but no matched-substring
-					// highlight inside the line.
-					const PreviewMatches =
-						M.columns.length > 0
-							? M.columns.map((C) => ({
-									startLineNumber: 1,
-									startColumn: C.start + 1,
-									endLineNumber: 1,
-									endColumn: C.end + 1,
-								}))
-							: [];
 					return {
-						preview: { text: M.preview, matches: PreviewMatches },
-						ranges: Ranges,
+						previewText: M.preview,
+						rangeLocations: RangeLocations,
 					};
 				}),
 			};
@@ -1980,7 +2004,9 @@ export async function InstallSkyBridge(): Promise<void> {
 		for (const Entry of Changed) {
 			try {
 				const Uri = Entry?.uri;
-				const Markers_ = Array.isArray(Entry?.markers) ? Entry.markers : [];
+				const Markers_ = Array.isArray(Entry?.markers)
+					? Entry.markers
+					: [];
 				if (!Uri) continue;
 				const RealUri =
 					typeof Uri === "string"
@@ -2727,11 +2753,7 @@ export async function InstallSkyBridge(): Promise<void> {
 		} catch (Error) {
 			try {
 				const W = globalThis as any;
-				if (
-					W?.process?.env?.Trace?.includes?.(
-						"cel-customeditor",
-					)
-				) {
+				if (W?.process?.env?.Trace?.includes?.("cel-customeditor")) {
 					(W.console || console).warn(
 						`[Sky:CEL-CustomEditor] registerCapability failed: ${
 							(Error as { message?: string })?.message ??

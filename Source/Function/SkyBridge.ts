@@ -120,6 +120,10 @@ const _CelDispatchLog = (DomEvent: string, HasConsumer: boolean): void => {
 /**
  * Retrieves the VS Code `IWorkbench` stored globally by Mountain.astro.
  * Returns null if the workbench has not loaded yet.
+ *
+ * Defensive: `window` itself can be undefined under SSR / Astro
+ * pre-render evaluation; the global access path is wrapped to keep the
+ * function safe to call from any module-eval context.
  */
 function GetWorkbench(): {
 	commands: {
@@ -127,7 +131,12 @@ function GetWorkbench(): {
 	};
 	env: { openUri(target: unknown): Promise<boolean> };
 } | null {
-	return (window as any).__CEL_WORKBENCH__ ?? null;
+	try {
+		if (typeof window === "undefined") return null;
+		return (window as any).__CEL_WORKBENCH__ ?? null;
+	} catch {
+		return null;
+	}
 }
 
 // Concrete workbench service handles written by the Output transform
@@ -233,6 +242,14 @@ interface CelServices {
 }
 
 function GetServices(): CelServices | null {
+	// SSR safety: `window` is undefined during Astro's pre-render
+	// pass. Returning `null` lets every caller keep its existing
+	// `if (!Services) return;` early-return contract.
+	try {
+		if (typeof window === "undefined") return null;
+	} catch {
+		return null;
+	}
 	return (window as any).__CEL_SERVICES__ ?? null;
 }
 
@@ -664,10 +681,45 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		Channel: string,
 		Handler: (Payload: any) => void,
 	) => {
-		const Unlisten = await listen<any>(Channel, (Event) =>
-			Handler(Event.payload),
-		);
-		Cleanups.push(Unlisten);
+		// Centralized try/catch wrapper: a single bad handler must not
+		// crash the Tauri listener loop, which would silently
+		// disconnect future events on the same channel. Stock VS
+		// Code's Emitter wraps each subscriber's call in a try/catch
+		// for the same reason - one buggy listener should never
+		// silence its peers.
+		const SafeHandler = (Payload: any): void => {
+			try {
+				Handler(Payload);
+			} catch (HandlerError) {
+				try {
+					console.warn(
+						`[SkyBridge] handler for ${Channel} threw:`,
+						HandlerError,
+					);
+				} catch {
+					/* console may be replaced */
+				}
+			}
+		};
+		try {
+			const Unlisten = await listen<any>(Channel, (Event) =>
+				SafeHandler(Event.payload),
+			);
+			Cleanups.push(Unlisten);
+		} catch (RegisterError) {
+			// Tauri's `listen()` can reject if the IPC bridge is torn
+			// down mid-install (e.g. window closing during boot). Log
+			// and continue - the rest of the bridge install must
+			// still complete so other channels work.
+			try {
+				console.warn(
+					`[SkyBridge] failed to register listener for ${Channel}:`,
+					RegisterError,
+				);
+			} catch {
+				/* console may be replaced */
+			}
+		}
 	};
 
 	// Atom Q1: resolve UI requests via Mountain's `ResolveUIRequest` Tauri
@@ -2074,16 +2126,40 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	] as const;
 	for (const Channel of FanOut) {
 		await Register(Channel, (Payload: any) => {
-			const DomEvent = ChannelToDomEvent(Channel);
-			document.dispatchEvent(
-				new CustomEvent(DomEvent, { detail: Payload }),
-			);
-			// `cel-dispatch` tag: surfaces whether this CustomEvent has
-			// any consumer registered. Orphans (consumer-present=false)
-			// are F1.1 indicators - Mountain's emit reaches the DOM
-			// but nothing in the workbench listens, so the event
-			// effectively vanishes.
-			_CelDispatchLog(DomEvent, _CelConsumers.has(DomEvent));
+			// Defensive: a single handler that throws (bad payload from
+			// upstream, dispatchEvent rejected by the DOM, etc.) must
+			// not stop the rest of the fan-out from running. Same
+			// philosophy as VS Code's `safeStringify` / event-emitter
+			// per-listener try/catch - one bad consumer never silences
+			// the others.
+			let DomEvent = "";
+			try {
+				DomEvent = ChannelToDomEvent(Channel);
+				document.dispatchEvent(
+					new CustomEvent(DomEvent, { detail: Payload }),
+				);
+			} catch (DispatchError) {
+				try {
+					console.warn(
+						`[SkyBridge] FanOut dispatch failed for ${Channel}:`,
+						DispatchError,
+					);
+				} catch {
+					/* swallow - console may be replaced */
+				}
+				return;
+			}
+			try {
+				// `cel-dispatch` tag: surfaces whether this CustomEvent
+				// has any consumer registered. Orphans
+				// (consumer-present=false) are F1.1 indicators -
+				// Mountain's emit reaches the DOM but nothing in the
+				// workbench listens, so the event effectively vanishes.
+				_CelDispatchLog(DomEvent, _CelConsumers.has(DomEvent));
+			} catch {
+				/* dispatch-log failure must not propagate; the event
+				 * itself already fired above */
+			}
 		});
 	}
 
@@ -2248,13 +2324,26 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					? Response.items
 					: [];
 				const ParentHandle = Element?.handle ?? "";
-				const Items = RawItems.map((Raw, Index) =>
-					ToTreeItem(Raw, {
-						ViewId,
-						ParentHandle,
-						Index,
-					}),
-				);
+				// Per-item try/catch so a single malformed tree node
+				// (extension-side serialisation glitch, missing
+				// `label`/`handle`) doesn't drop the entire panel
+				// children list. Stock VS Code's renderer skips bad
+				// items rather than failing the parent.
+				const Items: unknown[] = [];
+				for (let Index = 0; Index < RawItems.length; Index += 1) {
+					try {
+						Items.push(
+							ToTreeItem(RawItems[Index], {
+								ViewId,
+								ParentHandle,
+								Index,
+							}),
+						);
+					} catch {
+						/* skip the bad item; the rest of the children
+						 * are still valid */
+					}
+				}
 				// Dual-emit: DOM CustomEvent for Sky-side observers
 				// (same shape as the workbench tree renderer sees so
 				// mirror panels don't need a second conversion).
@@ -2391,13 +2480,29 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				| undefined;
 			const ViewId = Detail?.viewId ?? "";
 			if (!ViewId) return;
-			const Services = GetServices();
-			const TreeView = Services?.TreeViewByViewId?.(ViewId);
-			if (TreeView?.refresh) {
-				TreeView.refresh().catch(() => {});
+			// Defensive: `Services?.TreeViewByViewId?.()` itself could
+			// throw (Registry lookup with a freshly disposed view), and
+			// `TreeView.refresh()` may synchronously throw before
+			// returning a Promise (older xterm/tree shims). Wrap so a
+			// single failure doesn't crash the listener loop.
+			try {
+				const Services = GetServices();
+				const TreeView = Services?.TreeViewByViewId?.(ViewId);
+				if (TreeView?.refresh) {
+					const RefreshResult = TreeView.refresh();
+					if (RefreshResult && typeof RefreshResult.catch === "function") {
+						RefreshResult.catch(() => {});
+					}
+				}
+			} catch {
+				/* swallow - already-disposed view / DI lookup race */
 			}
 			// Also re-prime the Sky observers.
-			void ProvideChildren(ViewId, undefined);
+			try {
+				void ProvideChildren(ViewId, undefined);
+			} catch {
+				/* swallow */
+			}
 		});
 
 		// `cel:tree-view:dispose` - extension disposed its tree data
@@ -2410,10 +2515,16 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				| undefined;
 			const ViewId = Detail?.viewId ?? "";
 			if (!ViewId) return;
-			const Services = GetServices();
-			const TreeView = Services?.TreeViewByViewId?.(ViewId);
-			if (TreeView && TreeView.dataProvider !== undefined) {
-				TreeView.dataProvider = undefined;
+			// Defensive: setter may throw if the workbench already
+			// torn down the view in a parallel disposal race.
+			try {
+				const Services = GetServices();
+				const TreeView = Services?.TreeViewByViewId?.(ViewId);
+				if (TreeView && TreeView.dataProvider !== undefined) {
+					TreeView.dataProvider = undefined;
+				}
+			} catch {
+				/* view already disposed - nothing to clear */
 			}
 		});
 	}
@@ -2701,12 +2812,35 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		const Handle = Args[0] ?? Payload?.handle;
 		const ViewId: string = String(Args[1] ?? Payload?.viewId ?? "");
 		if (!ViewId) return;
-		WebviewViewResolvers.set(ViewId, Number(Handle));
-		document.dispatchEvent(
-			new CustomEvent("cel:webview:registerView", {
-				detail: { handle: Handle, viewId: ViewId, payload: Payload },
-			}),
-		);
+		// Defensive: a malformed payload (Mountain emit shape drift,
+		// missing handle, etc.) shouldn't kill the rest of the
+		// listener pipeline. Track + DOM-dispatch are best-effort;
+		// the WebviewViewService.register call below is what actually
+		// makes the panel work, so isolate failures so one doesn't
+		// cascade into the other.
+		try {
+			WebviewViewResolvers.set(ViewId, Number(Handle));
+		} catch {
+			/* Map.set on a non-string viewId is unreachable since we
+			 * String()-coerced above, but keep the guard so a future
+			 * payload-shape change can't poison the registry */
+		}
+		try {
+			document.dispatchEvent(
+				new CustomEvent("cel:webview:registerView", {
+					detail: { handle: Handle, viewId: ViewId, payload: Payload },
+				}),
+			);
+		} catch (DispatchError) {
+			try {
+				console.warn(
+					`[SkyBridge] webview/registerView CustomEvent dispatch failed for ${ViewId}:`,
+					DispatchError,
+				);
+			} catch {
+				/* console may be replaced */
+			}
+		}
 		// Per-fire trace so the SkyEmit -> Sky-listener bridge is
 		// observable in Mountain.dev.log. The listener used to silently
 		// `return` when `Services?.WebviewViews?.register` was missing,
@@ -2829,8 +2963,29 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					}
 				},
 			});
-		} catch (_e) {
-			/* swallow - workbench DI not yet resolved */
+		} catch (RegisterError) {
+			// `IWebviewViewService.register` throws on duplicate viewId -
+			// stock VS Code's `webviewViewService.ts:108` does
+			// `throw new Error("View resolver already registered for ...")`
+			// when a viewId is registered twice. That happens when the
+			// extension host re-registers after a hot-reload or when our
+			// SkyBridge reentrancy guard didn't engage in time. Swallow
+			// the dup-error specifically (the existing resolver is
+			// already serving the view); log anything else so we can
+			// triage real failures.
+			try {
+				const Message = (RegisterError as any)?.message ?? String(
+					RegisterError,
+				);
+				if (!String(Message).includes("already registered")) {
+					console.warn(
+						`[SkyBridge] WebviewViews.register failed for ${ViewId}:`,
+						RegisterError,
+					);
+				}
+			} catch {
+				/* console may be replaced */
+			}
 		}
 	});
 

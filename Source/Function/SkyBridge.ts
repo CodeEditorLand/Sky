@@ -1075,11 +1075,32 @@ export async function InstallSkyBridge(): Promise<void> {
 						],
 					})) as any[];
 					const Results: any[] = [];
+					let LineMatchCount = 0;
+					let OnProgressCalled = 0;
+					const HasOnProgress = typeof OnProgress === "function";
 					for (const Hit of Raw ?? []) {
 						const Match = MatchFromHit(Hit);
-						OnProgress?.(Match);
+						LineMatchCount += Match.results?.length ?? 0;
+						if (HasOnProgress) {
+							try {
+								OnProgress?.(Match);
+								OnProgressCalled++;
+							} catch (ProgressErr) {
+								console.warn(
+									"[SkyBridge] OnProgress threw on file",
+									(Hit as any)?.resource,
+									ProgressErr,
+								);
+							}
+						}
 						Results.push(Match);
 					}
+					invoke("RenderDevLog", {
+						Tag: "search",
+						Message: `[SkyBridge] textSearch return raw=${(Raw ?? []).length} files=${Results.length} lineMatches=${LineMatchCount} onProgress=${OnProgressCalled} hasCallback=${HasOnProgress} firstResource=${Results[0]?.resource?.toString?.()?.slice(0, 80) ?? "<none>"}`,
+						tag: "search",
+						message: `[SkyBridge] textSearch return raw=${(Raw ?? []).length} files=${Results.length} lineMatches=${LineMatchCount} onProgress=${OnProgressCalled} hasCallback=${HasOnProgress}`,
+					}).catch(() => {});
 					return {
 						results: Results,
 						messages: [],

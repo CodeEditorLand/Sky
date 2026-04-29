@@ -2926,9 +2926,11 @@ export async function InstallSkyBridge(): Promise<void> {
 					treeViews?: number;
 					scmProviders?: number;
 					commands?: number;
+					terminals?: number;
+					terminalDataBytes?: number;
 			  }
 			| undefined;
-		const Summary = `tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0} commands=${Replay?.commands ?? 0}`;
+		const Summary = `tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0} commands=${Replay?.commands ?? 0} terminals=${Replay?.terminals ?? 0} terminal-bytes=${Replay?.terminalDataBytes ?? 0}`;
 		invoke("RenderDevLog", {
 			Tag: "sky-emit",
 			Message: `[SkyBridge] replay-events ${Summary}`,

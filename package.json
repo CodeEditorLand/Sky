@@ -51,7 +51,7 @@
 		"typescript": "6.0.3",
 		"vite": "8.0.10",
 		"vite-plugin-top-level-await": "1.6.0",
-		"zod": "4.3.6"
+		"zod": "4.4.0"
 	},
 	"devDependencies": {
 		"@astrojs/compiler-rs": "0.1.10",

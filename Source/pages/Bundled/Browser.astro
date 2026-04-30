@@ -6,9 +6,17 @@
  */
 
 import Layout from "../../Function/Markup/Base.astro";
-import BundledBrowserLayout from "../../Workbench/Bundled/Browser/Layout.astro";
+
+const BundledList = (process.env["Pack"] ?? "")
+	.split(/\s+/)
+	.map((Name) => Name.trim().toLowerCase())
+	.filter(Boolean);
+
+const BundledBrowserLayout = BundledList.includes("browser")
+	? (await import("../../Workbench/Bundled/Browser/Layout.astro")).default
+	: null;
 ---
 
 <Layout>
-	<BundledBrowserLayout />
+	{BundledBrowserLayout ? <BundledBrowserLayout /> : null}
 </Layout>

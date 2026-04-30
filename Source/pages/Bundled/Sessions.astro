@@ -6,9 +6,17 @@
  */
 
 import Layout from "../../Function/Markup/Base.astro";
-import BundledSessionsLayout from "../../Workbench/Bundled/Sessions/Layout.astro";
+
+const BundledList = (process.env["Pack"] ?? "")
+	.split(/\s+/)
+	.map((Name) => Name.trim().toLowerCase())
+	.filter(Boolean);
+
+const BundledSessionsLayout = BundledList.includes("sessions")
+	? (await import("../../Workbench/Bundled/Sessions/Layout.astro")).default
+	: null;
 ---
 
 <Layout>
-	<BundledSessionsLayout />
+	{BundledSessionsLayout ? <BundledSessionsLayout /> : null}
 </Layout>

@@ -16,9 +16,23 @@
  */
 
 import Layout from "../../Function/Markup/Base.astro";
-import BundledElectronLayout from "../../Workbench/Bundled/Electron/Layout.astro";
+
+const BundledList = (process.env["Pack"] ?? "")
+	.split(/\s+/)
+	.map((Name) => Name.trim().toLowerCase())
+	.filter(Boolean);
+
+// Gate the inner Layout import on the active `Pack` so Vite/Rollup walks
+// the bundled VS Code module graph only when the profile actually selected
+// this variant. Static `import` would force Rollup to follow the chain
+// regardless, pulling in gulp-only files (`workbench.desktop.main.js`) that
+// the release `out-build/` tree does not carry. See `pages/index.astro`
+// frontmatter for the full rationale.
+const BundledElectronLayout = BundledList.includes("electron")
+	? (await import("../../Workbench/Bundled/Electron/Layout.astro")).default
+	: null;
 ---
 
 <Layout>
-	<BundledElectronLayout />
+	{BundledElectronLayout ? <BundledElectronLayout /> : null}
 </Layout>

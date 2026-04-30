@@ -1293,6 +1293,47 @@ export default defineConfig({
 		plugins: [
 			(await import("vite-plugin-top-level-await")).default(),
 
+			// Stub `Source/Workbench/Bundled/<Variant>/Entry.ts` for every
+			// variant NOT in the active `Pack` env var.
+			//
+			// Astro auto-discovers `pages/Bundled/<Variant>.astro` as page
+			// routes; each page's component graph references the matching
+			// `Workbench/Bundled/<Variant>/Layout.astro`, whose `<script>` block
+			// statically `await import("./Entry.js")`s. Rollup follows
+			// `await import(<literal>)` to build a separate chunk
+			// regardless of any surrounding runtime conditional, so even
+			// pages we never render still pull every variant's Entry into
+			// the module graph - at which point the Browser variant's
+			// `vs/code/browser/workbench/workbench.js` walks into the
+			// gulp-only `workbench.web.main.internal.js`, the Electron
+			// variant's `workbench.js` walks into `workbench.desktop.main.js`,
+			// and Output's release `out-build/` tree (mangled,
+			// telemetry-stripped) cannot satisfy the unmangled gulp-only
+			// imports.
+			//
+			// Replacing inactive Entry modules with an empty stub at
+			// `load()` time short-circuits the walk entirely - Rollup sees
+			// `export default {};`, has nothing to follow, and emits a
+			// trivial chunk for the inactive route. The active variant's
+			// real Entry is left untouched and bundled normally through
+			// `BundledInputs`. `enforce: "pre"` runs the stub before any
+			// other plugin parses the file, so transform plugins targeting
+			// `vs/**` never get a chance to walk into it.
+			{
+				name: "BundledEntryStubInactive",
+				enforce: "pre",
+				load(Identifier: string) {
+					const Match = Identifier.replace(/\\/g, "/").match(
+						/\/Source\/Workbench\/Bundled\/(\w+)\/Entry\.(?:ts|js)$/,
+					);
+					if (!Match) return null;
+					if (BundledList.includes(Match[1]!.toLowerCase())) {
+						return null;
+					}
+					return "export default {};";
+				},
+			},
+
 			// Plugin to add @vite-ignore comments to VSCode worker dynamic URL imports
 			{
 				name: "ViteIgnoreWorkerUrls",

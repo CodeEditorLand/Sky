@@ -20,10 +20,6 @@ import Layout from "../Function/Markup/Base.astro";
 import { Bust, On } from "../Function/Shared";
 import BrowserWorkbench from "../Workbench/Browser.astro";
 import BrowserProxyWorkbench from "../Workbench/BrowserProxy/Layout.astro";
-import BundledBrowserWorkbench from "../Workbench/Bundled/Browser/Layout.astro";
-import BundledElectronWorkbench from "../Workbench/Bundled/Electron/Layout.astro";
-import BundledSessionsWorkbench from "../Workbench/Bundled/Sessions/Layout.astro";
-import BundledWorkbenchWorkbench from "../Workbench/Bundled/Workbench/Layout.astro";
 import DefaultWorkbench from "../Workbench/Default.astro";
 import ElectronWorkbench from "../Workbench/Electron/Layout.astro";
 import MountainWorkbench from "../Workbench/Mountain.astro";
@@ -44,6 +40,40 @@ const BundledList = (process.env["Pack"] ?? "")
 	.split(/\s+/)
 	.map((Name) => Name.trim().toLowerCase())
 	.filter(Boolean);
+
+// Conditional Bundled-Layout imports. Each Bundled/<Variant>/Layout.astro
+// emits a `<script>import "./Entry"</script>` block whose static graph
+// `await import()`s a VS Code workbench entry from the
+// `@codeeditorland/output` package. Astro page-level scripts are bundled by
+// Vite/Rollup at build time regardless of whether the parent component is
+// rendered, so static `import` of all four layouts pulls every variant's
+// VS Code module graph through Rollup - including the Browser variant's
+// `vs/code/browser/workbench/workbench.js` which carries a static
+// `import { create } from "../../../workbench/workbench.web.main.internal.js"`.
+// `workbench.web.main.internal.js` is gulp-only (exists only in Dependency
+// `out/`, absent from `out-build/` and therefore from Output's release
+// emit), and even if backfilled the unmangled `out/` file references
+// upstream symbols by name where the rest of Output's tree carries
+// property-mangled names (`$Hp`, `$ZXb`, ...). The cross-tree symbol
+// mismatch is unfixable without re-running gulp's mangler, so the only
+// workable answer is to never let Rollup walk that subtree when the
+// active `Pack` does not include the variant.
+//
+// `await import()` in Astro frontmatter runs at build time, so the loaded
+// component is fully usable in the template below. Variants not in
+// `BundledList` resolve to `null` and never appear in Vite's module graph.
+const BundledElectronWorkbench = BundledList.includes("electron")
+	? (await import("../Workbench/Bundled/Electron/Layout.astro")).default
+	: null;
+const BundledBrowserWorkbench = BundledList.includes("browser")
+	? (await import("../Workbench/Bundled/Browser/Layout.astro")).default
+	: null;
+const BundledSessionsWorkbench = BundledList.includes("sessions")
+	? (await import("../Workbench/Bundled/Sessions/Layout.astro")).default
+	: null;
+const BundledWorkbenchWorkbench = BundledList.includes("workbench")
+	? (await import("../Workbench/Bundled/Workbench/Layout.astro")).default
+	: null;
 
 // Determine workbench type (default to Browser if nothing specified)
 // Mountain uses the Electron workbench - it has the full IPC chain
@@ -301,13 +331,13 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					import "@codeeditorland/worker/Target/Worker/Register.js";
 				</script>
 
-				{BundledVariant === "electron" ? (
+				{BundledVariant === "electron" && BundledElectronWorkbench ? (
 					<BundledElectronWorkbench />
-				) : BundledVariant === "browser" ? (
+				) : BundledVariant === "browser" && BundledBrowserWorkbench ? (
 					<BundledBrowserWorkbench />
-				) : BundledVariant === "sessions" ? (
+				) : BundledVariant === "sessions" && BundledSessionsWorkbench ? (
 					<BundledSessionsWorkbench />
-				) : BundledVariant === "workbench" ? (
+				) : BundledVariant === "workbench" && BundledWorkbenchWorkbench ? (
 					<BundledWorkbenchWorkbench />
 				) : WorkbenchType === "Electron" ? (
 					<ElectronWorkbench />

@@ -1293,38 +1293,71 @@ export default defineConfig({
 		plugins: [
 			(await import("vite-plugin-top-level-await")).default(),
 
-			// Stub `Source/Workbench/Bundled/<Variant>/Entry.ts` for every
-			// variant NOT in the active `Pack` env var.
+			// Short-circuit Rollup's walk into Bundled/<Variant> module
+			// graphs the active `Pack` does not select.
 			//
-			// Astro auto-discovers `pages/Bundled/<Variant>.astro` as page
-			// routes; each page's component graph references the matching
-			// `Workbench/Bundled/<Variant>/Layout.astro`, whose `<script>` block
-			// statically `await import("./Entry.js")`s. Rollup follows
-			// `await import(<literal>)` to build a separate chunk
-			// regardless of any surrounding runtime conditional, so even
-			// pages we never render still pull every variant's Entry into
+			// Each `Workbench/Bundled/<Variant>/Layout.astro` carries a
+			// `<script>` block whose static `await import("./Entry.js")`
+			// pulls a VS Code workbench entry from `@codeeditorland/output`.
+			// Rollup follows literal-string `await import()` to build a
+			// chunk regardless of any surrounding runtime conditional, so
+			// even pages we never render pull every variant's Entry into
 			// the module graph - at which point the Browser variant's
 			// `vs/code/browser/workbench/workbench.js` walks into the
 			// gulp-only `workbench.web.main.internal.js`, the Electron
-			// variant's `workbench.js` walks into `workbench.desktop.main.js`,
-			// and Output's release `out-build/` tree (mangled,
-			// telemetry-stripped) cannot satisfy the unmangled gulp-only
-			// imports.
+			// variant's `workbench.js` walks into `workbench.desktop.main.js`
+			// (whose StaticToDynamicImport-rewritten body is then 3000+
+			// literal-string `await import()`s into excluded paths), and
+			// Output's release `out-build/` tree (mangled, telemetry-
+			// stripped) cannot satisfy the unmangled gulp-only imports.
 			//
-			// Replacing inactive Entry modules with an empty stub at
-			// `load()` time short-circuits the walk entirely - Rollup sees
-			// `export default {};`, has nothing to follow, and emits a
-			// trivial chunk for the inactive route. The active variant's
-			// real Entry is left untouched and bundled normally through
-			// `BundledInputs`. `enforce: "pre"` runs the stub before any
-			// other plugin parses the file, so transform plugins targeting
-			// `vs/**` never get a chance to walk into it.
+			// `resolveId` rewrites the inactive Layout's `./Entry.js`
+			// import to a virtual module that `load` answers with an empty
+			// `export default {};`. Rollup never opens the real Entry.ts,
+			// has nothing to follow, and emits a trivial chunk for the
+			// inactive route. The active variant's real Entry is left
+			// untouched and bundled normally through `BundledInputs`.
+			// Operating at `resolveId` (with `enforce: "pre"`) guarantees
+			// every downstream plugin - Astro's TS loader, OXC mangler,
+			// Output transforms - sees the virtual ID instead of the on-
+			// disk file, regardless of which Vite phase (SSR / client)
+			// is processing the page.
 			{
 				name: "BundledEntryStubInactive",
 				enforce: "pre",
+				resolveId(Source: string, Importer: string | undefined) {
+					if (!Importer) return null;
+					if (
+						!Source.endsWith("/Entry.js") &&
+						!Source.endsWith("/Entry.ts") &&
+						Source !== "./Entry.js" &&
+						Source !== "./Entry.ts"
+					) {
+						return null;
+					}
+					const ImporterNormalised = Importer.replace(/\\/g, "/");
+					const Match = ImporterNormalised.match(
+						/\/Workbench\/Bundled\/(\w+)\/Layout\.astro/,
+					);
+					if (!Match) return null;
+					if (BundledList.includes(Match[1]!.toLowerCase())) {
+						return null;
+					}
+					return `\0BundledEntryStub:${Match[1]!.toLowerCase()}`;
+				},
 				load(Identifier: string) {
+					if (Identifier.startsWith("\0BundledEntryStub:")) {
+						return "export default {};";
+					}
+					// Belt-and-suspenders: if Astro/Vite somehow resolves the
+					// real Entry.ts path before our `resolveId` runs (e.g.,
+					// through the page input map for a future profile, or a
+					// hoisted-script virtual ID we did not anticipate), still
+					// stub the file when its variant is inactive. The default
+					// `resolveId` chain produces an absolute on-disk path so
+					// the regex matches with or without a leading slash.
 					const Match = Identifier.replace(/\\/g, "/").match(
-						/\/Source\/Workbench\/Bundled\/(\w+)\/Entry\.(?:ts|js)$/,
+						/(?:^|\/)Source\/Workbench\/Bundled\/(\w+)\/Entry\.(?:ts|js)$/,
 					);
 					if (!Match) return null;
 					if (BundledList.includes(Match[1]!.toLowerCase())) {

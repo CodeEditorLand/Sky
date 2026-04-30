@@ -745,6 +745,51 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		});
 
 	// ---- Editor ----
+	// Mountain emits this when the user hits Cmd+W (macOS menu's
+	// `Window > Close`) or clicks the window X. Mountain has already
+	// `prevent_close()`d the underlying Tauri close. Try to close the
+	// active editor instead - that matches stock VS Code's Cmd+W. Only
+	// fall through to closing the actual window if there is no editor
+	// to close (welcome screen, empty workbench, or workbench not yet
+	// installed). The fallback uses `nativeHost:closeWindow`, which
+	// `Window.destroy()`s and bypasses the prevent_close intercept.
+	await Register("sky://window/close-requested", async () => {
+		const Workbench = GetWorkbench();
+		const Services: any = (globalThis as any).__CEL_SERVICES__;
+		const ActiveEditorCount = (() => {
+			try {
+				const Editor = Services?.Editor;
+				const Snapshot = Editor?.snapshot?.() ?? Editor;
+				if (Array.isArray(Snapshot?.visibleEditors)) {
+					return Snapshot.visibleEditors.length;
+				}
+				if (Snapshot?.activeEditor) return 1;
+			} catch {
+				/* fall through */
+			}
+			return -1;
+		})();
+
+		if (Workbench && ActiveEditorCount !== 0) {
+			try {
+				await Workbench.commands.executeCommand(
+					"workbench.action.closeActiveEditor",
+				);
+				return;
+			} catch {
+				/* fall through to actual close */
+			}
+		}
+		try {
+			await invoke("MountainIPCInvoke", {
+				method: "nativeHost:closeWindow",
+				params: [],
+			});
+		} catch {
+			/* nothing to do; window will stay open if Mountain rejects */
+		}
+	});
+
 	await Register("sky://editor/openDocument", ({ uri, viewColumn }: any) => {
 		const Wb = GetWorkbench();
 		if (!Wb) return;
@@ -2051,6 +2096,55 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				detail: Payload,
 			}),
 		);
+	});
+
+	// On Restored (phase 3) Mountain calls `MainWindow.show()` +
+	// `set_focus()` so the NSWindow becomes key. The inner WKWebView
+	// doesn't always receive first-responder status from that alone:
+	// if DevTools auto-opened (or any other macOS chrome stole focus
+	// during boot), keystrokes route to whatever became key after the
+	// app menu finished setting itself up. The user sees "I can't
+	// type". Force focus into the workbench DOM so the active Monaco
+	// editor (or the currently-active part) becomes the keyboard
+	// target without requiring the user to click first.
+	await Register("sky://lifecycle/phaseChanged", (Payload: any) => {
+		const Phase =
+			typeof Payload === "number"
+				? Payload
+				: typeof Payload?.phase === "number"
+					? Payload.phase
+					: typeof Payload?.Phase === "number"
+						? Payload.Phase
+						: 0;
+		document.dispatchEvent(
+			new CustomEvent("cel:lifecycle:phaseChanged", {
+				detail: { phase: Phase },
+			}),
+		);
+		if (Phase >= 3) {
+			try {
+				const Workbench = GetWorkbench();
+				const FocusTarget =
+					(document.querySelector(
+						".monaco-workbench .editor-instance.active textarea",
+					) as HTMLElement | null) ??
+					(document.querySelector(
+						".monaco-workbench .editor-instance textarea",
+					) as HTMLElement | null) ??
+					(document.querySelector(
+						".monaco-workbench",
+					) as HTMLElement | null) ??
+					document.body;
+				FocusTarget?.focus?.({ preventScroll: true } as FocusOptions);
+				if (Workbench && document.activeElement === document.body) {
+					Workbench.commands
+						.executeCommand("workbench.action.focusActiveEditorGroup")
+						.catch(() => {});
+				}
+			} catch {
+				/* focus is best-effort; user can click to recover */
+			}
+		}
 	});
 
 	// ---- Status bar messages ----

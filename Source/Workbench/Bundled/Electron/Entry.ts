@@ -82,4 +82,27 @@ performance.measure(
 	"land:bundled:electron:imported",
 );
 
+// Boot-time smoke harness. Walks Wind's generated `CommandCatalog`
+// and asserts each command id is known to the workbench's command
+// service. Opt-in via `?land-smoke=1` query param or
+// `localStorage.LAND_SMOKE_TEST="1"` so a normal run pays zero
+// observable overhead - the deferred await below settles the promise
+// chain so the export still resolves immediately and Vite/Rollup can
+// tree-shake the harness when neither flag is set at build time
+// (the gate runs at runtime so this stays in the chunk, but the
+// harness body itself only runs when explicitly enabled).
+//
+// The smoke run is fired *after* the workbench import settles so
+// `__CEL_WORKBENCH__` and `__CEL_SERVICES__` are populated by
+// `Output/ExposeWorkbenchAccessor` before the harness probes them.
+// We wait one macrotask (`setTimeout(_, 0)`) for any synchronous
+// post-import service registration to finish.
+void (async () => {
+	const { RunCommandCatalogSmokeTest } = await import(
+		"../../../Function/SmokeTest/RunCommandCatalogSmokeTest.js"
+	);
+	await new Promise<void>((Resolve) => setTimeout(Resolve, 0));
+	await RunCommandCatalogSmokeTest();
+})();
+
 export default {};

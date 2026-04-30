@@ -6,25 +6,44 @@
  * through Rollup, hashes the output, and the resulting JS / CSS
  * land under Sky/Target/_astro/workbench-[hash].{js,css}.
  *
- * Same Preload -> Polyfills -> Bootstrap chain as the non-bundled
- * ../Electron/Layout.astro, only the workbench step is bundled. The
- * chain is required because VS Code's workbench module reads
- * globalThis.process / window.vscode / etc. before its own module
- * code runs - without the polyfills it crashes with
- *   `TypeError: undefined is not an object (evaluating 'p.process')`.
+ * Boot chain when `Disable !== "true"`:
  *
- * SkyBridge is wired after the bundled workbench import resolves so
- * its Tauri event consumers attach before the workbench starts
- * pumping events.
+ *   NLS -> TelemetryBridge -> phase-advance ->
+ *   WindPreload -> Polyfills -> Bootstrap (Wind Effect-TS) ->
+ *   Entry (bundled workbench) -> InstallSkyBridge
+ *
+ * Boot chain when `Disable === "true"` (master kill-switch):
+ *
+ *   NLS -> phase-advance ->
+ *   WindPreload (Wind's `window.vscode` shim - workbench panics
+ *                without it) ->
+ *   Polyfills (the 7 Electron polyfills VS Code reads at module-eval
+ *              time - workbench panics without them) ->
+ *   Entry (bundled workbench)
+ *
+ * Bootstrap (Wind's Effect-TS bootstrap), TelemetryBridge, and
+ * InstallSkyBridge are all skipped under `Disable=true` so the
+ * workbench loads as close to vanilla as our Electron-on-Tauri
+ * scaffolding allows. Useful for bisecting whether a regression
+ * lives in our customisations or upstream / Tauri / WKWebView.
+ *
+ * The skip is keyed on `import.meta.env.Disable` (Vite define from
+ * `astro.config.ts`) so a build-time `export Disable=true` flips
+ * it deterministically; Astro's static rendering means a runtime-
+ * only flip cannot reach this scaffolding (the `<script>` tags
+ * are emitted at build time).
  */
 
 import NLS from "../../NLS.astro";
 import TelemetryBridge from "../../TelemetryBridge.astro";
+
+const Disable =
+	(import.meta.env as Record<string, string | undefined>)["Disable"] === "true";
 ---
 
 <Fragment>
 	<NLS />
-	<TelemetryBridge />
+	{!Disable && <TelemetryBridge />}
 
 	<!-- Phase advance script - fires BEFORE the workbench import so it
 	     is not blocked by the main workbench script. Mirrors the
@@ -36,7 +55,11 @@ import TelemetryBridge from "../../TelemetryBridge.astro";
 	     half-restored render state - editor state-restoration gated on
 	     phase=Restored is deferred, "Eventually" work is deferred -
 	     which surfaces as sluggish UI / heavy-on-the-eye flicker
-	     during the first 8-23 seconds. -->
+	     during the first 8-23 seconds.
+
+	     Phase advance still fires under Disable=true: phase advancement
+	     is Land lifecycle bookkeeping, not a workbench feature. Mountain
+	     uses it to flip the window from `visible(false)` to visible. -->
 	<script type="module">
 		const PhaseInvoke =
 			globalThis.__TAURI_INTERNALS__?.invoke ??
@@ -59,23 +82,48 @@ import TelemetryBridge from "../../TelemetryBridge.astro";
 		}
 	</script>
 
-	<!-- Sequential: Preload -> Polyfills -> Bootstrap -> Entry (bundled workbench) -> SkyBridge -->
+	{/*
+	  Single boot-chain `<script>` with a build-time conditional. Vite
+	  substitutes `import.meta.env.Disable` with the literal string at
+	  build time (per `astro.config.ts` `define` block), so the `if`
+	  blocks tree-shake cleanly: `Disable=true` builds drop Bootstrap
+	  + SkyBridge entirely, `Disable=false` builds drop the
+	  disabled-mode mark.
+
+	  Astro's JSX-conditional rendering of `<script>` tags is fragile
+	  (Astro hoists / processes `<script>` specially and does not
+	  always honour ternary placement), so we keep ONE script and let
+	  Vite handle the dead-code elimination instead.
+
+	  WindPreload + Polyfills run unconditionally - VS Code's
+	  workbench.js reads `globalThis.process`, `window.vscode`, the
+	  Electron-style IPC shim, etc. at module-eval time and crashes
+	  without them. They are NOT skippable.
+	*/}
 	<script type="module">
 		await import("../../Electron/WindPreload.js");
 		await import("../../Electron/Polyfills.js");
-		await import("../../Electron/Bootstrap.js");
+		if (import.meta.env.Disable !== "true") {
+			await import("../../Electron/Bootstrap.js");
+		}
 		await import("./Entry.js");
-
-		try {
-			const { InstallSkyBridge } = await import(
-				"@codeeditorland/sky/Source/Function/SkyBridge"
-			);
-			await InstallSkyBridge();
-			performance.mark("land:bundled:electron:skybridge:installed");
-		} catch (Error) {
-			performance.mark("land:bundled:electron:skybridge:error");
-			// eslint-disable-next-line no-console
-			console.warn("[Bundled/Electron/Layout.astro] InstallSkyBridge failed:", Error);
+		if (import.meta.env.Disable !== "true") {
+			try {
+				const { InstallSkyBridge } = await import(
+					"@codeeditorland/sky/Source/Function/SkyBridge"
+				);
+				await InstallSkyBridge();
+				performance.mark("land:bundled:electron:skybridge:installed");
+			} catch (Error) {
+				performance.mark("land:bundled:electron:skybridge:error");
+				// eslint-disable-next-line no-console
+				console.warn(
+					"[Bundled/Electron/Layout.astro] InstallSkyBridge failed:",
+					Error,
+				);
+			}
+		} else {
+			performance.mark("land:bundled:electron:disabled-mode-loaded");
 		}
 	</script>
 </Fragment>

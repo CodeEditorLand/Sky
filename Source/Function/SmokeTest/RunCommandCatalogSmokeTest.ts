@@ -11,12 +11,15 @@
  *   - command resolves through `getCommands()` → known
  *
  * Anything else surfaces in the harness report as `missing`. The
- * harness is opt-in via either:
+ * harness is opt-in via either gate (PascalCase, matching Land's
+ * env-var naming convention - see `.env.Land.Diagnostics`):
  *
- *   - URL query string: `?land-smoke=1` (survives reloads as long
- *     as the URL is preserved)
- *   - LocalStorage: `localStorage.setItem("LAND_SMOKE_TEST", "1")`
- *     (sticky across reloads; clear with `removeItem` to disable)
+ *   - URL query string: `?Smoke=1` (survives reloads as long as
+ *     the URL is preserved)
+ *   - LocalStorage: `localStorage.setItem("Smoke", "1")` (sticky
+ *     across reloads; clear with `removeItem` to disable)
+ *   - Build-time env: `Smoke=1` set before Sky's prepublishOnly,
+ *     surfaced via `import.meta.env.Smoke` (Vite define).
  *
  * The report is written to `console.info` (one summary line + one
  * `console.table` of failures) and emitted as a CustomEvent
@@ -78,7 +81,7 @@ const ResolveQueryFlag = (): boolean => {
 	try {
 		if (typeof window === "undefined") return false;
 		const Params = new URLSearchParams(window.location.search);
-		const Flag = Params.get("land-smoke");
+		const Flag = Params.get("Smoke");
 		return Flag === "1" || Flag === "true";
 	} catch {
 		return false;
@@ -88,15 +91,29 @@ const ResolveQueryFlag = (): boolean => {
 const ResolveStorageFlag = (): boolean => {
 	try {
 		if (typeof localStorage === "undefined") return false;
-		const Stored = localStorage.getItem("LAND_SMOKE_TEST");
+		const Stored = localStorage.getItem("Smoke");
 		return Stored === "1" || Stored === "true";
 	} catch {
 		return false;
 	}
 };
 
+const ResolveBuildTimeFlag = (): boolean => {
+	try {
+		// Vite/Astro replace `import.meta.env.Smoke` at build time with
+		// the value present at compile time. When undefined the
+		// expression evaluates to `undefined` and the gate stays off.
+		const Meta = (import.meta as { env?: Record<string, unknown> }).env;
+		if (!Meta) return false;
+		const Flag = Meta["Smoke"];
+		return Flag === "1" || Flag === "true" || Flag === true;
+	} catch {
+		return false;
+	}
+};
+
 const ShouldRunSmokeTest = (): boolean => {
-	return ResolveQueryFlag() || ResolveStorageFlag();
+	return ResolveQueryFlag() || ResolveStorageFlag() || ResolveBuildTimeFlag();
 };
 
 const ResolveCommandHost = (): CommandHostShape | null => {

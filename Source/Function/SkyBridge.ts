@@ -657,7 +657,52 @@ function ShowNotification(
 let _SkyBridgeInstalled = false;
 let _SkyBridgeInstallPromise: Promise<void> | null = null;
 
+/**
+ * Master "disable Land customisations" gate. When the build-time env
+ * var `Disable=true` is set (PascalCase, single-word - matches Land's
+ * env-var convention in `.env.Land.Diagnostics`), `InstallSkyBridge`
+ * short-circuits without registering ANY of the ~100 `sky://*` Tauri-
+ * event listeners. Useful for bisecting whether a regression lives in
+ * our bridges or upstream / Tauri / WKWebView. Flag arrives via
+ * Sky's `astro.config.ts` Vite define (`import.meta.env.Disable`).
+ *
+ * Code is NOT removed - the rest of `SkyBridge.ts` and
+ * `_InstallSkyBridgeOnce` still live in the chunk, ready to re-enable
+ * with one rebuild after `Disable=` is unset.
+ */
+const ResolveLandDisabled = (): boolean => {
+	try {
+		const Meta = (import.meta as { env?: Record<string, unknown> }).env;
+		if (Meta) {
+			const Flag = Meta["Disable"];
+			if (Flag === "true" || Flag === true || Flag === "1") return true;
+		}
+	} catch {
+		/* no-op */
+	}
+	try {
+		if (typeof localStorage !== "undefined") {
+			const Stored = localStorage.getItem("Disable");
+			if (Stored === "1" || Stored === "true") return true;
+		}
+	} catch {
+		/* no-op */
+	}
+	return false;
+};
+
 export async function InstallSkyBridge(): Promise<void> {
+	if (ResolveLandDisabled()) {
+		try {
+			console.info(
+				"[SkyBridge] Disable=true: Land bridges SKIPPED (no sky://* listeners registered, no command/scm/webview handlers wired)",
+			);
+		} catch {
+			/* no-op */
+		}
+		_SkyBridgeInstalled = true;
+		return;
+	}
 	if (_SkyBridgeInstalled) {
 		return;
 	}
@@ -2098,15 +2143,22 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		);
 	});
 
-	// On Restored (phase 3) Mountain calls `MainWindow.show()` +
-	// `set_focus()` so the NSWindow becomes key. The inner WKWebView
-	// doesn't always receive first-responder status from that alone:
-	// if DevTools auto-opened (or any other macOS chrome stole focus
-	// during boot), keystrokes route to whatever became key after the
-	// app menu finished setting itself up. The user sees "I can't
-	// type". Force focus into the workbench DOM so the active Monaco
-	// editor (or the currently-active part) becomes the keyboard
-	// target without requiring the user to click first.
+	// Mountain emits `sky://lifecycle/phaseChanged` on every phase
+	// transition. Re-dispatch as a DOM CustomEvent for any Sky-side
+	// listener that wants the signal.
+	//
+	// A previous revision also tried to "restore focus" on every
+	// transition >= 3 by forcing focus to a Monaco textarea + running
+	// `workbench.action.focusActiveEditorGroup`. That regressed
+	// interactive typing: the listener fires twice (phase 3 and
+	// phase 4 ~15s later), so the user could click into the
+	// activity-bar search box, type one character, and have focus
+	// yanked back to the editor on the next phase tick. Mountain's
+	// `MainWindow.show()` + `set_focus()` already lands first-
+	// responder on the WKWebView at phase 3 (see AppLifecycle.rs),
+	// so the eager Sky-side re-focus was redundant on the success
+	// path and actively harmful on the regression path. Drop it -
+	// rely on Mountain + the user's first click.
 	await Register("sky://lifecycle/phaseChanged", (Payload: any) => {
 		const Phase =
 			typeof Payload === "number"
@@ -2121,30 +2173,6 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				detail: { phase: Phase },
 			}),
 		);
-		if (Phase >= 3) {
-			try {
-				const Workbench = GetWorkbench();
-				const FocusTarget =
-					(document.querySelector(
-						".monaco-workbench .editor-instance.active textarea",
-					) as HTMLElement | null) ??
-					(document.querySelector(
-						".monaco-workbench .editor-instance textarea",
-					) as HTMLElement | null) ??
-					(document.querySelector(
-						".monaco-workbench",
-					) as HTMLElement | null) ??
-					document.body;
-				FocusTarget?.focus?.({ preventScroll: true } as FocusOptions);
-				if (Workbench && document.activeElement === document.body) {
-					Workbench.commands
-						.executeCommand("workbench.action.focusActiveEditorGroup")
-						.catch(() => {});
-				}
-			} catch {
-				/* focus is best-effort; user can click to recover */
-			}
-		}
 	});
 
 	// ---- Status bar messages ----

@@ -877,6 +877,26 @@ export default defineConfig({
 				process.env["Ask"] ?? "false",
 			),
 			"import.meta.env.Brand": JSON.stringify(process.env["Brand"] ?? ""),
+			// Atom DG1: mirror `.env.Land.Diagnostics` keys consumed
+			// by Sky-side code so build-time gating composes with the
+			// localStorage / URL-query gates without a rebuild.
+			// Add new diagnostic flags to BOTH this block AND
+			// `LandRuntimeKeys` in `TierEnvironment.sh`.
+			"import.meta.env.Smoke": JSON.stringify(
+				process.env["Smoke"] ?? "",
+			),
+			// `Disable=true` - master kill-switch. When set, every
+			// Land-specific shim / polyfill / connection attempt is
+			// short-circuited so the workbench loads as close to
+			// upstream VS Code on Tauri as possible (Copy plugins
+			// still produce `Output/Target/`, but no transforms
+			// patch it; SkyBridge skips its ~100 listeners; the
+			// smoke harness skips). Useful for bisecting whether a
+			// regression is in our additions or in upstream / Tauri
+			// / WKWebView itself.
+			"import.meta.env.Disable": JSON.stringify(
+				process.env["Disable"] ?? "",
+			),
 		},
 
 		build: {

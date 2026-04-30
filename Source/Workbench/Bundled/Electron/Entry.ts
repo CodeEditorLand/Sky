@@ -97,12 +97,54 @@ performance.measure(
 // `Output/ExposeWorkbenchAccessor` before the harness probes them.
 // We wait one macrotask (`setTimeout(_, 0)`) for any synchronous
 // post-import service registration to finish.
-void (async () => {
-	const { RunCommandCatalogSmokeTest } = await import(
-		"../../../Function/SmokeTest/RunCommandCatalogSmokeTest.js"
-	);
-	await new Promise<void>((Resolve) => setTimeout(Resolve, 0));
-	await RunCommandCatalogSmokeTest();
+// Master "disable Land customisations" gate. When `Disable=true` is
+// set at build or runtime, the smoke-test harness import is skipped
+// entirely so the workbench loads without ANY Land probe attaching to
+// it. Useful for bisecting input regressions: `Disable=true` proves
+// whether typing breakage is upstream / Tauri / WKWebView (still
+// broken under Disable) or in our customisations (works under Disable).
+const LandDisabled = (() => {
+	try {
+		const Meta = (import.meta as { env?: Record<string, unknown> }).env;
+		if (Meta) {
+			const Flag = Meta["Disable"];
+			if (Flag === "true" || Flag === true || Flag === "1") return true;
+		}
+	} catch {
+		/* no-op */
+	}
+	try {
+		if (typeof localStorage !== "undefined") {
+			const Stored = localStorage.getItem("Disable");
+			if (Stored === "1" || Stored === "true") return true;
+		}
+	} catch {
+		/* no-op */
+	}
+	return false;
 })();
+
+if (!LandDisabled) {
+	void (async () => {
+		const { RunCommandCatalogSmokeTest } = await import(
+			"../../../Function/SmokeTest/RunCommandCatalogSmokeTest.js"
+		);
+		await new Promise<void>((Resolve) => setTimeout(Resolve, 0));
+		await RunCommandCatalogSmokeTest();
+	})();
+} else {
+	// Under `Disable=true` we skip the smoke harness but install the
+	// hands-off auto-diagnose probe instead. It logs to console which
+	// editor instance has focus, classifies it (chat input / file
+	// editor / search / settings), and tells the user whether typing
+	// SHOULD work in that target. Saves a round-trip of pasting probe
+	// scripts into DevTools every time something feels off.
+	void (async () => {
+		const { AutoDiagnoseInput } = await import(
+			"../../../Function/SmokeTest/AutoDiagnoseInput.js"
+		);
+		AutoDiagnoseInput();
+	})();
+}
 
 export default {};

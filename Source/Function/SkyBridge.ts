@@ -2572,17 +2572,39 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}
 			AttachToDescriptor(ViewId, TreeView);
 		};
-		document.addEventListener("cel:tree-view:create", (Event: Event) => {
-			const Detail = (Event as CustomEvent).detail as
-				| { viewId?: string; extensionId?: string }
-				| undefined;
-			const ViewId = Detail?.viewId ?? "";
+		const HandleTreeViewCreate = (Entry: {
+			viewId?: string;
+			extensionId?: string;
+		}): void => {
+			const ViewId = Entry?.viewId ?? "";
 			if (!ViewId) return;
 			AttachDataProvider(ViewId, 0);
 			// Prime the DOM fan-out with the initial children too so
 			// side-panel shims that mirror tree state don't need to wait
 			// for a user-triggered expand.
 			void ProvideChildren(ViewId, undefined);
+		};
+		document.addEventListener("cel:tree-view:create", (Event: Event) => {
+			const Detail = (Event as CustomEvent).detail as
+				| {
+						viewId?: string;
+						extensionId?: string;
+						views?: Array<{
+							viewId?: string;
+							extensionId?: string;
+						}>;
+				  }
+				| undefined;
+			// Mountain may deliver a single tree-view registration or a
+			// batch (`{ views: [...] }`) collected within a 16ms flush
+			// window during extension boot. The batch shape avoids
+			// emitting one Tauri event per registration, which used to
+			// flood the WKWebView IPC channel with 30+ events at boot.
+			if (Array.isArray(Detail?.views)) {
+				for (const Entry of Detail.views) HandleTreeViewCreate(Entry);
+			} else {
+				HandleTreeViewCreate(Detail ?? {});
+			}
 		});
 
 		// `cel:tree-view:refresh` - extension called `treeView.refresh()` or

@@ -124,6 +124,29 @@ const LandDisabled = (() => {
 	return false;
 })();
 
+// Install Wind's `__CEL_WIND__` bridge after `__CEL_SERVICES__` is
+// populated by Output's `ExposeWorkbenchAccessor` transform (which
+// dispatches `cel:services-ready` once the workbench DI container is
+// up). InstallLandWorkbench() is idempotent and dispatches
+// `cel:wind-ready` for downstream subscribers (SkyBridge, Astro
+// components, in-page Wind tasks). Skipped under `Disable=true` so
+// the bisect mode keeps the workbench probe-free. (IT-01 from
+// `.claude/workflow/05-Open-Threads.md`.)
+if (!LandDisabled) {
+	window.addEventListener(
+		"cel:services-ready",
+		() => {
+			void (async () => {
+				const { InstallLandWorkbench } = await import(
+					"@codeeditorland/wind/Target/Effect/LandWorkbench/LandWorkbenchGlobal.js"
+				);
+				InstallLandWorkbench();
+			})();
+		},
+		{ once: true },
+	);
+}
+
 if (!LandDisabled) {
 	void (async () => {
 		const { RunCommandCatalogSmokeTest } = await import(

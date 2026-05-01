@@ -95,13 +95,14 @@ if (_HasDOM && !(globalThis as any).__Track) {
 }
 
 // Mirror a `cel-dispatch` line into Mountain's dev-log file sink via
-// the RenderDevLog Tauri command. Fire-and-forget. Silent when no
-// Tauri invoke is available (SSR or plain web preview). When the
-// addEventListener wrap couldn't be installed (readonly property,
-// rare), the `consumer-present` field reports `?` so the tag still
-// yields useful traffic data without lying about consumer state.
+// the RenderDevLog Tauri command. Off by default - opt in from
+// DevTools with `globalThis.__LAND_TRACE_CEL_DISPATCH__ = true`. The
+// per-event invoke used to fire 1:1 with every `sky://*` Mountain
+// emit (~50-100/s during extension boot), doubling traffic on Tauri's
+// single serialised WKWebView channel and starving keystroke delivery.
 const _CelDispatchLog = (DomEvent: string, HasConsumer: boolean): void => {
 	if (!_HasDOM) return;
+	if (!(globalThis as any).__LAND_TRACE_CEL_DISPATCH__) return;
 	const Flag = _CelTrackingActive ? String(HasConsumer) : "?";
 	try {
 		invoke<void>("RenderDevLog", {
@@ -1318,12 +1319,6 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				_Token?: unknown,
 			) => {
 				const Pattern = String(Query?.contentPattern?.pattern ?? "");
-				invoke("RenderDevLog", {
-					Tag: "search",
-					Message: `[SkyBridge] textSearch invoked pattern="${Pattern}" folders=${Query?.folderQueries?.length ?? 0}`,
-					tag: "search",
-					message: `[SkyBridge] textSearch invoked pattern="${Pattern}" folders=${Query?.folderQueries?.length ?? 0}`,
-				}).catch(() => {});
 				if (!Pattern) {
 					return { results: [], messages: [], limitHit: false };
 				}
@@ -1371,12 +1366,6 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 						}
 						Results.push(Match);
 					}
-					invoke("RenderDevLog", {
-						Tag: "search",
-						Message: `[SkyBridge] textSearch return raw=${(Raw ?? []).length} files=${Results.length} lineMatches=${LineMatchCount} onProgress=${OnProgressCalled} hasCallback=${HasOnProgress} firstResource=${Results[0]?.resource?.toString?.()?.slice(0, 80) ?? "<none>"}`,
-						tag: "search",
-						message: `[SkyBridge] textSearch return raw=${(Raw ?? []).length} files=${Results.length} lineMatches=${LineMatchCount} onProgress=${OnProgressCalled} hasCallback=${HasOnProgress}`,
-					}).catch(() => {});
 					return {
 						results: Results,
 						messages: [],
@@ -1399,12 +1388,6 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					? `**/*${Raw}*`
 					: (Object.keys(Query?.includePattern ?? {})[0] ?? "**");
 				const MaxResults = Number(Query?.maxResults ?? 500);
-				invoke("RenderDevLog", {
-					Tag: "search",
-					Message: `[SkyBridge] fileSearch invoked pattern="${Raw}" glob="${Glob}" max=${MaxResults}`,
-					tag: "search",
-					message: `[SkyBridge] fileSearch invoked pattern="${Raw}" glob="${Glob}" max=${MaxResults}`,
-				}).catch(() => {});
 				try {
 					// Positional contract for `search:findFiles` (see
 					// `Mountain/Source/IPC/WindServiceHandlers/Search.rs::handle_search_find_files`):
@@ -2308,20 +2291,21 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		const Changed = Array.isArray(Payload?.changedURIs)
 			? Payload.changedURIs
 			: [];
-		// Per-fire trace - same reasoning as the webview/registerView
-		// listener: a silent early-return on missing services made the
-		// "Problems panel populates with count but stays visually empty"
-		// symptom impossible to triage without DevTools. The
-		// `pushable` field tells us at a glance whether this fire
-		// would have called `changeOne` at all.
-		invoke("MountainIPCInvoke", {
-			method: "diagnostic:log",
-			params: [
-				"markers-bridge",
-				`owner=${Owner} uris=${Changed.length} pushable=${typeof Markers?.changeOne === "function" && !!URICtor}`,
-			],
-		}).catch(() => {});
-		if (!Markers?.changeOne || !URICtor) return;
+		// Failure-only trace - the original log fired on every
+		// diagnostic-changed event (5-50/s during LSP boot), saturating
+		// the IPC channel. The triage value lives entirely in the
+		// `pushable=false` case: when services are missing we want to
+		// know why diagnostics aren't painting. Success path is silent.
+		if (!Markers?.changeOne || !URICtor) {
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"markers-bridge",
+					`owner=${Owner} uris=${Changed.length} pushable=false markers=${typeof Markers?.changeOne} uri=${!!URICtor}`,
+				],
+			}).catch(() => {});
+			return;
+		}
 		for (const Entry of Changed) {
 			try {
 				const Uri = Entry?.uri;
@@ -2531,12 +2515,6 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					return Items as any[];
 				},
 			};
-			invoke("RenderDevLog", {
-				Tag: "tree-view",
-				Message: `[TreeView] attach-ok view=${ViewId}`,
-				tag: "tree-view",
-				message: `[TreeView] attach-ok view=${ViewId}`,
-			}).catch(() => {});
 			// First successful attach can mean the workbench bridge has
 			// finally wired up its `TreeViewByViewId` map. Sweep any
 			// pending attachers - cheap (~one HashMap lookup each) and
@@ -2963,22 +2941,23 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				/* console may be replaced */
 			}
 		}
-		// Per-fire trace so the SkyEmit -> Sky-listener bridge is
-		// observable in Mountain.dev.log. The listener used to silently
-		// `return` when `Services?.WebviewViews?.register` was missing,
-		// which made post-mortem indistinguishable from "Sky listener
-		// never fired".
+		// Failure-only trace - the original log fired on every
+		// webview-register event, saturating the IPC channel during
+		// extension boot. The triage value lives entirely in the
+		// `hasRegister=false` case: when the workbench service is
+		// missing we want to know why webviews aren't attaching.
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
-			const Reg = Services?.WebviewViews?.register;
-			invoke("MountainIPCInvoke", {
-				method: "diagnostic:log",
-				params: [
-					"webview-bridge",
-					`registerView viewId=${ViewId} handle=${Handle} hasRegister=${typeof Reg === "function"}`,
-				],
-			}).catch(() => {});
-			if (!Services?.WebviewViews?.register) return;
+			if (!Services?.WebviewViews?.register) {
+				invoke("MountainIPCInvoke", {
+					method: "diagnostic:log",
+					params: [
+						"webview-bridge",
+						`registerView viewId=${ViewId} handle=${Handle} hasRegister=false`,
+					],
+				}).catch(() => {});
+				return;
+			}
 			Services.WebviewViews.register(ViewId, {
 				resolve: async (WebviewView: any, _Cancellation: any) => {
 					// Bridge the workbench-supplied WebviewView into a

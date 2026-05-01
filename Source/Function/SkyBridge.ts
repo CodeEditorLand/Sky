@@ -1069,10 +1069,17 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}
 		}
 	});
-	await Register("sky://command/register", (Payload: any) => {
+	// Mountain may deliver either a single command `{ id, commandId,
+	// kind }` (legacy shape, used for the rare runtime registration)
+	// or a batch `{ commands: [{ id, commandId, kind }, ...] }` (the
+	// extension-boot path, where 100+ extensions each register ~10
+	// commands; the per-command emit was saturating Tauri's shared
+	// WKWebView IPC channel and keystrokes queued behind 1000+ register
+	// events). Handle both shapes through one helper.
+	const RegisterOneCommand = (Entry: any): void => {
 		const Services = GetServices();
 		if (!Services?.CommandRegistry) return;
-		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
+		const Id = String(Entry?.id ?? Entry?.commandId ?? "");
 		if (!Id) return;
 		if (RegisteredCommands.has(Id)) return;
 		try {
@@ -1095,6 +1102,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			RegisteredCommands.set(Id, Disposable);
 		} catch (Error) {
 			console.warn("[SkyBridge] command register failed", Id, Error);
+		}
+	};
+	await Register("sky://command/register", (Payload: any) => {
+		if (Array.isArray(Payload?.commands)) {
+			for (const Entry of Payload.commands) RegisterOneCommand(Entry);
+		} else {
+			RegisterOneCommand(Payload);
 		}
 	});
 	await Register("sky://command/unregister", (Payload: any) => {

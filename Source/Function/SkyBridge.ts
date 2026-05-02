@@ -2773,6 +2773,59 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	});
 
 	// ---- Webview extensions ----
+	// `sky://webview/create` - extension called
+	// `vscode.window.createWebviewPanel(viewType, title, showOptions, options)`.
+	// Cocoon's `WindowNamespace.ts:createWebviewPanel` emits this with
+	// payload `{ method: "webview.create", handle, args: [Handle, ViewType,
+	// Title, ShowOptions, Options] }` (or canonicalised via Mountain's
+	// Effect dispatcher). Without a Sky-side handler, panel-mode
+	// webviews (createWebviewPanel) had no parked target and any
+	// subsequent `webview.setHtml` arriving for the same handle was
+	// silently dropped by the registry lookup. Park a placeholder under
+	// the handle so the set-html listener has SOMETHING to find;
+	// downstream wiring to a real workbench WebviewPanel via
+	// `IWebviewWorkbenchService` is a follow-up batch (the workbench
+	// service isn't in `__CEL_SERVICES__` yet - see ExposeWorkbenchAccessor).
+	let WebviewCreateFirstLogged = false;
+	await Register("sky://webview/create", (Payload: any) => {
+		const Handle =
+			Payload?.handle != null
+				? Payload.handle
+				: Array.isArray(Payload?.args)
+					? Payload.args[0]
+					: undefined;
+		if (Handle == null) return;
+		const HandleRegistry: Map<string | number, any> = ((
+			globalThis as any
+		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ ??= new Map());
+		// Placeholder shape: matches the WebviewView interface enough
+		// that the set-html listener's `ParkedView.webview.html = ...`
+		// assignment doesn't throw. The real paint requires
+		// `IWebviewWorkbenchService` integration (not yet wired).
+		HandleRegistry.set(Handle, {
+			webview: {
+				_isPlaceholder: true,
+				_pendingHtml: "",
+				set html(Value: string) {
+					this._pendingHtml = Value;
+				},
+				get html() {
+					return this._pendingHtml;
+				},
+			},
+		});
+		if (!WebviewCreateFirstLogged) {
+			WebviewCreateFirstLogged = true;
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"webview-bridge",
+					`first-create handle=${String(Handle)} viewType=${String(Payload?.args?.[1] ?? Payload?.viewType ?? "")} title=${String(Payload?.args?.[2] ?? Payload?.title ?? "")}`,
+				],
+			}).catch(() => {});
+		}
+	});
+
 	// Extension-initiated webview content updates. The canonical channel
 	// is the kebab-case `sky://webview/set-html` (see `SkyEvent.ts` for
 	// the single source of truth). The earlier camelCase fan-out over

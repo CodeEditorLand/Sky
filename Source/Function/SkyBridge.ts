@@ -2297,6 +2297,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// `Markers.changeOne` REPLACES the marker set for that URI under the
 	// given owner - matching VS Code's `MainThreadDiagnostics` behaviour
 	// where each `set()` call overwrites the previous diagnostic state.
+	let MarkersBridgeFirstSuccessLogged = false;
 	await Register("sky://diagnostics/changed", (Payload: any) => {
 		const Services = GetServices();
 		const Markers = (Services as any)?.Markers;
@@ -2305,11 +2306,6 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		const Changed = Array.isArray(Payload?.changedURIs)
 			? Payload.changedURIs
 			: [];
-		// Failure-only trace - the original log fired on every
-		// diagnostic-changed event (5-50/s during LSP boot), saturating
-		// the IPC channel. The triage value lives entirely in the
-		// `pushable=false` case: when services are missing we want to
-		// know why diagnostics aren't painting. Success path is silent.
 		if (!Markers?.changeOne || !URICtor) {
 			invoke("MountainIPCInvoke", {
 				method: "diagnostic:log",
@@ -2320,6 +2316,10 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}).catch(() => {});
 			return;
 		}
+		let PushedTotal = 0;
+		let FirstUri = "";
+		let FirstSeverity:number | undefined;
+		let FirstMessageLength = 0;
 		for (const Entry of Changed) {
 			try {
 				const Uri = Entry?.uri;
@@ -2334,10 +2334,43 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 							? Uri
 							: URICtor.from(Uri);
 				Markers.changeOne(Owner, RealUri, Markers_);
+				PushedTotal += Markers_.length;
+				if (!FirstUri) {
+					FirstUri =
+						typeof Uri === "string"
+							? Uri
+							: typeof (RealUri as any)?.toString === "function"
+								? (RealUri as any).toString()
+								: "";
+					if (Markers_[0]) {
+						FirstSeverity = (Markers_[0] as any)?.severity;
+						FirstMessageLength = String(
+							(Markers_[0] as any)?.message ?? "",
+						).length;
+					}
+				}
 			} catch (Error) {
 				// Swallow - one bad entry must not stop the rest.
 				void Error;
 			}
+		}
+		// One-time success-path confirmation. Fires on the FIRST
+		// diagnostic event that actually pushed markers, then stays
+		// silent. Without this we can't distinguish "bridge runs but
+		// markers are empty / malformed" from "bridge never runs at
+		// all" - both look like a silent Problems panel. The fields
+		// included are exactly what we need to triage either failure
+		// mode (URI scheme/normalisation, marker severity validity,
+		// message length).
+		if (!MarkersBridgeFirstSuccessLogged && PushedTotal > 0) {
+			MarkersBridgeFirstSuccessLogged = true;
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"markers-bridge",
+					`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} firstUri=${FirstUri.slice(0, 200)} firstSeverity=${FirstSeverity ?? "?"} firstMsgLen=${FirstMessageLength}`,
+				],
+			}).catch(() => {});
 		}
 	});
 
@@ -2757,16 +2790,45 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// viewId and apply the html to its real `webview.html` setter so
 	// the panel paints. Falls back to `cel:webview:set-html` DOM event
 	// for any Sky-side observer that wants the raw payload.
+	let WebviewSetHtmlFirstLogged = false;
 	await Register("sky://webview/set-html", (Payload: any) => {
+		// Mountain's Effect-dispatcher path emits the payload directly
+		// from Cocoon's `{ handle, viewId, html }` (webview-view path)
+		// or translated `{ method, handle, html }` (panel path). Both
+		// shapes are accepted - read every viable key, then resolve a
+		// view by viewId first (most common), then fall back to a
+		// handle→view registry lookup so panel-mode webviews still get
+		// their html applied.
 		const ViewId: string = String(Payload?.viewId ?? "");
-		const Html: string = String(Payload?.html ?? "");
+		const Handle: string | number =
+			Payload?.handle != null ? Payload.handle : "";
+		const Html: string = String(Payload?.html ?? Payload?.value ?? "");
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:set-html", { detail: Payload }),
 		);
-		if (!ViewId) return;
 		const Registry: Map<string, any> | undefined = (globalThis as any)
 			.__CEL_WEBVIEW_VIEWS__;
-		const ParkedView = Registry?.get(ViewId);
+		const HandleRegistry: Map<string | number, any> | undefined = (
+			globalThis as any
+		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__;
+		const ParkedView =
+			(ViewId && Registry?.get(ViewId)) ||
+			(Handle !== "" && HandleRegistry?.get(Handle));
+		// One-time confirmation log for the FIRST set-html that arrives.
+		// Tells us at-a-glance whether the bridge sees the kebab-case
+		// channel + canonicalised payload. Subsequent set-html calls
+		// stay silent so Roo / claude-vscode iframe re-renders don't
+		// flood the IPC log.
+		if (!WebviewSetHtmlFirstLogged) {
+			WebviewSetHtmlFirstLogged = true;
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"webview-bridge",
+					`first-set-html viewId=${ViewId} handle=${String(Handle)} htmlLen=${Html.length} parkedViewFound=${!!ParkedView} hasRegistry=${!!Registry} hasHandleRegistry=${!!HandleRegistry}`,
+				],
+			}).catch(() => {});
+		}
 		if (!ParkedView?.webview) return;
 		try {
 			ParkedView.webview.html = Html;
@@ -2856,20 +2918,40 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	});
 
 	// ---- Editor decorations ----
+	// Mountain coalesces decoration create/dispose into 16ms batches
+	// (`Vine/Server/Notification/DecorationTypeLifecycle.rs`). Each
+	// Tauri payload is now `{ batch: [<original payload>, ...] }`;
+	// fall back to single-payload shape for any non-batched runtime
+	// emit. Sky demultiplexes back into per-decoration
+	// `cel:decoration:create` / `cel:decoration:dispose` CustomEvents
+	// so individual listeners stay simple.
+	const DispatchDecorationBatch = (
+		DomEvent: string,
+		Payload: { batch?: unknown[] } | unknown,
+	): void => {
+		const Maybe = (Payload as { batch?: unknown[] } | undefined)?.batch;
+		if (Array.isArray(Maybe)) {
+			for (const Entry of Maybe) {
+				document.dispatchEvent(
+					new CustomEvent(DomEvent, { detail: Entry }),
+				);
+			}
+		} else {
+			document.dispatchEvent(
+				new CustomEvent(DomEvent, { detail: Payload }),
+			);
+		}
+	};
 	await Register(
 		"sky://decoration/createTextEditorDecorationType",
 		(Payload: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:decoration:create", { detail: Payload }),
-			);
+			DispatchDecorationBatch("cel:decoration:create", Payload);
 		},
 	);
 	await Register(
 		"sky://decoration/disposeTextEditorDecorationType",
 		(Payload: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:decoration:dispose", { detail: Payload }),
-			);
+			DispatchDecorationBatch("cel:decoration:dispose", Payload);
 		},
 	);
 
@@ -3014,6 +3096,22 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 							globalThis as any
 						).__CEL_WEBVIEW_VIEWS__ ??= new Map());
 						Registry.set(ViewId, WebviewView);
+						// Also register by handle so the set-html listener
+						// can fall back to a handle lookup for payloads that
+						// don't carry viewId (panel-mode webviews).
+						const HandleRegistry: Map<string | number, any> = ((
+							globalThis as any
+						).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ ??= new Map());
+						if (Handle != null && Handle !== "") {
+							HandleRegistry.set(Handle, WebviewView);
+						}
+						invoke("MountainIPCInvoke", {
+							method: "diagnostic:log",
+							params: [
+								"webview-bridge",
+								`resolve viewId=${ViewId} handle=${String(Handle)} hasWebview=${!!WebviewView?.webview}`,
+							],
+						}).catch(() => {});
 					} catch (_e) {
 						/* ignore */
 					}

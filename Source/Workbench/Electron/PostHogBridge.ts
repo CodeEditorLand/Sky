@@ -28,10 +28,15 @@ const PostHogAPIKey =
 const PostHogHost =
 	((import.meta.env as any).Beam as string | undefined) ??
 	"https://eu.i.posthog.com";
+// `Capture=false` is the master telemetry kill switch shared with
+// Mountain / Cocoon. Honored regardless of `Report` so a single env
+// flip stops every Sky PostHog + OTLP emit. Distinct from
+// `.env.Land.Diagnostics`'s `Disable` (polyfill / shim kill switch).
+const TelemetryCaptureEnabled =
+	((import.meta.env as any).Capture as string | undefined) !== "false";
 const PostHogEnabled =
-	((import.meta.env as any).Report as
-		| string
-		| undefined) !== "false";
+	TelemetryCaptureEnabled &&
+	((import.meta.env as any).Report as string | undefined) !== "false";
 // Atom PH2: Sky was hitting PostHog's built-in rate limiter (observed as
 // `[PostHog.js] This capture call is ignored due to client rate limiting.`
 // in the webview console). Apply our own rate cap + a larger batch window
@@ -39,15 +44,10 @@ const PostHogEnabled =
 const PostHogMaxEventsPerSecond = Number(
 	(import.meta.env as any).Throttle ?? "5",
 );
-const PostHogBatchWindowMs = Number(
-	(import.meta.env as any).Buffer ?? "3000",
-);
-const PostHogBatchMax = Number(
-	(import.meta.env as any).Batch ?? "20",
-);
+const PostHogBatchWindowMs = Number((import.meta.env as any).Buffer ?? "3000");
+const PostHogBatchMax = Number((import.meta.env as any).Batch ?? "20");
 const PostHogDistinctIdSeed =
-	((import.meta.env as any).Brand as string | undefined) ??
-	"";
+	((import.meta.env as any).Brand as string | undefined) ?? "";
 
 const GetOrCreateSkyIdentifier = (): string => {
 	const StorageKey = "land-posthog-id";
@@ -77,14 +77,25 @@ const LoadPostHog = async (): Promise<any> => {
 						autocapture: false,
 						capture_pageview: false,
 						capture_pageleave: false,
+						// Atom PH8: posthog-js's built-in exception
+						// autocapture fires `$exception` events from
+						// window.onerror / unhandledrejection without
+						// the rich Error stack data, producing the
+						// `$$_posthog_breakdown_null_$$` bucket on the
+						// Exceptions Type Breakdown chart. Sky has its
+						// own typed `land:resource:error` /
+						// `land:error:rejection` handlers below that
+						// preserve the message + source; turn the
+						// SDK's built-in capture off so it stops
+						// duplicating with null-property events.
+						capture_uncaught_errors: false,
+						capture_unhandled_promise_rejections: false,
 						disable_session_recording:
-							(import.meta.env as any)
-								.Replay === "true"
+							(import.meta.env as any).Replay === "true"
 								? false
 								: true,
 						disable_surveys:
-							(import.meta.env as any).Ask ===
-							"true"
+							(import.meta.env as any).Ask === "true"
 								? false
 								: true,
 						advanced_disable_decide: true,
@@ -181,9 +192,7 @@ const ExceptionThrottleLimitPerSignature = Math.max(1, ThrottleLimitPerName);
 // explicit `PH.capture("land:*")` calls that happen to share the slot.
 const ExceptionGlobalLimit = Math.max(
 	1,
-	Number(
-		(import.meta.env as any).Cap ?? "7",
-	),
+	Number((import.meta.env as any).Cap ?? "7"),
 );
 const ThrottleCounters = new Map<string, { Count: number; ResetAt: number }>();
 const ThrottleDropped = new Map<string, number>();
@@ -292,6 +301,14 @@ const DrainThrottleMetrics = (PH: any): void => {
 };
 
 const Initialize = async (): Promise<void> => {
+	// Belt-and-braces production gate. The single caller below is already
+	// wrapped in `if (import.meta.env.DEV) {...}`, but Vite's tree-shake
+	// only drops Initialize entirely when nothing else references it.
+	// Adding the inner gate guarantees every string literal / object
+	// payload constructed from this point on is dead-coded by Vite even
+	// if a future caller forgets the outer gate.
+	if (!import.meta.env.DEV) return;
+
 	const Raw = await LoadPostHog();
 	if (!Raw) return;
 

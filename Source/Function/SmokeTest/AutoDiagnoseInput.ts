@@ -24,7 +24,12 @@ interface InputDiagnostic {
 	readonly elementTag: string;
 	readonly placeholder: string | null;
 	readonly ariaLabel: string | null;
-	readonly mode: "chat-input" | "file-editor" | "search-input" | "settings-input" | "untyped";
+	readonly mode:
+		| "chat-input"
+		| "file-editor"
+		| "search-input"
+		| "settings-input"
+		| "untyped";
 	readonly editorGroupEmpty: boolean;
 	readonly textareaValue: string;
 	readonly textareaTabIndex: number;
@@ -65,12 +70,14 @@ const ClassifyEditor = (
 		};
 	}
 	const Placeholder = El.getAttribute("aria-placeholder") ?? "";
-	if (Placeholder.includes("Describe what to build") || Placeholder.includes("Ask")) {
+	if (
+		Placeholder.includes("Describe what to build") ||
+		Placeholder.includes("Ask")
+	) {
 		return {
 			mode: "chat-input",
 			typingExpected: false,
-			hint:
-				"this is the VS Code chat panel input. With Disable=true, Cocoon is off, so the chat backend is unavailable. Typing here is intentionally dropped at the workbench level. Open a real file (Cmd+O) to test typing.",
+			hint: "this is the VS Code chat panel input. With Disable=true, Cocoon is off, so the chat backend is unavailable. Typing here is intentionally dropped at the workbench level. Open a real file (Cmd+O) to test typing.",
 		};
 	}
 	const AriaLabel = El.getAttribute("aria-label") ?? "";
@@ -161,9 +168,7 @@ export const AutoDiagnoseInput = (): void => {
 	console.info(
 		`${Tag}   1. Press Cmd+O (or use the menu) to open a file picker`,
 	);
-	console.info(
-		`${Tag}   2. Pick a .md / .ts / .json file (NOT a folder)`,
-	);
+	console.info(`${Tag}   2. Pick a .md / .ts / .json file (NOT a folder)`);
 	console.info(
 		`${Tag}   3. Click in its content area where the cursor blinks`,
 	);

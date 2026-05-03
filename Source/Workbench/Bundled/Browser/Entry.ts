@@ -6,7 +6,9 @@
  * for the shared bundled-pipeline contract.
  */
 
-if (typeof (globalThis as never as { __name?: unknown }).__name !== "function") {
+if (
+	typeof (globalThis as never as { __name?: unknown }).__name !== "function"
+) {
 	(globalThis as never as { __name: unknown }).__name = (
 		Target: object,
 		Value: string,
@@ -22,14 +24,13 @@ if (typeof (globalThis as never as { __name?: unknown }).__name !== "function") 
 (globalThis as never as { _VSCODE_FILE_ROOT?: string })._VSCODE_FILE_ROOT ??=
 	new URL("./", import.meta.url).href;
 
-(globalThis as never as { _VSCODE_PRODUCT_JSON?: object })._VSCODE_PRODUCT_JSON ??=
-	{};
+(
+	globalThis as never as { _VSCODE_PRODUCT_JSON?: object }
+)._VSCODE_PRODUCT_JSON ??= {};
 
 performance.mark("land:bundled:browser:start");
 
-await import(
-	"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js"
-);
+await import("@codeeditorland/output/Target/Microsoft/VSCode/vs/code/browser/workbench/workbench.js");
 
 performance.mark("land:bundled:browser:imported");
 performance.measure(

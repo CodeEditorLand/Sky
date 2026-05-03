@@ -757,19 +757,26 @@ export default defineConfig({
 					StepMark("done");
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 
-					// PostHog build telemetry - debug only, skipped in production.
-					// Uses top-level static `request` import; dynamic imports fail
-					// here because the Vite module runner has been closed by the
-					// time astro:build:done fires.
-					if (process.env["NODE_ENV"] !== "production") {
+					// PostHog build telemetry - debug only, skipped in production
+					// and when `Disable=true` (master kill switch shared with
+					// Mountain / Cocoon). Uses top-level static `request`
+					// import; dynamic imports fail here because the Vite
+					// module runner has been closed by the time
+					// astro:build:done fires.
+					if (
+						process.env["NODE_ENV"] !== "production" &&
+						process.env["Capture"] !== "false" &&
+						process.env["Report"] !== "false"
+					) {
 						try {
 							const Body = JSON.stringify({
-								api_key: "",
-								event: "sky:build:complete",
+								api_key: process.env["Authorize"] || "",
+								event: "land:sky:build:complete",
 								properties: {
 									distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
 									$app: "land-editor",
 									$component: "sky",
+									$tier: "sky",
 									$build_mode:
 										process.env["NODE_ENV"] ||
 										"development",
@@ -783,11 +790,11 @@ export default defineConfig({
 								timestamp: new Date().toISOString(),
 							});
 							const Url = new URL(
-								"https://eu.i.posthog.com/capture/",
+								`${process.env["Beam"] ?? "https://eu.i.posthog.com"}/capture/`,
 							);
 							const Req = request({
 								hostname: Url.hostname,
-								port: 443,
+								port: Number(Url.port) || 443,
 								path: Url.pathname,
 								method: "POST",
 								headers: {
@@ -877,14 +884,27 @@ export default defineConfig({
 				process.env["Ask"] ?? "false",
 			),
 			"import.meta.env.Brand": JSON.stringify(process.env["Brand"] ?? ""),
+			// Atom PH7: master telemetry kill switch + OTLP wiring shared
+			// with Mountain / Cocoon. `Capture=false` short-circuits both
+			// PostHog and OTLP in Sky's webview bridge.
+			"import.meta.env.Capture": JSON.stringify(
+				process.env["Capture"] ?? "true",
+			),
+			"import.meta.env.OTLPEndpoint": JSON.stringify(
+				process.env["OTLPEndpoint"] ?? "http://127.0.0.1:4318",
+			),
+			"import.meta.env.OTLPEnabled": JSON.stringify(
+				process.env["OTLPEnabled"] ?? "true",
+			),
+			"import.meta.env.Trace": JSON.stringify(
+				process.env["Trace"] ?? "all",
+			),
 			// Atom DG1: mirror `.env.Land.Diagnostics` keys consumed
 			// by Sky-side code so build-time gating composes with the
 			// localStorage / URL-query gates without a rebuild.
 			// Add new diagnostic flags to BOTH this block AND
 			// `LandRuntimeKeys` in `TierEnvironment.sh`.
-			"import.meta.env.Smoke": JSON.stringify(
-				process.env["Smoke"] ?? "",
-			),
+			"import.meta.env.Smoke": JSON.stringify(process.env["Smoke"] ?? ""),
 			// `Disable=true` - master kill-switch. When set, every
 			// Land-specific shim / polyfill / connection attempt is
 			// short-circuited so the workbench loads as close to

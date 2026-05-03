@@ -335,9 +335,11 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					<BundledElectronWorkbench />
 				) : BundledVariant === "browser" && BundledBrowserWorkbench ? (
 					<BundledBrowserWorkbench />
-				) : BundledVariant === "sessions" && BundledSessionsWorkbench ? (
+				) : BundledVariant === "sessions" &&
+				  BundledSessionsWorkbench ? (
 					<BundledSessionsWorkbench />
-				) : BundledVariant === "workbench" && BundledWorkbenchWorkbench ? (
+				) : BundledVariant === "workbench" &&
+				  BundledWorkbenchWorkbench ? (
 					<BundledWorkbenchWorkbench />
 				) : WorkbenchType === "Electron" ? (
 					<ElectronWorkbench />

@@ -48,8 +48,9 @@
 (globalThis as never as { _VSCODE_FILE_ROOT?: string })._VSCODE_FILE_ROOT ??=
 	`${window.location.origin}/Static/Application/`;
 
-(globalThis as never as { _VSCODE_PRODUCT_JSON?: object })._VSCODE_PRODUCT_JSON ??=
-	{};
+(
+	globalThis as never as { _VSCODE_PRODUCT_JSON?: object }
+)._VSCODE_PRODUCT_JSON ??= {};
 
 performance.mark("land:bundled:electron:start");
 
@@ -71,9 +72,7 @@ performance.mark("land:bundled:electron:start");
 // workbench.js's `load()` chain. Pre-importing meant desktop.main.js
 // evaluated before that setup, mode-detected as "web", skipped every
 // Electron registration, and surfaced as ENOPRO file-system errors.
-await import(
-	"@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-browser/workbench/workbench.js"
-);
+await import("@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-browser/workbench/workbench.js");
 
 performance.mark("land:bundled:electron:imported");
 performance.measure(
@@ -137,9 +136,8 @@ if (!LandDisabled) {
 		"cel:services-ready",
 		() => {
 			void (async () => {
-				const { InstallLandWorkbench } = await import(
-					"@codeeditorland/wind/Target/Effect/LandWorkbench/LandWorkbenchGlobal.js"
-				);
+				const { InstallLandWorkbench } =
+					await import("@codeeditorland/wind/Target/Effect/LandWorkbench/LandWorkbenchGlobal.js");
 				InstallLandWorkbench();
 			})();
 		},
@@ -149,9 +147,8 @@ if (!LandDisabled) {
 
 if (!LandDisabled) {
 	void (async () => {
-		const { RunCommandCatalogSmokeTest } = await import(
-			"../../../Function/SmokeTest/RunCommandCatalogSmokeTest.js"
-		);
+		const { RunCommandCatalogSmokeTest } =
+			await import("../../../Function/SmokeTest/RunCommandCatalogSmokeTest.js");
 		await new Promise<void>((Resolve) => setTimeout(Resolve, 0));
 		await RunCommandCatalogSmokeTest();
 	})();
@@ -163,9 +160,8 @@ if (!LandDisabled) {
 	// SHOULD work in that target. Saves a round-trip of pasting probe
 	// scripts into DevTools every time something feels off.
 	void (async () => {
-		const { AutoDiagnoseInput } = await import(
-			"../../../Function/SmokeTest/AutoDiagnoseInput.js"
-		);
+		const { AutoDiagnoseInput } =
+			await import("../../../Function/SmokeTest/AutoDiagnoseInput.js");
 		AutoDiagnoseInput();
 	})();
 }

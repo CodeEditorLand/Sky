@@ -55,8 +55,17 @@ const LoadCatalog = async (): Promise<ReadonlyArray<CommandCatalogEntry>> => {
 		// String concatenation defeats Rollup's static-import analyser.
 		// `@vite-ignore` doubles up the signal: Vite skips the literal
 		// even when it can resolve it, so dev builds also stay clean.
-		const Specifier = ["@codeeditorland", "wind", "Target", "Effect", "Generated", "CommandCatalog.js"].join("/");
-		const Module = (await import(/* @vite-ignore */ Specifier)) as CommandCatalogModule;
+		const Specifier = [
+			"@codeeditorland",
+			"wind",
+			"Target",
+			"Effect",
+			"Generated",
+			"CommandCatalog.js",
+		].join("/");
+		const Module = (await import(
+			/* @vite-ignore */ Specifier
+		)) as CommandCatalogModule;
 		if (Array.isArray(Module?.CommandCatalog)) return Module.CommandCatalog;
 	} catch {
 		/* fall through to empty */
@@ -168,14 +177,12 @@ const RunOnce = async (): Promise<SmokeTestSummary> => {
 			total: Catalog.length,
 			known: 0,
 			missing: Catalog.length,
-			missingIds: Catalog.map(
-				(entry) => entry.CommandIdentifier,
-			),
+			missingIds: Catalog.map((entry) => entry.CommandIdentifier),
 			elapsedMilliseconds: Math.round(performance.now() - Started),
 		};
 	}
 	const Known = await ListKnownCommands(Host);
-	const MissingIds:string[] = [];
+	const MissingIds: string[] = [];
 	for (const Entry of Catalog) {
 		if (!Known.has(Entry.CommandIdentifier)) {
 			MissingIds.push(Entry.CommandIdentifier);
@@ -198,10 +205,7 @@ const ReportSummary = (summary: SmokeTestSummary): void => {
 	);
 	if (summary.missing > 0 && summary.missingIds.length > 0) {
 		const Preview = summary.missingIds.slice(0, 50);
-		console.info(
-			`${Tag} first ${Preview.length} missing:`,
-			Preview,
-		);
+		console.info(`${Tag} first ${Preview.length} missing:`, Preview);
 	}
 	try {
 		document.dispatchEvent(

@@ -28,11 +28,11 @@
 		"prepublishOnly": "cross-env NODE_OPTIONS=--max-old-space-size=16384 astro build"
 	},
 	"dependencies": {
+		"@codeeditorland/cocoon": "0.0.1",
 		"@codeeditorland/common": "0.0.6",
 		"@codeeditorland/output": "0.0.1",
 		"@codeeditorland/wind": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
-		"@codeeditorland/cocoon": "0.0.1",
 		"@playform/build": "0.3.1",
 		"@playform/compress": "0.2.3",
 		"@playform/inline": "0.1.4",

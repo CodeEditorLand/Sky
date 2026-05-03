@@ -37,11 +37,11 @@ The UI Component Layer for `Land`&#x2001;🏞️.
 [![Effect Version](https://img.shields.io/badge/Effect-3.x-blueviolet.svg)](https://www.npmjs.com/package/effect)
 
 Welcome to **Sky**&#x2001;🌌, the declarative **UI component layer** of the
-**Land**&#x2001;🏞️ Code Editor. Built with the **`Astro`** framework, `Sky` renders
-the user interface - editor, side bar, activity bar, status bar, and panels. It
-operates within the **`Tauri`** webview alongside `Wind`, consuming state and
-services from the `Wind` service layer to display and manage the editor's visual
-presentation.
+**Land**&#x2001;🏞️ Code Editor. Built with the **`Astro`** framework, `Sky`
+renders the user interface - editor, side bar, activity bar, status bar, and
+panels. It operates within the **`Tauri`** webview alongside `Wind`, consuming
+state and services from the `Wind` service layer to display and manage the
+editor's visual presentation.
 
 **Sky** is engineered to:
 
@@ -72,11 +72,11 @@ presentation.
   event system for native OS capabilities.
 - **Flexible Workbench Variants:** Supports multiple workbench approaches
   through environment-based selection:
-  - **A1 (Browser/BrowserProxy):** Browser-based workbench with optional service
-    proxy.
-  - **A2 (Mountain - RECOMMENDED):** Browser workbench with Mountain-backed
-    providers.
-  - **A3 (Electron):** Electron workbench with polyfills for `VS Code`.
+    - **A1 (Browser/BrowserProxy):** Browser-based workbench with optional
+      service proxy.
+    - **A2 (Mountain - RECOMMENDED):** Browser workbench with Mountain-backed
+      providers.
+    - **A3 (Electron):** Electron workbench with polyfills for `VS Code`.
 - **Component Modularity:** Organized into Pages (routes), Workbenches
   (components), and Workbench Implementations (`BrowserProxy/`, `Electron/`
   subdirectories) for clear separation of concerns and maintainability.
@@ -85,26 +85,26 @@ presentation.
 
 ## Core Architecture Principles&#x2001;🏗️
 
-| Principle           | Description                                                                                                                           | Key Components                                                                                      |
-| :------------------ | :------------------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------- |
-| **Compatibility**   | High-fidelity `VS Code` UI rendering to maximize compatibility with extensions and workflows.                                         | `Workbench/*`, `Workbench/BrowserProxy/*`, `Workbench/Electron/*`, `@codeeditorland/output`         |
-| **Modularity**      | Pages, workbenches, and layouts organized into distinct, cohesive modules.                                                            | `pages/*`, `Workbench/*`, `Workbench/BrowserProxy/*`, `Workbench/Electron/*`, `Function/*`          |
-| **Performance**     | `Astro`'s static generation and selective hydration minimize `JavaScript` payload.                                                    | `Astro` build system, Component Islands                                                             |
-| **Integration**     | Seamless connection with `Wind` services and `Mountain` backend through `Tauri` events and IPC.                                       | `Install`, `Bootstrap`, `Tauri` event listeners                                                     |
-| **Maintainability** | UI state driven by `Wind` services for predictable data flow; clear boundary between rendering and logic.                             | Service consumption pattern, Event-driven updates                                                   |
+| Principle           | Description                                                                                               | Key Components                                                                              |
+| :------------------ | :-------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------ |
+| **Compatibility**   | High-fidelity `VS Code` UI rendering to maximize compatibility with extensions and workflows.             | `Workbench/*`, `Workbench/BrowserProxy/*`, `Workbench/Electron/*`, `@codeeditorland/output` |
+| **Modularity**      | Pages, workbenches, and layouts organized into distinct, cohesive modules.                                | `pages/*`, `Workbench/*`, `Workbench/BrowserProxy/*`, `Workbench/Electron/*`, `Function/*`  |
+| **Performance**     | `Astro`'s static generation and selective hydration minimize `JavaScript` payload.                        | `Astro` build system, Component Islands                                                     |
+| **Integration**     | Seamless connection with `Wind` services and `Mountain` backend through `Tauri` events and IPC.           | `Install`, `Bootstrap`, `Tauri` event listeners                                             |
+| **Maintainability** | UI state driven by `Wind` services for predictable data flow; clear boundary between rendering and logic. | Service consumption pattern, Event-driven updates                                           |
 
 ---
 
 ## `Sky`&#x2001;🌌 in the `Land`&#x2001;🏞️ Ecosystem
 
-| Component              | Role & Key Responsibilities                                                                                                              |
-| :--------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
-| **`Astro` Components** | Declarative UI building blocks composing the editor interface, from activity bar to status bar.                                          |
-| **`Tauri` Webview**    | Runtime environment where `Sky` executes, providing access to `Tauri` APIs and OS integration.                                          |
-| **`Wind` Integration** | Consumes `Wind`'s `Effect-TS` services for file operations, dialogs, configuration, and state management.                               |
-| **Workbench Variants** | Three approaches (A1-A3) for loading `VS Code`'s core editor components: Browser, Mountain (recommended), and Electron.               |
-| **Page Routing**       | Manages navigation between `index` (default), `Browser`, `BrowserProxy`, `Electron`, `Mountain`, and `Isolation` pages.                 |
-| **Event Handling**     | Listens for `Tauri` events from `Mountain` to update UI state (terminal output, SCM updates, configuration changes).                     |
+| Component              | Role & Key Responsibilities                                                                                             |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| **`Astro` Components** | Declarative UI building blocks composing the editor interface, from activity bar to status bar.                         |
+| **`Tauri` Webview**    | Runtime environment where `Sky` executes, providing access to `Tauri` APIs and OS integration.                          |
+| **`Wind` Integration** | Consumes `Wind`'s `Effect-TS` services for file operations, dialogs, configuration, and state management.               |
+| **Workbench Variants** | Three approaches (A1-A3) for loading `VS Code`'s core editor components: Browser, Mountain (recommended), and Electron. |
+| **Page Routing**       | Manages navigation between `index` (default), `Browser`, `BrowserProxy`, `Electron`, `Mountain`, and `Isolation` pages. |
+| **Event Handling**     | Listens for `Tauri` events from `Mountain` to update UI state (terminal output, SCM updates, configuration changes).    |
 
 ---
 
@@ -113,27 +113,27 @@ presentation.
 1. **Page Load:** User navigates to `/`, which loads `index.astro`.
 2. **Workbench Selection:** The page reads environment variables to determine
    which workbench to load:
-   - `Mountain=true` → Loads the recommended A2: `Mountain` workbench.
-   - `Electron=true` → Loads A3: `Electron` workbench.
-   - `BrowserProxy=true` → Loads A1: Browser Proxy workbench.
-   - `Browser=true` → Loads A1: Browser workbench.
-   - Default → Loads `Workbench/Default.astro`.
-3. **`Wind` Bootstrap:** The workbench imports and executes `@codeeditorland/wind`
-   bootstrap, which installs the `Preload.ts` environment shim and initializes
-   `Effect-TS` runtime and service layers.
+    - `Mountain=true` → Loads the recommended A2: `Mountain` workbench.
+    - `Electron=true` → Loads A3: `Electron` workbench.
+    - `BrowserProxy=true` → Loads A1: Browser Proxy workbench.
+    - `Browser=true` → Loads A1: Browser workbench.
+    - Default → Loads `Workbench/Default.astro`.
+3. **`Wind` Bootstrap:** The workbench imports and executes
+   `@codeeditorland/wind` bootstrap, which installs the `Preload.ts` environment
+   shim and initializes `Effect-TS` runtime and service layers.
 4. **Service Consumption:** `Sky` components subscribe to `Wind` services:
-   - `StatusBarService` → Updates status bar items.
-   - `ActivityBarService` → Manages activity bar state.
-   - `FileSystemService` → Provides file tree data to the sidebar.
+    - `StatusBarService` → Updates status bar items.
+    - `ActivityBarService` → Manages activity bar state.
+    - `FileSystemService` → Provides file tree data to the sidebar.
 5. **Event Listening:** `Sky` listens for `Tauri` events from `Mountain`:
-   - `sky://terminal/data` → Renders `xterm.js` terminal output in panel.
-   - `sky://scm/update-group` → Updates source control view.
-   - `sky://configuration/changed` → Re-renders affected UI components.
+    - `sky://terminal/data` → Renders `xterm.js` terminal output in panel.
+    - `sky://scm/update-group` → Updates source control view.
+    - `sky://configuration/changed` → Re-renders affected UI components.
 6. **User Interaction:** When user clicks “Open File”:
-   - `Sky` component calls `Wind`'s `DialogService.showOpenDialog()`.
-   - `Wind` invokes `Tauri`'s native dialog via `@tauri-apps/plugin-dialog`.
-   - Selected file URI is returned through `Wind` to `Sky`.
-   - `Sky` updates the editor component to display the opened file.
+    - `Sky` component calls `Wind`'s `DialogService.showOpenDialog()`.
+    - `Wind` invokes `Tauri`'s native dialog via `@tauri-apps/plugin-dialog`.
+    - Selected file URI is returned through `Wind` to `Sky`.
+    - `Sky` updates the editor component to display the opened file.
 
 ---
 
@@ -228,13 +228,13 @@ pnpm add @codeeditorland/sky
 
 **Key Dependencies:**
 
-| Package                        | Purpose                              |
-| :----------------------------- | :----------------------------------- |
-| `astro`                        | UI framework (current stable)        |
-| `@codeeditorland/wind`         | Service layer                        |
-| `@codeeditorland/common`       | Rust core bindings                   |
-| `@codeeditorland/output`       | `VS Code` output bundle              |
-| `@codeeditorland/worker`       | Web worker implementations           |
+| Package                  | Purpose                       |
+| :----------------------- | :---------------------------- |
+| `astro`                  | UI framework (current stable) |
+| `@codeeditorland/wind`   | Service layer                 |
+| `@codeeditorland/common` | Rust core bindings            |
+| `@codeeditorland/output` | `VS Code` output bundle       |
+| `@codeeditorland/worker` | Web worker implementations    |
 
 ### Usage Pattern&#x2001;🚀
 
@@ -289,18 +289,19 @@ file.
 
 ## Changelog&#x2001;📜
 
-See [`CHANGELOG.md`](https://github.com/CodeEditorLand/Land/tree/Current/CHANGELOG.md) for a history of changes specific to
-**Sky**&#x2001;🌌.
+See
+[`CHANGELOG.md`](https://github.com/CodeEditorLand/Land/tree/Current/CHANGELOG.md)
+for a history of changes specific to **Sky**&#x2001;🌌.
 
 ---
 
 ## Funding \& Acknowledgements&#x2001;🙏🏻
 
-**Sky**&#x2001;🌌 is a core element of the **Land**&#x2001;🏞️ ecosystem. This project is
-funded through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund
-established by [NLnet](https://NLnet.NL) with financial support from the
-European Commission's [Next Generation Internet](https://ngi.eu) program.
-Learn more at the [NLnet project page](https://NLnet.NL/project/Land).
+**Sky**&#x2001;🌌 is a core element of the **Land**&#x2001;🏞️ ecosystem. This
+project is funded through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a
+fund established by [NLnet](https://NLnet.NL) with financial support from the
+European Commission's [Next Generation Internet](https://ngi.eu) program. Learn
+more at the [NLnet project page](https://NLnet.NL/project/Land).
 
 The project is operated by PlayForm, based in Sofia, Bulgaria.
 

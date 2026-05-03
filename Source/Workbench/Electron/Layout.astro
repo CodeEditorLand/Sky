@@ -47,15 +47,17 @@ import TelemetryBridge from "../TelemetryBridge.astro";
 		//    `await import()` by this point, so consumers wire up before
 		//    the workbench starts pumping events to empty listeners.
 		try {
-			const { InstallSkyBridge } = await import(
-				"@codeeditorland/sky/Source/Function/SkyBridge"
-			);
+			const { InstallSkyBridge } =
+				await import("@codeeditorland/sky/Source/Function/SkyBridge");
 			await InstallSkyBridge();
 			performance.mark("land:electron:skybridge:installed");
 		} catch (Error) {
 			performance.mark("land:electron:skybridge:error");
 			// eslint-disable-next-line no-console
-			console.warn("[Electron/Layout.astro] InstallSkyBridge failed:", Error);
+			console.warn(
+				"[Electron/Layout.astro] InstallSkyBridge failed:",
+				Error,
+			);
 		}
 	</script>
 </Fragment>

@@ -19,11 +19,27 @@
 
 const ServiceName = "land-editor";
 const ServiceVersion = "0.0.1";
-// In Vite dev server, /v1/traces is proxied. In Tauri desktop (localhost:PORT),
-// we must use the real collector URL directly. CSP allows http://localhost:*.
+
+// `Capture=false` is the master telemetry kill shared with Mountain /
+// Cocoon. `OTLPEnabled=false` disables only this pipe.
+const TelemetryCaptureEnabled =
+	((import.meta.env as Record<string, string | undefined>)["Capture"] ??
+		"true") !== "false";
+const OTLPPipeEnabled =
+	TelemetryCaptureEnabled &&
+	((import.meta.env as Record<string, string | undefined>)["OTLPEnabled"] ??
+		"true") !== "false";
+
+// Build-baked endpoint from `import.meta.env.OTLPEndpoint`
+// (`astro.config.ts` Vite define). Falls back to the docker-compose
+// default if the env var is missing. In the Vite dev server, `/v1/traces`
+// is proxied; in Tauri desktop it must be the real collector URL.
+const ConfiguredOTLPEndpoint =
+	(import.meta.env as Record<string, string | undefined>)["OTLPEndpoint"] ??
+	"http://127.0.0.1:4318";
 const OTLPEndpoint =
 	typeof (window as any).__TAURI_INTERNALS__ !== "undefined"
-		? "http://localhost:4318/v1/traces"
+		? `${ConfiguredOTLPEndpoint.replace(/\/$/, "")}/v1/traces`
 		: "/v1/traces";
 const BatchIntervalMs = 2000;
 const TraceId = Array.from(crypto.getRandomValues(new Uint8Array(16)))
@@ -198,7 +214,7 @@ const Observer = new PerformanceObserver((List) => {
 	}
 });
 
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV && OTLPPipeEnabled) {
 	Observer.observe({ type: "mark", buffered: true });
 	Observer.observe({ type: "measure", buffered: true });
 

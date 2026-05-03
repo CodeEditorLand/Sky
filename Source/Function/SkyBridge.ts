@@ -2318,7 +2318,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		}
 		let PushedTotal = 0;
 		let FirstUri = "";
-		let FirstSeverity:number | undefined;
+		let FirstSeverity: number | undefined;
 		let FirstMessageLength = 0;
 		for (const Entry of Changed) {
 			try {
@@ -2659,7 +2659,10 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				const TreeView = Services?.TreeViewByViewId?.(ViewId);
 				if (TreeView?.refresh) {
 					const RefreshResult = TreeView.refresh();
-					if (RefreshResult && typeof RefreshResult.catch === "function") {
+					if (
+						RefreshResult &&
+						typeof RefreshResult.catch === "function"
+					) {
 						RefreshResult.catch(() => {});
 					}
 				}
@@ -3099,7 +3102,11 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		try {
 			document.dispatchEvent(
 				new CustomEvent("cel:webview:registerView", {
-					detail: { handle: Handle, viewId: ViewId, payload: Payload },
+					detail: {
+						handle: Handle,
+						viewId: ViewId,
+						payload: Payload,
+					},
 				}),
 			);
 		} catch (DispatchError) {
@@ -3262,9 +3269,8 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			// already serving the view); log anything else so we can
 			// triage real failures.
 			try {
-				const Message = (RegisterError as any)?.message ?? String(
-					RegisterError,
-				);
+				const Message =
+					(RegisterError as any)?.message ?? String(RegisterError);
 				if (!String(Message).includes("already registered")) {
 					console.warn(
 						`[SkyBridge] WebviewViews.register failed for ${ViewId}:`,

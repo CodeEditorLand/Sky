@@ -38,7 +38,8 @@ import NLS from "../../NLS.astro";
 import TelemetryBridge from "../../TelemetryBridge.astro";
 
 const Disable =
-	(import.meta.env as Record<string, string | undefined>)["Disable"] === "true";
+	(import.meta.env as Record<string, string | undefined>)["Disable"] ===
+	"true";
 ---
 
 <Fragment>
@@ -82,7 +83,8 @@ const Disable =
 		}
 	</script>
 
-	{/*
+	{
+		/*
 	  Single boot-chain `<script>` with a build-time conditional. Vite
 	  substitutes `import.meta.env.Disable` with the literal string at
 	  build time (per `astro.config.ts` `define` block), so the `if`
@@ -99,7 +101,8 @@ const Disable =
 	  workbench.js reads `globalThis.process`, `window.vscode`, the
 	  Electron-style IPC shim, etc. at module-eval time and crashes
 	  without them. They are NOT skippable.
-	*/}
+	*/
+	}
 	<script type="module">
 		await import("../../Electron/WindPreload.js");
 		await import("../../Electron/Polyfills.js");
@@ -109,9 +112,8 @@ const Disable =
 		await import("./Entry.js");
 		if (import.meta.env.Disable !== "true") {
 			try {
-				const { InstallSkyBridge } = await import(
-					"@codeeditorland/sky/Source/Function/SkyBridge"
-				);
+				const { InstallSkyBridge } =
+					await import("@codeeditorland/sky/Source/Function/SkyBridge");
 				await InstallSkyBridge();
 				performance.mark("land:bundled:electron:skybridge:installed");
 			} catch (Error) {

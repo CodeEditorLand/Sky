@@ -148,7 +148,7 @@ if (!LandDisabled) {
 if (!LandDisabled) {
 	void (async () => {
 		const { RunCommandCatalogSmokeTest } =
-			await import("../../../Function/SmokeTest/RunCommandCatalogSmokeTest.js");
+			await import("../../../Function/SmokeTest/Run/Command/Catalog/Smoke/Test.js");
 		await new Promise<void>((Resolve) => setTimeout(Resolve, 0));
 		await RunCommandCatalogSmokeTest();
 	})();
@@ -161,7 +161,7 @@ if (!LandDisabled) {
 	// scripts into DevTools every time something feels off.
 	void (async () => {
 		const { AutoDiagnoseInput } =
-			await import("../../../Function/SmokeTest/AutoDiagnoseInput.js");
+			await import("../../../Function/SmokeTest/Auto/Diagnose/Input.js");
 		AutoDiagnoseInput();
 	})();
 }

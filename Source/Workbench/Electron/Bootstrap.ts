@@ -64,7 +64,7 @@ if (import.meta.env["Render"] === "false") {
 		// workbench reload required. Fire-and-forget; the subscriber logs
 		// its own performance.mark on start / error / skipped states.
 		const { default: StartExtensionSubscriber } =
-			await import("./ExtensionChangeSubscriber.js");
+			await import("./Extension/Change/Subscriber.js");
 		void StartExtensionSubscriber();
 	} catch {
 		performance.mark("land:bootstrap:error");

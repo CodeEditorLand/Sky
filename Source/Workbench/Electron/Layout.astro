@@ -30,7 +30,7 @@ import TelemetryBridge from "../TelemetryBridge.astro";
 	<!-- Sequential: Preload → Polyfills → Bootstrap → Workbench → SkyBridge -->
 	<script type="module">
 		// 1. Wind Preload - must complete first (sets window.vscode)
-		await import("./WindPreload.js");
+		await import("./Wind/Preload.js");
 
 		// 2. Electron API Polyfills - depends on Wind process globals
 		await import("./Polyfills.js");

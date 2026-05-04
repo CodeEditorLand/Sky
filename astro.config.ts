@@ -335,7 +335,7 @@ export default defineConfig({
 						TauriMainProcessService: {
 							OutputService: resolve(
 								process.cwd(),
-								"node_modules/@codeeditorland/output/Configuration/Service/TauriMainProcessService.js",
+								"node_modules/@codeeditorland/output/Configuration/Service/Tauri/Main/Process/Service.js",
 							),
 							WindService: resolve(
 								process.cwd(),

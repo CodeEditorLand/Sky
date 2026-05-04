@@ -3155,7 +3155,12 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				}).catch(() => {});
 				return;
 			}
-			Services.WebviewViews.register(ViewId, {
+			// Probe the workbench's `_resolvers` map straight after the
+			// register call. If it doesn't contain our viewType the
+			// `_resolvers` reference is on a different instance than the
+			// one the WebviewViewPane uses, which is the only remaining
+			// explanation for register-completes-but-resolver-never-fires.
+			const Disposable = Services.WebviewViews.register(ViewId, {
 				resolve: async (WebviewView: any, _Cancellation: any) => {
 					// Unconditional entry trace - fires the moment the
 					// workbench's WebviewViewService.register / resolve
@@ -3294,6 +3299,48 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					}
 				},
 			});
+			// One-shot post-register probe: confirm our resolver actually
+			// landed in the workbench's `_resolvers` map. Bracket access
+			// because `_resolvers` is a TS-private field; JS doesn't
+			// enforce so this works at runtime. If `hasResolver=false` the
+			// `__CEL_SERVICES__.WebviewViews` instance is divorced from
+			// the one the WebviewViewPane uses (DI scope mismatch) and we
+			// know the bridge is talking to the wrong service.
+			if (!(globalThis as any).__CEL_REGISTER_VIEW_VERIFIED__) {
+				(globalThis as any).__CEL_REGISTER_VIEW_VERIFIED__ = true;
+				try {
+					const Resolvers = Services.WebviewViews?._resolvers;
+					const HasResolver =
+						typeof Resolvers?.has === "function"
+							? Resolvers.has(ViewId)
+							: undefined;
+					const AwaitingRevival =
+						Services.WebviewViews?._awaitingRevival;
+					const HasPending =
+						typeof AwaitingRevival?.has === "function"
+							? AwaitingRevival.has(ViewId)
+							: undefined;
+					invoke("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: [
+							"webview-bridge",
+							`registerView verified viewId=${ViewId} hasResolver=${String(HasResolver)} hasPending=${String(HasPending)} disposable=${typeof Disposable} resolversSize=${Resolvers?.size} awaitingSize=${AwaitingRevival?.size}`,
+						],
+					}).catch(() => {});
+				} catch (ProbeError) {
+					try {
+						invoke("MountainIPCInvoke", {
+							method: "diagnostic:log",
+							params: [
+								"webview-bridge",
+								`registerView probe-failed viewId=${ViewId} message=${String((ProbeError as any)?.message ?? ProbeError).slice(0, 200)}`,
+							],
+						}).catch(() => {});
+					} catch {
+						/* invoke may be unavailable mid-teardown */
+					}
+				}
+			}
 		} catch (RegisterError) {
 			// `IWebviewViewService.register` throws on duplicate viewId -
 			// stock VS Code's `webviewViewService.ts:108` does

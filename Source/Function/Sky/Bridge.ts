@@ -3058,6 +3058,16 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			new CustomEvent("cel:task:execute", { detail: Payload }),
 		);
 	});
+	// Counterpart: `vscode.tasks.taskExecution.terminate()` routes through
+	// `RPC/CocoonService/Task/TerminateTask.rs:22` and fires
+	// `sky://task/terminate` with `{ id }`. The workbench's task-runner
+	// component listens on the matching DOM event so it can stop tracking
+	// the row and (if the task spawned a terminal) close the pane.
+	await Register("sky://task/terminate", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:task:terminate", { detail: Payload }),
+		);
+	});
 
 	// ---- Workspace edits / focus ----
 	// Extensions' `workspace.applyEdit(edit)` / `window.showTextDocument(uri)`
@@ -3764,6 +3774,181 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			void ResolveUiRequest(RequestIdentifier, Picked);
 		},
 	);
+
+	// ====================================================================
+	// Batch 17 - previously-dead Mountain emit channels.
+	//
+	// Audit of `Mountain/Source/**/emit("sky://*", ...)` vs Sky bridge
+	// `Register("sky://*", ...)` revealed nine channels Mountain emits but
+	// Sky never listened on. Each emit therefore vanished into the Tauri
+	// event bus with no observable effect, leaving the corresponding
+	// workbench surface stale: tree views never bound a data provider,
+	// configuration changes never refreshed sidebars, status-bar entries
+	// from extension activation were dropped on the floor, etc.
+	//
+	// All nine relays follow the same minimal pattern: re-dispatch the
+	// payload as a DOM `CustomEvent` so any listener (workbench React
+	// component, Wind orchestration layer, future deep integration) can
+	// subscribe via `document.addEventListener("cel:<channel>", ...)`.
+	// Tree-view/create has an existing DOM handler at line ~2620 that
+	// attaches a Cocoon-backed `dataProvider` to the workbench's
+	// `TreeViewByViewId` map - simply dispatching `cel:tree-view:create`
+	// drives the existing infrastructure; no new wiring needed.
+	// ====================================================================
+
+	// Mountain emits during `sky:replay-events` boot drain AND on every
+	// fresh `treeData.register*` notification afterwards.
+	// Payload: `{ viewId, options: { canSelectMany, showCollapseAll, title } }`.
+	// The DOM handler at line ~2620 reads `Detail.viewId` (and ignores
+	// `options`) - it just needs the dispatch to happen.
+	await Register("sky://tree-view/create", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:tree-view:create", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits when `Configuration.Update` mutates a key. Payload
+	// includes `{ changedKeys, ... }`. Two emit sites:
+	// `Track/Effect/CreateEffectForRequest/Configuration.rs:75,129` and
+	// `RPC/CocoonService/Workspace/UpdateConfiguration.rs:26`.
+	// Forward to `IConfigurationService.reloadConfiguration()` so the
+	// workbench's per-target cache repopulates from disk and downstream
+	// `onDidChangeConfiguration` listeners (editor, themes, extensions)
+	// see the new values without waiting for the next workbench tick.
+	await Register("sky://configuration/changed", (Payload: any) => {
+		try {
+			const Services = GetServices() as any;
+			const Reload = Services?.Configuration?.reloadConfiguration;
+			if (typeof Reload === "function") {
+				const Result = Reload.call(Services.Configuration);
+				if (Result && typeof Result.catch === "function") {
+					Result.catch(() => {});
+				}
+			}
+		} catch {
+			/* swallow - workbench may not have Configuration yet */
+		}
+		document.dispatchEvent(
+			new CustomEvent("cel:configuration:changed", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits after `IPC/WindServiceHandlers/Extension/ExtensionInstall.rs`
+	// finishes installing a VSIX/marketplace extension.
+	// Payload: `{ identifier, version, location }`.
+	await Register("sky://extensions/installed", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:extensions:installed", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits after `Extension/ExtensionUninstall.rs` removes an
+	// extension. Payload: `{ identifier, location }`.
+	await Register("sky://extensions/uninstalled", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:extensions:uninstalled", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits from `Vine/Server/Notification/SecurityIncident.rs`
+	// when the security service flags a violation. Payload includes
+	// `{ type, severity, ext, ... }`. Surface to the user via the
+	// workbench `INotificationService` so high-severity incidents pop
+	// the notification toaster instead of dying silently in a DOM
+	// event no UI listens to. `severity` follows the
+	// MessageSeverity enum (1=Info, 2=Warning, 3=Error) used by VS Code.
+	await Register("sky://security/incident", (Payload: any) => {
+		try {
+			const Services = GetServices() as any;
+			const Notification = Services?.Notification;
+			if (Notification) {
+				const Type = String(Payload?.type ?? "security");
+				const Extension = Payload?.ext ?? Payload?.extensionId;
+				const Message = Extension
+					? `[${Type}] ${Extension}: ${Payload?.message ?? ""}`
+					: `[${Type}] ${Payload?.message ?? ""}`;
+				const Severity = Number(Payload?.severity ?? 2);
+				if (Severity >= 3 && typeof Notification.error === "function") {
+					Notification.error(Message);
+				} else if (
+					Severity >= 2 &&
+					typeof Notification.warn === "function"
+				) {
+					Notification.warn(Message);
+				} else if (typeof Notification.info === "function") {
+					Notification.info(Message);
+				}
+			}
+		} catch {
+			/* swallow - never throw from a security listener */
+		}
+		document.dispatchEvent(
+			new CustomEvent("cel:security:incident", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits from `RPC/CocoonService/Window/CreateStatusBarItem.rs`
+	// when an extension calls `vscode.window.createStatusBarItem(...)`.
+	// Payload: `{ id, text, tooltip, alignment, priority }`. Forward
+	// straight through the existing `SetOrUpdateEntry` helper (defined
+	// at line ~992 in the same closure) so creation calls
+	// `IStatusbarService.addEntry(...)` and stashes the accessor in the
+	// shared `StatusbarAccessors` map - identical to the path
+	// `sky://statusbar/set-entry` already takes. Without this the entry
+	// would never be added, just announced via DOM event.
+	await Register("sky://statusbar/create", (Payload: any) => {
+		try {
+			SetOrUpdateEntry(Payload);
+		} catch (Error) {
+			console.warn("[SkyBridge] statusbar/create failed", Error);
+		}
+		document.dispatchEvent(
+			new CustomEvent("cel:statusbar:create", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits from `RPC/CocoonService/Terminal/AcceptTerminalProcessId.rs`
+	// once the spawned PTY child reports its OS pid. Payload: `{ id, pid }`.
+	// xterm panels that need the pid for environment-variable injection or
+	// the "kill terminal" command can subscribe. Stash the pid in a
+	// global side-map so synchronous lookups (`__CEL_TERMINAL_PIDS__.get(id)`)
+	// don't have to wait for an async DOM event round-trip.
+	await Register("sky://terminal/processId", (Payload: any) => {
+		try {
+			const Land = globalThis as any;
+			const Map_ =
+				Land.__CEL_TERMINAL_PIDS__ ??
+				(Land.__CEL_TERMINAL_PIDS__ = new Map<string, number>());
+			const Id = String(Payload?.id ?? "");
+			const Pid = Number(Payload?.pid ?? 0);
+			if (Id && Pid > 0) Map_.set(Id, Pid);
+		} catch {
+			/* swallow */
+		}
+		document.dispatchEvent(
+			new CustomEvent("cel:terminal:processId", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits from `RPC/CocoonService/Debug/StartDebugging.rs` when
+	// an extension calls `vscode.debug.startDebugging(...)`. Payload includes
+	// `{ sessionId, debugType, configuration, ... }`. Distinct from the
+	// later `sky://debug/sessionStart` (DAP `initialized` event) - this fires
+	// at request-time before the adapter has actually attached.
+	await Register("sky://debug/start", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:start", { detail: Payload }),
+		);
+	});
+
+	// Mountain emits from `RPC/CocoonService/Debug/RegisterDebugAdapter.rs`
+	// when an extension contributes a debug-adapter descriptor. Payload:
+	// `{ debugType, extensionId }`. The debug picker lists these.
+	await Register("sky://debug/register", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:register", { detail: Payload }),
+		);
+	});
 
 	// Cleanup helper (call on Tauri window close)
 	(window as any).__CEL_SKY_BRIDGE_CLEANUP__ = () =>

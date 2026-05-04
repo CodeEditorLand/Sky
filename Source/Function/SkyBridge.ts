@@ -3081,10 +3081,29 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// `Provider.resolveWebviewView(view, ctx)` and the extension
 	// populates `view.webview.html`.
 	const WebviewViewResolvers = new Map<string, number>();
+	// Once-per-session diagnostic so we can confirm at-a-glance from
+	// `Mountain.dev.log` that this listener is actually wired into the
+	// bundle, what shape Mountain hands us, and whether ViewId resolves.
+	// Without this the listener was an opaque no-op when something
+	// upstream (gRPC drop, payload-shape drift, missing __CEL_SERVICES__)
+	// silently broke the registration chain. Subsequent emits stay quiet
+	// so extension-host re-registration after a hot-reload doesn't spam
+	// the IPC channel.
+	let WebviewRegisterViewFirstLogged = false;
 	await Register("sky://webview/registerView", (Payload: any) => {
 		const Args = Array.isArray(Payload?.args) ? Payload.args : [];
 		const Handle = Args[0] ?? Payload?.handle;
 		const ViewId: string = String(Args[1] ?? Payload?.viewId ?? "");
+		if (!WebviewRegisterViewFirstLogged) {
+			WebviewRegisterViewFirstLogged = true;
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"webview-bridge",
+					`first-registerView viewId=${ViewId} handle=${String(Handle)} hasArgs=${Array.isArray(Payload?.args)} hasViewIdKey=${typeof Payload?.viewId !== "undefined"} hasServices=${typeof (globalThis as any).__CEL_SERVICES__ === "object"} hasRegister=${typeof (globalThis as any).__CEL_SERVICES__?.WebviewViews?.register === "function"}`,
+				],
+			}).catch(() => {});
+		}
 		if (!ViewId) return;
 		// Defensive: a malformed payload (Mountain emit shape drift,
 		// missing handle, etc.) shouldn't kill the rest of the
@@ -3138,6 +3157,23 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}
 			Services.WebviewViews.register(ViewId, {
 				resolve: async (WebviewView: any, _Cancellation: any) => {
+					// Unconditional entry trace - fires the moment the
+					// workbench's WebviewViewService.register / resolve
+					// path invokes our resolver, BEFORE any local logic
+					// can throw. Without this we cannot distinguish
+					// "workbench never called us" from "workbench called
+					// us but something inside this callback errored".
+					try {
+						invoke("MountainIPCInvoke", {
+							method: "diagnostic:log",
+							params: [
+								"webview-bridge",
+								`resolve-enter viewId=${ViewId} handle=${String(Handle)} hasWebview=${!!WebviewView?.webview}`,
+							],
+						}).catch(() => {});
+					} catch {
+						/* invoke may be unavailable mid-teardown */
+					}
 					// Bridge the workbench-supplied WebviewView into a
 					// Cocoon-visible reference. The extension's
 					// `resolveWebviewView(view, ctx)` callback runs in
@@ -3264,21 +3300,25 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			// `throw new Error("View resolver already registered for ...")`
 			// when a viewId is registered twice. That happens when the
 			// extension host re-registers after a hot-reload or when our
-			// SkyBridge reentrancy guard didn't engage in time. Swallow
-			// the dup-error specifically (the existing resolver is
-			// already serving the view); log anything else so we can
-			// triage real failures.
+			// SkyBridge reentrancy guard didn't engage in time. Mirror
+			// every failure into Mountain.dev.log via the diagnostic IPC
+			// so we can triage from the file sink (console.warn lands in
+			// the renderer devtools but never reaches the dev-log file).
 			try {
 				const Message =
 					(RegisterError as any)?.message ?? String(RegisterError);
-				if (!String(Message).includes("already registered")) {
-					console.warn(
-						`[SkyBridge] WebviewViews.register failed for ${ViewId}:`,
-						RegisterError,
-					);
-				}
+				const Kind = String(Message).includes("already registered")
+					? "dup"
+					: "error";
+				invoke("MountainIPCInvoke", {
+					method: "diagnostic:log",
+					params: [
+						"webview-bridge",
+						`registerView ${Kind} viewId=${ViewId} message=${String(Message).slice(0, 200)}`,
+					],
+				}).catch(() => {});
 			} catch {
-				/* console may be replaced */
+				/* invoke may be unavailable mid-teardown */
 			}
 		}
 	});

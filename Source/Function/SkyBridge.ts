@@ -3442,10 +3442,11 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			// visible so we don't force-open every collapsed sidebar.
 			try {
 				const Visible = Services?.Views?.isViewVisible?.(ViewId);
-				if (Visible && typeof Services?.Views?.openView === "function") {
-					Services.Views.openView(ViewId, false)?.catch?.(
-						() => null,
-					);
+				if (
+					Visible &&
+					typeof Services?.Views?.openView === "function"
+				) {
+					Services.Views.openView(ViewId, false)?.catch?.(() => null);
 				}
 			} catch {
 				/* swallow - openView is best-effort */

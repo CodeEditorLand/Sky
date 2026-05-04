@@ -2801,29 +2801,82 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		const HandleRegistry: Map<string | number, any> = ((
 			globalThis as any
 		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ ??= new Map());
-		// Placeholder shape: matches the WebviewView interface enough
-		// that the set-html listener's `ParkedView.webview.html = ...`
-		// assignment doesn't throw. The real paint requires
-		// `IWebviewWorkbenchService` integration (not yet wired).
-		HandleRegistry.set(Handle, {
-			webview: {
-				_isPlaceholder: true,
-				_pendingHtml: "",
-				set html(Value: string) {
-					this._pendingHtml = Value;
+		const ViewType = String(Payload?.viewType ?? Payload?.args?.[1] ?? "");
+		const Title = String(
+			Payload?.title ?? Payload?.args?.[2] ?? ViewType ?? "",
+		);
+		// Try to materialise a REAL workbench webview-panel via
+		// `IWebviewWorkbenchService.openWebview`. When the workbench-side
+		// service is wired (see CELExposeAccessor's `WebviewPanels` slot)
+		// this gives us a fully-functional `WebviewInput.webview` whose
+		// `setHtml(html)` actually paints; the iframe goes through the
+		// stock workbench message-port plumbing the same way native
+		// `vscode.window.createWebviewPanel` does. If anything in the
+		// service chain is missing (decorator unresolved, init-info
+		// shape mismatch, or the Layout part not ready yet) we fall back
+		// to the historical no-op placeholder so the set-html listener
+		// at least doesn't throw on `webview.html = X` assignment.
+		let RealOverlayWebview: any = null;
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			const WebviewPanels = Services?.WebviewPanels;
+			if (
+				ViewType &&
+				WebviewPanels &&
+				typeof WebviewPanels.openWebview === "function"
+			) {
+				const WebviewInput = WebviewPanels.openWebview(
+					{
+						origin: undefined,
+						providedViewType: ViewType,
+						title: Title,
+						options: { purpose: "webviewView" },
+						contentOptions: {
+							allowScripts: true,
+							allowForms: true,
+						},
+						extension: undefined,
+					},
+					ViewType,
+					Title,
+					undefined,
+					{ preserveFocus: true },
+				);
+				RealOverlayWebview = WebviewInput?.webview ?? null;
+			}
+		} catch {
+			/* swallow - fall back to placeholder */
+		}
+		if (
+			RealOverlayWebview &&
+			typeof RealOverlayWebview.setHtml === "function"
+		) {
+			HandleRegistry.set(Handle, { webview: RealOverlayWebview });
+		} else {
+			// Fallback placeholder. Sky's set-html listener will write
+			// to `_pendingHtml` via the html setter; once a future panel
+			// integration arrives the cached `__CEL_WEBVIEW_PENDING_HTML_BY_HANDLE__`
+			// can be replayed onto the real overlay's `setHtml(html)`.
+			HandleRegistry.set(Handle, {
+				webview: {
+					_isPlaceholder: true,
+					_pendingHtml: "",
+					set html(Value: string) {
+						this._pendingHtml = Value;
+					},
+					get html() {
+						return this._pendingHtml;
+					},
 				},
-				get html() {
-					return this._pendingHtml;
-				},
-			},
-		});
+			});
+		}
 		if (!WebviewCreateFirstLogged) {
 			WebviewCreateFirstLogged = true;
 			invoke("MountainIPCInvoke", {
 				method: "diagnostic:log",
 				params: [
 					"webview-bridge",
-					`first-create handle=${String(Handle)} viewType=${String(Payload?.args?.[1] ?? Payload?.viewType ?? "")} title=${String(Payload?.args?.[2] ?? Payload?.title ?? "")}`,
+					`first-create handle=${String(Handle)} viewType=${ViewType} title=${Title} backedBy=${RealOverlayWebview ? "WebviewInput" : "placeholder"}`,
 				],
 			}).catch(() => {});
 		}
@@ -2846,13 +2899,60 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// viewId and apply the html to its real `webview.html` setter so
 	// the panel paints. Falls back to `cel:webview:set-html` DOM event
 	// for any Sky-side observer that wants the raw payload.
+	// Per-view pending HTML cache. setHtml notifications can race ahead of
+	// the WebviewViewService resolver chain: an extension may set
+	// `view.webview.html = "<html>"` inside `resolveWebviewView` before
+	// our resolver callback's `Registry.set(ViewId, WebviewView)` runs,
+	// or before the workbench's pane is body-visible at all. Without a
+	// cache the very first set-html for each view lands on a placeholder
+	// or `undefined` and is dropped. Park the html keyed by viewId AND
+	// handle so a late resolve can replay it onto the real workbench
+	// `IOverlayWebview` via `setHtml(html)`.
+	const PendingWebviewHtml = new Map<string, string>();
+	const PendingWebviewHtmlByHandle = new Map<string | number, string>();
+	(globalThis as any).__CEL_WEBVIEW_PENDING_HTML__ = PendingWebviewHtml;
+	(globalThis as any).__CEL_WEBVIEW_PENDING_HTML_BY_HANDLE__ =
+		PendingWebviewHtmlByHandle;
+	const ApplyHtmlToWebview = (
+		ParkedView: any,
+		Html: string,
+	): "method" | "setter" | "skipped" => {
+		// Stock VS Code's `IOverlayWebview` exposes `setHtml(html)` as a
+		// METHOD (see `vs/workbench/contrib/webview/browser/webview.ts`
+		// :195 - `setHtml(html: string): void`). Earlier code used a
+		// property assignment (`webview.html = X`) which silently no-op'd
+		// because no such setter exists on the workbench-supplied object;
+		// the iframe stayed blank even when the resolver chain wired up
+		// correctly. Try the method first, fall back to the setter for
+		// the panel-mode placeholder shape (set in the
+		// `sky://webview/create` listener) which DOES define a setter on
+		// `_pendingHtml`.
+		if (!ParkedView?.webview) {
+			return "skipped";
+		}
+		try {
+			if (typeof ParkedView.webview.setHtml === "function") {
+				ParkedView.webview.setHtml(Html);
+				return "method";
+			}
+		} catch {
+			/* fall through to setter */
+		}
+		try {
+			ParkedView.webview.html = Html;
+			return "setter";
+		} catch {
+			return "skipped";
+		}
+	};
+	(globalThis as any).__CEL_WEBVIEW_APPLY_HTML__ = ApplyHtmlToWebview;
 	let WebviewSetHtmlFirstLogged = false;
 	await Register("sky://webview/set-html", (Payload: any) => {
 		// Mountain's Effect-dispatcher path emits the payload directly
 		// from Cocoon's `{ handle, viewId, html }` (webview-view path)
-		// or translated `{ method, handle, html }` (panel path). Both
-		// shapes are accepted - read every viable key, then resolve a
-		// view by viewId first (most common), then fall back to a
+		// or translated `{ method, handle, html, args }` (panel path).
+		// Both shapes are accepted - read every viable key, then resolve
+		// a view by viewId first (most common), then fall back to a
 		// handle→view registry lookup so panel-mode webviews still get
 		// their html applied.
 		const ViewId: string = String(Payload?.viewId ?? "");
@@ -2870,27 +2970,28 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		const ParkedView =
 			(ViewId && Registry?.get(ViewId)) ||
 			(Handle !== "" && HandleRegistry?.get(Handle));
+		// Always cache so a late resolve can replay - even if a parked
+		// view was found, the resolver may build a fresh proxy on
+		// re-attach and we want the latest html available.
+		if (ViewId) {
+			PendingWebviewHtml.set(ViewId, Html);
+		}
+		if (Handle !== "") {
+			PendingWebviewHtmlByHandle.set(Handle, Html);
+		}
+		const Applied = ApplyHtmlToWebview(ParkedView, Html);
 		// One-time confirmation log for the FIRST set-html that arrives.
 		// Tells us at-a-glance whether the bridge sees the kebab-case
-		// channel + canonicalised payload. Subsequent set-html calls
-		// stay silent so Roo / claude-vscode iframe re-renders don't
-		// flood the IPC log.
+		// channel + canonicalised payload AND which apply-strategy hit.
 		if (!WebviewSetHtmlFirstLogged) {
 			WebviewSetHtmlFirstLogged = true;
 			invoke("MountainIPCInvoke", {
 				method: "diagnostic:log",
 				params: [
 					"webview-bridge",
-					`first-set-html viewId=${ViewId} handle=${String(Handle)} htmlLen=${Html.length} parkedViewFound=${!!ParkedView} hasRegistry=${!!Registry} hasHandleRegistry=${!!HandleRegistry}`,
+					`first-set-html viewId=${ViewId} handle=${String(Handle)} htmlLen=${Html.length} parkedViewFound=${!!ParkedView} applied=${Applied} hasRegistry=${!!Registry} hasHandleRegistry=${!!HandleRegistry}`,
 				],
 			}).catch(() => {});
-		}
-		if (!ParkedView?.webview) return;
-		try {
-			ParkedView.webview.html = Html;
-		} catch (_e) {
-			/* swallow - workbench WebviewView may have been disposed
-			   between resolveWebviewView completion and this callback */
 		}
 	});
 
@@ -3206,11 +3307,39 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 						if (Handle != null && Handle !== "") {
 							HandleRegistry.set(Handle, WebviewView);
 						}
+						// Drain any pending HTML that arrived BEFORE this
+						// resolver fired. Cocoon's `view.webview.html =
+						// "<html>"` setter inside `resolveWebviewView` runs
+						// synchronously after the extension's activate(),
+						// which can race ahead of our resolver callback;
+						// without the replay the very first iframe content
+						// is dropped and the panel sits at the spinner
+						// even though the chain is wired correctly.
+						const PendingByViewId: Map<string, string> | undefined =
+							(globalThis as any).__CEL_WEBVIEW_PENDING_HTML__;
+						const PendingByHandle:
+							| Map<string | number, string>
+							| undefined = (globalThis as any)
+							.__CEL_WEBVIEW_PENDING_HTML_BY_HANDLE__;
+						const ApplyHtml = (globalThis as any)
+							.__CEL_WEBVIEW_APPLY_HTML__ as
+							| ((view: any, html: string) => string)
+							| undefined;
+						const PendingHtml =
+							(ViewId && PendingByViewId?.get(ViewId)) ||
+							(Handle != null &&
+								Handle !== "" &&
+								PendingByHandle?.get(Handle)) ||
+							"";
+						let ReplayApplied: string | "none" = "none";
+						if (PendingHtml && typeof ApplyHtml === "function") {
+							ReplayApplied = ApplyHtml(WebviewView, PendingHtml);
+						}
 						invoke("MountainIPCInvoke", {
 							method: "diagnostic:log",
 							params: [
 								"webview-bridge",
-								`resolve viewId=${ViewId} handle=${String(Handle)} hasWebview=${!!WebviewView?.webview}`,
+								`resolve viewId=${ViewId} handle=${String(Handle)} hasWebview=${!!WebviewView?.webview} replayApplied=${String(ReplayApplied)} replayLen=${PendingHtml.length}`,
 							],
 						}).catch(() => {});
 					} catch (_e) {
@@ -3299,6 +3428,28 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					}
 				},
 			});
+			// Defensive: nudge the WebviewViewPane's resolution chain by
+			// touching `Services.Views.openView(viewId)` if the pane is
+			// already body-visible. The workbench's `WebviewViewPane.
+			// activate()` is gated by `_activated` and only runs once;
+			// when our register fires AFTER activation completed, the
+			// `onNewResolverRegistered` listener calls `updateTreeVisibility`
+			// which hits the no-op early-return. `openView` re-enters the
+			// composite-show path which re-fires `onDidChangeBodyVisibility`,
+			// and the workbench's `webviewViewService.resolve(...)` is
+			// re-invoked - finding our just-registered resolver this
+			// second pass. We only do this when the pane is already
+			// visible so we don't force-open every collapsed sidebar.
+			try {
+				const Visible = Services?.Views?.isViewVisible?.(ViewId);
+				if (Visible && typeof Services?.Views?.openView === "function") {
+					Services.Views.openView(ViewId, false)?.catch?.(
+						() => null,
+					);
+				}
+			} catch {
+				/* swallow - openView is best-effort */
+			}
 			// One-shot post-register probe: confirm our resolver actually
 			// landed in the workbench's `_resolvers` map. Bracket access
 			// because `_resolvers` is a TS-private field; JS doesn't

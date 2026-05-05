@@ -1843,79 +1843,12 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		});
 	}
 
-	// ---- Extension-host debug service ----
-	// Workbench reload/close triggered from the extension host debug
-	// service (`vscode.debug.onDidReceiveDebugSessionCustomEvent` flow).
-	await Register("sky://exthost/debug-reload", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:exthost:debug-reload", { detail: Payload }),
-		);
-	});
-	await Register("sky://exthost/debug-close", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:exthost:debug-close", { detail: Payload }),
-		);
-	});
-
-	// ---- Debug session lifecycle ----
-	// Mountain's `DebugProvider::StartDebugging` / `StopDebugging` mirror
-	// each session-state transition over these channels so the debug
-	// toolbar, call-stack panel, and breakpoints view can react without
-	// waiting on the typed `__CEL_SERVICES__.Debug` snapshot to refresh.
-	// The forwarded payload matches the `vscode.DebugSession`-shaped
-	// dictionary the renderer expects ({ sessionId, type, configuration }).
-	await Register("sky://debug/sessionStart", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:sessionStart", { detail: Payload }),
-		);
-	});
-	await Register("sky://debug/sessionEnd", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:sessionEnd", { detail: Payload }),
-		);
-	});
-	// `addBreakpoints` / `removeBreakpoints` / `consoleAppend` arrive on
-	// `sky://debug/<suffix>` because `DebugLifecycle.rs` strips the
-	// `debug.` prefix from the Cocoon notification method.
-	await Register("sky://debug/addBreakpoints", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:addBreakpoints", { detail: Payload }),
-		);
-	});
-	await Register("sky://debug/removeBreakpoints", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:removeBreakpoints", { detail: Payload }),
-		);
-	});
-	await Register("sky://debug/consoleAppend", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:consoleAppend", { detail: Payload }),
-		);
-	});
-
-	// Forward parsed DAP frames from the spawned debug-adapter's stdout
-	// (Mountain `Environment/DebugProvider.rs::StartDebugging` stdout-reader
-	// task) into a `cel:debug:dap-message` DOM event. The workbench's
-	// `RawDebugSession` correlates responses by `request_seq`; routing the
-	// raw `{ sessionId, message }` shape here lets a future RawDebugSession
-	// shim subscribe and forward without re-implementing DAP framing.
-	await Register("sky://debug/dap-message", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:dap-message", { detail: Payload }),
-		);
-	});
-
-	// Custom editor save lifecycle: Mountain emits `sky://customEditor/saved`
-	// after `OnSaveCustomDocument` reverse-RPC succeeds. Workbench's dirty-
-	// indicator already updates from the `IFileService.writeFile` flow the
-	// extension drives, but observers (gitlens diff overlays, change-tracking
-	// surfaces) listen on `cel:customEditor:saved` for the explicit
-	// "extension save callback completed" signal.
-	await Register("sky://customEditor/saved", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:customEditor:saved", { detail: Payload }),
-		);
-	});
+	// Debug + custom-editor channel relays - implementation in
+	// `Bridge/InstallDebug.ts`. All nine channels are pure DOM-event
+	// re-dispatchers; the workbench's own IDebugService /
+	// ICustomEditorService handle the underlying flows through stock
+	// VS Code internals.
+	await (await import("./Bridge/InstallDebug.js")).default({ Register });
 
 	// ---- Webview extensions ----
 	// `sky://webview/create` - extension called

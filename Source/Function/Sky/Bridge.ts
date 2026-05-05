@@ -43,76 +43,24 @@ import SkyEvent from "@codeeditorland/wind/Target/IPC/SkyEvent.js";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-// Track which `cel:*` CustomEvents have at least one consumer so we
-// can report a `consumer-present` flag on every dispatch under the
-// `cel-dispatch` tag.
-//
-// Tracking is best-effort. In WebKit/Safari, DOM prototype methods
-// like `Document.prototype.addEventListener` are defined as
-// non-writable properties on the instance; reassigning
-// `document.addEventListener` throws `TypeError: Attempted to assign
-// to readonly property` in strict mode (ES modules are strict), which
-// crashes the entire Sky bundle at load and takes the workbench down
-// with a cascade of unhandled rejections. We wrap the install in
-// `try/catch` so a failed install degrades to `consumer-present=?`
-// reporting instead of breaking boot. SSR is also skipped via the
-// `typeof document !== "undefined"` guard because Astro imports
-// SkyBridge during pre-render.
-const _CelConsumers = new Set<string>();
-const _HasDOM =
-	typeof globalThis !== "undefined" &&
-	typeof (globalThis as any).document !== "undefined";
-let _CelTrackingActive = false;
-if (_HasDOM && !(globalThis as any).__Track) {
-	try {
-		const TargetDocument = (globalThis as any).document as Document;
-		const OriginalAdd =
-			TargetDocument.addEventListener.bind(TargetDocument);
-		// Install via `Object.defineProperty` on the prototype, with
-		// `configurable: true` so we can cleanly replace the method.
-		// If the runtime rejects the redefinition we catch and fall
-		// back to untracked mode - the tag still fires, just without
-		// the consumer-present flag.
-		Object.defineProperty(TargetDocument, "addEventListener", {
-			configurable: true,
-			writable: true,
-			value: function PatchedAdd(
-				Type: string,
-				Listener: EventListenerOrEventListenerObject | null,
-				Options?: boolean | AddEventListenerOptions,
-			) {
-				if (typeof Type === "string" && Type.startsWith("cel:")) {
-					_CelConsumers.add(Type);
-				}
-				return OriginalAdd(Type, Listener as EventListener, Options);
-			},
-		});
-		(globalThis as any).__Track = true;
-		_CelTrackingActive = true;
-	} catch {
-		_CelTrackingActive = false;
-	}
-}
-
-// Mirror a `cel-dispatch` line into Mountain's dev-log file sink via
-// the RenderDevLog Tauri command. Off by default - opt in from
-// DevTools with `globalThis.__LAND_TRACE_CEL_DISPATCH__ = true`. The
-// per-event invoke used to fire 1:1 with every `sky://*` Mountain
-// emit (~50-100/s during extension boot), doubling traffic on Tauri's
-// single serialised WKWebView channel and starving keystroke delivery.
-const _CelDispatchLog = (DomEvent: string, HasConsumer: boolean): void => {
-	if (!_HasDOM) return;
-	if (!(globalThis as any).__LAND_TRACE_CEL_DISPATCH__) return;
-	const Flag = _CelTrackingActive ? String(HasConsumer) : "?";
-	try {
-		invoke<void>("RenderDevLog", {
-			Tag: "cel-dispatch",
-			Message: `[CelDispatch] event=${DomEvent} consumer-present=${Flag}`,
-			tag: "cel-dispatch",
-			message: `[CelDispatch] event=${DomEvent} consumer-present=${Flag}`,
-		}).catch(() => {});
-	} catch {}
+// `cel:*` CustomEvent consumer-presence tracking lives in
+// `Bridge/CelDispatchTracking.ts`. Module-level placeholder pair so
+// the dispatch line at line ~1985 reads unchanged; the install
+// function below replaces both with the real bag.
+let _CelConsumers: { has: (Type: string) => boolean } = {
+	has: () => false,
 };
+let _CelDispatchLog: (
+	DomEvent: string,
+	HasConsumer: boolean,
+) => void = () => {};
+void (async () => {
+	const Tracking = (await import("./Bridge/CelDispatchTracking.js")).default(
+		invoke,
+	);
+	_CelConsumers = { has: (T: string) => Tracking.HasConsumer(T) };
+	_CelDispatchLog = Tracking.Log;
+})();
 
 // ============================================================================
 // VS Code workbench accessor
@@ -254,136 +202,14 @@ function GetServices(): CelServices | null {
 	return (window as any).__CEL_SERVICES__ ?? null;
 }
 
-// Probe `__CEL_SERVICES__` shape once after services-ready fires. The
-// Output transform plugin `ExposeWorkbenchAccessor.ts` populates each
-// service handle inside a `try`-IIFE; a contrib that fails to resolve
-// (rare but observed for `IDebugService` in the headless web profile)
-// silently drops to `null`. Without this probe, the Sky-side SCM /
-// Debug / CustomEditor bridges silently no-op without telling anyone
-// why. Logs once to the renderer console (visible in DevTools) on the
-// first `cel:services-ready` fire; subsequent listeners are unaffected.
-{
-	const ProbeServices = (): void => {
-		const S = GetServices() as Record<string, unknown> | null;
-		// Bridge the probe through `MountainIPCInvoke` so the per-key
-		// service shape lands in `Mountain.dev.log` under the
-		// `[diagnostic]` tag. The original `console.log` only surfaces
-		// in DevTools, which is invisible to log dissection - silent
-		// `Markers=null` / `WebviewViews=null` resolutions caused
-		// SkyBridge bridges (Problems-panel push, sidebar webview
-		// resolver) to no-op without any trace anywhere. Use the
-		// pre-bound `__TAURI__.core.invoke` (same surface SkyBridge
-		// already uses below) so we don't re-import.
-		const ToMountain = (Tag: string, Message: string): void => {
-			try {
-				const Inv =
-					(globalThis as any).__TAURI__?.core?.invoke ??
-					(globalThis as any).__TAURI__?.invoke;
-				if (typeof Inv === "function") {
-					Inv("MountainIPCInvoke", {
-						method: "diagnostic:log",
-						params: [Tag, Message],
-					}).catch(() => {});
-				}
-			} catch {}
-		};
-		if (!S) {
-			try {
-				console.warn("[Sky:CEL] __CEL_SERVICES__ missing on probe");
-			} catch {}
-			ToMountain("cel-services", "__CEL_SERVICES__ missing on probe");
-			return;
-		}
-		// Every `__CEL_SERVICES__` key the workbench transform installs
-		// (see `Output/Source/Plugin/Transform/ExposeWorkbenchAccessor.ts`).
-		// `WebviewViews` and `Markers` are the leverage keys for the
-		// current "panes don't show / Problems empty" symptoms - keep
-		// them in the list even if they look incidental, since the
-		// shape line is the only post-mortem signal we have.
-		const Keys = [
-			"Statusbar",
-			"Commands",
-			"CommandRegistry",
-			"Search",
-			"Views",
-			"URI",
-			"TreeViewByViewId",
-			"SCM",
-			"Debug",
-			"CustomEditor",
-			"Emitter",
-			"Disposable",
-			"ToDisposable",
-			"Models",
-			"Languages",
-			"ResourceTree",
-			"UriIdentity",
-			"WebviewViews",
-			"Markers",
-		];
-		const Shape = Keys.map(
-			(K) => `${K}=${S[K] == null ? "null" : typeof S[K]}`,
-		).join(" ");
-		try {
-			console.log(`[Sky:CEL] services-ready ${Shape}`);
-		} catch {}
-		ToMountain("cel-services", `shape ${Shape}`);
-		// Probe one level deeper for the two services the current bug
-		// hunt depends on, so a `WebviewViews=object` line that is
-		// nonetheless missing `.register` (e.g. a stub that resolved
-		// but isn't the real `WebviewViewService`) still surfaces.
-		const RegisterShape = `WebviewViews.register=${typeof (S["WebviewViews"] as any)?.register} Markers.changeOne=${typeof (S["Markers"] as any)?.changeOne}`;
-		ToMountain("cel-services", RegisterShape);
-		// View-registry snapshot. The Output transform's
-		// `ViewRegistrySnapshot()` accessor (added in
-		// `ExposeWorkbenchAccessor.ts`) walks the workbench's
-		// `IViewContainersRegistry` and `IViewsRegistry`, returning
-		// counts + sample IDs. Logged at +5s so the extension-points
-		// pipeline has time to flush. If `containers` is still tiny
-		// (only built-ins like `workbench.view.explorer`) and no
-		// extension-contributed IDs (`roo-cline`, `claude-vscode`,
-		// `gitlens.views.welcome`, ...) appear, the issue is that
-		// extension manifests aren't reaching
-		// `viewsContainersExtensionPoint.setHandler` - meaning the
-		// workbench's `IExtensionService` never received those
-		// extensions' descriptions through the `_registerExtensions`
-		// path. Activity bar stays empty, panels can't open.
-		setTimeout(() => {
-			try {
-				const Snapshot = (S as any)?.ViewRegistrySnapshot?.();
-				if (!Snapshot) {
-					ToMountain(
-						"view-registry",
-						"snapshot accessor missing on __CEL_SERVICES__",
-					);
-					return;
-				}
-				ToMountain(
-					"view-registry",
-					`containers=${Snapshot.containers} views=${Snapshot.views} containerSample=${(Snapshot.containerSample ?? []).join(",")} viewSample=${(Snapshot.viewSample ?? []).join(",")}`,
-				);
-			} catch (Error) {
-				ToMountain(
-					"view-registry",
-					`probe failed: ${(Error as Error)?.message ?? String(Error)}`,
-				);
-			}
-		}, 5000);
-	};
-	if (typeof window !== "undefined") {
-		// If services already ready by the time this module loads, probe
-		// immediately. Otherwise wait for the event.
-		if ((window as any).__CEL_SERVICES__) {
-			ProbeServices();
-		} else {
-			window.addEventListener(
-				"cel:services-ready",
-				() => ProbeServices(),
-				{ once: true },
-			);
-		}
-	}
-}
+// One-shot diagnostic probe of `__CEL_SERVICES__` shape; implementation
+// in `Bridge/ProbeServices.ts`. Wires itself onto `cel:services-ready`
+// (or fires immediately if services are already ready). Uses a
+// fire-and-forget dynamic import so the probe doesn't block module eval.
+void (async () => {
+	const Probe = (await import("./Bridge/ProbeServices.js")).default;
+	Probe(() => GetServices() as Record<string, unknown> | null);
+})();
 
 // ============================================================================
 // URI helpers for command arguments
@@ -406,106 +232,23 @@ function GetServices(): CelServices | null {
 // shape with `.uri` nested) and produces a real URI when the bundled
 // class is available. Fallback POJO retains `$mid:1` so the few code
 // paths that DO call `revive` still work.
-function BuildOpenArg(Source: unknown): unknown {
-	const Ctor = GetServices()?.URI;
-	const ExtractParts = (
-		Value: unknown,
-	): {
-		Scheme: string;
-		Authority: string;
-		Path: string;
-		Query: string;
-		Fragment: string;
-	} | null => {
-		if (Value == null) return null;
-		if (typeof Value === "string") {
-			const Trimmed = Value.trim();
-			if (!Trimmed) return null;
-			if (Trimmed.includes("://")) {
-				try {
-					const Parsed = new URL(Trimmed);
-					return {
-						Scheme: Parsed.protocol.replace(/:$/, ""),
-						Authority: Parsed.host,
-						Path: decodeURIComponent(Parsed.pathname),
-						Query: Parsed.search.replace(/^\?/, ""),
-						Fragment: Parsed.hash.replace(/^#/, ""),
-					};
-				} catch {
-					return null;
-				}
-			}
-			return {
-				Scheme: "file",
-				Authority: "",
-				Path: Trimmed,
-				Query: "",
-				Fragment: "",
-			};
-		}
-		if (typeof Value !== "object") return null;
-		const Holder = Value as Record<string, unknown>;
-		// Workspace-folder-style nested shape.
-		if (Holder["uri"] && typeof Holder["uri"] === "object") {
-			return ExtractParts(Holder["uri"]);
-		}
-		const Scheme = String(Holder["scheme"] ?? "file");
-		const Path = String(Holder["path"] ?? Holder["fsPath"] ?? "");
-		if (!Path) return null;
-		return {
-			Scheme,
-			Authority: String(Holder["authority"] ?? ""),
-			Path,
-			Query: String(Holder["query"] ?? ""),
-			Fragment: String(Holder["fragment"] ?? ""),
-		};
-	};
-	const Parts = ExtractParts(Source);
-	if (!Parts) return Source;
-	if (Ctor) {
-		try {
-			return Ctor.from({
-				scheme: Parts.Scheme,
-				authority: Parts.Authority,
-				path: Parts.Path,
-				query: Parts.Query,
-				fragment: Parts.Fragment,
-			});
-		} catch {
-			// Fall through to POJO.
-		}
-	}
-	return {
-		$mid: 1,
-		scheme: Parts.Scheme,
-		authority: Parts.Authority,
-		path: Parts.Path,
-		query: Parts.Query,
-		fragment: Parts.Fragment,
-	};
-}
+// `BuildOpenArg` lives in `Bridge/BuildOpenArg.ts`. Bridge.ts hydrates
+// the helper inside `_InstallSkyBridgeOnce` (it requires
+// `__CEL_SERVICES__.URI` which is only populated after the workbench's
+// `web.main.js` runs `ExposeAccessor`). The local symbol below is
+// installed at install-time so existing call sites read unchanged.
+let BuildOpenArg: (Source: unknown) => unknown = (S) => S;
 
-// ============================================================================
-// Output channel state (local mirror of Mountain's channel registry)
-// ============================================================================
-
-const OutputChannels = new Map<string, string[]>();
-
-function GetOrCreateChannel(Id: string, Name?: string): string[] {
-	if (!OutputChannels.has(Id)) {
-		OutputChannels.set(Id, []);
-		// Announce channel creation to VS Code workbench output panel
-		const Wb = GetWorkbench();
-		if (Wb && Name) {
-			// Use logger as a lightweight sink - a real IOutputService integration
-			// requires AMD require('vs/workbench/services/output/common/output')
-			Wb.commands
-				.executeCommand("workbench.action.output.show")
-				.catch(() => {});
-		}
-	}
+// `OutputChannels` map + `GetOrCreateChannel` live in
+// `Bridge/OutputChannels.ts`. Bridge.ts hydrates the helper inside
+// `_InstallSkyBridgeOnce`; the local symbols below are install-time
+// placeholders so the rest of this file's downstream call sites read
+// unchanged.
+let OutputChannels = new Map<string, string[]>();
+let GetOrCreateChannel: (Id: string, Name?: string) => string[] = (Id) => {
+	if (!OutputChannels.has(Id)) OutputChannels.set(Id, []);
 	return OutputChannels.get(Id)!;
-}
+};
 
 // ============================================================================
 // Status bar bridge (no-op - stock workbench renders the bar)
@@ -523,120 +266,11 @@ function GetOrCreateChannel(Id: string, Name?: string): string[] {
 // booting, the native bar renders, and the missing per-extension items
 // are recoverable once the real routing lands.
 
-// ============================================================================
-// Progress DOM bridge
-// ============================================================================
-
-const ActiveProgress = new Map<string, HTMLElement>();
-
-function ShowProgress(Id: string, Title?: string, Cancellable?: boolean): void {
-	let El = ActiveProgress.get(Id);
-	if (!El) {
-		El = document.createElement("div");
-		El.id = `cel-progress-${CSS.escape(Id)}`;
-		El.className = "cel-progress-toast";
-		El.style.cssText =
-			"position:fixed;bottom:28px;right:16px;background:#1e1e1e;color:#ccc;border:1px solid #454545;border-radius:4px;padding:8px 12px;font-size:12px;z-index:9998;max-width:320px;display:flex;align-items:center;gap:8px;";
-		// Spinner
-		const Spinner = document.createElement("span");
-		Spinner.style.cssText =
-			"width:14px;height:14px;border:2px solid #555;border-top-color:#007acc;border-radius:50%;animation:cel-spin 0.8s linear infinite;flex-shrink:0;";
-		El.appendChild(Spinner);
-		const Label = document.createElement("span");
-		Label.className = "cel-progress-label";
-		Label.textContent = Title ?? "Loading…";
-		El.appendChild(Label);
-		if (Cancellable) {
-			const CancelBtn = document.createElement("button");
-			CancelBtn.textContent = "✕";
-			CancelBtn.style.cssText =
-				"background:none;border:none;color:#ccc;cursor:pointer;font-size:10px;margin-left:auto;padding:0 2px;";
-			CancelBtn.onclick = () => DismissProgress(Id);
-			El.appendChild(CancelBtn);
-		}
-		// Inject keyframe if needed
-		if (!document.getElementById("cel-spin-style")) {
-			const Style = document.createElement("style");
-			Style.id = "cel-spin-style";
-			Style.textContent =
-				"@keyframes cel-spin{to{transform:rotate(360deg)}}";
-			document.head.appendChild(Style);
-		}
-		document.body.appendChild(El);
-		ActiveProgress.set(Id, El);
-	}
-}
-
-function UpdateProgress(
-	Id: string,
-	Message?: string,
-	_Increment?: number,
-): void {
-	const El = ActiveProgress.get(Id);
-	if (El) {
-		const Label = El.querySelector(".cel-progress-label");
-		if (Label && Message) Label.textContent = Message;
-	}
-}
-
-function DismissProgress(Id: string): void {
-	const El = ActiveProgress.get(Id);
-	if (El) {
-		El.remove();
-		ActiveProgress.delete(Id);
-	}
-}
-
-// ============================================================================
-// Notification DOM bridge
-// ============================================================================
-
-function ShowNotification(
-	Severity: string,
-	Message: string,
-	Actions?: string[],
-): void {
-	const Wb = GetWorkbench();
-	if (Wb) {
-		// Route through VS Code's notification system via command
-		const CmdMap: Record<string, string> = {
-			info: "notifications.showExtensionNotification",
-			warning: "notifications.showExtensionNotification",
-			error: "notifications.showExtensionNotification",
-		};
-		const Cmd =
-			CmdMap[Severity] ?? "notifications.showExtensionNotification";
-		// VS Code doesn't expose a direct "show notification with message" command
-		// from outside. Use workbench.showMessage as fallback with logger.
-		Wb.commands
-			.executeCommand("workbench.action.showMessages")
-			.catch(() => {});
-	}
-	// DOM fallback
-	const Toast = document.createElement("div");
-	const Colors: Record<string, string> = {
-		info: "#007acc",
-		warning: "#ddb100",
-		error: "#f44747",
-	};
-	Toast.style.cssText = `position:fixed;top:16px;right:16px;background:#1e1e1e;color:#ccc;border-left:3px solid ${Colors[Severity] ?? "#007acc"};border-radius:2px;padding:8px 12px;font-size:12px;z-index:10000;max-width:400px;box-shadow:0 2px 8px rgba(0,0,0,0.4);`;
-	Toast.textContent = Message;
-	if (Actions?.length) {
-		const ActionBar = document.createElement("div");
-		ActionBar.style.cssText = "display:flex;gap:8px;margin-top:6px;";
-		Actions.forEach((Label) => {
-			const Btn = document.createElement("button");
-			Btn.textContent = Label;
-			Btn.style.cssText =
-				"background:#007acc;color:#fff;border:none;border-radius:2px;padding:2px 8px;font-size:11px;cursor:pointer;";
-			Btn.onclick = () => Toast.remove();
-			ActionBar.appendChild(Btn);
-		});
-		Toast.appendChild(ActionBar);
-	}
-	document.body.appendChild(Toast);
-	setTimeout(() => Toast.remove(), 6000);
-}
+// Progress + Notification DOM bridges live in `Bridge/Progress.ts` and
+// `Bridge/Notification.ts`. `_InstallSkyBridgeOnce` instantiates the
+// factories and binds the three Progress operations + the single
+// Notification operation into local symbols so the rest of the install
+// reads identically to the pre-extraction shape.
 
 // ============================================================================
 // Main bridge initialisation
@@ -723,6 +357,28 @@ export async function InstallSkyBridge(): Promise<void> {
 
 async function _InstallSkyBridgeOnce(): Promise<void> {
 	const Cleanups: Array<() => void> = [];
+	// Hydrate the extracted DOM-bridge factories. Both modules return a
+	// closure-bound bag (Progress) or a single function (Notification);
+	// keep the local symbol names identical to the pre-extraction shape
+	// so every downstream call site reads unchanged.
+	const Progress = (await import("./Bridge/Progress.js")).default();
+	const ShowProgress = Progress.Show;
+	const UpdateProgress = Progress.Update;
+	const DismissProgress = Progress.Dismiss;
+	const ShowNotification = (await import("./Bridge/Notification.js")).default(
+		GetWorkbench,
+	);
+	{
+		const Build = (await import("./Bridge/BuildOpenArg.js")).default;
+		BuildOpenArg = (Source: unknown) => Build(GetServices, Source);
+	}
+	{
+		const Output = (await import("./Bridge/OutputChannels.js")).default(
+			GetWorkbench,
+		);
+		OutputChannels = Output.Channels;
+		GetOrCreateChannel = Output.GetOrCreate;
+	}
 	const Register = async (
 		Channel: string,
 		Handler: (Payload: any) => void,
@@ -790,170 +446,21 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			);
 		});
 
-	// ---- Editor ----
-	// Mountain emits this when the user hits Cmd+W (macOS menu's
-	// `Window > Close`) or clicks the window X. Mountain has already
-	// `prevent_close()`d the underlying Tauri close. Try to close the
-	// active editor instead - that matches stock VS Code's Cmd+W. Only
-	// fall through to closing the actual window if there is no editor
-	// to close (welcome screen, empty workbench, or workbench not yet
-	// installed). The fallback uses `nativeHost:closeWindow`, which
-	// `Window.destroy()`s and bypasses the prevent_close intercept.
-	await Register("sky://window/close-requested", async () => {
-		const Workbench = GetWorkbench();
-		const Services: any = (globalThis as any).__CEL_SERVICES__;
-		const ActiveEditorCount = (() => {
-			try {
-				const Editor = Services?.Editor;
-				const Snapshot = Editor?.snapshot?.() ?? Editor;
-				if (Array.isArray(Snapshot?.visibleEditors)) {
-					return Snapshot.visibleEditors.length;
-				}
-				if (Snapshot?.activeEditor) return 1;
-			} catch {
-				/* fall through */
-			}
-			return -1;
-		})();
-
-		if (Workbench && ActiveEditorCount !== 0) {
-			try {
-				await Workbench.commands.executeCommand(
-					"workbench.action.closeActiveEditor",
-				);
-				return;
-			} catch {
-				/* fall through to actual close */
-			}
-		}
-		try {
-			await invoke("MountainIPCInvoke", {
-				method: "nativeHost:closeWindow",
-				params: [],
-			});
-		} catch {
-			/* nothing to do; window will stay open if Mountain rejects */
-		}
-	});
-
-	await Register("sky://editor/openDocument", ({ uri, viewColumn }: any) => {
-		const Wb = GetWorkbench();
-		if (!Wb) return;
-		Wb.commands
-			.executeCommand("vscode.open", BuildOpenArg(uri), viewColumn)
-			.catch(() => {
-				// Fallback: generic open
-				Wb.env.openUri({ path: uri }).catch(() => {});
-			});
-	});
-
-	await Register("sky://editor/saveAll", () => {
-		GetWorkbench()
-			?.commands.executeCommand("workbench.action.files.saveAll")
-			.catch(() => {});
-	});
-
-	// Atom T1: workspace.applyEdit - round-trip reply. Mountain's request
-	// carries `{ RequestIdentifier, Payload }` and blocks the extension's
-	// awaited promise until we resolve.
-	await Register(
-		"sky://workspace/applyEdit",
-		async ({ RequestIdentifier, Payload }: any) => {
-			if (!RequestIdentifier) return;
-			try {
-				const Wb = GetWorkbench();
-				const Edits = Payload?.edits ?? Payload ?? [];
-				if (Wb && Edits) {
-					await Wb.commands.executeCommand(
-						"workbench.action.applyThemeFromFile",
-						Edits,
-					);
-				}
-				void ResolveUiRequest(RequestIdentifier, true);
-			} catch (Error) {
-				console.warn("[SkyBridge] applyEdit failed", Error);
-				void ResolveUiRequest(RequestIdentifier, false);
-			}
-		},
-	);
-
-	// Atom T1: window.showTextDocument - round-trip reply with a
-	// minimal TextEditor-shaped acknowledgement (`{ uri, viewColumn }`).
-	// Extensions chaining editor-scoped operations will see undefined for
-	// properties we don't synthesise yet; tracking that enrichment
-	// separately as T2.
-	await Register("sky://window/showTextDocument", async (RawPayload: any) => {
-		const RequestIdentifier = RawPayload?.RequestIdentifier;
-		const Payload = RawPayload?.Payload ?? RawPayload;
-		const UriValue =
-			Payload?.[0]?.uri ?? Payload?.uri ?? Payload?.[0] ?? null;
-		const ViewColumn =
-			Payload?.[1]?.viewColumn ??
-			Payload?.viewColumn ??
-			Payload?.[1] ??
-			null;
-		try {
-			const Wb = GetWorkbench();
-			if (Wb && UriValue) {
-				await Wb.commands.executeCommand(
-					"vscode.open",
-					BuildOpenArg(UriValue),
-					ViewColumn,
-				);
-			}
-			if (RequestIdentifier) {
-				void ResolveUiRequest(RequestIdentifier, {
-					uri: UriValue,
-					viewColumn: ViewColumn,
-				});
-			}
-		} catch (Error) {
-			console.warn("[SkyBridge] showTextDocument failed", Error);
-			if (RequestIdentifier) {
-				void ResolveUiRequest(RequestIdentifier, null);
-			}
-		}
-	});
-
-	await Register("sky://editor/applyEdits", ({ edits }: any) => {
-		if (!Array.isArray(edits) || !edits.length) return;
-		GetWorkbench()
-			?.commands.executeCommand(
-				"workbench.action.applyThemeFromFile",
-				edits,
-			)
-			.catch(() => {});
-	});
-
-	// ---- Output ----
-	await Register("sky://output/create", ({ id, name }: any) => {
-		GetOrCreateChannel(id, name);
-	});
-
-	await Register("sky://output/append", ({ channel, text }: any) => {
-		const Lines = GetOrCreateChannel(channel);
-		Lines.push(text);
-		// Mirror to VS Code logger (visible in Output panel under "Log (Window)")
-		(window as any).__CEL_WORKBENCH__?.logger?.log?.(
-			5 /* Info */,
-			`[${channel}] ${text}`,
-		);
-	});
-
-	await Register("sky://output/clear", ({ channel }: any) => {
-		OutputChannels.set(channel, []);
-	});
-
-	await Register("sky://output/show", ({ channel, visible }: any) => {
-		if (visible !== false) {
-			GetWorkbench()
-				?.commands.executeCommand("workbench.action.output.show")
-				.catch(() => {});
-		}
-	});
-
-	await Register("sky://output/dispose", ({ channel }: any) => {
-		OutputChannels.delete(channel);
+	// Editor + Output bridges - implementation in
+	// `Bridge/InstallEditorAndOutput.ts`. Covers the close-window
+	// short-circuit, file-open / save-all / applyEdit /
+	// showTextDocument round-trips, and the five output channel
+	// lifecycle channels.
+	await (
+		await import("./Bridge/InstallEditorAndOutput.js")
+	).default({
+		Register,
+		GetWorkbench,
+		Invoke: invoke,
+		BuildOpenArg,
+		ResolveUiRequest,
+		GetOrCreateChannel,
+		OutputChannels,
 	});
 
 	// ---- Status Bar ----
@@ -968,159 +475,23 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// below (`cel:statusbar:*`) remains for any Sky-side component that
 	// wants to mirror the state in a side panel.
 	//
-	// Alignment mapping follows VS Code's `StatusbarAlignment` enum:
-	// LEFT=0, RIGHT=1 - the accessor takes it as a number. We accept
-	// both string and numeric forms from Cocoon since extensions
-	// supply whichever their dts typed as.
-	const StatusbarAccessors = new Map<string, CelStatusbarEntryAccessor>();
-	const BuildEntry = (Payload: any) => ({
-		name: Payload?.name ?? Payload?.extension ?? "extension",
-		text: Payload?.text ?? "",
-		tooltip: Payload?.tooltip,
-		command: Payload?.command,
-		ariaLabel:
-			Payload?.accessibilityInformation?.label ?? Payload?.text ?? "",
-		role: Payload?.accessibilityInformation?.role,
-		backgroundColor: Payload?.backgroundColor,
-		color: Payload?.color,
-	});
-	const AlignmentToNumber = (Raw: any): number => {
-		if (Raw === 0 || Raw === 1) return Raw;
-		if (Raw === "right" || Raw === "RIGHT") return 1;
-		return 0;
-	};
-	const SetOrUpdateEntry = (Payload: any) => {
-		const Services = GetServices();
-		if (!Services?.Statusbar) return;
-		const Id = String(
-			Payload?.id ?? Payload?.handle ?? Payload?.entryId ?? "",
-		);
-		if (!Id) return;
-		const Existing = StatusbarAccessors.get(Id);
-		if (Existing) {
-			try {
-				Existing.update(BuildEntry(Payload));
-			} catch (Error) {
-				console.warn("[SkyBridge] statusbar update failed", Id, Error);
-			}
-			return;
-		}
-		try {
-			const Accessor = Services.Statusbar.addEntry(
-				BuildEntry(Payload),
-				Id,
-				AlignmentToNumber(Payload?.alignment),
-				typeof Payload?.priority === "number"
-					? Payload.priority
-					: undefined,
-			);
-			StatusbarAccessors.set(Id, Accessor);
-		} catch (Error) {
-			console.warn("[SkyBridge] statusbar addEntry failed", Id, Error);
-		}
-	};
-	const DisposeEntry = (Payload: any) => {
-		const Id = String(
-			Payload?.id ?? Payload?.handle ?? Payload?.entryId ?? "",
-		);
-		if (!Id) return;
-		const Accessor = StatusbarAccessors.get(Id);
-		if (Accessor) {
-			try {
-				Accessor.dispose();
-			} catch {}
-			StatusbarAccessors.delete(Id);
-		}
-	};
-	await Register("sky://statusbar/update", SetOrUpdateEntry);
-	await Register("sky://statusbar/set-entry", SetOrUpdateEntry);
-	await Register("sky://statusbar/dispose", DisposeEntry);
-	await Register("sky://statusbar/dispose-entry", DisposeEntry);
+	// Statusbar bridge - implementation in `Bridge/InstallStatusbar.ts`.
+	// Returns the `SetOrUpdateEntry` helper so the dead-channel
+	// `sky://statusbar/create` listener (in
+	// `Bridge/InstallDeadChannelListeners.ts`) can route through the
+	// same `IStatusbarService.addEntry` path.
+	const { SetOrUpdateEntry } = await (
+		await import("./Bridge/InstallStatusbar.js")
+	).default({ Register, GetServices });
 
-	// ---- Commands ----
-	// Bridge Cocoon → workbench command invocations. `sky://command/execute`
-	// calls through `ICommandService.executeCommand(id, ...args)` and
-	// resolves the UI request with the result (or null on failure) so the
-	// extension's awaited promise in Cocoon unblocks. `sky://command/register`
-	// registers an extension-contributed command into the stock
-	// `CommandsRegistry`; invocation from the command palette or another
-	// extension proxies back into Cocoon via `ResolveUIRequest` with
-	// `{ cid, args }`. Unregister disposes the registration.
-	const RegisteredCommands = new Map<string, { dispose(): void }>();
-	await Register("sky://command/execute", async (RawPayload: any) => {
-		const Services = GetServices();
-		if (!Services?.Commands) return;
-		const RequestIdentifier = RawPayload?.RequestIdentifier;
-		const Payload = RawPayload?.Payload ?? RawPayload;
-		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
-		const Arguments = Array.isArray(Payload?.args) ? Payload.args : [];
-		try {
-			const Result = await Services.Commands.executeCommand(
-				Id,
-				...Arguments,
-			);
-			if (RequestIdentifier) {
-				void ResolveUiRequest(RequestIdentifier, Result ?? null);
-			}
-		} catch (Error) {
-			console.warn("[SkyBridge] command execute failed", Id, Error);
-			if (RequestIdentifier) {
-				void ResolveUiRequest(RequestIdentifier, null);
-			}
-		}
-	});
-	// Mountain may deliver either a single command `{ id, commandId,
-	// kind }` (legacy shape, used for the rare runtime registration)
-	// or a batch `{ commands: [{ id, commandId, kind }, ...] }` (the
-	// extension-boot path, where 100+ extensions each register ~10
-	// commands; the per-command emit was saturating Tauri's shared
-	// WKWebView IPC channel and keystrokes queued behind 1000+ register
-	// events). Handle both shapes through one helper.
-	const RegisterOneCommand = (Entry: any): void => {
-		const Services = GetServices();
-		if (!Services?.CommandRegistry) return;
-		const Id = String(Entry?.id ?? Entry?.commandId ?? "");
-		if (!Id) return;
-		if (RegisteredCommands.has(Id)) return;
-		try {
-			const Disposable = Services.CommandRegistry.registerCommand(
-				Id,
-				(...AllArguments: unknown[]) => {
-					// `CommandsRegistry.registerCommand` passes an accessor
-					// as the first arg followed by the caller's args. The
-					// accessor is the workbench ServicesAccessor - extensions
-					// running in Cocoon can't consume it, so we strip it and
-					// forward the remaining positional args back for the
-					// extension handler to receive via $executeContributedCommand.
-					const CallerArguments = AllArguments.slice(1);
-					return invoke("ResolveUIRequest", {
-						RequestID: `command:${Id}`,
-						Result: { cid: Id, args: CallerArguments },
-					}).catch(() => undefined);
-				},
-			);
-			RegisteredCommands.set(Id, Disposable);
-		} catch (Error) {
-			console.warn("[SkyBridge] command register failed", Id, Error);
-		}
-	};
-	await Register("sky://command/register", (Payload: any) => {
-		if (Array.isArray(Payload?.commands)) {
-			for (const Entry of Payload.commands) RegisterOneCommand(Entry);
-		} else {
-			RegisterOneCommand(Payload);
-		}
-	});
-	await Register("sky://command/unregister", (Payload: any) => {
-		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
-		if (!Id) return;
-		const Disposable = RegisteredCommands.get(Id);
-		if (Disposable) {
-			try {
-				Disposable.dispose();
-			} catch {}
-			RegisteredCommands.delete(Id);
-		}
+	// Commands bridge - implementation in `Bridge/InstallCommands.ts`.
+	await (
+		await import("./Bridge/InstallCommands.js")
+	).default({
+		Register,
+		GetServices,
+		Invoke: invoke,
+		ResolveUiRequest,
 	});
 
 	// ---- Search result provider (Land-native) ----
@@ -1979,93 +1350,18 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		TryUpdateScmGroup(Payload);
 	});
 
-	// ---- Progress ----
-	await Register(
-		"sky://progress/start",
-		({ id, title, location, cancellable }: any) => {
-			ShowProgress(id, title, cancellable);
-		},
-	);
-
-	await Register(
-		"sky://progress/update",
-		({ id, message, increment }: any) => {
-			UpdateProgress(id, message, increment);
-		},
-	);
-
-	await Register("sky://progress/complete", ({ id }: any) => {
-		DismissProgress(id);
+	// Progress + Terminal + Workspaces relays - implementation in
+	// `Bridge/InstallProgressTerminalWorkspace.ts`. Most of these are
+	// thin DOM-event re-dispatchers keyed by Mountain's emit channel.
+	await (
+		await import("./Bridge/InstallProgressTerminalWorkspace.js")
+	).default({
+		Register,
+		GetWorkbench,
+		ShowProgress,
+		UpdateProgress,
+		DismissProgress,
 	});
-
-	// ---- Terminal ----
-	await Register("sky://terminal/show", ({ id }: any) => {
-		GetWorkbench()
-			?.commands.executeCommand("workbench.action.terminal.focus")
-			.catch(() => {});
-	});
-
-	await Register("sky://terminal/hide", () => {
-		GetWorkbench()
-			?.commands.executeCommand("workbench.action.closePanel")
-			.catch(() => {});
-	});
-
-	await Register("sky://terminal/resize", ({ id, cols, rows }: any) => {
-		// Resize is handled by the terminal instance directly;
-		// emit a custom DOM event so Sky terminal components can react
-		document.dispatchEvent(
-			new CustomEvent("cel:terminal:resize", {
-				detail: { id, cols, rows },
-			}),
-		);
-	});
-
-	// BATCH-19 Part B: Mountain now fans terminal lifecycle events back
-	// through the `sky://terminal/*` channel so the xterm panel can mount
-	// without waiting for Cocoon to relay. Each event is re-dispatched as a
-	// DOM `CustomEvent` so the terminal React/Astro components subscribe
-	// through the same `document.addEventListener("cel:terminal:*")`
-	// interface they use for resize.
-	await Register("sky://terminal/create", ({ id, name, pid }: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:terminal:create", {
-				detail: { id, name, pid },
-			}),
-		);
-	});
-
-	await Register("sky://terminal/data", ({ id, data }: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:terminal:data", {
-				detail: { id, data },
-			}),
-		);
-	});
-
-	await Register("sky://terminal/exit", ({ id }: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:terminal:exit", {
-				detail: { id },
-			}),
-		);
-	});
-
-	// ---- Workspace folders ----
-	// BATCH-14 follow-up: whenever Mountain mutates the workspace folder set
-	// it emits `sky://workspaces/changed` with `{ added, removed, folders }`.
-	// Sky re-dispatches it as a DOM event so the sidebar, breadcrumb, and
-	// recent-folders list can refresh without polling `workspaces:getFolders`.
-	await Register(
-		"sky://workspaces/changed",
-		({ added, removed, folders }: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:workspaces:changed", {
-					detail: { added, removed, folders },
-				}),
-			);
-		},
-	);
 
 	// ---- Notifications ----
 	// Cocoon's `vscode.window.show{Information,Warning,Error}Message` routes
@@ -2073,214 +1369,60 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// Sky re-dispatches it as `cel:notification:show` so any notification UI
 	// (toast stack, status bar banner) can subscribe without needing a
 	// direct Tauri listener.
-	await Register("sky://notification/show", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:notification:show", {
-				detail: Payload,
-			}),
-		);
-	});
-	await Register("sky://notification/progress-begin", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:notification:progress-begin", {
-				detail: Payload,
-			}),
-		);
-	});
-	await Register("sky://notification/progress-update", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:notification:progress-update", {
-				detail: Payload,
-			}),
-		);
-	});
-	await Register("sky://notification/progress-end", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:notification:progress-end", {
-				detail: Payload,
-			}),
-		);
+	// Notification + Quickpick + Dialog + Lifecycle + StatusBarMessage +
+	// Languages relays - implementation in `Bridge/InstallSimpleRelays.ts`.
+	// All channels in this group are 1:1 DOM-event re-dispatchers; the
+	// workbench's own MainThreadStatusBar already paints ephemeral
+	// messages through its native path when extensions call
+	// `$setStatusBarMessage`, so we don't dual-route there.
+	await (
+		await import("./Bridge/InstallSimpleRelays.js")
+	).default({
+		Register,
 	});
 
-	// ---- Quick-pick / input / dialog prompts ----
-	// Mountain's `Window.ShowQuickPick`/`ShowInputBox`/`ShowOpenDialog`/
-	// `ShowSaveDialog` effects emit these events so Sky can render the
-	// picker. Reply path (Sky → Mountain) is a downstream batch; re-
-	// dispatching the event is enough for the current stub path.
-	await Register("sky://quickpick/show", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:quickpick:show", { detail: Payload }),
-		);
+	// Generic `sky://*` → `cel:*` fan-out for the long tail of channels
+	// that need only a DOM CustomEvent dispatch + consumer-presence
+	// log. Implementation in `Bridge/InstallFanOut.ts`. Channel set
+	// is sourced from Wind's `SkyEvent` table (single source of truth
+	// mirroring Mountain's Rust enum).
+	await (
+		await import("./Bridge/InstallFanOut.js")
+	).default({
+		Register,
+		Channels: [
+			SkyEvent.DiagnosticsChanged,
+			SkyEvent.ThemeChange,
+			SkyEvent.TreeViewDispose,
+			SkyEvent.TreeViewCreate,
+			SkyEvent.TreeViewRefresh,
+			SkyEvent.TestRegistered,
+			SkyEvent.SCMProviderAdded,
+			SkyEvent.SCMProviderRemoved,
+			SkyEvent.DocumentsOpen,
+			SkyEvent.DocumentsSaved,
+			SkyEvent.DebugStop,
+			SkyEvent.TerminalClosed,
+			SkyEvent.TerminalOpened,
+			SkyEvent.NativeOpenExternal,
+			SkyEvent.TaskTerminate,
+			SkyEvent.EditorApplyEdits,
+			SkyEvent.EditorOpenDocument,
+			SkyEvent.EditorSaveAll,
+			SkyEvent.OutputReplace,
+			SkyEvent.OutputReveal,
+			SkyEvent.StatusBarCreate,
+			SkyEvent.StatusBarDispose,
+			SkyEvent.StatusBarDisposeEntry,
+			SkyEvent.StatusBarSetEntry,
+			SkyEvent.WebviewSetHTML,
+		],
+		Tracking: {
+			HasConsumer: (DomEvent) => _CelConsumers.has(DomEvent),
+			Log: (DomEvent, HasConsumer) =>
+				_CelDispatchLog(DomEvent, HasConsumer),
+		},
 	});
-	await Register("sky://input-box/show", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:input-box:show", { detail: Payload }),
-		);
-	});
-	await Register("sky://dialog/open", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:dialog:open", { detail: Payload }),
-		);
-	});
-	await Register("sky://dialog/save", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:dialog:save", { detail: Payload }),
-		);
-	});
-
-	// ---- Lifecycle ----
-	// Mountain emits this on `ApplicationRunTime::Shutdown()` before the
-	// recovery pass tears sockets down. Wind/Sky need to flush state and
-	// dispose long-lived subscriptions.
-	await Register("sky://lifecycle/willShutdown", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:lifecycle:willShutdown", {
-				detail: Payload,
-			}),
-		);
-	});
-
-	// Mountain emits `sky://lifecycle/phaseChanged` on every phase
-	// transition. Re-dispatch as a DOM CustomEvent for any Sky-side
-	// listener that wants the signal.
-	//
-	// A previous revision also tried to "restore focus" on every
-	// transition >= 3 by forcing focus to a Monaco textarea + running
-	// `workbench.action.focusActiveEditorGroup`. That regressed
-	// interactive typing: the listener fires twice (phase 3 and
-	// phase 4 ~15s later), so the user could click into the
-	// activity-bar search box, type one character, and have focus
-	// yanked back to the editor on the next phase tick. Mountain's
-	// `MainWindow.show()` + `set_focus()` already lands first-
-	// responder on the WKWebView at phase 3 (see AppLifecycle.rs),
-	// so the eager Sky-side re-focus was redundant on the success
-	// path and actively harmful on the regression path. Drop it -
-	// rely on Mountain + the user's first click.
-	await Register("sky://lifecycle/phaseChanged", (Payload: any) => {
-		const Phase =
-			typeof Payload === "number"
-				? Payload
-				: typeof Payload?.phase === "number"
-					? Payload.phase
-					: typeof Payload?.Phase === "number"
-						? Payload.Phase
-						: 0;
-		document.dispatchEvent(
-			new CustomEvent("cel:lifecycle:phaseChanged", {
-				detail: { phase: Phase },
-			}),
-		);
-	});
-
-	// ---- Status bar messages ----
-	// `vscode.window.setStatusBarMessage(text, timeout?)` is the ephemeral
-	// text-left-side API, separate from the StatusBarItem lifecycle handled
-	// above. Mountain emits `sky://statusbar/set-message` via
-	// `StatusBarMessage.rs`. We fan it out as a DOM CustomEvent for
-	// Sky-side observers - the workbench's own MainThreadStatusBar
-	// already paints ephemeral messages through its own path when
-	// extensions call `$setStatusBarMessage`, so we don't dual-route.
-	await Register("sky://statusbar/set-message", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:statusbar:set-message", { detail: Payload }),
-		);
-	});
-
-	// ---- Languages ----
-	// `vscode.languages.setTextDocumentLanguage(doc, languageId)` flows
-	// through Mountain's `languages.setDocumentLanguage` notification.
-	await Register("sky://languages/setDocumentLanguage", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:languages:setDocumentLanguage", {
-				detail: Payload,
-			}),
-		);
-	});
-	// `setLanguageConfiguration` fires when an extension's activation
-	// installs brackets, wordPattern, indentationRules, etc. Monaco
-	// applies them via `monaco.languages.setLanguageConfiguration` in the
-	// workbench layer; re-dispatch so that shim can pick them up.
-	await Register("sky://language/configure", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:language:configure", { detail: Payload }),
-		);
-	});
-
-	// ---- Diagnostics / themes / SCM / docs / tests / native ----
-	// Round up the remaining `sky://` channels Mountain already emits so
-	// every event has a DOM listener downstream. Each arm re-dispatches
-	// on `cel:<prefix>:<action>` so consumers never need a Tauri listener
-	// of their own. Channels are sourced from the Wind `SkyEvent` table -
-	// the single source of truth that mirrors Mountain's Rust enum - so a
-	// renamed variant either compiles or breaks type-check, never silently
-	// fails at runtime.
-	const ChannelToDomEvent = (Channel: string): string =>
-		Channel.replace(/^sky:\/\//, "cel:").replace(/\//g, ":");
-	const FanOut = [
-		SkyEvent.DiagnosticsChanged,
-		SkyEvent.ThemeChange,
-		SkyEvent.TreeViewDispose,
-		SkyEvent.TreeViewCreate,
-		SkyEvent.TreeViewRefresh,
-		SkyEvent.TestRegistered,
-		SkyEvent.SCMProviderAdded,
-		SkyEvent.SCMProviderRemoved,
-		SkyEvent.DocumentsOpen,
-		SkyEvent.DocumentsSaved,
-		SkyEvent.DebugStop,
-		SkyEvent.TerminalClosed,
-		SkyEvent.TerminalOpened,
-		SkyEvent.NativeOpenExternal,
-		SkyEvent.TaskTerminate,
-		SkyEvent.EditorApplyEdits,
-		SkyEvent.EditorOpenDocument,
-		SkyEvent.EditorSaveAll,
-		SkyEvent.OutputReplace,
-		SkyEvent.OutputReveal,
-		SkyEvent.StatusBarCreate,
-		SkyEvent.StatusBarDispose,
-		SkyEvent.StatusBarDisposeEntry,
-		SkyEvent.StatusBarSetEntry,
-		SkyEvent.WebviewSetHTML,
-	] as const;
-	for (const Channel of FanOut) {
-		await Register(Channel, (Payload: any) => {
-			// Defensive: a single handler that throws (bad payload from
-			// upstream, dispatchEvent rejected by the DOM, etc.) must
-			// not stop the rest of the fan-out from running. Same
-			// philosophy as VS Code's `safeStringify` / event-emitter
-			// per-listener try/catch - one bad consumer never silences
-			// the others.
-			let DomEvent = "";
-			try {
-				DomEvent = ChannelToDomEvent(Channel);
-				document.dispatchEvent(
-					new CustomEvent(DomEvent, { detail: Payload }),
-				);
-			} catch (DispatchError) {
-				try {
-					console.warn(
-						`[SkyBridge] FanOut dispatch failed for ${Channel}:`,
-						DispatchError,
-					);
-				} catch {
-					/* swallow - console may be replaced */
-				}
-				return;
-			}
-			try {
-				// `cel-dispatch` tag: surfaces whether this CustomEvent
-				// has any consumer registered. Orphans
-				// (consumer-present=false) are F1.1 indicators -
-				// Mountain's emit reaches the DOM but nothing in the
-				// workbench listens, so the event effectively vanishes.
-				_CelDispatchLog(DomEvent, _CelConsumers.has(DomEvent));
-			} catch {
-				/* dispatch-log failure must not propagate; the event
-				 * itself already fired above */
-			}
-		});
-	}
 
 	// ---- Diagnostics → IMarkerService bridge ----
 	// Mountain emits `sky://diagnostics/changed` after each `Diagnostic.Set`
@@ -2913,38 +2055,8 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	(globalThis as any).__CEL_WEBVIEW_PENDING_HTML__ = PendingWebviewHtml;
 	(globalThis as any).__CEL_WEBVIEW_PENDING_HTML_BY_HANDLE__ =
 		PendingWebviewHtmlByHandle;
-	const ApplyHtmlToWebview = (
-		ParkedView: any,
-		Html: string,
-	): "method" | "setter" | "skipped" => {
-		// Stock VS Code's `IOverlayWebview` exposes `setHtml(html)` as a
-		// METHOD (see `vs/workbench/contrib/webview/browser/webview.ts`
-		// :195 - `setHtml(html: string): void`). Earlier code used a
-		// property assignment (`webview.html = X`) which silently no-op'd
-		// because no such setter exists on the workbench-supplied object;
-		// the iframe stayed blank even when the resolver chain wired up
-		// correctly. Try the method first, fall back to the setter for
-		// the panel-mode placeholder shape (set in the
-		// `sky://webview/create` listener) which DOES define a setter on
-		// `_pendingHtml`.
-		if (!ParkedView?.webview) {
-			return "skipped";
-		}
-		try {
-			if (typeof ParkedView.webview.setHtml === "function") {
-				ParkedView.webview.setHtml(Html);
-				return "method";
-			}
-		} catch {
-			/* fall through to setter */
-		}
-		try {
-			ParkedView.webview.html = Html;
-			return "setter";
-		} catch {
-			return "skipped";
-		}
-	};
+	const ApplyHtmlToWebview = (await import("./Bridge/ApplyHtmlToWebview.js"))
+		.default;
 	(globalThis as any).__CEL_WEBVIEW_APPLY_HTML__ = ApplyHtmlToWebview;
 	let WebviewSetHtmlFirstLogged = false;
 	await Register("sky://webview/set-html", (Payload: any) => {
@@ -2985,11 +2097,26 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		// channel + canonicalised payload AND which apply-strategy hit.
 		if (!WebviewSetHtmlFirstLogged) {
 			WebviewSetHtmlFirstLogged = true;
+			// Snapshot the first 320 chars + the first <script src=...>
+			// match so log dissection can tell at-a-glance whether
+			// Roo's HTML actually carries its bundle reference. Strip
+			// nonces from the snapshot since they vary per-resolve and
+			// would defeat string-matching across runs. The script-src
+			// tag is the single most informative data point on a paint
+			// failure: if the workbench wrote html but the iframe's
+			// React app never mounted, the script src tells us whether
+			// the bundle URL resolves to an extension asset or to a
+			// 404 / sourcemap-probe placeholder.
+			const Snapshot = Html.slice(0, 320).replace(
+				/nonce="[^"]+"/g,
+				'nonce="…"',
+			);
+			const ScriptMatch = Html.match(/<script[^>]+src=["']([^"']+)["']/);
 			invoke("MountainIPCInvoke", {
 				method: "diagnostic:log",
 				params: [
 					"webview-bridge",
-					`first-set-html viewId=${ViewId} handle=${String(Handle)} htmlLen=${Html.length} parkedViewFound=${!!ParkedView} applied=${Applied} hasRegistry=${!!Registry} hasHandleRegistry=${!!HandleRegistry}`,
+					`first-set-html viewId=${ViewId} handle=${String(Handle)} htmlLen=${Html.length} parkedViewFound=${!!ParkedView} applied=${Applied} hasRegistry=${!!Registry} hasHandleRegistry=${!!HandleRegistry} scriptSrc=${ScriptMatch?.[1] ?? "<none>"} snapshot=${JSON.stringify(Snapshot)}`,
 				],
 			}).catch(() => {});
 		}
@@ -3397,6 +2524,24 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 								visible: !!WebviewView.visible,
 							});
 						});
+						// Stock workbench `WebviewViewService.resolve` is
+						// only invoked when the pane is being revealed -
+						// `WebviewView.visible` is `true` at that moment by
+						// construction. Cocoon's WebviewView shim defaults
+						// `visible` to `true` so the extension's React
+						// mount path (Roo, Claude, GitLens, Continue all
+						// short-circuit `getHtmlContent` on a falsy
+						// `view.visible`) sees the right initial value.
+						// Mirror that with an explicit visible=true notify
+						// so the extension-host channel agrees with both
+						// ends, even on workbench builds where the
+						// internal `_visible` flag flips later than the
+						// resolve callback.
+						Notify("webview.viewState", {
+							handle: Handle,
+							viewId: ViewId,
+							visible: true,
+						});
 					} catch (_e) {
 						/* swallow */
 					}
@@ -3775,179 +2920,20 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		},
 	);
 
-	// ====================================================================
-	// Batch 17 - previously-dead Mountain emit channels.
-	//
-	// Audit of `Mountain/Source/**/emit("sky://*", ...)` vs Sky bridge
-	// `Register("sky://*", ...)` revealed nine channels Mountain emits but
-	// Sky never listened on. Each emit therefore vanished into the Tauri
-	// event bus with no observable effect, leaving the corresponding
-	// workbench surface stale: tree views never bound a data provider,
-	// configuration changes never refreshed sidebars, status-bar entries
-	// from extension activation were dropped on the floor, etc.
-	//
-	// All nine relays follow the same minimal pattern: re-dispatch the
-	// payload as a DOM `CustomEvent` so any listener (workbench React
-	// component, Wind orchestration layer, future deep integration) can
-	// subscribe via `document.addEventListener("cel:<channel>", ...)`.
-	// Tree-view/create has an existing DOM handler at line ~2620 that
-	// attaches a Cocoon-backed `dataProvider` to the workbench's
-	// `TreeViewByViewId` map - simply dispatching `cel:tree-view:create`
-	// drives the existing infrastructure; no new wiring needed.
-	// ====================================================================
-
-	// Mountain emits during `sky:replay-events` boot drain AND on every
-	// fresh `treeData.register*` notification afterwards.
-	// Payload: `{ viewId, options: { canSelectMany, showCollapseAll, title } }`.
-	// The DOM handler at line ~2620 reads `Detail.viewId` (and ignores
-	// `options`) - it just needs the dispatch to happen.
-	await Register("sky://tree-view/create", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:tree-view:create", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits when `Configuration.Update` mutates a key. Payload
-	// includes `{ changedKeys, ... }`. Two emit sites:
-	// `Track/Effect/CreateEffectForRequest/Configuration.rs:75,129` and
-	// `RPC/CocoonService/Workspace/UpdateConfiguration.rs:26`.
-	// Forward to `IConfigurationService.reloadConfiguration()` so the
-	// workbench's per-target cache repopulates from disk and downstream
-	// `onDidChangeConfiguration` listeners (editor, themes, extensions)
-	// see the new values without waiting for the next workbench tick.
-	await Register("sky://configuration/changed", (Payload: any) => {
-		try {
-			const Services = GetServices() as any;
-			const Reload = Services?.Configuration?.reloadConfiguration;
-			if (typeof Reload === "function") {
-				const Result = Reload.call(Services.Configuration);
-				if (Result && typeof Result.catch === "function") {
-					Result.catch(() => {});
-				}
-			}
-		} catch {
-			/* swallow - workbench may not have Configuration yet */
-		}
-		document.dispatchEvent(
-			new CustomEvent("cel:configuration:changed", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits after `IPC/WindServiceHandlers/Extension/ExtensionInstall.rs`
-	// finishes installing a VSIX/marketplace extension.
-	// Payload: `{ identifier, version, location }`.
-	await Register("sky://extensions/installed", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:extensions:installed", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits after `Extension/ExtensionUninstall.rs` removes an
-	// extension. Payload: `{ identifier, location }`.
-	await Register("sky://extensions/uninstalled", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:extensions:uninstalled", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits from `Vine/Server/Notification/SecurityIncident.rs`
-	// when the security service flags a violation. Payload includes
-	// `{ type, severity, ext, ... }`. Surface to the user via the
-	// workbench `INotificationService` so high-severity incidents pop
-	// the notification toaster instead of dying silently in a DOM
-	// event no UI listens to. `severity` follows the
-	// MessageSeverity enum (1=Info, 2=Warning, 3=Error) used by VS Code.
-	await Register("sky://security/incident", (Payload: any) => {
-		try {
-			const Services = GetServices() as any;
-			const Notification = Services?.Notification;
-			if (Notification) {
-				const Type = String(Payload?.type ?? "security");
-				const Extension = Payload?.ext ?? Payload?.extensionId;
-				const Message = Extension
-					? `[${Type}] ${Extension}: ${Payload?.message ?? ""}`
-					: `[${Type}] ${Payload?.message ?? ""}`;
-				const Severity = Number(Payload?.severity ?? 2);
-				if (Severity >= 3 && typeof Notification.error === "function") {
-					Notification.error(Message);
-				} else if (
-					Severity >= 2 &&
-					typeof Notification.warn === "function"
-				) {
-					Notification.warn(Message);
-				} else if (typeof Notification.info === "function") {
-					Notification.info(Message);
-				}
-			}
-		} catch {
-			/* swallow - never throw from a security listener */
-		}
-		document.dispatchEvent(
-			new CustomEvent("cel:security:incident", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits from `RPC/CocoonService/Window/CreateStatusBarItem.rs`
-	// when an extension calls `vscode.window.createStatusBarItem(...)`.
-	// Payload: `{ id, text, tooltip, alignment, priority }`. Forward
-	// straight through the existing `SetOrUpdateEntry` helper (defined
-	// at line ~992 in the same closure) so creation calls
-	// `IStatusbarService.addEntry(...)` and stashes the accessor in the
-	// shared `StatusbarAccessors` map - identical to the path
-	// `sky://statusbar/set-entry` already takes. Without this the entry
-	// would never be added, just announced via DOM event.
-	await Register("sky://statusbar/create", (Payload: any) => {
-		try {
-			SetOrUpdateEntry(Payload);
-		} catch (Error) {
-			console.warn("[SkyBridge] statusbar/create failed", Error);
-		}
-		document.dispatchEvent(
-			new CustomEvent("cel:statusbar:create", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits from `RPC/CocoonService/Terminal/AcceptTerminalProcessId.rs`
-	// once the spawned PTY child reports its OS pid. Payload: `{ id, pid }`.
-	// xterm panels that need the pid for environment-variable injection or
-	// the "kill terminal" command can subscribe. Stash the pid in a
-	// global side-map so synchronous lookups (`__CEL_TERMINAL_PIDS__.get(id)`)
-	// don't have to wait for an async DOM event round-trip.
-	await Register("sky://terminal/processId", (Payload: any) => {
-		try {
-			const Land = globalThis as any;
-			const Map_ =
-				Land.__CEL_TERMINAL_PIDS__ ??
-				(Land.__CEL_TERMINAL_PIDS__ = new Map<string, number>());
-			const Id = String(Payload?.id ?? "");
-			const Pid = Number(Payload?.pid ?? 0);
-			if (Id && Pid > 0) Map_.set(Id, Pid);
-		} catch {
-			/* swallow */
-		}
-		document.dispatchEvent(
-			new CustomEvent("cel:terminal:processId", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits from `RPC/CocoonService/Debug/StartDebugging.rs` when
-	// an extension calls `vscode.debug.startDebugging(...)`. Payload includes
-	// `{ sessionId, debugType, configuration, ... }`. Distinct from the
-	// later `sky://debug/sessionStart` (DAP `initialized` event) - this fires
-	// at request-time before the adapter has actually attached.
-	await Register("sky://debug/start", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:start", { detail: Payload }),
-		);
-	});
-
-	// Mountain emits from `RPC/CocoonService/Debug/RegisterDebugAdapter.rs`
-	// when an extension contributes a debug-adapter descriptor. Payload:
-	// `{ debugType, extensionId }`. The debug picker lists these.
-	await Register("sky://debug/register", (Payload: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:debug:register", { detail: Payload }),
-		);
+	// Batch 17 dead-channel listeners (tree-view, configuration,
+	// extensions, security, statusbar, terminal-pid, debug start +
+	// register). Implementation lives in
+	// `Bridge/InstallDeadChannelListeners.ts`; passing the install-time
+	// `Register` + `SetOrUpdateEntry` closures + the module-level
+	// `GetServices` keeps the helper decoupled from Bridge.ts's
+	// install-state while still wiring into the same Tauri listener
+	// registry.
+	await (
+		await import("./Bridge/InstallDeadChannelListeners.js")
+	).default({
+		Register,
+		GetServices,
+		SetOrUpdateEntry,
 	});
 
 	// Cleanup helper (call on Tauri window close)
@@ -3955,48 +2941,8 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		Cleanups.forEach((F) => F());
 
 	console.log("[SkyBridge] All sky:// event channels registered");
-
-	// Drain Mountain-side state that fired through `sky://*` emits BEFORE
-	// any of the listeners above were installed. Tauri's `app.emit` is
-	// fire-and-forget - in the bundled-electron profile, extension
-	// activation kicks off ~580 log-lines before the Sky bundle finishes
-	// booting, so every `sky://tree-view/create` and `sky://scm/register`
-	// emitted during that window is dropped before this `Register(...)`
-	// chain installs. Without this replay, extension-contributed views
-	// (gitlens panes, jsdebug trees, SCM provider rows) never bind data
-	// providers and the panels stay empty even though the workbench is
-	// otherwise healthy. The Mountain handler iterates state under
-	// `runtime.ApplicationState.Feature.{TreeViews, Markers}` and re-emits
-	// each entry idempotently (`ScmShimRegistry.has(scmId)` short-
-	// circuits any duplicate registration on the Sky side).
-	try {
-		const Replay = (await invoke("MountainIPCInvoke", {
-			method: "sky:replay-events",
-			params: [],
-		})) as
-			| {
-					treeViews?: number;
-					scmProviders?: number;
-					commands?: number;
-					terminals?: number;
-					terminalDataBytes?: number;
-			  }
-			| undefined;
-		const Summary = `tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0} commands=${Replay?.commands ?? 0} terminals=${Replay?.terminals ?? 0} terminal-bytes=${Replay?.terminalDataBytes ?? 0}`;
-		invoke("RenderDevLog", {
-			Tag: "sky-emit",
-			Message: `[SkyBridge] replay-events ${Summary}`,
-			tag: "sky-emit",
-			message: `[SkyBridge] replay-events ${Summary}`,
-		}).catch(() => {});
-	} catch (Error) {
-		invoke("RenderDevLog", {
-			Tag: "sky-emit",
-			Message: `[SkyBridge] replay-events failed: ${String(Error)}`,
-			tag: "sky-emit",
-			message: `[SkyBridge] replay-events failed: ${String(Error)}`,
-		}).catch(() => {});
-	}
+	// Replay drain - implementation in `Bridge/ReplayEvents.ts`.
+	await (await import("./Bridge/ReplayEvents.js")).default(invoke);
 }
 
 export default InstallSkyBridge;

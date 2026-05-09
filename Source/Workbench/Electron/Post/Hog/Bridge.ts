@@ -25,18 +25,22 @@
 // working before `.env.Land.PostHog` is sourced.
 const PostHogAPIKey =
 	((import.meta.env as any).Authorize as string | undefined) ?? "";
+
 const PostHogHost =
 	((import.meta.env as any).Beam as string | undefined) ??
 	"https://eu.i.posthog.com";
+
 // `Capture=false` is the master telemetry kill switch shared with
 // Mountain / Cocoon. Honored regardless of `Report` so a single env
 // flip stops every Sky PostHog + OTLP emit. Distinct from
 // `.env.Land.Diagnostics`'s `Disable` (polyfill / shim kill switch).
 const TelemetryCaptureEnabled =
 	((import.meta.env as any).Capture as string | undefined) !== "false";
+
 const PostHogEnabled =
 	TelemetryCaptureEnabled &&
 	((import.meta.env as any).Report as string | undefined) !== "false";
+
 // Atom PH2: Sky was hitting PostHog's built-in rate limiter (observed as
 // `[PostHog.js] This capture call is ignored due to client rate limiting.`
 // in the webview console). Apply our own rate cap + a larger batch window
@@ -44,27 +48,38 @@ const PostHogEnabled =
 const PostHogMaxEventsPerSecond = Number(
 	(import.meta.env as any).Throttle ?? "5",
 );
+
 const PostHogBatchWindowMs = Number((import.meta.env as any).Buffer ?? "3000");
+
 const PostHogBatchMax = Number((import.meta.env as any).Batch ?? "20");
+
 const PostHogDistinctIdSeed =
 	((import.meta.env as any).Brand as string | undefined) ?? "";
 
 const GetOrCreateSkyIdentifier = (): string => {
 	const StorageKey = "land-posthog-id";
+
 	const Existing = localStorage.getItem(StorageKey);
+
 	if (Existing) return Existing;
+
 	const Generated = `land-dev-sky-${Math.random().toString(36).slice(2, 10)}`;
+
 	localStorage.setItem(StorageKey, Generated);
+
 	return Generated;
 };
 
 const LoadPostHog = async (): Promise<any> => {
 	if (!PostHogEnabled) return null;
+
 	try {
 		if ((window as any).posthog) return (window as any).posthog;
+
 		const AssetsHost = PostHogHost.replace("://", "://")
 			.replace("//eu.i.", "//eu-assets.i.")
 			.replace("//us.i.", "//us-assets.i.");
+
 		return await new Promise((Resolve) => {
 			const Script = document.createElement("script");
 			Script.src = `${AssetsHost}/static/array.js`;
@@ -110,6 +125,7 @@ const LoadPostHog = async (): Promise<any> => {
 							events_per_second: PostHogMaxEventsPerSecond,
 							events_burst_limit: Math.max(
 								10,
+
 								PostHogMaxEventsPerSecond * 2,
 							),
 						},
@@ -144,24 +160,39 @@ const LoadPostHog = async (): Promise<any> => {
 // Component mapping: mark prefix → PostHog $component value
 const ComponentMap: Record<string, string> = {
 	exthost: "extension-host",
+
 	cocoon: "cocoon",
+
 	wind: "wind",
+
 	sky: "sky",
+
 	ipc: "ipc",
+
 	vscode: "vscode",
+
 	console: "vscode",
+
 	resource: "sky",
+
 	boot: "sky",
+
 	session: "all",
 };
 
 interface BufferedMark {
 	Name: string;
+
 	Component: string;
+
 	Category: string;
+
 	Action: string;
+
 	TimestampMs: number;
+
 	DurationMs: number;
+
 	Detail: unknown;
 }
 
@@ -180,8 +211,11 @@ interface BufferedMark {
 // of the message) so unique exceptions still reach PostHog while
 // bursts of the *same* exception collapse into one.
 const ThrottleWindowMs = 10_000;
+
 const ThrottleLimitPerName = Math.max(1, PostHogMaxEventsPerSecond * 2);
+
 const ExceptionThrottleLimitPerSignature = Math.max(1, ThrottleLimitPerName);
+
 // Global exception cap. posthog-js's CDN `array.js` enforces a hard
 // 10 events / 10 s per event-name limit on `$exception` - all our
 // `captureException` calls share that single slot regardless of
@@ -192,31 +226,46 @@ const ExceptionThrottleLimitPerSignature = Math.max(1, ThrottleLimitPerName);
 // explicit `PH.capture("land:*")` calls that happen to share the slot.
 const ExceptionGlobalLimit = Math.max(
 	1,
+
 	Number((import.meta.env as any).Cap ?? "7"),
 );
+
 const ThrottleCounters = new Map<string, { Count: number; ResetAt: number }>();
+
 const ThrottleDropped = new Map<string, number>();
+
 const ExceptionCounters = new Map<string, { Count: number; ResetAt: number }>();
+
 const ExceptionDropped = new Map<string, number>();
+
 let ExceptionGlobalCount = 0;
+
 let ExceptionGlobalResetAt = 0;
+
 let ExceptionGlobalDropped = 0;
 
 const ShouldThrottle = (Name: string): boolean => {
 	const Now = Date.now();
+
 	const Entry = ThrottleCounters.get(Name);
+
 	if (!Entry || Entry.ResetAt <= Now) {
 		ThrottleCounters.set(Name, {
 			Count: 1,
 			ResetAt: Now + ThrottleWindowMs,
 		});
+
 		return false;
 	}
+
 	Entry.Count += 1;
+
 	if (Entry.Count > ThrottleLimitPerName) {
 		ThrottleDropped.set(Name, (ThrottleDropped.get(Name) ?? 0) + 1);
+
 		return true;
 	}
+
 	return false;
 };
 
@@ -227,42 +276,56 @@ const ShouldThrottle = (Name: string): boolean => {
 const ExceptionSignature = (Error: unknown): string => {
 	if (Error && typeof Error === "object" && "message" in Error) {
 		const Message = String((Error as { message: unknown }).message ?? "");
+
 		return Message.slice(0, 200) || "unknown";
 	}
+
 	return String(Error).slice(0, 200) || "unknown";
 };
 
 const ShouldThrottleException = (Signature: string): boolean => {
 	const Now = Date.now();
+
 	// Global exception cap first - posthog-js's `$exception` slot fills
 	// up regardless of signature, so a diverse-error boot can still
 	// blow through the CDN limiter unless the *total* is capped.
 	if (ExceptionGlobalResetAt <= Now) {
 		ExceptionGlobalCount = 1;
+
 		ExceptionGlobalResetAt = Now + ThrottleWindowMs;
 	} else {
 		ExceptionGlobalCount += 1;
+
 		if (ExceptionGlobalCount > ExceptionGlobalLimit) {
 			ExceptionGlobalDropped += 1;
+
 			return true;
 		}
 	}
+
 	const Entry = ExceptionCounters.get(Signature);
+
 	if (!Entry || Entry.ResetAt <= Now) {
 		ExceptionCounters.set(Signature, {
 			Count: 1,
 			ResetAt: Now + ThrottleWindowMs,
 		});
+
 		return false;
 	}
+
 	Entry.Count += 1;
+
 	if (Entry.Count > ExceptionThrottleLimitPerSignature) {
 		ExceptionDropped.set(
 			Signature,
+
 			(ExceptionDropped.get(Signature) ?? 0) + 1,
 		);
+
 		return true;
 	}
+
 	return false;
 };
 
@@ -274,18 +337,27 @@ const DrainThrottleMetrics = (PH: any): void => {
 	) {
 		return;
 	}
+
 	const Summary: Record<string, number> = {};
+
 	for (const [Name, Count] of ThrottleDropped.entries()) {
 		Summary[Name] = Count;
 	}
+
 	ThrottleDropped.clear();
+
 	const ExceptionSummary: Record<string, number> = {};
+
 	for (const [Signature, Count] of ExceptionDropped.entries()) {
 		ExceptionSummary[Signature] = Count;
 	}
+
 	ExceptionDropped.clear();
+
 	const GlobalDropped = ExceptionGlobalDropped;
+
 	ExceptionGlobalDropped = 0;
+
 	// Single event per window - counted as one against the
 	// throttle itself, so always safe under the limit.
 	try {
@@ -310,6 +382,7 @@ const Initialize = async (): Promise<void> => {
 	if (!import.meta.env.DEV) return;
 
 	const Raw = await LoadPostHog();
+
 	if (!Raw) return;
 
 	// Wrap `capture` + `captureException` with the throttle so every
@@ -317,12 +390,16 @@ const Initialize = async (): Promise<void> => {
 	// returned `PH` handle) gets the same drop semantics.
 	const PH: any = {
 		...Raw,
+
 		capture: (Name: string, Properties?: Record<string, unknown>) => {
 			if (ShouldThrottle(Name)) return;
+
 			return Raw.capture(Name, Properties);
 		},
+
 		captureException: (
 			Error: unknown,
+
 			Properties?: Record<string, unknown>,
 		) => {
 			// Exceptions share the posthog-js `$exception` event-name
@@ -335,7 +412,9 @@ const Initialize = async (): Promise<void> => {
 			// exceptions still reach PostHog and bursts of the same
 			// error show up as a single `throttle-dropped` summary.
 			const Signature = ExceptionSignature(Error);
+
 			if (ShouldThrottleException(Signature)) return;
+
 			return Raw.captureException(Error, Properties);
 		},
 	};
@@ -345,8 +424,10 @@ const Initialize = async (): Promise<void> => {
 	// capture of the affected name was rate-limited.
 	const DrainTimer = setInterval(
 		() => DrainThrottleMetrics(Raw),
+
 		ThrottleWindowMs,
 	);
+
 	(DrainTimer as unknown as { unref?: () => void }).unref?.();
 
 	// Wire up Output's polyfill telemetry hook. The polyfills load
@@ -363,13 +444,16 @@ const Initialize = async (): Promise<void> => {
 				Set: (
 					H: (
 						Category: string,
+
 						Error: unknown,
+
 						Detail?: Record<string, unknown>,
 					) => void,
 				) => void;
 			};
 		}
 	).__LAND_POLYFILL_TELEMETRY__;
+
 	PolyfillTelemetry?.Set((Category, RawError, Detail) => {
 		const ErrorObj =
 			RawError instanceof Error
@@ -394,12 +478,16 @@ const Initialize = async (): Promise<void> => {
 
 	// Per-component buffers - flushed independently
 	const Buffers = new Map<string, BufferedMark[]>();
+
 	const Timers = new Map<string, ReturnType<typeof setTimeout>>();
+
 	const MaxPerFlush = PostHogBatchMax;
 
 	const FlushComponent = (Component: string) => {
 		Timers.delete(Component);
+
 		const Buffer = Buffers.get(Component);
+
 		if (!Buffer || Buffer.length === 0) return;
 
 		const Marks = Buffer.splice(0);
@@ -407,6 +495,7 @@ const Initialize = async (): Promise<void> => {
 		// Split into chunks of MaxPerFlush
 		for (let I = 0; I < Marks.length; I += MaxPerFlush) {
 			const Chunk = Marks.slice(I, I + MaxPerFlush);
+
 			PH.capture(`land:${Component}:marks`, {
 				$component: Component,
 				marks: Chunk,
@@ -425,14 +514,18 @@ const Initialize = async (): Promise<void> => {
 
 	const BufferMark = (Mark: BufferedMark) => {
 		const Component = Mark.Component;
+
 		if (!Buffers.has(Component)) Buffers.set(Component, []);
+
 		Buffers.get(Component)!.push(Mark);
 
 		if (!Timers.has(Component)) {
 			Timers.set(
 				Component,
+
 				setTimeout(
 					() => FlushComponent(Component),
+
 					PostHogBatchWindowMs,
 				),
 			);
@@ -478,6 +571,7 @@ const Initialize = async (): Promise<void> => {
 	});
 
 	Observer.observe({ type: "mark", buffered: true });
+
 	Observer.observe({ type: "measure", buffered: true });
 
 	addEventListener("visibilitychange", () => {
@@ -504,6 +598,7 @@ const Initialize = async (): Promise<void> => {
 		if (Message.includes("Canceled")) return;
 		PH.captureException(
 			Reason instanceof Error ? Reason : new Error(Message),
+
 			{
 				$component: "vscode",
 				$exception_origin: "unhandledrejection",
@@ -513,22 +608,29 @@ const Initialize = async (): Promise<void> => {
 
 	// === Error capture: console.error → PostHog + OTEL ===
 	const OriginalConsoleError = console.error;
+
 	let ConsoleErrorCount = 0;
+
 	console.error = (...Args: unknown[]) => {
 		OriginalConsoleError.apply(console, Args);
+
 		ConsoleErrorCount++;
+
 		const Message = Args.map(String).join(" ").slice(0, 500);
+
 		if (
 			Message.includes("Canceled") ||
 			Message.includes("[PostHog.js]") ||
 			Message.includes("sourceMappingURL")
 		)
 			return;
+
 		try {
 			performance.mark("land:console:error", {
 				detail: { message: Message, count: ConsoleErrorCount },
 			});
 		} catch {}
+
 		PH.captureException(new Error(Message), {
 			$component: "vscode",
 			$exception_origin: "console.error",
@@ -538,11 +640,16 @@ const Initialize = async (): Promise<void> => {
 
 	// === Warning capture: console.warn → OTEL only ===
 	const OriginalConsoleWarn = console.warn;
+
 	let ConsoleWarnCount = 0;
+
 	console.warn = (...Args: unknown[]) => {
 		OriginalConsoleWarn.apply(console, Args);
+
 		ConsoleWarnCount++;
+
 		const Message = Args.map(String).join(" ").slice(0, 500);
+
 		try {
 			performance.mark("land:console:warn", {
 				detail: { message: Message, count: ConsoleWarnCount },
@@ -554,15 +661,18 @@ const Initialize = async (): Promise<void> => {
 	(window as any)._Catch = (Error: unknown) => {
 		const Message =
 			Error instanceof globalThis.Error ? Error.message : String(Error);
+
 		PH.captureException(
 			Error instanceof globalThis.Error
 				? Error
 				: new globalThis.Error(Message),
+
 			{
 				$component: "vscode",
 				$exception_origin: "vscode.onUnexpectedError",
 			},
 		);
+
 		try {
 			performance.mark("land:vscode:error", {
 				detail: { message: Message.slice(0, 200) },
@@ -573,6 +683,7 @@ const Initialize = async (): Promise<void> => {
 	// === Resource load failures (capture phase) ===
 	window.addEventListener(
 		"error",
+
 		(Event) => {
 			const Target = Event.target as HTMLElement;
 			if (Target && Target !== window && "src" in Target) {
@@ -587,6 +698,7 @@ const Initialize = async (): Promise<void> => {
 							tag: Target.tagName,
 							src: (Target as HTMLScriptElement).src?.slice(
 								0,
+
 								200,
 							),
 						},
@@ -594,6 +706,7 @@ const Initialize = async (): Promise<void> => {
 				} catch {}
 			}
 		},
+
 		true,
 	);
 

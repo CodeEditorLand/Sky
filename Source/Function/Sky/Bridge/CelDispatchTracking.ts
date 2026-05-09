@@ -21,24 +21,32 @@ export default (
 	Invoke: Invoke,
 ): {
 	HasConsumer: (DomEvent: string) => boolean;
+
 	Log: (DomEvent: string, HasConsumer: boolean) => void;
 } => {
 	const Consumers = new Set<string>();
+
 	const HasDOM =
 		typeof globalThis !== "undefined" &&
 		typeof (globalThis as any).document !== "undefined";
+
 	let TrackingActive = false;
+
 	if (HasDOM && !(globalThis as any).__Track) {
 		try {
 			const TargetDocument = (globalThis as any).document as Document;
+
 			const OriginalAdd =
 				TargetDocument.addEventListener.bind(TargetDocument);
+
 			Object.defineProperty(TargetDocument, "addEventListener", {
 				configurable: true,
 				writable: true,
 				value: function PatchedAdd(
 					Type: string,
+
 					Listener: EventListenerOrEventListenerObject | null,
+
 					Options?: boolean | AddEventListenerOptions,
 				) {
 					if (typeof Type === "string" && Type.startsWith("cel:")) {
@@ -46,23 +54,32 @@ export default (
 					}
 					return OriginalAdd(
 						Type,
+
 						Listener as EventListener,
+
 						Options,
 					);
 				},
 			});
+
 			(globalThis as any).__Track = true;
+
 			TrackingActive = true;
 		} catch {
 			TrackingActive = false;
 		}
 	}
+
 	return {
 		HasConsumer: (DomEvent) => Consumers.has(DomEvent),
+
 		Log: (DomEvent, Has) => {
 			if (!HasDOM) return;
+
 			if (!(globalThis as any).__LAND_TRACE_CEL_DISPATCH__) return;
+
 			const Flag = TrackingActive ? String(Has) : "?";
+
 			try {
 				Invoke("RenderDevLog", {
 					Tag: "cel-dispatch",

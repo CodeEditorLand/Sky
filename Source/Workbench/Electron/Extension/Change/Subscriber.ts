@@ -24,6 +24,7 @@
 
 interface ExtensionChangeBase {
 	readonly Kind: "Installed" | "Uninstalled";
+
 	readonly Identifier: string;
 }
 
@@ -62,6 +63,7 @@ const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
 export default async (): Promise<void> => {
 	if (import.meta.env["Render"] === "false") {
 		performance.mark("land:extensions:subscriber:skipped-wind-disabled");
+
 		return;
 	}
 

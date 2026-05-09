@@ -15,15 +15,19 @@
  * on completion or the extension's awaited promise hangs for 300s.
  */
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+
 type ResolveUiRequest = (RequestId: string, Result: unknown) => unknown;
+
 interface Workbench {
 	commands: { executeCommand: (id: string, ...args: unknown[]) => any };
+
 	env: { openUri(target: unknown): Promise<boolean> };
 }
 
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void | Promise<void>,
 	) => Promise<void>;
 	GetWorkbench: () => Workbench | null;
@@ -35,13 +39,20 @@ export default async (Dependencies: {
 }): Promise<void> => {
 	const {
 		Register,
+
 		GetWorkbench,
+
 		Invoke,
+
 		BuildOpenArg,
+
 		ResolveUiRequest,
+
 		GetOrCreateChannel,
+
 		OutputChannels,
 	} = Dependencies;
+
 	const SwallowCatch = (Promise: { catch?: (h: () => void) => void }) =>
 		Promise?.catch?.(() => undefined);
 
@@ -87,7 +98,9 @@ export default async (Dependencies: {
 		SwallowCatch(
 			Wb.commands.executeCommand(
 				"vscode.open",
+
 				BuildOpenArg(uri),
+
 				viewColumn,
 			),
 		);
@@ -107,6 +120,7 @@ export default async (Dependencies: {
 	// command dispatch.
 	await Register(
 		"sky://workspace/applyEdit",
+
 		async ({ RequestIdentifier, Payload }: any) => {
 			if (!RequestIdentifier) return;
 			try {
@@ -115,6 +129,7 @@ export default async (Dependencies: {
 				if (Wb && Edits) {
 					await Wb.commands.executeCommand(
 						"workbench.action.applyThemeFromFile",
+
 						Edits,
 					);
 				}
@@ -141,7 +156,9 @@ export default async (Dependencies: {
 			if (Wb && UriValue) {
 				await Wb.commands.executeCommand(
 					"vscode.open",
+
 					BuildOpenArg(UriValue),
+
 					ViewColumn,
 				);
 			}
@@ -166,6 +183,7 @@ export default async (Dependencies: {
 		SwallowCatch(
 			Wb.commands.executeCommand(
 				"workbench.action.applyThemeFromFile",
+
 				edits,
 			),
 		);
@@ -174,17 +192,21 @@ export default async (Dependencies: {
 	await Register("sky://output/create", ({ id, name }: any) => {
 		GetOrCreateChannel(id, name);
 	});
+
 	await Register("sky://output/append", ({ channel, text }: any) => {
 		const Lines = GetOrCreateChannel(channel);
 		Lines.push(text);
 		(window as any).__CEL_WORKBENCH__?.logger?.log?.(
 			5 /* Info */,
+
 			`[${channel}] ${text}`,
 		);
 	});
+
 	await Register("sky://output/clear", ({ channel }: any) => {
 		OutputChannels.set(channel, []);
 	});
+
 	await Register("sky://output/show", ({ visible }: any) => {
 		if (visible !== false) {
 			const Wb = GetWorkbench();
@@ -194,6 +216,7 @@ export default async (Dependencies: {
 			);
 		}
 	});
+
 	await Register("sky://output/dispose", ({ channel }: any) => {
 		OutputChannels.delete(channel);
 	});

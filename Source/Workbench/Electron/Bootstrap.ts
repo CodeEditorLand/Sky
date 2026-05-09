@@ -15,14 +15,19 @@
 
 interface BootstrapStage {
 	success: boolean;
+
 	stageName: string;
+
 	duration: number;
 }
 
 interface BootstrapResult {
 	success: boolean;
+
 	totalDuration: number;
+
 	stages: BootstrapStage[];
+
 	error?: unknown;
 }
 
@@ -34,6 +39,7 @@ if (import.meta.env["Render"] === "false") {
 
 		const { runBootstrap } =
 			await import("@codeeditorland/wind/Target/Effect/Bootstrap");
+
 		const { Effect } = await import("effect");
 
 		const BootstrapResult: BootstrapResult = await Effect.runPromise(
@@ -53,9 +59,12 @@ if (import.meta.env["Render"] === "false") {
 				),
 			},
 		});
+
 		performance.measure(
 			"land:bootstrap",
+
 			"land:bootstrap:start",
+
 			"land:bootstrap:done",
 		);
 
@@ -65,6 +74,7 @@ if (import.meta.env["Render"] === "false") {
 		// its own performance.mark on start / error / skipped states.
 		const { default: StartExtensionSubscriber } =
 			await import("./Extension/Change/Subscriber.js");
+
 		void StartExtensionSubscriber();
 	} catch {
 		performance.mark("land:bootstrap:error");

@@ -40,10 +40,12 @@ export async function copyVSCodeOutput(): Promise<void> {
 	// Determine source location (prefer Element/Output, fallback to Dependency)
 	const sourceCandidates = [
 		"Element/Output/Target/Microsoft/VSCode",
+
 		"Dependency/Microsoft/Dependency/Editor/out",
 	];
 
 	let sourcePath: string | null = null;
+
 	for (const candidate of sourceCandidates) {
 		try {
 			await import("node:fs").then((fs) => {
@@ -60,19 +62,23 @@ export async function copyVSCodeOutput(): Promise<void> {
 
 	if (!sourcePath) {
 		console.warn("[BuildVSCode] WARNING: No VSCode output found!");
+
 		console.warn(
 			"[BuildVSCode] The VSCode workbench may not be available. Building anyway...",
 		);
+
 		return;
 	}
 
 	// Clean existing destination (but keep parent directory)
 	try {
 		await rm(VSCodeOutput, { recursive: true, force: true });
+
 		await mkdir(VSCodeOutput, { recursive: true });
 	} catch (error) {
 		console.warn(
 			"[BuildVSCode] Warning: Could not clean destination:",
+
 			error,
 		);
 	}
@@ -82,9 +88,11 @@ export async function copyVSCodeOutput(): Promise<void> {
 
 	try {
 		await cp(sourcePath, VSCodeOutput, { recursive: true });
+
 		console.log("[BuildVSCode] ✓ VSCode output copied successfully");
 	} catch (error) {
 		console.error("[BuildVSCode] ✗ Failed to copy VSCode output:", error);
+
 		throw error;
 	}
 
@@ -100,13 +108,17 @@ async function verifyVSCodeOutput(vscodePath: string): Promise<void> {
 
 	const requiredFiles = [
 		"vs/code/browser/workbench/workbench.js",
+
 		"vs/base/browser/browser.js",
+
 		"vs/workbench/workbench.web.main.js",
+
 		"vs/amdX.js",
 	];
 
 	for (const file of requiredFiles) {
 		const fullPath = join(vscodePath, file);
+
 		if (!fs.existsSync(fullPath)) {
 			console.warn(
 				`[BuildVSCode] WARNING: Missing required file: ${file}`,

@@ -7,11 +7,16 @@ import Install from "@codeeditorland/wind/Target/Function/Install/Function/Insta
 
 try {
 	performance.mark("land:preload:start");
+
 	await Install();
+
 	performance.mark("land:preload:done");
+
 	performance.measure(
 		"land:preload",
+
 		"land:preload:start",
+
 		"land:preload:done",
 	);
 } catch {

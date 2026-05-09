@@ -26,9 +26,11 @@ const SimpleRelay = (DomEventName: string): Handler => {
 
 const DispatchDecorationBatch = (
 	DomEvent: string,
+
 	Payload: { batch?: unknown[] } | unknown,
 ): void => {
 	const Maybe = (Payload as { batch?: unknown[] } | undefined)?.batch;
+
 	if (Array.isArray(Maybe)) {
 		for (const Entry of Maybe) {
 			document.dispatchEvent(
@@ -47,6 +49,7 @@ export default async (Dependencies: {
 
 	// Tasks
 	await Register("sky://task/execute", SimpleRelay("cel:task:execute"));
+
 	await Register("sky://task/terminate", SimpleRelay("cel:task:terminate"));
 
 	// Workspace edits / focus - extension `workspace.applyEdit(edit)` /
@@ -54,22 +57,28 @@ export default async (Dependencies: {
 	// workbench's BulkEditService + EditorService consume the events.
 	await Register(
 		"sky://workspace/applyEdit",
+
 		SimpleRelay("cel:workspace:applyEdit"),
 	);
+
 	await Register(
 		"sky://window/showTextDocument",
+
 		SimpleRelay("cel:window:showTextDocument"),
 	);
 
 	// Editor decorations - 16ms-batched create/dispose.
 	await Register(
 		"sky://decoration/createTextEditorDecorationType",
+
 		(Payload: any) => {
 			DispatchDecorationBatch("cel:decoration:create", Payload);
 		},
 	);
+
 	await Register(
 		"sky://decoration/disposeTextEditorDecorationType",
+
 		(Payload: any) => {
 			DispatchDecorationBatch("cel:decoration:dispose", Payload);
 		},
@@ -78,14 +87,20 @@ export default async (Dependencies: {
 	// Output-channel lifecycle (6 actions).
 	for (const Action of [
 		"create",
+
 		"append",
+
 		"clear",
+
 		"show",
+
 		"hide",
+
 		"dispose",
 	]) {
 		await Register(
 			`sky://output-channel/${Action}`,
+
 			SimpleRelay(`cel:output-channel:${Action}`),
 		);
 	}
@@ -97,6 +112,7 @@ export default async (Dependencies: {
 	// kebab-case channel.
 	await Register(
 		"sky://webview/message",
+
 		({ panelId, method, params }: any) => {
 			document.dispatchEvent(
 				new CustomEvent("cel:webview:message", {
@@ -105,6 +121,7 @@ export default async (Dependencies: {
 			);
 		},
 	);
+
 	await Register("sky://webview/post-message", ({ handle, message }: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:post-message", {
@@ -112,6 +129,7 @@ export default async (Dependencies: {
 			}),
 		);
 	});
+
 	await Register("sky://webview/dispose", ({ panelId }: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:dispose", { detail: { panelId } }),

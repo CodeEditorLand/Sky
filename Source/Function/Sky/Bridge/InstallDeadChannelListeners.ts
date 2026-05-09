@@ -22,9 +22,12 @@
 // re-importing it.
 interface ServicesProbe {
 	Configuration?: { reloadConfiguration?: () => unknown };
+
 	Notification?: {
 		error?: (m: string) => unknown;
+
 		warn?: (m: string) => unknown;
+
 		info?: (m: string) => unknown;
 	};
 }
@@ -32,6 +35,7 @@ interface ServicesProbe {
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
 	GetServices: () => ServicesProbe | null;
@@ -79,6 +83,7 @@ export default async (Dependencies: {
 			new CustomEvent("cel:extensions:installed", { detail: Payload }),
 		);
 	});
+
 	await Register("sky://extensions/uninstalled", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:extensions:uninstalled", { detail: Payload }),
@@ -165,6 +170,7 @@ export default async (Dependencies: {
 			new CustomEvent("cel:debug:start", { detail: Payload }),
 		);
 	});
+
 	await Register("sky://debug/register", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:debug:register", { detail: Payload }),

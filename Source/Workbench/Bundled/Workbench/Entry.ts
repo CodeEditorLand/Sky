@@ -12,12 +12,14 @@ if (
 ) {
 	(globalThis as never as { __name: unknown }).__name = (
 		Target: object,
+
 		Value: string,
 	) => {
 		Object.defineProperty(Target, "name", {
 			value: Value,
 			configurable: true,
 		});
+
 		return Target;
 	};
 }
@@ -34,9 +36,12 @@ performance.mark("land:bundled:workbench:start");
 await import("@codeeditorland/output/Target/Microsoft/VSCode/vs/workbench/browser/workbench.js");
 
 performance.mark("land:bundled:workbench:imported");
+
 performance.measure(
 	"land:bundled:workbench:import",
+
 	"land:bundled:workbench:start",
+
 	"land:bundled:workbench:imported",
 );
 

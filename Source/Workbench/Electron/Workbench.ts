@@ -10,10 +10,13 @@
 if (typeof window.requestIdleCallback !== "function") {
 	(window as any).requestIdleCallback = (
 		Callback: IdleRequestCallback,
+
 		Options?: IdleRequestOptions,
 	): number => {
 		const Timeout = Options?.timeout ?? 1;
+
 		const Start = Date.now();
+
 		return setTimeout(() => {
 			Callback({
 				didTimeout: Timeout <= 0,
@@ -23,6 +26,7 @@ if (typeof window.requestIdleCallback !== "function") {
 		}, Timeout) as unknown as number;
 	};
 }
+
 if (typeof window.cancelIdleCallback !== "function") {
 	(window as any).cancelIdleCallback = (Id: number): void => {
 		clearTimeout(Id);
@@ -39,6 +43,7 @@ if (typeof (globalThis as any).__name !== "function") {
 			value: Value,
 			configurable: true,
 		});
+
 		return Target;
 	};
 }
@@ -46,12 +51,15 @@ if (typeof (globalThis as any).__name !== "function") {
 // Blob patch: inject __name + rewrite vscode-file:// to http://localhost in worker blobs.
 {
 	const OriginalBlob = globalThis.Blob;
+
 	const NameShim =
 		"var __defProp=Object.defineProperty;var __name=(t,v)=>__defProp(t,'name',{value:v,configurable:true});\n";
+
 	const Origin = window.location.origin;
 
 	(globalThis as any).Blob = function PatchedBlob(
 		Parts?: BlobPart[],
+
 		Options?: BlobPropertyBag,
 	) {
 		if (
@@ -63,18 +71,23 @@ if (typeof (globalThis as any).__name !== "function") {
 				if (typeof Part !== "string") return Part;
 				let Rewritten = Part.replace(
 					/vscode-file:\/\/vscode-app\/Static\/Application\/out\//g,
+
 					`${Origin}/Static/Application/`,
 				);
 				Rewritten = Rewritten.replace(
 					/vscode-file:\/\/vscode-app\//g,
+
 					`${Origin}/`,
 				);
 				return Rewritten;
 			});
+
 			Parts = [NameShim, ...Parts];
 		}
+
 		return new OriginalBlob(Parts, Options);
 	} as unknown as typeof Blob;
+
 	(globalThis as any).Blob.prototype = OriginalBlob.prototype;
 }
 
@@ -87,14 +100,18 @@ try {
 	await import(/* @vite-ignore */ WorkbenchUrl);
 
 	performance.mark("land:workbench:imported");
+
 	performance.measure(
 		"land:workbench:import",
+
 		"land:workbench:start",
+
 		"land:workbench:imported",
 	);
 
 	// Diagnostic: poll for workbench render state via performance marks.
 	const CheckIntervals = [2000, 5000, 10000, 20000];
+
 	for (const Delay of CheckIntervals) {
 		setTimeout(() => {
 			const HasWorkbench = !!document.querySelector(".monaco-workbench");

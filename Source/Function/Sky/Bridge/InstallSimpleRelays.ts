@@ -36,6 +36,7 @@ const PhaseRelay: Handler = (Payload: any): void => {
 				: typeof Payload?.Phase === "number"
 					? Payload.Phase
 					: 0;
+
 	document.dispatchEvent(
 		new CustomEvent("cel:lifecycle:phaseChanged", {
 			detail: { phase: Phase },
@@ -45,29 +46,45 @@ const PhaseRelay: Handler = (Payload: any): void => {
 
 const Relays: Array<readonly [string, Handler]> = [
 	["sky://notification/show", SimpleRelay("cel:notification:show")],
+
 	[
 		"sky://notification/progress-begin",
+
 		SimpleRelay("cel:notification:progress-begin"),
 	],
+
 	[
 		"sky://notification/progress-update",
+
 		SimpleRelay("cel:notification:progress-update"),
 	],
+
 	[
 		"sky://notification/progress-end",
+
 		SimpleRelay("cel:notification:progress-end"),
 	],
+
 	["sky://quickpick/show", SimpleRelay("cel:quickpick:show")],
+
 	["sky://input-box/show", SimpleRelay("cel:input-box:show")],
+
 	["sky://dialog/open", SimpleRelay("cel:dialog:open")],
+
 	["sky://dialog/save", SimpleRelay("cel:dialog:save")],
+
 	["sky://lifecycle/willShutdown", SimpleRelay("cel:lifecycle:willShutdown")],
+
 	["sky://lifecycle/phaseChanged", PhaseRelay],
+
 	["sky://statusbar/set-message", SimpleRelay("cel:statusbar:set-message")],
+
 	[
 		"sky://languages/setDocumentLanguage",
+
 		SimpleRelay("cel:languages:setDocumentLanguage"),
 	],
+
 	["sky://language/configure", SimpleRelay("cel:language:configure")],
 ];
 
@@ -75,6 +92,7 @@ export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
 }): Promise<void> => {
 	const { Register } = Dependencies;
+
 	for (const [Channel, Handle] of Relays) {
 		await Register(Channel, Handle);
 	}

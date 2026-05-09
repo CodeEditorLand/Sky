@@ -77,7 +77,9 @@ await import("@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-br
 performance.mark("land:bundled:electron:imported");
 performance.measure(
 	"land:bundled:electron:import",
+
 	"land:bundled:electron:start",
+
 	"land:bundled:electron:imported",
 );
 
@@ -134,6 +136,7 @@ const LandDisabled = (() => {
 if (!LandDisabled) {
 	window.addEventListener(
 		"cel:services-ready",
+
 		() => {
 			void (async () => {
 				const { InstallLandWorkbench } =
@@ -141,6 +144,7 @@ if (!LandDisabled) {
 				InstallLandWorkbench();
 			})();
 		},
+
 		{ once: true },
 	);
 }

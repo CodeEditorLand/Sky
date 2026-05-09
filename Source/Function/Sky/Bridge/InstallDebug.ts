@@ -28,16 +28,25 @@ const SimpleRelay = (DomEventName: string): Handler => {
 
 const Relays: Array<readonly [string, Handler]> = [
 	["sky://exthost/debug-reload", SimpleRelay("cel:exthost:debug-reload")],
+
 	["sky://exthost/debug-close", SimpleRelay("cel:exthost:debug-close")],
+
 	["sky://debug/sessionStart", SimpleRelay("cel:debug:sessionStart")],
+
 	["sky://debug/sessionEnd", SimpleRelay("cel:debug:sessionEnd")],
+
 	["sky://debug/addBreakpoints", SimpleRelay("cel:debug:addBreakpoints")],
+
 	[
 		"sky://debug/removeBreakpoints",
+
 		SimpleRelay("cel:debug:removeBreakpoints"),
 	],
+
 	["sky://debug/consoleAppend", SimpleRelay("cel:debug:consoleAppend")],
+
 	["sky://debug/dap-message", SimpleRelay("cel:debug:dap-message")],
+
 	["sky://customEditor/saved", SimpleRelay("cel:customEditor:saved")],
 ];
 
@@ -45,6 +54,7 @@ export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
 }): Promise<void> => {
 	const { Register } = Dependencies;
+
 	for (const [Channel, Handle] of Relays) {
 		await Register(Channel, Handle);
 	}

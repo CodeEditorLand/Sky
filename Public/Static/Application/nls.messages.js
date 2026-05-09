@@ -21,4 +21,5 @@
  * localisation pipeline.
  */
 globalThis._VSCODE_NLS_MESSAGES = globalThis._VSCODE_NLS_MESSAGES ?? [];
+
 export {};

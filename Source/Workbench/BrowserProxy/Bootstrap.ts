@@ -7,14 +7,19 @@
 
 interface BootstrapStage {
 	success: boolean;
+
 	stageName: string;
+
 	duration: number;
 }
 
 interface BootstrapResult {
 	success: boolean;
+
 	totalDuration: number;
+
 	stages: BootstrapStage[];
+
 	error?: unknown;
 }
 

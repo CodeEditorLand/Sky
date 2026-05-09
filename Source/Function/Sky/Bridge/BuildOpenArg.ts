@@ -34,62 +34,95 @@ interface ServicesProbe {
 
 export default (
 	GetServices: () => ServicesProbe | null,
+
 	Source: unknown,
 ): unknown => {
 	const Ctor = GetServices()?.URI;
+
 	const ExtractParts = (
 		Value: unknown,
 	): {
 		Scheme: string;
+
 		Authority: string;
+
 		Path: string;
+
 		Query: string;
+
 		Fragment: string;
 	} | null => {
 		if (Value == null) return null;
+
 		if (typeof Value === "string") {
 			const Trimmed = Value.trim();
+
 			if (!Trimmed) return null;
+
 			if (Trimmed.includes("://")) {
 				try {
 					const Parsed = new URL(Trimmed);
+
 					return {
 						Scheme: Parsed.protocol.replace(/:$/, ""),
+
 						Authority: Parsed.host,
+
 						Path: decodeURIComponent(Parsed.pathname),
+
 						Query: Parsed.search.replace(/^\?/, ""),
+
 						Fragment: Parsed.hash.replace(/^#/, ""),
 					};
 				} catch {
 					return null;
 				}
 			}
+
 			return {
 				Scheme: "file",
+
 				Authority: "",
+
 				Path: Trimmed,
+
 				Query: "",
+
 				Fragment: "",
 			};
 		}
+
 		if (typeof Value !== "object") return null;
+
 		const Holder = Value as Record<string, unknown>;
+
 		if (Holder["uri"] && typeof Holder["uri"] === "object") {
 			return ExtractParts(Holder["uri"]);
 		}
+
 		const Scheme = String(Holder["scheme"] ?? "file");
+
 		const Path = String(Holder["path"] ?? Holder["fsPath"] ?? "");
+
 		if (!Path) return null;
+
 		return {
 			Scheme,
+
 			Authority: String(Holder["authority"] ?? ""),
+
 			Path,
+
 			Query: String(Holder["query"] ?? ""),
+
 			Fragment: String(Holder["fragment"] ?? ""),
 		};
 	};
+
 	const Parts = ExtractParts(Source);
+
 	if (!Parts) return Source;
+
 	if (Ctor) {
 		try {
 			return Ctor.from({
@@ -103,12 +136,18 @@ export default (
 			/* fall through to POJO */
 		}
 	}
+
 	return {
 		$mid: 1,
+
 		scheme: Parts.Scheme,
+
 		authority: Parts.Authority,
+
 		path: Parts.Path,
+
 		query: Parts.Query,
+
 		fragment: Parts.Fragment,
 	};
 };

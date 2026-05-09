@@ -20,7 +20,9 @@
 
 export type TraceContext = {
 	readonly TraceId: string;
+
 	readonly ParentSpanId: string;
+
 	readonly Sampled: boolean;
 };
 
@@ -30,14 +32,22 @@ const VERSION = "00";
 
 export const Parse = (Header: string): TraceContext | undefined => {
 	const Parts = Header.split("-");
+
 	if (Parts.length !== 4) return undefined;
+
 	if (Parts[0] !== VERSION) return undefined;
+
 	if (!/^[0-9a-f]{32}$/.test(Parts[1]!)) return undefined;
+
 	if (!/^[0-9a-f]{16}$/.test(Parts[2]!)) return undefined;
+
 	const Sampled = Parts[3] === "01";
+
 	return {
 		TraceId: Parts[1]!,
+
 		ParentSpanId: Parts[2]!,
+
 		Sampled,
 	};
 };
@@ -55,16 +65,23 @@ export const ConsumeFromPayload = <Payload extends Record<string, unknown>>(
 	Payload: Payload | undefined,
 ): Payload => {
 	if (!import.meta.env.DEV) return Payload as Payload;
+
 	if (!Payload || typeof Payload !== "object") return Payload as Payload;
+
 	const Header = (Payload as Record<string, unknown>)["_traceparent"];
+
 	if (typeof Header === "string" && Header.length > 0) {
 		const Decoded = Parse(Header);
+
 		if (Decoded) {
 			CurrentContext = Decoded;
 		}
 	}
+
 	const Cleaned = { ...Payload } as Record<string, unknown>;
+
 	delete Cleaned["_traceparent"];
+
 	return Cleaned as Payload;
 };
 
@@ -75,6 +92,7 @@ export const ConsumeFromPayload = <Payload extends Record<string, unknown>>(
  */
 export const Current = (): TraceContext | undefined => {
 	if (!import.meta.env.DEV) return undefined;
+
 	return CurrentContext;
 };
 
@@ -86,6 +104,7 @@ export const Current = (): TraceContext | undefined => {
  */
 export const Clear = (): void => {
 	if (!import.meta.env.DEV) return;
+
 	CurrentContext = undefined;
 };
 
@@ -97,14 +116,19 @@ export const Clear = (): void => {
  */
 const RandomHex = (Bytes: number): string => {
 	const Buffer = new Uint8Array(Bytes);
+
 	crypto.getRandomValues(Buffer);
+
 	return Array.from(Buffer, (B) => B.toString(16).padStart(2, "0")).join("");
 };
 
 export const Build = (): string => {
 	if (!import.meta.env.DEV) return "";
+
 	const TraceId = CurrentContext?.TraceId ?? RandomHex(16);
+
 	const SpanId = RandomHex(8);
+
 	return `${VERSION}-${TraceId}-${SpanId}-01`;
 };
 

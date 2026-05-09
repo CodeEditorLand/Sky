@@ -16,24 +16,31 @@
  * extension's `$executeContributedCommand` round-trip resolves.
  */
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+
 type ResolveUiRequest = (RequestId: string, Result: unknown) => unknown;
+
 interface CommandsService {
 	executeCommand(Id: string, ...Args: unknown[]): Promise<unknown>;
 }
+
 interface CommandRegistry {
 	registerCommand(
 		Id: string,
+
 		Handler: (...Args: unknown[]) => unknown,
 	): { dispose(): void };
 }
+
 interface ServicesProbe {
 	Commands?: CommandsService;
+
 	CommandRegistry?: CommandRegistry;
 }
 
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
 	GetServices: () => ServicesProbe | null;
@@ -41,6 +48,7 @@ export default async (Dependencies: {
 	ResolveUiRequest: ResolveUiRequest;
 }): Promise<void> => {
 	const { Register, GetServices, Invoke, ResolveUiRequest } = Dependencies;
+
 	const RegisteredCommands = new Map<string, { dispose(): void }>();
 
 	await Register("sky://command/execute", async (RawPayload: any) => {
@@ -68,13 +76,19 @@ export default async (Dependencies: {
 
 	const RegisterOneCommand = (Entry: any): void => {
 		const Services = GetServices();
+
 		if (!Services?.CommandRegistry) return;
+
 		const Id = String(Entry?.id ?? Entry?.commandId ?? "");
+
 		if (!Id) return;
+
 		if (RegisteredCommands.has(Id)) return;
+
 		try {
 			const Disposable = Services.CommandRegistry.registerCommand(
 				Id,
+
 				(...AllArguments: unknown[]) => {
 					const CallerArguments = AllArguments.slice(1);
 					return Invoke("ResolveUIRequest", {
@@ -83,6 +97,7 @@ export default async (Dependencies: {
 					}).catch(() => undefined);
 				},
 			);
+
 			RegisteredCommands.set(Id, Disposable);
 		} catch (Error) {
 			console.warn("[SkyBridge] command register failed", Id, Error);
@@ -96,6 +111,7 @@ export default async (Dependencies: {
 			RegisterOneCommand(Payload);
 		}
 	});
+
 	await Register("sky://command/unregister", (Payload: any) => {
 		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
 		if (!Id) return;

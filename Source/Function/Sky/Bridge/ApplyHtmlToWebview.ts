@@ -16,21 +16,26 @@
  */
 export default (
 	ParkedView: any,
+
 	Html: string,
 ): "method" | "setter" | "skipped" => {
 	if (!ParkedView?.webview) {
 		return "skipped";
 	}
+
 	try {
 		if (typeof ParkedView.webview.setHtml === "function") {
 			ParkedView.webview.setHtml(Html);
+
 			return "method";
 		}
 	} catch {
 		/* fall through to setter */
 	}
+
 	try {
 		ParkedView.webview.html = Html;
+
 		return "setter";
 	} catch {
 		return "skipped";

@@ -27,7 +27,9 @@ export const Host =
 // Used in optimizeDeps.exclude
 export const Link = [
 	"@codeeditorland/output",
+
 	"@codeeditorland/output/Target/Microsoft/VSCode/vs",
+
 	"monaco-editor",
 ];
 
@@ -36,9 +38,13 @@ export const Link = [
 // These are VSCode telemetry dependencies that shouldn't be bundled
 export const External = [
 	"@codeeditorland/output",
+
 	"monaco-editor",
+
 	"@microsoft/1ds-post-js",
+
 	"@microsoft/1ds-core-js",
+
 	"@microsoft/1ds-signalr-js",
 ];
 
@@ -47,7 +53,9 @@ export const External = [
 export const Static = [
 	{
 		src: toGlob(join(cwd, "Public")),
+
 		dest: ".",
+
 		options: {},
 	},
 ];
@@ -56,21 +64,28 @@ export const Static = [
 export async function validateVSCodeOutput(): Promise<boolean> {
 	try {
 		const fs = await import("node:fs");
+
 		const path = await import("node:path");
 
 		// Compute VSCode output path from the Output package
 		const VSCodeOutput = path.join(
 			cwd,
+
 			"../../node_modules/@codeeditorland/output/Target/Microsoft/VSCode",
 		);
+
 		const VSCodeVS = path.join(VSCodeOutput, "vs");
 
 		// Check critical paths (use absolute paths)
 		const workbenchPath = path.join(
 			VSCodeVS,
+
 			"code",
+
 			"browser",
+
 			"workbench",
+
 			"workbench.js",
 		);
 
@@ -80,17 +95,20 @@ export async function validateVSCodeOutput(): Promise<boolean> {
 			console.error(
 				`[Sky] Missing VSCode workbench file: ${workbenchPath}`,
 			);
+
 			return false;
 		}
 
 		if (!fs.existsSync(basePath)) {
 			console.error(`[Sky] Missing VSCode base file: ${basePath}`);
+
 			return false;
 		}
 
 		return true;
 	} catch (error) {
 		console.error("[Sky] Error validating VSCode output:", error);
+
 		return false;
 	}
 }

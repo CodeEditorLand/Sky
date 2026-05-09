@@ -50,10 +50,13 @@ import { listen } from "@tauri-apps/api/event";
 let _CelConsumers: { has: (Type: string) => boolean } = {
 	has: () => false,
 };
+
 let _CelDispatchLog: (
 	DomEvent: string,
+
 	HasConsumer: boolean,
 ) => void = () => {};
+
 void (async () => {
 	const Tracking = (await import("./Bridge/CelDispatchTracking.js")).default(
 		invoke,
@@ -78,10 +81,12 @@ function GetWorkbench(): {
 	commands: {
 		executeCommand(id: string, ...args: unknown[]): Promise<unknown>;
 	};
+
 	env: { openUri(target: unknown): Promise<boolean> };
 } | null {
 	try {
 		if (typeof window === "undefined") return null;
+
 		return (window as any).__CEL_WORKBENCH__ ?? null;
 	} catch {
 		return null;
@@ -96,34 +101,46 @@ function GetWorkbench(): {
 // stable public API and survive the mangler pass.
 interface CelStatusbarEntryAccessor {
 	update(entry: unknown): void;
+
 	dispose(): void;
 }
+
 interface CelStatusbarService {
 	addEntry(
 		entry: unknown,
+
 		id: string,
+
 		alignment: number,
+
 		priority?: number,
 	): CelStatusbarEntryAccessor;
 }
+
 interface CelCommandService {
 	executeCommand<T = unknown>(id: string, ...args: unknown[]): Promise<T>;
 }
+
 interface CelCommandRegistry {
 	registerCommand(
 		id: string,
+
 		handler: (...args: unknown[]) => unknown,
 	): { dispose(): void };
 }
+
 interface CelSearchService {
 	// `SearchProviderType`: file=0, text=1, aiText=2. Schema is the URI
 	// scheme the provider answers for - "file" for local workspace content.
 	registerSearchResultProvider(
 		scheme: string,
+
 		type: number,
+
 		provider: unknown,
 	): { dispose(): void };
 }
+
 // `ITreeView` from `vs/workbench/common/views`. Only the shape Sky
 // actually writes to (`dataProvider`) is typed - the rest is optional
 // read-only metadata the stock pane handles.
@@ -134,16 +151,23 @@ interface CelTreeView {
 				getChildren(element?: {
 					handle?: string;
 				}): Promise<unknown[] | undefined>;
+
 				isTreeEmpty?: boolean;
 		  };
+
 	title?: string;
+
 	description?: string | undefined;
+
 	message?: string | undefined;
+
 	refresh?(
 		treeItems?: readonly unknown[],
+
 		checkboxesChanged?: readonly unknown[],
 	): Promise<void>;
 }
+
 /**
  * Stock VS Code `URI` class shape. Only the methods Sky-side bridges
  * actually invoke are typed; everything else flows through the workbench
@@ -153,7 +177,9 @@ interface CelTreeView {
  */
 interface CelUriCtor {
 	file(path: string): CelUri;
+
 	parse(value: string, strict?: boolean): CelUri;
+
 	from(components: {
 		scheme: string;
 		authority?: string;
@@ -161,15 +187,23 @@ interface CelUriCtor {
 		query?: string;
 		fragment?: string;
 	}): CelUri;
+
 	revive(value: unknown): CelUri;
 }
+
 interface CelUri {
 	readonly scheme: string;
+
 	readonly authority: string;
+
 	readonly path: string;
+
 	readonly query: string;
+
 	readonly fragment: string;
+
 	readonly fsPath: string;
+
 	with(change: {
 		scheme?: string;
 		authority?: string;
@@ -177,16 +211,25 @@ interface CelUri {
 		query?: string;
 		fragment?: string;
 	}): CelUri;
+
 	toString(skipEncoding?: boolean): string;
+
 	toJSON(): unknown;
 }
+
 interface CelServices {
 	Statusbar: CelStatusbarService;
+
 	Commands: CelCommandService;
+
 	CommandRegistry: CelCommandRegistry;
+
 	Search: CelSearchService;
+
 	Views?: unknown;
+
 	TreeViewByViewId?: (viewId: string) => CelTreeView | null;
+
 	URI?: CelUriCtor;
 }
 
@@ -199,6 +242,7 @@ function GetServices(): CelServices | null {
 	} catch {
 		return null;
 	}
+
 	return (window as any).__CEL_SERVICES__ ?? null;
 }
 
@@ -208,6 +252,7 @@ function GetServices(): CelServices | null {
 // fire-and-forget dynamic import so the probe doesn't block module eval.
 void (async () => {
 	const Probe = (await import("./Bridge/ProbeServices.js")).default;
+
 	Probe(() => GetServices() as Record<string, unknown> | null);
 })();
 

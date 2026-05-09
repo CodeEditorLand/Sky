@@ -18,6 +18,7 @@
  */
 
 const ServiceName = "land-editor";
+
 const ServiceVersion = "0.0.1";
 
 // `Capture=false` is the master telemetry kill shared with Mountain /
@@ -25,6 +26,7 @@ const ServiceVersion = "0.0.1";
 const TelemetryCaptureEnabled =
 	((import.meta.env as Record<string, string | undefined>)["Capture"] ??
 		"true") !== "false";
+
 const OTLPPipeEnabled =
 	TelemetryCaptureEnabled &&
 	((import.meta.env as Record<string, string | undefined>)["OTLPEnabled"] ??
@@ -37,25 +39,34 @@ const OTLPPipeEnabled =
 const ConfiguredOTLPEndpoint =
 	(import.meta.env as Record<string, string | undefined>)["OTLPEndpoint"] ??
 	"http://127.0.0.1:4318";
+
 const OTLPEndpoint =
 	typeof (window as any).__TAURI_INTERNALS__ !== "undefined"
 		? `${ConfiguredOTLPEndpoint.replace(/\/$/, "")}/v1/traces`
 		: "/v1/traces";
+
 const BatchIntervalMs = 2000;
+
 const TraceId = Array.from(crypto.getRandomValues(new Uint8Array(16)))
 	.map((B) => B.toString(16).padStart(2, "0"))
 	.join("");
 
 interface PendingSpan {
 	Name: string;
+
 	StartTimeUnixNano: string;
+
 	EndTimeUnixNano: string;
+
 	SpanId: string;
+
 	Detail?: Record<string, unknown>;
 }
 
 const Batch: PendingSpan[] = [];
+
 let FlushTimer: ReturnType<typeof setTimeout> | null = null;
+
 let CollectorAvailable: boolean | null = null;
 
 const MakeSpanId = (): string =>
@@ -68,11 +79,13 @@ const HrTimeNano = (Ms: number): string =>
 
 const ScheduleFlush = (): void => {
 	if (FlushTimer) return;
+
 	FlushTimer = setTimeout(Flush, BatchIntervalMs);
 };
 
 const Flush = (): void => {
 	FlushTimer = null;
+
 	if (Batch.length === 0) return;
 
 	const Spans = Batch.splice(0);
@@ -87,21 +100,28 @@ const Flush = (): void => {
 					attributes: [
 						{
 							key: "service.name",
+
 							value: { stringValue: ServiceName },
 						},
+
 						{
 							key: "service.version",
+
 							value: { stringValue: ServiceVersion },
 						},
+
 						{
 							key: "browser.user_agent",
+
 							value: { stringValue: navigator.userAgent },
 						},
 					],
 				},
+
 				scopeSpans: [
 					{
 						scope: { name: "land.otel.bridge", version: "1.0.0" },
+
 						spans: Spans.map((S) => {
 							const IsError = S.Name.includes("error");
 							const DetailObj = S.Detail as
@@ -113,6 +133,7 @@ const Flush = (): void => {
 										value: {
 											stringValue: String(V).slice(
 												0,
+
 												500,
 											),
 										},
@@ -216,6 +237,7 @@ const Observer = new PerformanceObserver((List) => {
 
 if (import.meta.env.DEV && OTLPPipeEnabled) {
 	Observer.observe({ type: "mark", buffered: true });
+
 	Observer.observe({ type: "measure", buffered: true });
 
 	// Flush on page unload

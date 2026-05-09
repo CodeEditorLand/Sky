@@ -17,26 +17,40 @@
  */
 type StatusbarEntry = {
 	name: string;
+
 	text: string;
+
 	tooltip: unknown;
+
 	command: unknown;
+
 	ariaLabel: string;
+
 	role: unknown;
+
 	backgroundColor: unknown;
+
 	color: unknown;
 };
+
 interface StatusbarAccessor {
 	update(Entry: StatusbarEntry): void;
+
 	dispose(): void;
 }
+
 interface StatusbarService {
 	addEntry(
 		Entry: StatusbarEntry,
+
 		Id: string,
+
 		Alignment: number,
+
 		Priority?: number,
 	): StatusbarAccessor;
 }
+
 interface ServicesProbe {
 	Statusbar?: StatusbarService;
 }
@@ -44,12 +58,15 @@ interface ServicesProbe {
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
 	GetServices: () => ServicesProbe | null;
 }): Promise<{ SetOrUpdateEntry: (Payload: any) => void }> => {
 	const { Register, GetServices } = Dependencies;
+
 	const StatusbarAccessors = new Map<string, StatusbarAccessor>();
+
 	const BuildEntry = (Payload: any): StatusbarEntry => ({
 		name: Payload?.name ?? Payload?.extension ?? "extension",
 		text: Payload?.text ?? "",
@@ -61,59 +78,84 @@ export default async (Dependencies: {
 		backgroundColor: Payload?.backgroundColor,
 		color: Payload?.color,
 	});
+
 	const AlignmentToNumber = (Raw: any): number => {
 		if (Raw === 0 || Raw === 1) return Raw;
+
 		if (Raw === "right" || Raw === "RIGHT") return 1;
+
 		return 0;
 	};
+
 	const SetOrUpdateEntry = (Payload: any): void => {
 		const Services = GetServices();
+
 		if (!Services?.Statusbar) return;
+
 		const Id = String(
 			Payload?.id ?? Payload?.handle ?? Payload?.entryId ?? "",
 		);
+
 		if (!Id) return;
+
 		const Existing = StatusbarAccessors.get(Id);
+
 		if (Existing) {
 			try {
 				Existing.update(BuildEntry(Payload));
 			} catch (Error) {
 				console.warn("[SkyBridge] statusbar update failed", Id, Error);
 			}
+
 			return;
 		}
+
 		try {
 			const Accessor = Services.Statusbar.addEntry(
 				BuildEntry(Payload),
+
 				Id,
+
 				AlignmentToNumber(Payload?.alignment),
+
 				typeof Payload?.priority === "number"
 					? Payload.priority
 					: undefined,
 			);
+
 			StatusbarAccessors.set(Id, Accessor);
 		} catch (Error) {
 			console.warn("[SkyBridge] statusbar addEntry failed", Id, Error);
 		}
 	};
+
 	const DisposeEntry = (Payload: any): void => {
 		const Id = String(
 			Payload?.id ?? Payload?.handle ?? Payload?.entryId ?? "",
 		);
+
 		if (!Id) return;
+
 		const Accessor = StatusbarAccessors.get(Id);
+
 		if (Accessor) {
 			try {
 				Accessor.dispose();
 			} catch {
 				/* swallow */
 			}
+
 			StatusbarAccessors.delete(Id);
 		}
 	};
+
 	await Register("sky://statusbar/update", SetOrUpdateEntry);
+
 	await Register("sky://statusbar/set-entry", SetOrUpdateEntry);
+
 	await Register("sky://statusbar/dispose", DisposeEntry);
+
 	await Register("sky://statusbar/dispose-entry", DisposeEntry);
+
 	return { SetOrUpdateEntry };
 };

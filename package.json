@@ -54,7 +54,7 @@
 		"zod": "4.4.3"
 	},
 	"devDependencies": {
-		"@astrojs/compiler-rs": "0.1.10",
+		"@astrojs/compiler-rs": "0.2.0",
 		"@astrojs/ts-plugin": "1.10.7",
 		"ulid": "3.0.2"
 	},

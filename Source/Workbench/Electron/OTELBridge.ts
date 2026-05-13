@@ -23,14 +23,16 @@ const ServiceVersion = "0.0.1";
 
 // `Capture=false` is the master telemetry kill shared with Mountain /
 // Cocoon. `OTLPEnabled=false` disables only this pipe.
+// Default is "false" so telemetry is completely disabled unless
+// explicitly opted in.
 const TelemetryCaptureEnabled =
 	((import.meta.env as Record<string, string | undefined>)["Capture"] ??
-		"true") !== "false";
+		"false") === "true";
 
 const OTLPPipeEnabled =
 	TelemetryCaptureEnabled &&
 	((import.meta.env as Record<string, string | undefined>)["OTLPEnabled"] ??
-		"true") !== "false";
+		"false") === "true";
 
 // Build-baked endpoint from `import.meta.env.OTLPEndpoint`
 // (`astro.config.ts` Vite define). Falls back to the docker-compose

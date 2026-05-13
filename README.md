@@ -43,12 +43,12 @@ panels. It operates within the **`Tauri`** webview alongside `Wind`, consuming
 state and services from the `Wind` service layer to display and manage the
 editor's visual presentation.
 
-**Sky** loads `VS Code`'s core workbench from `@codeeditorland/output` and
+**Sky** loads `VS Code`'s core `workbench` from `@codeeditorland/output` and
 surrounds it with `Astro` pages, a `Tauri` event bridge (`SkyBridge`), and a
-`bundled-workbench` pipeline that pre-compiles each variant through
-`Vite`/`Rollup`. The `index.astro` entry point selects the active workbench at
-build time via environment variables, with conditional dynamic imports that
-prevent unused variants from entering `Vite`'s module graph.
+`Vite`/`Rollup` compilation pipeline that pre-compiles each variant into a
+`bundled-workbench` chunk. The `index.astro` entry point selects the active
+workbench at build time via environment variables, with conditional dynamic
+imports that prevent unused variants from entering `Vite`'s module graph.
 
 **Sky** is engineered to render a comprehensive set of `Astro`-based components
 that compose the editor interface, support multiple workbench variants for
@@ -103,11 +103,12 @@ rewrites `vscode-file://` URLs to HTTP origins.
 
 **Bundled Workbench Pipeline.** When `Pack` is set to a space-separated list of
 variants (`electron`, `browser`, `sessions`, `workbench`), the build produces
-`Vite`/`Rollup`-compiled workbench chunks under `Target/Static/Bundled/<Variant>/`.
-Each variant's `Entry.ts` imports the corresponding `VS Code` workbench module,
-and the page-level conditional import ensures only selected variants enter the
-module graph. This avoids pulling `gulp`-only `out/` files with property-mangled
-symbol mismatches into the `Rollup` bundle.
+`Vite`/`Rollup`-compiled workbench chunks under
+`Target/Static/Bundled/<Variant>/`. Each variant's `Entry.ts` imports the
+corresponding `VS Code` workbench module, and the page-level conditional import
+ensures only selected variants enter the module graph. This avoids pulling
+`gulp`-only `out/` files with property-mangled symbol mismatches into the
+`Rollup` bundle.
 
 **Component Modularity.** Organized into pages (routes), workbenches
 (components), and workbench implementations under `BrowserProxy/`, `Electron/`,

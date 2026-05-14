@@ -917,6 +917,9 @@ export default defineConfig({
 			"import.meta.env.Disable": JSON.stringify(
 				process.env["Disable"] ?? "",
 			),
+			"import.meta.env.DisableUIFixes": JSON.stringify(
+				process.env["DisableUIFixes"] ?? "",
+			),
 		},
 
 		build: {

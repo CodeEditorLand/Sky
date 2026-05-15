@@ -134,7 +134,7 @@ point for Tauri's isolation pattern.
 
 ---
 
-## `Sky`&#x2001;🌌 in the `Land`&#x2001;🏞️ Ecosystem
+## `Sky` in the `Land`&#x2001;🏞️ Ecosystem&#x2001;🌌
 
 | Component              | Role & Key Responsibilities                                                                                            |
 | :--------------------- | :--------------------------------------------------------------------------------------------------------------------- |
@@ -194,25 +194,25 @@ graph LR
     classDef mountain fill:#f0d0ff,stroke:#9b59b6,stroke-width:2px,color:#2c0050;
     classDef external fill:#ebebeb,stroke:#888,stroke-dasharray:5 5,color:#333;
 
-    subgraph "🌌 Sky - UI Component Layer (Tauri Webview)"
+    subgraph "Sky - UI Component Layer (Tauri Webview)&#x2001;🌌"
         Pages["Pages - index, Browser, Electron, Mountain, Isolation"]:::sky
         Workbenches["Workbench Components - Browser, Mountain, Default, NLS"]:::sky
         WorkbenchImpl["Workbench Implementations - BrowserProxy/, Electron/"]:::sky
     end
 
-    subgraph "🍃 Wind - Service Layer (Tauri Webview)"
+    subgraph "Wind - Service Layer (Tauri Webview)&#x2001;🍃"
         PreloadJS["Preload.js - Environment Shim"]:::wind
         WindServices["Wind Effect-TS Services"]:::wind
         TauriIntegrations["Wind/Tauri Integrations"]:::wind
     end
 
-    subgraph "📱 Tauri Shell & Mountain - Rust Backend"
+    subgraph "Tauri Shell & Mountain - Rust Backend&#x2001;📱"
         TauriWindow["Tauri Window API"]:::tauri
         TauriEvents["Tauri Event System"]:::tauri
-        MountainCore["⛰️ Mountain - Rust Core"]:::mountain
+        MountainCore["Mountain - Rust Core&#x2001;⛰️"]:::mountain
     end
 
-    subgraph "📦 External"
+    subgraph "External&#x2001;📦"
         VSCodeComponents["VS Code Core UI - @codeeditorland/output"]:::external
     end
 
@@ -395,9 +395,9 @@ for a history of changes specific to **Sky**&#x2001;🌌.
 
 ## Funding \& Acknowledgements&#x2001;🙏🏻
 
-**Sky**&#x2001;🌌 is a core element of the **Land**&#x2001;🏞️ ecosystem. This
-project is funded through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a
-fund established by [NLnet](https://NLnet.NL) with financial support from the
+**Sky** is a core element of the **Land**&#x2001;🏞️ ecosystem.&#x2001;🌌 project
+is funded through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund
+established by [NLnet](https://NLnet.NL) with financial support from the
 European Commission's [Next Generation Internet](https://ngi.eu) program. Learn
 more at the [NLnet project page](https://NLnet.NL/project/Land).
 

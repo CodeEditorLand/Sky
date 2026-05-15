@@ -1600,20 +1600,20 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		) => {
 			const Wire = (Raw ?? {}) as Record<string, unknown>;
 			const Handle =
-				typeof Wire.handle === "string" && Wire.handle.length > 0
-					? Wire.handle
+				typeof Wire["handle"] === "string" && Wire["handle"].length > 0
+					? Wire["handle"]
 					: `${Fallback.ViewId}/${Fallback.ParentHandle || "root"}/${Fallback.Index}`;
 			const Label =
-				typeof Wire.label === "string"
-					? { label: Wire.label }
-					: (Wire.label as { label?: string } | undefined)?.label
-						? (Wire.label as { label: string })
+				typeof Wire["label"] === "string"
+					? { label: Wire["label"] }
+					: (Wire["label"] as { label?: string } | undefined)?.label
+						? (Wire["label"] as { label: string })
 						: { label: "" };
 			const CollapsibleState =
-				Wire.isCollapsed === true
+				Wire["isCollapsed"] === true
 					? 1
-					: typeof Wire.collapsibleState === "number"
-						? Wire.collapsibleState
+					: typeof Wire["collapsibleState"] === "number"
+						? Wire["collapsibleState"]
 						: 0;
 			// Pass through the full set of fields Cocoon's wire DTO
 			// carries. Any field the workbench tree renderer doesn't
@@ -1621,29 +1621,31 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			// mirrors (diagnostic inspectors, test harnesses) see the
 			// same content the built-in tree does.
 			const Description =
-				typeof Wire.description === "string"
-					? Wire.description
+				typeof Wire["description"] === "string"
+					? Wire["description"]
 					: undefined;
 			const Tooltip =
-				typeof Wire.tooltip === "string" ? Wire.tooltip : undefined;
+				typeof Wire["tooltip"] === "string"
+					? Wire["tooltip"]
+					: undefined;
 			const ContextValue =
-				typeof Wire.contextValue === "string"
-					? Wire.contextValue
+				typeof Wire["contextValue"] === "string"
+					? Wire["contextValue"]
 					: undefined;
 			return {
 				handle: Handle,
 				collapsibleState: CollapsibleState,
 				label: Label,
 				icon:
-					typeof Wire.icon === "string" && Wire.icon.length > 0
-						? Wire.icon
+					typeof Wire["icon"] === "string" && Wire["icon"].length > 0
+						? Wire["icon"]
 						: undefined,
 				description: Description,
 				tooltip: Tooltip,
-				resourceUri: Wire.resourceUri,
+				resourceUri: Wire["resourceUri"],
 				contextValue: ContextValue,
-				command: Wire.command,
-				accessibilityInformation: Wire.accessibilityInformation,
+				command: Wire["command"],
+				accessibilityInformation: Wire["accessibilityInformation"],
 			};
 		};
 		const ProvideChildren = async (
@@ -2726,7 +2728,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					ViewType,
 					{
 						supportsMultipleEditorsPerDocument: Boolean(
-							Options.supportsMultipleEditorsPerDocument,
+							Options["supportsMultipleEditorsPerDocument"],
 						),
 					},
 				);

@@ -1,10 +1,12 @@
-# Sky: UI Component Layer
+# Sky: UI Component Layer ☁️
 
-This document describes Sky, the UI component layer of Land. Built with the
-Astro framework, Sky renders the editor interface -- editor, side bar, activity
-bar, status bar, and panels -- inside the Tauri WebView. It loads the VS Code
-workbench from `@codeeditorland/output` and communicates via SkyBridge for event
-routing.
+This document describes `Sky`, the UI component layer of `Land`.
+
+- `Sky` is built with the `Astro` framework.
+- It renders the editor interface - editor, side bar, activity bar, status bar,
+  and panels - inside the `Tauri` WebView.
+- It loads the VS Code workbench from `@codeeditorland/output`.
+- It communicates via `SkyBridge` for event routing.
 
 ---
 
@@ -39,24 +41,25 @@ graph TB
     BRIDGE -->|"channel dispatch"| WORKBENCH["VS Code Workbench"]
 ```
 
-## Overview
+## Overview 📋
 
-Sky is the rendering layer that presents the Land editor to the user. It uses
-Astro for page composition, loads the VS Code workbench from
-`@codeeditorland/output`, and bridges Tauri events to the workbench through
-SkyBridge.
+`Sky` is the rendering layer that presents the `Land` editor to the user.
 
-| Attribute    | Value                                                                                                                        |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Language     | TypeScript (Astro v6, Vite v8)                                                                                               |
-| Framework    | Astro + Vite                                                                                                                 |
-| IPC          | Tauri events (via SkyBridge)                                                                                                 |
-| Dependencies | @codeeditorland/wind, @codeeditorland/output, @codeeditorland/cocoon, @codeeditorland/worker, @xterm/xterm, astro, vite, zod |
-| Consumes     | Wind (services), Output (bundles), Worker (service worker)                                                                   |
+- It uses `Astro` for page composition.
+- It loads the VS Code workbench from `@codeeditorland/output`.
+- It bridges `Tauri` events to the workbench through `SkyBridge`.
+
+| Attribute    | Value                                                                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language     | `TypeScript` (`Astro` v6, `Vite` v8)                                                                                                         |
+| Framework    | `Astro` + `Vite`                                                                                                                             |
+| IPC          | `Tauri` events (via `SkyBridge`)                                                                                                             |
+| Dependencies | `@codeeditorland/wind`, `@codeeditorland/output`, `@codeeditorland/cocoon`, `@codeeditorland/worker`, `@xterm/xterm`, `astro`, `vite`, `zod` |
+| Consumes     | `Wind` (services), `Output` (bundles), `Worker` (service worker)                                                                             |
 
 ---
 
-## Architecture
+## Architecture 🏗️
 
 ```
 +------------------------------------------------------------------+
@@ -77,7 +80,7 @@ SkyBridge.
 +------------------------------------------------------------------+
 ```
 
-### Module Map
+### Module Map 🗺️
 
 | Path                              | Purpose                        |
 | --------------------------------- | ------------------------------ |
@@ -97,10 +100,10 @@ SkyBridge.
 
 ---
 
-## Page Structure
+## Page Structure 📄
 
-Sky provides multiple page entry points, each selecting a different workbench
-variant:
+`Sky` provides multiple page entry points, each selecting a different workbench
+variant.
 
 ### index.astro
 
@@ -136,9 +139,9 @@ const WorkbenchComponent =
 
 ---
 
-## Workbench Variants
+## Workbench Variants 🖥️
 
-Sky supports multiple workbench variants compiled through Vite/Rollup:
+`Sky` supports multiple workbench variants compiled through `Vite`/`Rollup`:
 
 | Variant          | Astro Page           | Feature Coverage        | Build Profile             |
 | ---------------- | -------------------- | ----------------------- | ------------------------- |
@@ -151,7 +154,7 @@ Sky supports multiple workbench variants compiled through Vite/Rollup:
 
 ### Variant Selection
 
-The active variant is selected at build time and compiled by Vite. Unused
+The active variant is selected at build time and compiled by `Vite`. Unused
 variants are tree-shaken and do not enter the production module graph:
 
 ```typescript
@@ -166,10 +169,10 @@ const workbenchPath =
 
 ---
 
-## SkyBridge
+## SkyBridge 🌉
 
-SkyBridge (`Source/Function/SkyBridge.ts`, ~2900 lines) is the runtime event
-routing bridge between Tauri's IPC system and the VS Code workbench's internal
+`SkyBridge` (`Source/Function/SkyBridge.ts`, ~2900 lines) is the runtime event
+routing bridge between `Tauri`'s IPC system and the VS Code workbench's internal
 message channel system.
 
 ### Event Translation Table
@@ -203,7 +206,7 @@ VS Code workbench service receives notification
 
 ### Webview Panel Management
 
-SkyBridge manages webview content injection through `first-set-html` logging:
+`SkyBridge` manages webview content injection through `first-set-html` logging:
 
 ```
 Extension calls vscode.window.createWebviewPanel()
@@ -223,10 +226,10 @@ SkyBridge sets HTML content:
 
 ---
 
-## Build-time Variant Selection
+## Build-time Variant Selection 🔧
 
-Sky uses Vite's conditional dynamic imports to select the active workbench at
-build time:
+`Sky` uses `Vite`'s conditional dynamic imports to select the active workbench
+at build time:
 
 ```typescript
 // vite.config.ts / astro.config.ts
@@ -255,9 +258,9 @@ Sky/Target/Static/
 
 ---
 
-## Static Asset Layout
+## Static Asset Layout 📁
 
-After a successful build, Sky's output is organized as:
+After a successful build, `Sky`'s output is organized as:
 
 ```
 Sky/Target/
@@ -275,22 +278,22 @@ Sky/Target/
 
 ---
 
-## Related Documentation
+## Related Documentation 📚
 
-- [Wind](../Wind/Documentation/GitHub/Architecture.md) - Service layer (Sky
-  consumes)
-- [Cocoon](../Cocoon/Documentation/GitHub/Architecture.md) - Extension host
-  (SkyBridge target)
-- [Worker](../Worker/Documentation/GitHub/Architecture.md) - Service worker (Sky
-  integrates)
-- [Output](../Output/Documentation/GitHub/Architecture.md) - Compiled workbench
-  source
-- [Mountain](../Mountain/Documentation/GitHub/Architecture.md) - Backend (IPC
-  source)
-- [Polyfills](../../../Documentation/GitHub/Polyfills.md) - SkyBridge and
-  preload shim details
-- [BuildPipeline](../../../Documentation/GitHub/BuildPipeline.md) - Build
-  pipeline for workbench variants
+- [Wind](https://github.com/CodeEditorLand/Wind/tree/Current/Documentation/GitHub/Architecture.md) -
+  Service layer (`Sky` consumes)
+- [Cocoon](https://github.com/CodeEditorLand/Cocoon/tree/Current/Documentation/GitHub/Architecture.md) -
+  Extension host (`SkyBridge` target)
+- [Worker](https://github.com/CodeEditorLand/Worker/tree/Current/Documentation/GitHub/Architecture.md) -
+  Service worker (`Sky` integrates)
+- [Output](https://github.com/CodeEditorLand/Output/tree/Current/Documentation/GitHub/Architecture.md) -
+  Compiled workbench source
+- [Mountain](https://github.com/CodeEditorLand/Mountain/tree/Current/Documentation/GitHub/Architecture.md) -
+  Backend (IPC source)
+- [Polyfills](https://github.com/CodeEditorLand/Land/tree/Current/Documentation/GitHub/Polyfills.md) -
+  `SkyBridge` and preload shim details
+- [BuildPipeline](https://github.com/CodeEditorLand/Land/tree/Current/Documentation/GitHub/BuildPipeline.md) -
+  Build pipeline for workbench variants
 
 ---
 

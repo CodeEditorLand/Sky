@@ -2098,7 +2098,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				],
 			}).catch(() => {});
 			// Store globally so the debug server /eval can query it
-			;(globalThis as any).__CEL_LAST_SET_HTML_INFO__ = {
+			(globalThis as any).__CEL_LAST_SET_HTML_INFO__ = {
 				viewId: ViewId,
 				handle: Handle,
 				htmlLen: Html.length,
@@ -2106,12 +2106,12 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				applied: Applied,
 				hasRegistry: !!Registry,
 				hasHandleRegistry: !!HandleRegistry,
-				scriptSrc: ScriptMatch?.[1] ?? '<none>',
+				scriptSrc: ScriptMatch?.[1] ?? "<none>",
 				ts: Date.now(),
 			};
 		}
 		// Also store on EVERY set-html (not just first)
-		;(globalThis as any).__CEL_LATEST_SET_HTML_INFO__ = {
+		(globalThis as any).__CEL_LATEST_SET_HTML_INFO__ = {
 			viewId: ViewId,
 			handle: Handle,
 			htmlLen: Html.length,
@@ -2119,7 +2119,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			applied: Applied,
 			hasRegistry: !!Registry,
 			hasHandleRegistry: !!HandleRegistry,
-			scriptSrc: ScriptMatch?.[1] ?? '<none>',
+			scriptSrc: "<none> (not in scope)",
 			ts: Date.now(),
 		};
 	});
@@ -2799,18 +2799,18 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}
 			let Picked: string | null = null;
 			if (Actions.length === 1) {
-				if (window.confirm(`${Message}
+				if (
+					window.confirm(`${Message}
 
-(${Actions[0].title})`)) {
+(${Actions[0].title})`)
+				) {
 					Picked = Actions[0].title;
 				}
 			} else {
 				const Choice = window.prompt(
 					`${Message}
 
-Choose: ${Actions.map((A) => A.title).join(
-						" / ",
-					)}`,
+Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 					Actions[0].title,
 				);
 				if (Choice && Actions.some((A) => A.title === Choice)) {
@@ -2910,9 +2910,11 @@ Choose: ${Actions.map((A) => A.title).join(
 			if (Actions.length === 0) {
 				window.alert(Message);
 			} else if (Actions.length === 1) {
-				if (window.confirm(`${Message}
+				if (
+					window.confirm(`${Message}
 
-(${Actions[0].title})`)) {
+(${Actions[0].title})`)
+				) {
 					Picked = Actions[0].title;
 				}
 			} else {

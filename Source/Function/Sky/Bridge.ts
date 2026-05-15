@@ -2106,7 +2106,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				applied: Applied,
 				hasRegistry: !!Registry,
 				hasHandleRegistry: !!HandleRegistry,
-				scriptSrc: ScriptMatch?.[1] ?? \"<none>\",
+				scriptSrc: ScriptMatch?.[1] ?? '<none>',
 				ts: Date.now(),
 			};
 		}
@@ -2119,7 +2119,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			applied: Applied,
 			hasRegistry: !!Registry,
 			hasHandleRegistry: !!HandleRegistry,
-			scriptSrc: ScriptMatch?.[1] ?? \"<none>\",
+			scriptSrc: ScriptMatch?.[1] ?? '<none>',
 			ts: Date.now(),
 		};
 	});

@@ -2097,7 +2097,31 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 					`first-set-html viewId=${ViewId} handle=${String(Handle)} htmlLen=${Html.length} parkedViewFound=${!!ParkedView} applied=${Applied} hasRegistry=${!!Registry} hasHandleRegistry=${!!HandleRegistry} scriptSrc=${ScriptMatch?.[1] ?? "<none>"} snapshot=${JSON.stringify(Snapshot)}`,
 				],
 			}).catch(() => {});
+			// Store globally so the debug server /eval can query it
+			;(globalThis as any).__CEL_LAST_SET_HTML_INFO__ = {
+				viewId: ViewId,
+				handle: Handle,
+				htmlLen: Html.length,
+				parkedViewFound: !!ParkedView,
+				applied: Applied,
+				hasRegistry: !!Registry,
+				hasHandleRegistry: !!HandleRegistry,
+				scriptSrc: ScriptMatch?.[1] ?? \"<none>\",
+				ts: Date.now(),
+			};
 		}
+		// Also store on EVERY set-html (not just first)
+		;(globalThis as any).__CEL_LATEST_SET_HTML_INFO__ = {
+			viewId: ViewId,
+			handle: Handle,
+			htmlLen: Html.length,
+			parkedViewFound: !!ParkedView,
+			applied: Applied,
+			hasRegistry: !!Registry,
+			hasHandleRegistry: !!HandleRegistry,
+			scriptSrc: ScriptMatch?.[1] ?? \"<none>\",
+			ts: Date.now(),
+		};
 	});
 
 	// Webview-view metadata: Cocoon `view.title = X` / `view.description
@@ -2775,12 +2799,16 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}
 			let Picked: string | null = null;
 			if (Actions.length === 1) {
-				if (window.confirm(`${Message}\n\n(${Actions[0].title})`)) {
+				if (window.confirm(`${Message}
+
+(${Actions[0].title})`)) {
 					Picked = Actions[0].title;
 				}
 			} else {
 				const Choice = window.prompt(
-					`${Message}\n\nChoose: ${Actions.map((A) => A.title).join(
+					`${Message}
+
+Choose: ${Actions.map((A) => A.title).join(
 						" / ",
 					)}`,
 					Actions[0].title,
@@ -2882,12 +2910,16 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			if (Actions.length === 0) {
 				window.alert(Message);
 			} else if (Actions.length === 1) {
-				if (window.confirm(`${Message}\n\n(${Actions[0].title})`)) {
+				if (window.confirm(`${Message}
+
+(${Actions[0].title})`)) {
 					Picked = Actions[0].title;
 				}
 			} else {
 				const Choice = window.prompt(
-					`${Message}\n\nChoose: ${Actions.map((A) => A.title).join(" / ")}`,
+					`${Message}
+
+Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 					Actions[0].title,
 				);
 				if (Choice && Actions.some((A) => A.title === Choice)) {

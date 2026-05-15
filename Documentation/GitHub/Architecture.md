@@ -21,6 +21,24 @@ routing.
 
 ---
 
+```mermaid
+graph TB
+    subgraph Sky["Sky UI Component Layer"]
+        PAGES["pages/<br/>index.astro<br/>Mountain.astro<br/>Browser.astro<br/>Electron.astro"]
+        WB["Workbench Variants<br/>Mountain / Browser<br/>Electron / Default"]
+        BRIDGE["SkyBridge<br/>event routing<br/>Tauri <-> Workbench"]
+        BUILD["Build-time Selection<br/>TierWorkbench env var"]
+
+        PAGES --> BUILD
+        BUILD --> WB
+        WB --> BRIDGE
+    end
+
+    OUTPUT["@codeeditorland/output"] --> WB
+    MOUNTAIN["Mountain<br/>Tauri events"] -->|"IPC events"| BRIDGE
+    BRIDGE -->|"channel dispatch"| WORKBENCH["VS Code Workbench"]
+```
+
 ## Overview
 
 Sky is the rendering layer that presents the Land editor to the user. It uses

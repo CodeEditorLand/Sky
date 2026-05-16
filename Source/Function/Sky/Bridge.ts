@@ -2162,6 +2162,19 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	await Register("sky://webview/postMessage", (Payload: any) => {
 		const ViewId: string = String(Payload?.viewId ?? "");
 		const Message = Payload?.message;
+		// Diagnostic: log entry
+		invoke("MountainIPCInvoke", {
+			method: "diagnostic:log",
+			params: [
+				"webview-bridge",
+				"postMessage-entry viewId=" +
+					ViewId +
+					" hasMsg=" +
+					(Message != null) +
+					" msgType=" +
+					(Message?.type ?? "?"),
+			],
+		}).catch(() => {});
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:post-message", {
 				detail: { ...Payload, viewId: ViewId, message: Message },
@@ -2171,11 +2184,43 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		const Registry: Map<string, any> | undefined = (globalThis as any)
 			.__CEL_WEBVIEW_VIEWS__;
 		const ParkedView = Registry?.get(ViewId);
+		// Diagnostic: log registry state
+		invoke("MountainIPCInvoke", {
+			method: "diagnostic:log",
+			params: [
+				"webview-bridge",
+				"postMessage-registry viewId=" +
+					ViewId +
+					" found=" +
+					!!ParkedView +
+					" hasPostMessage=" +
+					!!ParkedView?.webview?.postMessage,
+			],
+		}).catch(() => {});
 		if (!ParkedView?.webview?.postMessage) return;
 		try {
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"webview-bridge",
+					"postMessage-calling viewId=" +
+						ViewId +
+						" msgType=" +
+						(Message?.type ?? "?"),
+				],
+			}).catch(() => {});
 			ParkedView.webview.postMessage(Message);
 		} catch (_e) {
-			/* swallow */
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"webview-bridge",
+					"postMessage-error viewId=" +
+						ViewId +
+						" error=" +
+						String(_e).slice(0, 120),
+				],
+			}).catch(() => {});
 		}
 	});
 

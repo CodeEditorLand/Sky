@@ -774,7 +774,7 @@ export default defineConfig({
 								event: "land:sky:build:complete",
 								properties: {
 									distinct_id: `land-dev-${process.env["USER"] || "unknown"}`,
-									$app: "land-editor",
+									$app: "fiddee",
 									$component: "sky",
 									$tier: "sky",
 									$build_mode:

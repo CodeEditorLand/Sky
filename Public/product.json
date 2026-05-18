@@ -2,8 +2,8 @@
 	"date": "2026-04-22T13:36:16.219Z",
 	"licenseName": "MIT",
 	"licenseUrl": "https://github.com/codeeditorland/land/blob/main/LICENSE",
-	"serverDataFolderName": ".land-server",
-	"darwinBundleIdentifier": "land.editor",
+	"serverDataFolderName": ".fiddee-server",
+	"darwinBundleIdentifier": "fiddee.editor",
 	"reportIssueUrl": "https://github.com/codeeditorland/land/issues/new",
 	"webEndpointUrlTemplate": "",
 	"extensionAllowedProposedApi": [],
@@ -27,14 +27,14 @@
 	"aiConfig": {
 		"ariaKey": ""
 	},
-	"nameShort": "Land",
-	"nameLong": "Land Editor",
-	"applicationName": "land",
-	"dataFolderName": ".land",
+	"nameShort": "FIDDEE",
+	"nameLong": "FIDDEE",
+	"applicationName": "fiddee",
+	"dataFolderName": ".fiddee",
 	"version": "1.118.0",
 	"commit": "dev",
 	"quality": "development",
-	"urlProtocol": "land",
-	"embedderIdentifier": "land-desktop",
-	"serverApplicationName": "land-server"
+	"urlProtocol": "fiddee",
+	"embedderIdentifier": "fiddee-desktop",
+	"serverApplicationName": "fiddee-server"
 }

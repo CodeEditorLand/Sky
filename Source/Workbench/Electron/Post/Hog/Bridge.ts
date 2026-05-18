@@ -136,7 +136,7 @@ const LoadPostHog = async (): Promise<any> => {
 						},
 						loaded: (Instance: any) => {
 							Instance.register({
-								$app: "land-editor",
+								$app: "fiddee",
 								$app_version: "0.0.1",
 								$build_mode: "debug",
 								$platform: navigator.platform,

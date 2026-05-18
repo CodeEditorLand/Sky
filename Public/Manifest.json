@@ -2,9 +2,9 @@
 	"background_color": "#ffffff",
 	"categories": [],
 	"display": "minimal-ui",
-	"name": "Land",
+	"name": "FIDDEE",
 	"orientation": "landscape",
-	"short_name": "land",
+	"short_name": "FIDDEE",
 	"start_url": "/",
 	"theme_color": "#ffffff"
 }

@@ -17,7 +17,7 @@
  *     -p 4318:4318 -p 16686:16686 jaegertracing/jaeger:2
  */
 
-const ServiceName = "land-editor";
+const ServiceName = "fiddee";
 
 const ServiceVersion = "0.0.1";
 

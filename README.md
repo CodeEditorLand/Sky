@@ -393,7 +393,7 @@ for a history of changes specific to **Sky**&#x2001;🌌.
 
 ---
 
-## Funding \& Acknowledgements&#x2001;🙏🏻
+## Funding & Acknowledgements&#x2001;🙏🏻
 
 **Sky** is a core element of the **Land**&#x2001;🏞️ ecosystem.&#x2001;🌌 project
 is funded through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund

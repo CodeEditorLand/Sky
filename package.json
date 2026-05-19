@@ -55,7 +55,7 @@
 	},
 	"devDependencies": {
 		"@astrojs/compiler-rs": "0.2.0",
-		"@astrojs/ts-plugin": "1.10.8",
+		"@astrojs/ts-plugin": "1.10.9",
 		"ulid": "3.0.2"
 	},
 	"publishConfig": {

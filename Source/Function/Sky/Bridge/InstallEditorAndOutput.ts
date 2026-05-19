@@ -1,6 +1,6 @@
 /**
  * Editor + Output bridge: routes the close-window, file-open, save-all,
- * applyEdit, showTextDocument, applyEdits channels into workbench
+ * applyEdit, showTextDocument, applyEdits, and diff channels into workbench
  * commands; routes the output channel-lifecycle channels into the
  * local OutputChannels map.
  *
@@ -13,6 +13,13 @@
  * `applyEdit` and `showTextDocument` are round-trip request channels
  * (`{ RequestIdentifier, Payload }`); we MUST call `ResolveUiRequest`
  * on completion or the extension's awaited promise hangs for 300s.
+ *
+ * `sky://editor/diff` is the round-trip channel for `vscode.diff` /
+ * `$scm:openDiff`. The vscode.git extension calls it when the user
+ * clicks a staged or unstaged file in the SCM sidebar; Mountain
+ * serialises the positional args `[leftUri, rightUri, title?, options?]`
+ * and forwards them here. We dispatch `vscode.diff` into the workbench
+ * and resolve the round-trip so the extension's awaited promise settles.
  */
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 
@@ -170,6 +177,67 @@ export default async (Dependencies: {
 			}
 		} catch (Error) {
 			console.warn("[SkyBridge] showTextDocument failed", Error);
+			if (RequestIdentifier) {
+				void ResolveUiRequest(RequestIdentifier, null);
+			}
+		}
+	});
+
+	// `sky://editor/diff` — opened by the vscode.diff / $scm:openDiff
+	// Mountain effect arm when the user clicks a staged or unstaged file
+	// in the SCM sidebar. The vscode.git extension calls:
+	//   commands.executeCommand("vscode.diff", leftUri, rightUri, title, opts?)
+	// Mountain serialises all four positional args as a JSON array and
+	// sends them here as a round-trip request (RequestIdentifier +
+	// Payload). We must call ResolveUiRequest on completion so the
+	// extension's awaited promise resolves.
+	//
+	// Payload shape (array): [leftUri, rightUri, title?, options?]
+	//   leftUri  – the "before" side (e.g. git:// scheme, HEAD content)
+	//   rightUri – the "after"  side (working-tree or index file URI)
+	//   title    – optional string label for the editor tab
+	//   options  – optional { preview, viewColumn, ... }
+	await Register("sky://editor/diff", async (RawPayload: any) => {
+		const RequestIdentifier = RawPayload?.RequestIdentifier;
+		const Payload = RawPayload?.Payload ?? RawPayload;
+
+		// Payload is the raw positional-args array from the extension call.
+		// Mountain wraps it: { RequestIdentifier, Payload: [left, right, title?, opts?] }
+		// but may also arrive unwrapped as a bare array for fire-and-forget paths.
+		const Args: unknown[] = Array.isArray(Payload)
+			? Payload
+			: Array.isArray(Payload?.args)
+				? Payload.args
+				: [];
+
+		const LeftUri = Args[0] ?? null;
+		const RightUri = Args[1] ?? null;
+		const Title = typeof Args[2] === "string" ? Args[2] : undefined;
+		const Options =
+			Args[3] != null && typeof Args[3] === "object"
+				? (Args[3] as Record<string, unknown>)
+				: {};
+
+		const ViewColumn = (Options as any)?.viewColumn ?? null;
+
+		try {
+			const Wb = GetWorkbench();
+			if (Wb && LeftUri != null && RightUri != null) {
+				await Wb.commands.executeCommand(
+					"vscode.diff",
+					BuildOpenArg(LeftUri),
+					BuildOpenArg(RightUri),
+					Title,
+					{ viewColumn: ViewColumn, preview: true, ...Options },
+				);
+			}
+			if (RequestIdentifier) {
+				void ResolveUiRequest(RequestIdentifier, {
+					viewColumn: ViewColumn,
+				});
+			}
+		} catch (Error) {
+			console.warn("[SkyBridge] vscode.diff failed", Error);
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, null);
 			}

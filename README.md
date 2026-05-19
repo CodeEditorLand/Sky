@@ -193,42 +193,57 @@ graph LR
     classDef tauri    fill:#fde,stroke:#c0392b,stroke-width:2px,color:#4a0010;
     classDef mountain fill:#f0d0ff,stroke:#9b59b6,stroke-width:2px,color:#2c0050;
     classDef external fill:#ebebeb,stroke:#888,stroke-dasharray:5 5,color:#333;
+    classDef bridge   fill:#e8ffe8,stroke:#27ae60,stroke-width:1px,color:#0a3a0a;
 
-    subgraph "Sky - UI Component Layer (Tauri Webview)&#x2001;🌌"
-        Pages["Pages - index, Browser, Electron, Mountain, Isolation"]:::sky
-        Workbenches["Workbench Components - Browser, Mountain, Default, NLS"]:::sky
-        WorkbenchImpl["Workbench Implementations - BrowserProxy/, Electron/"]:::sky
+    subgraph SKY["Sky 🌌 - Astro UI Layer (Tauri WebView)"]
+        direction TB
+        subgraph PAGES["pages/ - Route Entry Points"]
+            IndexPage["index.astro - env-driven variant selector"]:::sky
+            MountainPage["Mountain.astro - A2 recommended 🏔️"]:::sky
+            ElectronPage["Electron.astro - A3 + WKWebView polyfills"]:::sky
+            BrowserPage["BrowserProxy.astro - A1"]:::sky
+            BundledPages["Bundled/ - pre-compiled variants"]:::sky
+        end
+        subgraph WORKBENCH["Workbench/ - Component Implementations"]
+            ElectronWB["Electron/ - Layout · Bootstrap · Polyfills · SkyBridge"]:::sky
+            BrowserProxyWB["BrowserProxy/ - Layout · Bootstrap · Services/Proxy"]:::sky
+            BundledWB["Bundled/ - Browser · Electron · Sessions · Workbench"]:::sky
+        end
+        SkyBridge["Function/Sky/Bridge.ts - ~100 sky:// event channels 🌉"]:::bridge
     end
 
-    subgraph "Wind - Service Layer (Tauri Webview)&#x2001;🍃"
-        PreloadJS["Preload.js - Environment Shim"]:::wind
-        WindServices["Wind Effect-TS Services"]:::wind
-        TauriIntegrations["Wind/Tauri Integrations"]:::wind
+    subgraph WIND["Wind 🍃 - Service Layer (same WebView)"]
+        WindPreload["Preload.ts - ipcRenderer shim + window.vscode"]:::wind
+        WindServices["Effect/Layers/TauriLiveLayer - 40+ services ⚡"]:::wind
     end
 
-    subgraph "Tauri Shell & Mountain - Rust Backend&#x2001;📱"
-        TauriWindow["Tauri Window API"]:::tauri
-        TauriEvents["Tauri Event System"]:::tauri
-        MountainCore["Mountain - Rust Core&#x2001;⛰️"]:::mountain
+    subgraph BACKEND["Tauri Shell + Mountain ⛰️"]
+        TauriAPI["Tauri Window API + Events"]:::tauri
+        MountainCore["Mountain - Rust Core"]:::mountain
     end
 
-    subgraph "External&#x2001;📦"
-        VSCodeComponents["VS Code Core UI - @codeeditorland/output"]:::external
+    subgraph OUTPUT["@codeeditorland/output 📦"]
+        VSCodeUI["VS Code workbench.js + web.main.js"]:::external
     end
 
-    Pages --> Workbenches
-    Pages --> WorkbenchImpl
-    Workbenches --> PreloadJS
-    WorkbenchImpl --> PreloadJS
-    Workbenches -- consumes services --> WindServices
-    WorkbenchImpl -- consumes services --> WindServices
-    WindServices --> TauriIntegrations
-    TauriIntegrations --> TauriWindow
-    TauriIntegrations -- listens --> TauriEvents
-    TauriWindow -- IPC --> MountainCore
-    TauriEvents -- emits from --> MountainCore
-    Workbenches -- loads --> VSCodeComponents
-    WorkbenchImpl -- loads --> VSCodeComponents
+    IndexPage --> MountainPage
+    IndexPage --> ElectronPage
+    IndexPage --> BrowserPage
+    MountainPage --> ElectronWB
+    ElectronPage --> ElectronWB
+    BrowserPage --> BrowserProxyWB
+    IndexPage --> BundledPages
+    BundledPages --> BundledWB
+    ElectronWB --> WindPreload
+    BrowserProxyWB --> WindPreload
+    WindPreload --> WindServices
+    ElectronWB -- loads --> VSCodeUI
+    BrowserProxyWB -- loads --> VSCodeUI
+    ElectronWB --> SkyBridge
+    SkyBridge -- tauri listen sky:// --> TauriAPI
+    WindServices -- tauri::invoke --> TauriAPI
+    TauriAPI -- commands + events --> MountainCore
+    MountainCore -- sky:// emit --> TauriAPI
 ```
 
 ---

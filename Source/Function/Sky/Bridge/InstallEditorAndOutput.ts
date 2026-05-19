@@ -183,7 +183,7 @@ export default async (Dependencies: {
 		}
 	});
 
-	// `sky://editor/diff` — opened by the vscode.diff / $scm:openDiff
+	// `sky://editor/diff` - opened by the vscode.diff / $scm:openDiff
 	// Mountain effect arm when the user clicks a staged or unstaged file
 	// in the SCM sidebar. The vscode.git extension calls:
 	//   commands.executeCommand("vscode.diff", leftUri, rightUri, title, opts?)
@@ -193,10 +193,10 @@ export default async (Dependencies: {
 	// extension's awaited promise resolves.
 	//
 	// Payload shape (array): [leftUri, rightUri, title?, options?]
-	//   leftUri  – the "before" side (e.g. git:// scheme, HEAD content)
-	//   rightUri – the "after"  side (working-tree or index file URI)
-	//   title    – optional string label for the editor tab
-	//   options  – optional { preview, viewColumn, ... }
+	//   leftUri  - the "before" side (e.g. git:// scheme, HEAD content)
+	//   rightUri - the "after"  side (working-tree or index file URI)
+	//   title    - optional string label for the editor tab
+	//   options  - optional { preview, viewColumn, ... }
 	await Register("sky://editor/diff", async (RawPayload: any) => {
 		const RequestIdentifier = RawPayload?.RequestIdentifier;
 		const Payload = RawPayload?.Payload ?? RawPayload;

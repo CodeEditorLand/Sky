@@ -171,6 +171,11 @@ const Worker = `/Worker.js?BASE_REMOTE=${encodeURIComponent(Astro.url.origin)}`;
 					"vscode-file:",
 					"vscode-file://vscode-app",
 					"http://localhost:*",
+					// Loopback IPv4 + IPv6 - covers the OTLP collector
+					// (127.0.0.1:4318) when `Inspect=1` /
+					// `OTLPEnabled=true` fires the exporter.
+					"http://127.0.0.1:*",
+					"http://[::1]:*",
 					"https://tauri.localhost",
 					"wss://tauri.localhost",
 					"https:",

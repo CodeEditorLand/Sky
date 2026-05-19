@@ -62,17 +62,65 @@ const Disable =
 	     is Land lifecycle bookkeeping, not a workbench feature. Mountain
 	     uses it to flip the window from `visible(false)` to visible. -->
 	<script type="module">
-		const PhaseInvoke =
-			globalThis.__TAURI_INTERNALS__?.invoke ??
-			globalThis.__TAURI__?.invoke ??
-			globalThis.__TAURI__?.core?.invoke ??
-			null;
-		if (PhaseInvoke) {
+		// Resolve the Tauri invoke handle. Two race conditions are at play:
+		//   1. ES-module script tags can execute BEFORE the Tauri runtime
+		//      has finished injecting `window.__TAURI_INTERNALS__` into the
+		//      page (Wry's bridge is a content-script that fires during
+		//      document_start, but module evaluation can race ahead under
+		//      certain webview / page-load orderings).
+		//   2. With patched / forked Tauri builds, the injection may land
+		//      on `window.__TAURI__.core.invoke` rather than the
+		//      `__TAURI_INTERNALS__` global.
+		//
+		// Earlier versions of this script gave up immediately when neither
+		// was defined - that silenced `lifecycle:advancePhase(3)` and let
+		// Mountain's 8s / 23s fallback take over (visible in the log as
+		// "Sky did not advance to Restored within 8s"). All editor
+		// actions that route through the same `Tauri.invoke` channel
+		// (Open Folder, terminal commands, native dialogs) also fail the
+		// first time. Retry instead until either the global appears or
+		// the 5s budget is exhausted, then log the verdict.
+		function ResolveInvoke() {
+			return (
+				globalThis.__TAURI_INTERNALS__?.invoke ??
+				globalThis.__TAURI__?.core?.invoke ??
+				globalThis.__TAURI__?.invoke ??
+				null
+			);
+		}
+
+		async function WaitForInvoke(MaxMs = 5000, IntervalMs = 25) {
+			const StartedAt = performance.now();
+			let Found = ResolveInvoke();
+			while (!Found && performance.now() - StartedAt < MaxMs) {
+				await new Promise((Resolve) => setTimeout(Resolve, IntervalMs));
+				Found = ResolveInvoke();
+			}
+			return Found;
+		}
+
+		(async () => {
+			const PhaseInvoke = await WaitForInvoke();
+			if (!PhaseInvoke) {
+				// eslint-disable-next-line no-console
+				console.error(
+					"[Bundled/Electron/Layout] Tauri IPC bridge never appeared on window.__TAURI_INTERNALS__ / __TAURI__.{core,}.invoke - every Mountain action (Open Folder, terminal, dialogs, lifecycle) will fail. Mountain's 8s phase fallback will paint the workbench but actions will be no-ops. Likely cause: tauri-runtime-wry / tauri-plugin-localhost mismatch with the loaded URL scheme.",
+				);
+				performance.mark("land:bundled:electron:tauri-missing");
+				return;
+			}
+			performance.mark("land:bundled:electron:tauri-resolved");
 			const Advance = (PhaseNumber) =>
 				PhaseInvoke("MountainIPCInvoke", {
 					method: "lifecycle:advancePhase",
 					params: [PhaseNumber],
-				}).catch(() => {});
+				}).catch((Error) => {
+					// eslint-disable-next-line no-console
+					console.warn(
+						`[Bundled/Electron/Layout] advancePhase(${PhaseNumber}) failed:`,
+						Error,
+					);
+				});
 			// Phase 3 = Restored: workbench DOM is attached, first
 			// paint imminent. Mountain rejects same-/backwards-phase
 			// advances, so racing the workbench import is safe.
@@ -80,7 +128,7 @@ const Disable =
 			// Phase 4 = Eventually: long-tail background work can
 			// start. Delayed so 3 → 4 stays monotonic.
 			setTimeout(() => Advance(4), 1500);
-		}
+		})();
 	</script>
 
 	{

@@ -1038,26 +1038,73 @@ export default defineConfig({
 				output: {
 					// Preserve dynamic URL imports in VSCode worker files
 					hoistTransitiveImports: false,
-					// No `manualChunks` for the bundled tree. The workbench
-					// loader (`workbench.js`) dynamically imports
-					// `workbench.desktop.main.js` via a literal-string
-					// `await import(...)` (rewritten there by Output's
-					// `RewriteWorkbenchBaseURL` transform). Rollup
-					// auto-splits at that boundary, putting workbench.js's
-					// small sync graph in one chunk and desktop.main.js +
-					// its 1500-module transitive graph in another. The
-					// split is REQUIRED for correct initialisation order:
-					// workbench.js's `load()` function must set up
-					// `_VSCODE_FILE_ROOT`, NLS, and the resolved
-					// configuration BEFORE desktop.main.js's contribs
-					// evaluate (which `isElectron`-check at module-init
-					// time and otherwise mode-detect as "web", skipping
-					// the Electron-side service registrations and breaking
-					// the FS provider chain).
+
+					// S1 - non-bundled code-split.
 					//
-					// Forcing all VS Code into one chunk via manualChunks
-					// would defeat the auto-split and re-introduce the
-					// initialisation-order bug.
+					// For the non-bundled profile (debug-electron etc.) `vs/**`
+					// is entirely external, so the chunk Vite emits for Sky's
+					// own module graph can be enormous (Effect-TS runtime, Wind
+					// service layer, SkyBridge, telemetry all concatenated into
+					// one `partsSplash.*.js`). `manualChunks` breaks it into
+					// smaller pieces the browser preloader can fetch in parallel
+					// and V8 can parse on separate threads:
+					//
+					//   effect-rt      - Effect-TS runtime (~800 KB)
+					//   wind-effect-gen - Wind's codegen Effect layer (large,
+					//                    stable - cache-friendly)
+					//   sky-telemetry  - PostHog + OTLP bridge (never on the
+					//                    synchronous paint path)
+					//   sky-debug      - SmokeTest / diagnostic harness
+					//
+					// The bundled tree MUST NOT have manualChunks: the bundled
+					// workbench.js loader's auto-split boundary (workbench.js →
+					// workbench.desktop.main.js) is REQUIRED for correct
+					// initialisation order. Any forced merge would re-introduce
+					// the "isElectron mode-detection at module-init" bug that
+					// breaks the FS provider chain.
+					...(!BundledActive
+						? {
+								manualChunks: (id: string) => {
+									const N = id.replace(/\\/g, "/");
+
+									// Effect-TS runtime (heavy, rarely changes)
+									if (
+										N.includes("/node_modules/effect/") ||
+										N.includes("/node_modules/@effect/")
+									) {
+										return "effect-rt";
+									}
+
+									// Wind's codegen Effect layer (large, stable)
+									if (
+										N.includes("/Wind/") &&
+										N.includes("/Effect/Generated/")
+									) {
+										return "wind-effect-gen";
+									}
+
+									// PostHog + OTLP telemetry (never on critical path)
+									if (
+										N.includes("posthog") ||
+										N.includes("PostHog") ||
+										N.includes("/Telemetry/") ||
+										N.includes("OTLPBridge") ||
+										N.includes("PostHogBridge")
+									) {
+										return "sky-telemetry";
+									}
+
+									// Smoke-test / debug harness (debug builds only)
+									if (
+										N.includes("/SmokeTest/") ||
+										N.includes("/Function/Debug")
+									) {
+										return "sky-debug";
+									}
+								},
+							}
+						: {}),
+
 					// Route bundled entries to `${BundledOutputDir}/<Variant>/
 					// workbench-[hash].js`; everything else keeps the existing
 					// `app.js` / `[name]-[hash].js` shape.

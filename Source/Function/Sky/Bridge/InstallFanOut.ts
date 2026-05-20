@@ -36,10 +36,10 @@ export default async (Dependencies: {
 				);
 			} catch (DispatchError) {
 				try {
-					console.warn(
-						`[SkyBridge] FanOut dispatch failed for ${Channel}:`,
-						DispatchError,
-					);
+					invoke("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: ["sky-bridge", "[SkyBridge] FanOut dispatch failed for ${Channel}:"],
+					}).catch(() => {});
 				} catch {
 					/* swallow - console may be replaced */
 				}

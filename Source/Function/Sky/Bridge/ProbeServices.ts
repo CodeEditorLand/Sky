@@ -77,7 +77,7 @@ export default (GetServices: () => Record<string, unknown> | null): void => {
 
 		if (!S) {
 			try {
-				console.warn("[Sky:CEL] __CEL_SERVICES__ missing on probe");
+				invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[Sky:CEL] __CEL_SERVICES__ missing on probe"] }).catch(() => {});
 			} catch {
 				/* swallow */
 			}
@@ -92,7 +92,7 @@ export default (GetServices: () => Record<string, unknown> | null): void => {
 		).join(" ");
 
 		try {
-			console.log(`[Sky:CEL] services-ready ${Shape}`);
+			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", `[Sky:CEL] services-ready ${Shape}`] }).catch(() => {});
 		} catch {
 			/* swallow */
 		}

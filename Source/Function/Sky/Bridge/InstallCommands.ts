@@ -67,7 +67,7 @@ export default async (Dependencies: {
 				void ResolveUiRequest(RequestIdentifier, Result ?? null);
 			}
 		} catch (Error) {
-			console.warn("[SkyBridge] command execute failed", Id, Error);
+			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] command execute failed", Id, Error] }).catch(() => {});
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, null);
 			}
@@ -100,7 +100,7 @@ export default async (Dependencies: {
 
 			RegisteredCommands.set(Id, Disposable);
 		} catch (Error) {
-			console.warn("[SkyBridge] command register failed", Id, Error);
+			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] command register failed", Id, Error] }).catch(() => {});
 		}
 	};
 

@@ -374,9 +374,11 @@ const ResolveLandDisabled = (): boolean => {
 export async function InstallSkyBridge(): Promise<void> {
 	if (ResolveLandDisabled()) {
 		try {
-			console.info(
-				"[SkyBridge] Disable=true: Land bridges SKIPPED (no sky://* listeners registered, no command/scm/webview handlers wired)",
-			);
+			if (typeof process !== "undefined" && process.stdout) {
+				process.stdout.write(
+					"[SkyBridge] Disable=true: Land bridges SKIPPED (no sky://* listeners registered, no command/scm/webview handlers wired)\n",
+				);
+			}
 		} catch {
 			/* no-op */
 		}
@@ -438,14 +440,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			try {
 				Handler(Payload);
 			} catch (HandlerError) {
-				try {
-					console.warn(
-						`[SkyBridge] handler for ${Channel} threw:`,
-						HandlerError,
-					);
-				} catch {
-					/* console may be replaced */
-				}
+				invoke("MountainIPCInvoke", {
+					method: "diagnostic:log",
+					params: [
+						"sky-bridge",
+						`handler for ${Channel} threw: ${HandlerError instanceof Error ? HandlerError.message : String(HandlerError)}`,
+					],
+				}).catch(() => {});
 			}
 		};
 		try {
@@ -458,14 +459,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			// down mid-install (e.g. window closing during boot). Log
 			// and continue - the rest of the bridge install must
 			// still complete so other channels work.
-			try {
-				console.warn(
-					`[SkyBridge] failed to register listener for ${Channel}:`,
-					RegisterError,
-				);
-			} catch {
-				/* console may be replaced */
-			}
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					`failed to register listener for ${Channel}: ${RegisterError instanceof Error ? RegisterError.message : String(RegisterError)}`,
+				],
+			}).catch(() => {});
 		}
 	};
 
@@ -484,11 +484,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			RequestID: RequestIdentifier,
 			Result,
 		}).catch((Error) => {
-			console.warn(
-				"[SkyBridge] ResolveUIRequest failed",
-				RequestIdentifier,
-				Error,
-			);
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					`ResolveUIRequest failed reqId=${RequestIdentifier} err=${Error instanceof globalThis.Error ? Error.message : String(Error)}`,
+				],
+			}).catch(() => {});
 		});
 
 	// Editor + Output bridges - implementation in
@@ -787,11 +789,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 								OnProgress?.(Match);
 								OnProgressCalled++;
 							} catch (ProgressErr) {
-								console.warn(
-									"[SkyBridge] OnProgress threw on file",
-									(Hit as any)?.resource,
-									ProgressErr,
-								);
+								invoke("MountainIPCInvoke", {
+									method: "diagnostic:log",
+									params: [
+										"sky-bridge",
+										`OnProgress threw on file ${(Hit as any)?.resource}: ${ProgressErr instanceof Error ? ProgressErr.message : String(ProgressErr)}`,
+									],
+								}).catch(() => {});
 							}
 						}
 						Results.push(Match);
@@ -802,7 +806,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 						limitHit: Results.length >= MaxResults,
 					};
 				} catch (Error) {
-					console.warn("[SkyBridge] textSearch failed", Error);
+					invoke("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: [
+							"sky-bridge",
+							`textSearch failed: ${Error instanceof globalThis.Error ? Error.message : String(Error)}`,
+						],
+					}).catch(() => {});
 					return { results: [], messages: [], limitHit: false };
 				}
 			},
@@ -844,7 +854,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 						limitHit: Results.length >= MaxResults,
 					};
 				} catch (Error) {
-					console.warn("[SkyBridge] fileSearch failed", Error);
+					invoke("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: [
+							"sky-bridge",
+							`fileSearch failed: ${Error instanceof globalThis.Error ? Error.message : String(Error)}`,
+						],
+					}).catch(() => {});
 					return { results: [], messages: [], limitHit: false };
 				}
 			},
@@ -2416,14 +2432,13 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				}),
 			);
 		} catch (DispatchError) {
-			try {
-				console.warn(
-					`[SkyBridge] webview/registerView CustomEvent dispatch failed for ${ViewId}:`,
-					DispatchError,
-				);
-			} catch {
-				/* console may be replaced */
-			}
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					`webview/registerView CustomEvent dispatch failed for ${ViewId}: ${DispatchError instanceof Error ? DispatchError.message : String(DispatchError)}`,
+				],
+			}).catch(() => {});
 		}
 		// Failure-only trace - the original log fired on every
 		// webview-register event, saturating the IPC channel during
@@ -2999,7 +3014,12 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 	(window as any).__CEL_SKY_BRIDGE_CLEANUP__ = () =>
 		Cleanups.forEach((F) => F());
 
-	console.log("[SkyBridge] All sky:// event channels registered");
+	// Always surface via stdout so Mountain captures it under [Cocoon stdout].
+	if (typeof process !== "undefined" && process.stdout) {
+		process.stdout.write(
+			"[SkyBridge] All sky:// event channels registered\n",
+		);
+	}
 	// Replay drain - implementation in `Bridge/ReplayEvents.ts`.
 	await (await import("./Bridge/ReplayEvents.js")).default(invoke);
 }

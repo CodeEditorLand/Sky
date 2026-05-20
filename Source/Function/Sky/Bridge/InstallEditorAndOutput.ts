@@ -142,7 +142,7 @@ export default async (Dependencies: {
 				}
 				void ResolveUiRequest(RequestIdentifier, true);
 			} catch (Error) {
-				console.warn("[SkyBridge] applyEdit failed", Error);
+				invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] applyEdit failed", Error] }).catch(() => {});
 				void ResolveUiRequest(RequestIdentifier, false);
 			}
 		},
@@ -176,7 +176,7 @@ export default async (Dependencies: {
 				});
 			}
 		} catch (Error) {
-			console.warn("[SkyBridge] showTextDocument failed", Error);
+			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] showTextDocument failed", Error] }).catch(() => {});
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, null);
 			}
@@ -237,7 +237,7 @@ export default async (Dependencies: {
 				});
 			}
 		} catch (Error) {
-			console.warn("[SkyBridge] vscode.diff failed", Error);
+			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] vscode.diff failed", Error] }).catch(() => {});
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, null);
 			}

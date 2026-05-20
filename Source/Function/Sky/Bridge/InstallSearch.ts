@@ -51,22 +51,14 @@ interface CelSearchService {
 }
 
 export default async (Dependencies: {
-	Register: (
-		Channel: string,
-		Handler: (Payload: any) => void,
-	) => Promise<void>;
 	GetServices: () => {
 		Search?: CelSearchService;
 		URI?: CelUriCtor;
 		[key: string]: unknown;
 	} | null;
-	Invoke: (
-		cmd: string,
-		args?: Record<string, unknown>,
-	) => Promise<unknown>;
+	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { GetServices, Invoke } = Dependencies;
-	void Dependencies.Register; // Register not used directly here; kept for API symmetry
 
 	// Extract the single-folder root URI from a query - Mountain's
 	// search handlers take the active workspace folder, not a set.
@@ -265,10 +257,8 @@ export default async (Dependencies: {
 				Query?.contentPattern?.isCaseSensitive,
 			);
 			const IsWordMatch = Boolean(Query?.contentPattern?.isWordMatch);
-			const Include =
-				Object.keys(Query?.includePattern ?? {})[0] ?? "**";
-			const Exclude =
-				Object.keys(Query?.excludePattern ?? {})[0] ?? "";
+			const Include = Object.keys(Query?.includePattern ?? {})[0] ?? "**";
+			const Exclude = Object.keys(Query?.excludePattern ?? {})[0] ?? "";
 			const MaxResults = Number(Query?.maxResults ?? 1000);
 			try {
 				const Raw = (await Invoke("MountainIPCInvoke", {

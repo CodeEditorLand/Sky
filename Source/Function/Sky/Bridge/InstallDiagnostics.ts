@@ -26,11 +26,7 @@ export default async (Dependencies: {
 	) => Promise<void>;
 	GetServices: () => {
 		Markers?: {
-			changeOne(
-				owner: string,
-				uri: unknown,
-				markers: unknown[],
-			): void;
+			changeOne(owner: string, uri: unknown, markers: unknown[]): void;
 			read(...args: unknown[]): unknown[];
 		};
 		URI?: {
@@ -42,10 +38,7 @@ export default async (Dependencies: {
 		};
 		[key: string]: unknown;
 	} | null;
-	Invoke: (
-		cmd: string,
-		args?: Record<string, unknown>,
-	) => Promise<unknown>;
+	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { Register, GetServices, Invoke } = Dependencies;
 

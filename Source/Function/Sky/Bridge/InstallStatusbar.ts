@@ -104,7 +104,15 @@ export default async (Dependencies: {
 			try {
 				Existing.update(BuildEntry(Payload));
 			} catch (Error) {
-				invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] statusbar update failed", Id, Error] }).catch(() => {});
+				invoke("MountainIPCInvoke", {
+					method: "diagnostic:log",
+					params: [
+						"sky-bridge",
+						"[SkyBridge] statusbar update failed",
+						Id,
+						Error,
+					],
+				}).catch(() => {});
 			}
 
 			return;
@@ -125,7 +133,15 @@ export default async (Dependencies: {
 
 			StatusbarAccessors.set(Id, Accessor);
 		} catch (Error) {
-			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] statusbar addEntry failed", Id, Error] }).catch(() => {});
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					"[SkyBridge] statusbar addEntry failed",
+					Id,
+					Error,
+				],
+			}).catch(() => {});
 		}
 	};
 

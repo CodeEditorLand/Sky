@@ -77,7 +77,13 @@ export default (GetServices: () => Record<string, unknown> | null): void => {
 
 		if (!S) {
 			try {
-				invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[Sky:CEL] __CEL_SERVICES__ missing on probe"] }).catch(() => {});
+				invoke("MountainIPCInvoke", {
+					method: "diagnostic:log",
+					params: [
+						"sky-bridge",
+						"[Sky:CEL] __CEL_SERVICES__ missing on probe",
+					],
+				}).catch(() => {});
 			} catch {
 				/* swallow */
 			}
@@ -92,7 +98,10 @@ export default (GetServices: () => Record<string, unknown> | null): void => {
 		).join(" ");
 
 		try {
-			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", `[Sky:CEL] services-ready ${Shape}`] }).catch(() => {});
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: ["sky-bridge", `[Sky:CEL] services-ready ${Shape}`],
+			}).catch(() => {});
 		} catch {
 			/* swallow */
 		}

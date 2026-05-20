@@ -134,7 +134,14 @@ export default async (Dependencies: {
 		try {
 			SetOrUpdateEntry(Payload);
 		} catch (Error) {
-			invoke("MountainIPCInvoke", { method: "diagnostic:log", params: ["sky-bridge", "[SkyBridge] statusbar/create failed", Error] }).catch(() => {});
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					"[SkyBridge] statusbar/create failed",
+					Error,
+				],
+			}).catch(() => {});
 		}
 		document.dispatchEvent(
 			new CustomEvent("cel:statusbar:create", { detail: Payload }),

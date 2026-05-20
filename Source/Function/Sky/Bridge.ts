@@ -1557,23 +1557,50 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				void Error;
 			}
 		}
-		// One-time success-path confirmation. Fires on the FIRST
-		// diagnostic event that actually pushed markers, then stays
-		// silent. Without this we can't distinguish "bridge runs but
-		// markers are empty / malformed" from "bridge never runs at
-		// all" - both look like a silent Problems panel. The fields
-		// included are exactly what we need to triage either failure
-		// mode (URI scheme/normalisation, marker severity validity,
-		// message length).
+		// One-time success-path confirmation. Also checks the Problems panel
+		// view filter state and clears `activeFile` if it was left on, which
+		// causes "count shows but panel empty" - the status bar reads from
+		// IMarkerService (unfiltered) while the panel reads from
+		// IMarkersView.filteredGroups which respects the activeFile toggle.
 		if (!MarkersBridgeFirstSuccessLogged && PushedTotal > 0) {
 			MarkersBridgeFirstSuccessLogged = true;
-			invoke("MountainIPCInvoke", {
-				method: "diagnostic:log",
-				params: [
-					"markers-bridge",
-					`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} firstUri=${FirstUri.slice(0, 200)} firstSeverity=${FirstSeverity ?? "?"} firstMsgLen=${FirstMessageLength}`,
-				],
-			}).catch(() => {});
+
+			// Read back from IMarkerService to confirm markers are stored.
+			const AllStored = (Markers.read as (...args: unknown[]) => unknown[])?.() ?? [];
+
+			// Check the Problems panel view filter state. `getViewWithId` returns
+			// the view regardless of whether it's currently focused; if the panel
+			// is open, the view instance exists. Clear `activeFile` if it was on
+			// so all markers are visible, not just the active file's.
+			try {
+				const ViewsSvc = (Services as any)?.Views;
+				const MarkersView = ViewsSvc?.getViewWithId?.(
+					"workbench.panel.markers.view",
+				) as any;
+				const FilterStats = MarkersView?.getFilterStats?.() as
+					| { total: number; filtered: number }
+					| undefined;
+				const ActiveFileWasOn =
+					MarkersView?.filters?.activeFile === true;
+				if (ActiveFileWasOn) {
+					MarkersView.filters.activeFile = false;
+				}
+				invoke("MountainIPCInvoke", {
+					method: "diagnostic:log",
+					params: [
+						"markers-bridge",
+						`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} stored=${AllStored.length} firstUri=${FirstUri.slice(0, 200)} firstSeverity=${FirstSeverity ?? "?"} firstMsgLen=${FirstMessageLength} filterTotal=${FilterStats?.total ?? "?"} filterFiltered=${FilterStats?.filtered ?? "?"} activeFileCleared=${ActiveFileWasOn}`,
+					],
+				}).catch(() => {});
+			} catch {
+				invoke("MountainIPCInvoke", {
+					method: "diagnostic:log",
+					params: [
+						"markers-bridge",
+						`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} stored=${AllStored.length} firstUri=${FirstUri.slice(0, 200)} firstSeverity=${FirstSeverity ?? "?"} firstMsgLen=${FirstMessageLength}`,
+					],
+				}).catch(() => {});
+			}
 		}
 	});
 

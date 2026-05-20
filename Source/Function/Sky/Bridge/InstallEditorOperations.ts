@@ -124,6 +124,20 @@ export default async (Dependencies: {
 	try {
 		const Services = GetServices();
 		const CodeEditorService = (Services as any)?.CodeEditorService;
+
+		// Resolve the view column (1-based) for the active editor group.
+		// `EditorGroups.activeGroup.index` is 0-based, so we add 1.
+		// Falls back to 1 when the service isn't yet available.
+		const GetViewColumn = (): number => {
+			try {
+				const Groups = (Services as any)?.EditorGroups;
+				const Idx = Groups?.activeGroup?.index;
+				return typeof Idx === "number" ? Idx + 1 : 1;
+			} catch {
+				return 1;
+			}
+		};
+
 		if (CodeEditorService?.onDidChangeActiveCodeEditor) {
 			CodeEditorService.onDidChangeActiveCodeEditor((Ed: any) => {
 				try {
@@ -132,7 +146,13 @@ export default async (Dependencies: {
 					const Sels = Ed?.getSelections?.() ?? [];
 					Invoke("MountainIPCInvoke", {
 						method: "sky:editor:activeChanged",
-						params: [{ uri: Uri, selections: Sels, viewColumn: 1 }],
+						params: [
+							{
+								uri: Uri,
+								selections: Sels,
+								viewColumn: GetViewColumn(),
+							},
+						],
 					}).catch(() => {});
 				} catch {}
 			});
@@ -150,7 +170,13 @@ export default async (Dependencies: {
 							: [];
 						Invoke("MountainIPCInvoke", {
 							method: "sky:editor:selectionChanged",
-							params: [{ uri: Uri, selections: Sels }],
+							params: [
+								{
+									uri: Uri,
+									selections: Sels,
+									viewColumn: GetViewColumn(),
+								},
+							],
 						}).catch(() => {});
 					} catch {}
 				});

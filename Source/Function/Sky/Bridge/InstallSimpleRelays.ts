@@ -85,7 +85,32 @@ const Relays: Array<readonly [string, Handler]> = [
 		SimpleRelay("cel:languages:setDocumentLanguage"),
 	],
 
-	["sky://language/configure", SimpleRelay("cel:language:configure")],
+	// `sky://language/configure` - Cocoon called `vscode.languages.setLanguageConfiguration`.
+	// Relay as DOM event AND directly call Monaco's API so bracket-matching,
+	// auto-indent, and comment-toggling work for the configured language.
+	[
+		"sky://language/configure",
+		(Payload: any): void => {
+			document.dispatchEvent(
+				new CustomEvent("cel:language:configure", { detail: Payload }),
+			);
+			try {
+				const MonacoGlobal =
+					(globalThis as any).monaco ?? (window as any).monaco;
+				const LanguageId: string =
+					Payload?.language ?? Payload?.languageId ?? "";
+				const Config = Payload?.configuration ?? Payload;
+				if (MonacoGlobal?.languages && LanguageId && Config) {
+					MonacoGlobal.languages.setLanguageConfiguration(
+						LanguageId,
+						Config,
+					);
+				}
+			} catch {
+				/* Monaco may not be available yet */
+			}
+		},
+	],
 ];
 
 export default async (Dependencies: {

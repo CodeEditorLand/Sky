@@ -87,28 +87,35 @@ export default async (Dependencies: {
 				)
 					continue;
 				// Convert to Monaco edit operations and apply.
-				const Ops = Edits.map((E: any) => ({
-					range: {
-						startLineNumber:
-							E.range?.startLineNumber ??
-							E.range?.start?.line + 1 ??
-							1,
-						startColumn:
-							E.range?.startColumn ??
-							E.range?.start?.character + 1 ??
-							1,
-						endLineNumber:
-							E.range?.endLineNumber ??
-							E.range?.end?.line + 1 ??
-							1,
-						endColumn:
-							E.range?.endColumn ??
-							E.range?.end?.character + 1 ??
-							1,
-					},
-					text: E.text ?? "",
-					forceMoveMarkers: true,
-				}));
+				// Handles both VS Code 0-based Range (_start._line) and
+				// already-1-based Monaco ranges (startLineNumber).
+				const ExtL = (Val: any, Fb: number): number =>
+					typeof Val?._line === "number"
+						? Val._line + 1
+						: typeof Val?.line === "number"
+							? Val.line + 1
+							: Fb;
+				const ExtC = (Val: any, Fb: number): number =>
+					typeof Val?._character === "number"
+						? Val._character + 1
+						: typeof Val?.character === "number"
+							? Val.character + 1
+							: Fb;
+				const Ops = Edits.map((E: any) => {
+					const R = E.range ?? E._range ?? {};
+					const S = R._start ?? R.start ?? {};
+					const En = R._end ?? R.end ?? {};
+					return {
+						range: {
+							startLineNumber: R.startLineNumber ?? ExtL(S, 1),
+							startColumn: R.startColumn ?? ExtC(S, 1),
+							endLineNumber: R.endLineNumber ?? ExtL(En, 1),
+							endColumn: R.endColumn ?? ExtC(En, 1),
+						},
+						text: E.text ?? E._newText ?? E.newText ?? "",
+						forceMoveMarkers: true,
+					};
+				});
 				Ed.executeEdits?.("extension-host", Ops);
 				break;
 			} catch {

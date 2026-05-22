@@ -56,6 +56,54 @@ export default async (Dependencies: {
 				void ResolveUiRequest(RawPayload.RequestIdentifier, null);
 				return;
 			}
+			// Prefer INotificationService for proper VS Code notification
+			// toasts with clickable action buttons.
+			const NotificationSvc = (globalThis as any).__CEL_SERVICES__
+				?.Notification;
+			if (
+				NotificationSvc &&
+				typeof NotificationSvc.notify === "function"
+			) {
+				try {
+					const SeverityEnum: Record<string, number> = {
+						info: 1,
+						warn: 2,
+						warning: 2,
+						error: 3,
+					};
+					const Level = SeverityEnum[Severity.toLowerCase()] ?? 1;
+					const RequestId = RawPayload.RequestIdentifier;
+					let Resolved = false;
+					const ResolveOnce = (Title: string | null) => {
+						if (Resolved) return;
+						Resolved = true;
+						void ResolveUiRequest(RequestId, Title);
+					};
+					NotificationSvc.notify({
+						severity: Level,
+						message: Message,
+						actions: {
+							primary: Actions.map((A: { title: string }) => ({
+								id: `cel-msg-action-${A.title}`,
+								label: A.title,
+								tooltip: A.title,
+								class: undefined,
+								enabled: true,
+								checked: false,
+								run: () => ResolveOnce(A.title),
+							})),
+						},
+					});
+					// Timeout fallback - if the toast is dismissed without
+					// clicking a button, resolve null after 60 s so Mountain
+					// doesn't hang.
+					window.setTimeout(() => ResolveOnce(null), 60_000);
+					return;
+				} catch {
+					// Fall through to prompt fallback
+				}
+			}
+			// Prompt fallback
 			let Picked: string | null = null;
 			if (Actions.length === 1) {
 				if (
@@ -91,10 +139,46 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 		"sky://ui/show-input-box-request",
 		({ RequestIdentifier, Payload }: any) => {
 			if (!RequestIdentifier) return;
-			// Minimal fallback - a DOM prompt is serviceable until Sky ships
-			// a native input box component. Extensions receive the literal
-			// string the user typed, or `null` when the user dismissed.
 			const Options = Payload ?? {};
+			// Prefer IQuickInputService.createInputBox() for a native VS Code
+			// input box experience. Falls back to window.prompt() when the
+			// workbench service isn't available yet.
+			const QI = (globalThis as any).__CEL_SERVICES__?.QuickInput;
+			if (QI && typeof QI.createInputBox === "function") {
+				try {
+					const IB = QI.createInputBox();
+					IB.placeholder =
+						Options?.Prompt ??
+						Options?.PlaceHolder ??
+						Options?.prompt ??
+						Options?.placeHolder ??
+						"";
+					IB.prompt =
+						Options?.Prompt ?? Options?.prompt ?? IB.placeholder;
+					IB.value = Options?.Value ?? Options?.value ?? "";
+					IB.password = !!(Options?.Password ?? Options?.password);
+					IB.title = Options?.Title ?? Options?.title ?? "";
+					IB.step = Options?.Step ?? Options?.step;
+					IB.totalSteps = Options?.TotalSteps ?? Options?.totalSteps;
+					IB.ignoreFocusOut = !!(
+						Options?.IgnoreFocusOut ?? Options?.ignoreFocusOut
+					);
+					let Resolved = false;
+					const Resolve = (Value: string | undefined) => {
+						if (Resolved) return;
+						Resolved = true;
+						IB.dispose();
+						void ResolveUiRequest(RequestIdentifier, Value);
+					};
+					IB.onDidAccept(() => Resolve(IB.value));
+					IB.onDidHide(() => Resolve(undefined));
+					IB.show();
+					return;
+				} catch {
+					// Fall through to window.prompt()
+				}
+			}
+			// DOM fallback
 			const Answer = window.prompt(
 				Options?.Prompt ??
 					Options?.PlaceHolder ??
@@ -103,7 +187,10 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 					"",
 				Options?.Value ?? Options?.value ?? "",
 			);
-			void ResolveUiRequest(RequestIdentifier, Answer);
+			void ResolveUiRequest(
+				RequestIdentifier,
+				Answer === null ? undefined : Answer,
+			);
 		},
 	);
 
@@ -113,18 +200,74 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 			if (!RequestIdentifier) return;
 			const Items = Payload?.Items ?? Payload?.items ?? [];
 			const Options = Payload?.Options ?? Payload?.options ?? {};
-			// Broadcast a DOM event so Sky components can render a real
-			// quick-pick UI. Components call `ResolveUiRequest` themselves
-			// by listening for `cel:quickpick:resolve` CustomEvents.
+			// Prefer IQuickInputService.createQuickPick() so the native VS Code
+			// quick-pick widget renders (keyboard nav, fuzzy-match, theming).
+			// Fall back to the existing CustomEvent+DOM path when unavailable.
+			const QI = (globalThis as any).__CEL_SERVICES__?.QuickInput;
+			if (QI && typeof QI.createQuickPick === "function") {
+				try {
+					const Picker = QI.createQuickPick();
+					Picker.placeholder =
+						Options?.PlaceHolder ??
+						Options?.placeHolder ??
+						Options?.Placeholder ??
+						"";
+					Picker.title = Options?.Title ?? Options?.title ?? "";
+					Picker.step = Options?.Step ?? Options?.step;
+					Picker.totalSteps =
+						Options?.TotalSteps ?? Options?.totalSteps;
+					Picker.matchOnDescription = !!(
+						Options?.MatchOnDescription ??
+						Options?.matchOnDescription
+					);
+					Picker.matchOnDetail = !!(
+						Options?.MatchOnDetail ?? Options?.matchOnDetail
+					);
+					Picker.canSelectMany = !!(
+						Options?.CanPickMany ?? Options?.canPickMany
+					);
+					Picker.ignoreFocusOut = !!(
+						Options?.IgnoreFocusOut ?? Options?.ignoreFocusOut
+					);
+					// Normalise items to the shape IQuickInputService expects.
+					Picker.items = (Array.isArray(Items) ? Items : []).map(
+						(Item: any) => ({
+							label:
+								typeof Item === "string"
+									? Item
+									: (Item?.label ?? ""),
+							description: Item?.description,
+							detail: Item?.detail,
+							picked: !!Item?.picked,
+							alwaysShow: !!Item?.alwaysShow,
+						}),
+					);
+					let Resolved = false;
+					const Resolve = (Value: unknown) => {
+						if (Resolved) return;
+						Resolved = true;
+						Picker.dispose();
+						void ResolveUiRequest(RequestIdentifier, Value);
+					};
+					Picker.onDidAccept(() => {
+						const Sel = Picker.canSelectMany
+							? Picker.selectedItems
+							: (Picker.selectedItems[0] ?? null);
+						Resolve(Sel);
+					});
+					Picker.onDidHide(() => Resolve(null));
+					Picker.show();
+					return;
+				} catch {
+					// Fall through to CustomEvent path
+				}
+			}
+			// CustomEvent path - existing behaviour
 			document.dispatchEvent(
 				new CustomEvent("cel:quickpick:show", {
 					detail: { RequestIdentifier, Items, Options },
 				}),
 			);
-			// Safety-net fallback: if no component consumes the event
-			// within 30 s, resolve with the first picked label (or null
-			// when no item is pre-selected). Prevents Mountain from
-			// timing out on a missing UI.
 			const FallbackTimer = window.setTimeout(() => {
 				const PickedLabels = Array.isArray(Items)
 					? Items.filter((Item: any) => Item?.picked).map(
@@ -152,42 +295,75 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 		},
 	);
 
-	// Atom Q1: message box with actions. Mountain already uses this shape
-	// (see `sky://ui/show-message-request` above for the notification fn);
-	// when extensions pass `actions`, we must return the picked index.
+	// Message box with explicit actions. Prefer INotificationService so
+	// workbench-rendered toasts with clickable buttons resolve the round-trip.
+	// Falls back to ShowNotification (DOM toast) which now accepts an
+	// OnAction callback, then ultimately to window.confirm/prompt.
 	await Register(
 		"sky://ui/show-message-with-actions-request",
 		({ RequestIdentifier, Payload }: any) => {
 			if (!RequestIdentifier) return;
 			const Message = Payload?.Message ?? Payload?.message ?? "";
+			const Severity = Payload?.Severity ?? Payload?.severity ?? "info";
 			const Actions: Array<{ title: string }> =
 				Payload?.Actions ?? Payload?.actions ?? [];
-			// No native chooser yet - use confirm() for a single action, or
-			// prompt() with the action titles for multiple. Real UI work
-			// happens downstream when Sky ships a message-box component.
-			let Picked: string | null = null;
+			const RequestId = RequestIdentifier;
+			let Resolved = false;
+			const ResolveOnce = (Picked: string | null) => {
+				if (Resolved) return;
+				Resolved = true;
+				void ResolveUiRequest(RequestId, Picked);
+			};
 			if (Actions.length === 0) {
-				window.alert(Message);
-			} else if (Actions.length === 1) {
-				if (
-					window.confirm(`${Message}
-
-(${Actions[0].title})`)
-				) {
-					Picked = Actions[0].title;
-				}
-			} else {
-				const Choice = window.prompt(
-					`${Message}
-
-Choose: ${Actions.map((A) => A.title).join(" / ")}`,
-					Actions[0].title,
-				);
-				if (Choice && Actions.some((A) => A.title === Choice)) {
-					Picked = Choice;
+				// No buttons - just show and resolve null immediately.
+				ShowNotification(Severity, Message, []);
+				ResolveOnce(null);
+				return;
+			}
+			// Tier 1: INotificationService.notify() with action callbacks.
+			const NotificationSvc = (globalThis as any).__CEL_SERVICES__
+				?.Notification;
+			if (
+				NotificationSvc &&
+				typeof NotificationSvc.notify === "function"
+			) {
+				try {
+					const SeverityEnum: Record<string, number> = {
+						info: 1,
+						warn: 2,
+						warning: 2,
+						error: 3,
+					};
+					const Level = SeverityEnum[Severity.toLowerCase()] ?? 1;
+					NotificationSvc.notify({
+						severity: Level,
+						message: Message,
+						actions: {
+							primary: Actions.map((A: { title: string }) => ({
+								id: `cel-mwa-action-${A.title}`,
+								label: A.title,
+								tooltip: A.title,
+								class: undefined,
+								enabled: true,
+								checked: false,
+								run: () => ResolveOnce(A.title),
+							})),
+						},
+					});
+					window.setTimeout(() => ResolveOnce(null), 60_000);
+					return;
+				} catch {
+					// Fall through to DOM toast
 				}
 			}
-			void ResolveUiRequest(RequestIdentifier, Picked);
+			// Tier 2: DOM toast with OnAction callback so button clicks
+			// still resolve the Mountain oneshot.
+			ShowNotification(
+				Severity,
+				Message,
+				Actions.map((A) => A.title),
+				(Label) => ResolveOnce(Label),
+			);
 		},
 	);
 };

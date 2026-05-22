@@ -9,16 +9,26 @@
  * visible output.
  *
  * Auto-dismisses after 6 seconds. Action buttons (when supplied)
- * dismiss on click without firing back to the extension - the
- * action-result round-trip would require a request/response IPC pair
- * we haven't yet wired through Sky for the DOM-fallback path.
+ * call the optional `OnAction` callback so the Mountain request
+ * round-trip can be resolved when `ShowNotification` is used as a
+ * fallback for requests that need an action result.
  */
 export default (
 	GetWorkbench: () => {
 		commands: { executeCommand: (id: string) => unknown };
 	} | null,
-): ((Severity: string, Message: string, Actions?: string[]) => void) => {
-	return (Severity: string, Message: string, Actions?: string[]): void => {
+): ((
+	Severity: string,
+	Message: string,
+	Actions?: string[],
+	OnAction?: (Label: string | null) => void,
+) => void) => {
+	return (
+		Severity: string,
+		Message: string,
+		Actions?: string[],
+		OnAction?: (Label: string | null) => void,
+	): void => {
 		const Wb = GetWorkbench();
 
 		if (Wb) {
@@ -46,6 +56,10 @@ export default (
 
 		Toast.textContent = Message;
 
+		// Track whether any action was taken so the auto-dismiss timeout
+		// can resolve the round-trip with null if the toast times out.
+		let ActionTaken = false;
+
 		if (Actions?.length) {
 			const ActionBar = document.createElement("div");
 
@@ -56,7 +70,16 @@ export default (
 				Btn.textContent = Label;
 				Btn.style.cssText =
 					"background:#007acc;color:#fff;border:none;border-radius:2px;padding:2px 8px;font-size:11px;cursor:pointer;";
-				Btn.onclick = () => Toast.remove();
+				Btn.onclick = () => {
+					ActionTaken = true;
+					Toast.remove();
+					// Resolve the Mountain round-trip with the clicked label.
+					try {
+						OnAction?.(Label);
+					} catch {
+						/* never throw from a button click */
+					}
+				};
 				ActionBar.appendChild(Btn);
 			});
 
@@ -65,6 +88,15 @@ export default (
 
 		document.body.appendChild(Toast);
 
-		setTimeout(() => Toast.remove(), 6000);
+		setTimeout(() => {
+			Toast.remove();
+			// If the toast auto-dismissed without a button click, resolve
+			// with null so Mountain's oneshot doesn't hang for 300 s.
+			if (!ActionTaken) {
+				try {
+					OnAction?.(null);
+				} catch {}
+			}
+		}, 6000);
 	};
 };

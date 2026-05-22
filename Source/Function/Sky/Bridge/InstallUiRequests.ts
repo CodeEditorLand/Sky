@@ -25,7 +25,8 @@ export default async (Dependencies: {
 	ShowNotification: (
 		severity: string,
 		message: string,
-		actions?: unknown,
+		actions?: string[],
+		onAction?: (label: string | null) => void,
 	) => void;
 	ResolveUiRequest: (
 		RequestIdentifier: string,

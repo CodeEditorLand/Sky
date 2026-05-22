@@ -1,0 +1,47 @@
+---
+/**
+ * WebviewHost - shell page for Tauri extension webview windows.
+ *
+ * Served at /Mountain/WebviewHost.html via the localhost plugin.
+ * WebviewProvider/Lifecycle.rs creates each extension panel as a
+ * Tauri WebviewWindow pointing at this URL instead of
+ * WebviewUrl::App("WebviewHost.html") (which fails when frontendDist
+ * is null). The workbench renders the actual panel content via
+ * IWebviewWorkbenchService inside the main window; this page is a
+ * lightweight shell that establishes the Tauri IPC bridge so the
+ * secondary window can receive messages and relay them back.
+ */
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Extension Panel</title>
+		<style>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				background: transparent;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			// Forward __WEBVIEW_INITIAL_STATE__ to the main window so
+			// Sky's bridge can resolve the pending webview handle.
+			const State = window.__WEBVIEW_INITIAL_STATE__;
+			if (State && window.opener) {
+				window.opener.postMessage(
+					{ type: "webview-host-ready", ...State },
+					"*",
+				);
+			}
+		</script>
+	</body>
+</html>

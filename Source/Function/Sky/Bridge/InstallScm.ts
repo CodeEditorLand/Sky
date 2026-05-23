@@ -71,7 +71,10 @@ export default async (Dependencies: {
 				SourceUri = UriField;
 			} else if (typeof UriField.scheme === "string") {
 				SourceUri = Services.URI.from(UriField);
-			} else if (typeof UriField.toString === "function") {
+			} else if (
+				typeof UriField.toString === "function" &&
+				UriField.toString !== Object.prototype.toString
+			) {
 				try {
 					SourceUri = Services.URI.parse(UriField.toString());
 				} catch {

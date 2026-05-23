@@ -675,7 +675,9 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// re-dispatchers; the workbench's own IDebugService /
 	// ICustomEditorService handle the underlying flows through stock
 	// VS Code internals.
-	await (await import("./Bridge/InstallDebug.js")).default({ Register });
+	await (
+		await import("./Bridge/InstallDebug.js")
+	).default({ Register, GetServices });
 
 	// ---- Webview extensions ----
 	// Implementation in `Bridge/InstallWebview.ts`. Covers
@@ -723,7 +725,10 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			// Open the view (makes it visible if it's collapsed)
 			const ViewsService = (Services as any)?.Views;
 			if (ViewsService?.openView) {
-				void ViewsService.openView(ViewId, !!Payload?.options?.focus).catch(() => {});
+				void ViewsService.openView(
+					ViewId,
+					!!Payload?.options?.focus,
+				).catch(() => {});
 			}
 		} catch {
 			/* swallow - non-fatal */

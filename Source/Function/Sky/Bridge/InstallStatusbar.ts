@@ -15,6 +15,8 @@
  * `IStatusbarService`, so first-time entries never appeared in the
  * native bar.
  */
+import { invoke } from "@tauri-apps/api/core";
+
 type StatusbarEntry = {
 	name: string;
 

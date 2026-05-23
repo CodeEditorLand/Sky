@@ -145,32 +145,32 @@ export default async (Dependencies: {
 			}
 		};
 
-		if (CodeEditorService?.onDidChangeActiveCodeEditor) {
-			CodeEditorService.onDidChangeActiveCodeEditor((Ed: any) => {
-				try {
-					const Uri = Ed?.getModel?.()?.uri?.toString?.();
-					if (!Uri) return;
-					const Sels = Ed?.getSelections?.() ?? [];
-					Invoke("MountainIPCInvoke", {
-						method: "sky:editor:activeChanged",
-						params: [
-							{
-								uri: Uri,
-								selections: Sels,
-								viewColumn: GetViewColumn(),
-							},
-						],
-					}).catch(() => {});
-				} catch {}
-			});
-		}
-		// Wire selection changes - dispose the previous editor's listener
-		// on each active-editor change to prevent accumulation of permanent
-		// selection handlers (one per editor switch = unbounded listener leak).
+		// Single onDidChangeActiveCodeEditor subscription handles both
+		// sky:editor:activeChanged AND selection-change wiring. Two separate
+		// subscriptions caused the service event to fire twice on every editor
+		// switch - once per listener - doubling all downstream IPC calls.
 		if (CodeEditorService?.onDidChangeActiveCodeEditor) {
 			let SelectionDisposable: (() => void) | null = null;
 			CodeEditorService.onDidChangeActiveCodeEditor((Ed: any) => {
-				// Dispose the listener installed on the previous editor.
+				// Fire active-editor IPC (was the first standalone subscription).
+				try {
+					const Uri = Ed?.getModel?.()?.uri?.toString?.();
+					if (Uri) {
+						const Sels = Ed?.getSelections?.() ?? [];
+						Invoke("MountainIPCInvoke", {
+							method: "sky:editor:activeChanged",
+							params: [
+								{
+									uri: Uri,
+									selections: Sels,
+									viewColumn: GetViewColumn(),
+								},
+							],
+						}).catch(() => {});
+					}
+				} catch {}
+				// Dispose the previous editor's selection listener to prevent
+				// unbounded accumulation (one permanent listener per switch).
 				try {
 					SelectionDisposable?.();
 				} catch {}

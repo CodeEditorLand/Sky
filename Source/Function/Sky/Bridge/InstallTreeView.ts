@@ -222,6 +222,41 @@ export default async (Dependencies: {
 				return Items as any[];
 			},
 		};
+		// Subscribe directly to the workbench's ITreeView onDid* events so
+		// Mountain receives selection/collapse/expand/visibility changes.
+		// The DOM cel:tree-view:* events are never dispatched by anyone,
+		// so the document.addEventListener handlers at the bottom of this
+		// file are dead code for those paths. Direct subscription here is
+		// the canonical path. Checks are defensive: some TreeView
+		// implementations may omit optional event properties.
+		if (typeof (TreeView as any).onDidChangeSelection === "function") {
+			(TreeView as any).onDidChangeSelection((E: any) => {
+				ForwardTreeViewEvent("tree:selectionChanged", ViewId, {
+					selection: E?.selection ?? [],
+				});
+			});
+		}
+		if (typeof (TreeView as any).onDidCollapseElement === "function") {
+			(TreeView as any).onDidCollapseElement((E: any) => {
+				ForwardTreeViewEvent("tree:collapseElement", ViewId, {
+					element: E?.element,
+				});
+			});
+		}
+		if (typeof (TreeView as any).onDidExpandElement === "function") {
+			(TreeView as any).onDidExpandElement((E: any) => {
+				ForwardTreeViewEvent("tree:expandElement", ViewId, {
+					element: E?.element,
+				});
+			});
+		}
+		if (typeof (TreeView as any).onDidChangeVisibility === "function") {
+			(TreeView as any).onDidChangeVisibility((E: any) => {
+				ForwardTreeViewEvent("tree:visibilityChanged", ViewId, {
+					visible: E?.visible ?? false,
+				});
+			});
+		}
 		// First successful attach can mean the workbench bridge has
 		// finally wired up its `TreeViewByViewId` map. Sweep any
 		// pending attachers - cheap (~one HashMap lookup each) and

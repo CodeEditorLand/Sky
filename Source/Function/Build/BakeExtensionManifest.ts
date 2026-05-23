@@ -149,6 +149,22 @@ export default {
 				extensions: All,
 			});
 
+			if (All.length === 0) {
+				// No extensions found. Write only BundlePath so Tauri's resource
+				// bundler can include the file in the .app - the empty blob is
+				// harmless there because LoadFromCache treats count=0 as a miss
+				// and falls back to the live scan at runtime.
+				// Never write to DebugPath when empty: an empty cache at the dev
+				// binary location causes LoadFromCache to return 0 extensions,
+				// which makes the workbench extension host time out on every launch.
+				await Fs.mkdir(dirname(BundlePath), { recursive: true });
+				await Fs.writeFile(BundlePath, Blob, "utf8");
+				console.log(
+					"[BakeExtensionManifest] No extensions found - wrote empty stub to BundlePath only.",
+				);
+				return;
+			}
+
 			// Always write both paths when BundlePath is missing, even if debug
 			// cache is fresh - prevents .app from bundling a stale/stub manifest.
 			let BundleExists = false;

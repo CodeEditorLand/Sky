@@ -408,9 +408,11 @@ export default async (Dependencies: {
 		// `splice` updates the live array + fires the panel's
 		// re-render hook in one go. Replacing the contents in
 		// place preserves array identity for any cached refs.
-		// Spread Resources so splice receives individual elements, not the
-		// array as a single element (which would insert [[...]] not [...]).
-		Group.Group.splice(0, Group.Group.resources.length, ...Resources);
+		// The custom splice wrapper signature is splice(Start, DeleteCount, ToInsert)
+		// where ToInsert is the array. It spreads internally: ...ToInsert.
+		// Passing ...Resources here would put each element into the wrong
+		// parameter slot and cause "Spread syntax requires iterable" when empty.
+		Group.Group.splice(0, Group.Group.resources.length, Resources);
 		Group.ResourceStates = RawStates;
 	};
 
@@ -445,11 +447,30 @@ export default async (Dependencies: {
 		);
 		void TryRegisterScmProviderWithRetry(Payload);
 	});
+	// `sky://scm/registerGroup` arrives immediately after `sky://scm/register`.
+	// If __CEL_SERVICES__.Emitter or URI aren't ready yet (same 200-400ms race
+	// as the provider), TryRegisterScmGroup returns early and the group is
+	// permanently lost - unlike TryRegisterScmProvider, there was no retry.
+	const TryRegisterScmGroupWithRetry = async (
+		Payload: any,
+		Retries = 0,
+	): Promise<void> => {
+		const Services: any = (globalThis as any).__CEL_SERVICES__;
+		if (Services?.Emitter && Services?.URI) {
+			TryRegisterScmGroup(Payload);
+			return;
+		}
+		if (Retries < 10) {
+			await new Promise((R) => window.setTimeout(R, 200));
+			return TryRegisterScmGroupWithRetry(Payload, Retries + 1);
+		}
+	};
+
 	await Register("sky://scm/registerGroup", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:registerGroup", { detail: Payload }),
 		);
-		TryRegisterScmGroup(Payload);
+		void TryRegisterScmGroupWithRetry(Payload);
 	});
 	await Register("sky://scm/unregister", (Payload: any) => {
 		document.dispatchEvent(

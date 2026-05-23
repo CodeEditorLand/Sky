@@ -98,17 +98,28 @@ export default async (Dependencies: {
 							? (Response!.items as any[])
 							: [];
 
-						const Items = RawItems.map((Item: any) => ({
-							insertText:
+						const Items = RawItems.map((Item: any) => {
+							// Only wrap as { snippet } when the provider explicitly
+							// marks it as a snippet. Wrapping every completion as a
+							// snippet causes literal `$` and `\` characters to be
+							// interpreted as snippet syntax, corrupting completions.
+							const RawText =
 								typeof Item?.insertText === "string"
-									? { snippet: Item.insertText }
+									? Item.insertText
 									: typeof Item?.text === "string"
-										? { snippet: Item.text }
-										: { snippet: "" },
-							range: Item?.range,
-							command: Item?.command,
-							completeBracketPairs: false,
-						}));
+										? Item.text
+										: "";
+							const InsertText =
+								Item?.isSnippet === true
+									? { snippet: RawText }
+									: RawText;
+							return {
+								insertText: InsertText,
+								range: Item?.range,
+								command: Item?.command,
+								completeBracketPairs: false,
+							};
+						});
 
 						return { items: Items };
 					} catch {

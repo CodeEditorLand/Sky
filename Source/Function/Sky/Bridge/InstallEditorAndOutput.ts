@@ -21,6 +21,8 @@
  * and forwards them here. We dispatch `vscode.diff` into the workbench
  * and resolve the round-trip so the extension's awaited promise settles.
  */
+import { invoke } from "@tauri-apps/api/core";
+
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 
 type ResolveUiRequest = (RequestId: string, Result: unknown) => unknown;

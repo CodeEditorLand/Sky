@@ -250,6 +250,37 @@ export default async (Dependencies: {
 
 	// Webview-view metadata: Cocoon `view.title = X` / `view.description
 	// = X` / `view.badge = X` setters fire `webview.updateView`
+	// `webview.setTitle` - extension set webview panel title via
+	// `panel.title = "..."`. Forward to the parked overlay if available.
+	await Register("sky://webview/setTitle", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:setTitle", { detail: Payload }),
+		);
+		const Handle: string | number =
+			Payload?.handle ?? Payload?.viewId ?? "";
+		const Title: string = String(Payload?.title ?? Payload?.value ?? "");
+		if (!Title) return;
+		const HandleRegistry: Map<string | number, any> | undefined = (
+			globalThis as any
+		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ as
+			| Map<string | number, any>
+			| undefined;
+		const Entry = HandleRegistry?.get(Handle);
+		if (!Entry) return;
+		try {
+			const Webview = Entry?.webview ?? Entry;
+			if (typeof Webview?.setTitle === "function")
+				Webview.setTitle(Title);
+		} catch {}
+	});
+
+	// `webview.setIconPath` - extension set webview panel icon.
+	await Register("sky://webview/setIconPath", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:setIconPath", { detail: Payload }),
+		);
+	});
+
 	// notification with `{handle, viewId, title, description, badge}`.
 	// Apply each non-null field to the parked workbench `WebviewView`.
 	// `null` is the proxy's "explicitly unset" wire form (TS undefined
@@ -769,6 +800,36 @@ export default async (Dependencies: {
 	// extension calls `panel.dispose()`. This handler was previously in
 	// InstallTasksAndDecorations.ts and was accidentally removed.
 	// Without it, panels are never cleaned up and stale DOM nodes accumulate.
+	// `webview.reveal` - extension called `panel.reveal(viewColumn, preserveFocus)`.
+	// Bring the webview panel into view via the parked WebviewInput or view service.
+	await Register("sky://webview/reveal", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:reveal", { detail: Payload }),
+		);
+		const Handle: string | number =
+			Payload?.handle ?? Payload?.viewId ?? Payload?.args?.[0] ?? "";
+		const ViewId: string = String(Payload?.viewId ?? "");
+		const PreserveFocus: boolean = !!(Payload?.preserveFocus ?? false);
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			if (ViewId && Services?.Views) {
+				Services.Views.openView?.(ViewId, !PreserveFocus);
+			} else {
+				const HandleRegistry: Map<string | number, any> | undefined = (
+					globalThis as any
+				).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ as
+					| Map<string | number, any>
+					| undefined;
+				const Entry = HandleRegistry?.get(Handle);
+				const Webview = Entry?.webview ?? Entry;
+				if (typeof Webview?.focus === "function" && !PreserveFocus)
+					Webview.focus();
+			}
+		} catch {
+			/* non-fatal */
+		}
+	});
+
 	await Register("sky://webview/dispose", ({ panelId }: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:dispose", { detail: { panelId } }),

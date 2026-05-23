@@ -185,13 +185,6 @@ export default async (Dependencies: {
 	// event fires (gitlens, clangd, dependencies all hit this -
 	// their views activate ~3-5 s into boot, well after the original
 	// 750 ms retry window expired). Each attempt-attach call adds to
-	// (PendingAttaches and RetryPendingAttaches removed - retry loops are wrong.
-	// If TreeViewByViewId isn't ready when the event arrives, that's a timing
-	// issue to fix at the source, not compensate for with polling.)
-			}
-		}
-	};
-
 	const AttachToDescriptor = (
 		ViewId: string,
 		TreeView: NonNullable<
@@ -245,48 +238,16 @@ export default async (Dependencies: {
 				});
 			});
 		}
-		// First successful attach can mean the workbench bridge has
-		// finally wired up its `TreeViewByViewId` map. Sweep any
-		// pending attachers - cheap (~one HashMap lookup each) and
-		// rescues the views whose retry budget hadn't quite expired.
-		RetryPendingAttaches();
 	};
 
-	// Exponential-ish backoff with a generous total budget. Stock
-	// VS Code's view contributions register within ~3 s of extension
-	// activation; gitlens / clangd / heavy extensions stretch that
-	// to ~5 s. Total budget here is ~10 s across 12 retries; the
-	// last ~half are 1 s apart so we don't keep firing setTimeouts
-	// indefinitely. After budget exhaustion we register in
-	// `PendingAttaches` so any later successful attach can sweep
-	// the still-missing entries.
-	const AttachBackoffSchedule: number[] = [
-		100, 200, 400, 600, 800, 1000, 1000, 1000, 1500, 1500, 1500, 1500,
-	];
-
-	const AttachDataProvider = (ViewId: string, Step: number): void => {
+	const AttachDataProvider = (ViewId: string): void => {
 		const Services = GetServices();
 		const GetTreeView = Services?.TreeViewByViewId;
 		const TreeView =
 			typeof GetTreeView === "function" ? GetTreeView(ViewId) : null;
-		if (!TreeView) {
-			if (Step >= AttachBackoffSchedule.length) {
-				PendingAttaches.add(ViewId);
-				Invoke("RenderDevLog", {
-					Tag: "tree-view",
-					Message: `[TreeView] attach-pending view=${ViewId} (queued for late workbench wiring)`,
-					tag: "tree-view",
-					message: `[TreeView] attach-pending view=${ViewId} (queued for late workbench wiring)`,
-				}).catch(() => {});
-				return;
-			}
-			setTimeout(
-				() => AttachDataProvider(ViewId, Step + 1),
-				AttachBackoffSchedule[Step] ?? 1500,
-			);
-			return;
+		if (TreeView) {
+			AttachToDescriptor(ViewId, TreeView);
 		}
-		AttachToDescriptor(ViewId, TreeView);
 	};
 
 	const HandleTreeViewCreate = (Entry: {
@@ -295,10 +256,7 @@ export default async (Dependencies: {
 	}): void => {
 		const ViewId = Entry?.viewId ?? "";
 		if (!ViewId) return;
-		AttachDataProvider(ViewId, 0);
-		// Prime the DOM fan-out with the initial children too so
-		// side-panel shims that mirror tree state don't need to wait
-		// for a user-triggered expand.
+		AttachDataProvider(ViewId);
 		void ProvideChildren(ViewId, undefined);
 	};
 
@@ -375,24 +333,6 @@ export default async (Dependencies: {
 			params: [{ viewId, ...extra }],
 		}).catch(() => {});
 	};
-
-	// Hook into the workbench's IViewDescriptorService / ITreeView to
-	// receive collapse/expand/selection change notifications.
-	const InstallWorkbenchTreeHooks = () => {
-		try {
-			const Services = GetServices();
-			if (!(Services as any)?._treeHooksInstalled) {
-				(Services as any)._treeHooksInstalled = true;
-				// VS Code fires `onDidChangeTreeItemCollapsibleState` on the
-				// TreeView object itself. We listen on the TreeView service.
-				// Currently a best-effort hook via CustomEvents the workbench
-				// might fire; the canonical path is cel:tree-view:collapse/expand.
-			}
-		} catch {
-			/* workbench not ready yet */
-		}
-	};
-	setTimeout(InstallWorkbenchTreeHooks, 3000);
 
 	document.addEventListener(
 		"cel:tree-view:selectionChanged",

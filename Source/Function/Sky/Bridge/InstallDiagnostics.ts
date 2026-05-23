@@ -40,9 +40,6 @@ export default async (Dependencies: {
 			from(components: object): unknown;
 			revive?(value: unknown): unknown;
 		};
-		Views?: {
-			getViewWithId?(id: string): unknown;
-		};
 		[key: string]: unknown;
 	} | null;
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
@@ -72,10 +69,6 @@ export default async (Dependencies: {
 			}
 		});
 	};
-
-	// One-time: clear the persisted activeFile filter if the panel is already
-	// open. Only runs once per session - no openView, no force-showing.
-	let ActiveFilterChecked = false;
 
 	await Register("sky://diagnostics/changed", (Payload: any) => {
 		const Services = GetServices();
@@ -133,34 +126,6 @@ export default async (Dependencies: {
 				Markers.changeOne(Owner, RealUri, FinalMarkers);
 			} catch {
 				// Swallow - one bad entry must not stop the rest.
-			}
-		}
-
-		// One-time: if the Problems panel is already open and the persisted
-		// activeFile filter is on, clear it so all markers are visible.
-		// This is the only UI intervention - we never force the panel open.
-		if (!ActiveFilterChecked) {
-			ActiveFilterChecked = true;
-			try {
-				const ViewsSvc = (Services as any)?.Views;
-				const View =
-					typeof ViewsSvc?.getViewWithId === "function"
-						? (ViewsSvc.getViewWithId(
-								"workbench.panel.markers.view",
-							) as any)
-						: null;
-				if (View?.isVisible?.() && View?.filters?.activeFile === true) {
-					View.filters.activeFile = false;
-					Invoke("MountainIPCInvoke", {
-						method: "diagnostic:log",
-						params: [
-							"markers-bridge",
-							`cleared activeFile filter for owner=${Owner}`,
-						],
-					}).catch(() => {});
-				}
-			} catch {
-				// Non-fatal.
 			}
 		}
 	});

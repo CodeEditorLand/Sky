@@ -35,13 +35,11 @@ const Relays: Array<readonly [string, Handler]> = [
 
 	["sky://debug/sessionEnd", SimpleRelay("cel:debug:sessionEnd")],
 
-	["sky://debug/addBreakpoints", SimpleRelay("cel:debug:addBreakpoints")],
-
-	[
-		"sky://debug/removeBreakpoints",
-
-		SimpleRelay("cel:debug:removeBreakpoints"),
-	],
+	// sky://debug/addBreakpoints and removeBreakpoints are NOT in the Relays
+	// array: they have dedicated handlers below that wire IDebugService too.
+	// Keeping them here caused double-registration: the DOM relay fired AND
+	// the real handler fired, double-dispatching cel:debug:addBreakpoints
+	// on every Mountain emit.
 
 	["sky://debug/consoleAppend", SimpleRelay("cel:debug:consoleAppend")],
 

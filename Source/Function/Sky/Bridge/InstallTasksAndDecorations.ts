@@ -52,20 +52,10 @@ export default async (Dependencies: {
 
 	await Register("sky://task/terminate", SimpleRelay("cel:task:terminate"));
 
-	// Workspace edits / focus - extension `workspace.applyEdit(edit)` /
-	// `window.showTextDocument(uri)` round-trips. Sky re-dispatches; the
-	// workbench's BulkEditService + EditorService consume the events.
-	await Register(
-		"sky://workspace/applyEdit",
-
-		SimpleRelay("cel:workspace:applyEdit"),
-	);
-
-	await Register(
-		"sky://window/showTextDocument",
-
-		SimpleRelay("cel:window:showTextDocument"),
-	);
+	// sky://workspace/applyEdit and sky://window/showTextDocument have real
+	// handlers in InstallEditorAndOutput.ts that wire BulkEditService and
+	// EditorService. Registering SimpleRelays here caused double-handling:
+	// both the DOM relay and the real handler fired on every Mountain emit.
 
 	// Editor decorations - 16ms-batched create/dispose.
 	await Register(
@@ -130,9 +120,6 @@ export default async (Dependencies: {
 		);
 	});
 
-	await Register("sky://webview/dispose", ({ panelId }: any) => {
-		document.dispatchEvent(
-			new CustomEvent("cel:webview:dispose", { detail: { panelId } }),
-		);
-	});
+	// sky://webview/dispose is handled in InstallWebview.ts with the real
+	// panel cleanup. A DOM-relay duplicate here caused double-disposal.
 };

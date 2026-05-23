@@ -164,11 +164,19 @@ export default async (Dependencies: {
 				} catch {}
 			});
 		}
-		// Also wire selection changes
+		// Wire selection changes - dispose the previous editor's listener
+		// on each active-editor change to prevent accumulation of permanent
+		// selection handlers (one per editor switch = unbounded listener leak).
 		if (CodeEditorService?.onDidChangeActiveCodeEditor) {
+			let SelectionDisposable: (() => void) | null = null;
 			CodeEditorService.onDidChangeActiveCodeEditor((Ed: any) => {
+				// Dispose the listener installed on the previous editor.
+				try {
+					SelectionDisposable?.();
+				} catch {}
+				SelectionDisposable = null;
 				if (!Ed) return;
-				Ed.onDidChangeCursorSelection?.((E: any) => {
+				const D = Ed.onDidChangeCursorSelection?.((E: any) => {
 					try {
 						const Uri = Ed.getModel?.()?.uri?.toString?.();
 						if (!Uri) return;
@@ -187,6 +195,12 @@ export default async (Dependencies: {
 						}).catch(() => {});
 					} catch {}
 				});
+				// IDisposable from Monaco is either { dispose() } or a function.
+				if (D && typeof D.dispose === "function") {
+					SelectionDisposable = () => D.dispose();
+				} else if (typeof D === "function") {
+					SelectionDisposable = D;
+				}
 			});
 		}
 		// Wire Monaco model content changes → Mountain → Cocoon `onDidChangeTextDocument`.

@@ -408,7 +408,9 @@ export default async (Dependencies: {
 		// `splice` updates the live array + fires the panel's
 		// re-render hook in one go. Replacing the contents in
 		// place preserves array identity for any cached refs.
-		Group.Group.splice(0, Group.Group.resources.length, Resources);
+		// Spread Resources so splice receives individual elements, not the
+		// array as a single element (which would insert [[...]] not [...]).
+		Group.Group.splice(0, Group.Group.resources.length, ...Resources);
 		Group.ResourceStates = RawStates;
 	};
 

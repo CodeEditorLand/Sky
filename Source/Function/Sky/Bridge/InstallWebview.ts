@@ -754,14 +754,42 @@ export default async (Dependencies: {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
 			if (!Services?.CustomEditor?.registerCustomEditorCapabilities)
 				return;
-			const Args = Array.isArray(Payload?.args) ? Payload.args : [];
-			const ViewType: string = String(Args[1] ?? "");
-			const Options =
-				typeof Args[2] === "object" && Args[2] !== null
-					? (Args[2] as Record<string, unknown>)
-					: {};
+
+			// Resolve viewType from either payload format defensively.
+			// New (named-key): { viewType, options, selector, handle }
+			// Old (positional): { args: [handle, viewType, options, ...] }
+			// The old code read ONLY Args[1], which was always "" after Cocoon
+			// switched to named-key payloads, silently skipping registration.
+			const Args: unknown[] = Array.isArray(Payload?.args)
+				? Payload.args
+				: [];
+			const ViewType: string = String(
+				Payload?.viewType ??
+					(typeof Args[1] === "string" && Args[1].length > 0
+						? Args[1]
+						: undefined) ??
+					"",
+			);
+
+			// Options: prefer named-key payload.options, fall back to Args[2].
+			const Options: Record<string, unknown> =
+				Payload?.options !== null &&
+				typeof Payload?.options === "object"
+					? (Payload.options as Record<string, unknown>)
+					: Args[2] !== null && typeof Args[2] === "object"
+						? (Args[2] as Record<string, unknown>)
+						: {};
+
+			// Selector: glob patterns like [{ filenamePattern: "*.{png,...}" }]
+			const Selector: unknown[] = Array.isArray(Payload?.selector)
+				? Payload.selector
+				: [];
+
 			if (!ViewType || CustomEditorCapabilityHandles.has(ViewType))
 				return;
+
+			// Register capabilities (metadata used by VS Code's
+			// CustomEditorContribution for multi-editor and lifecycle).
 			const Disposable =
 				Services.CustomEditor.registerCustomEditorCapabilities(
 					ViewType,
@@ -771,7 +799,64 @@ export default async (Dependencies: {
 						),
 					},
 				);
-			CustomEditorCapabilityHandles.set(ViewType, Disposable);
+			if (Disposable != null) {
+				CustomEditorCapabilityHandles.set(ViewType, Disposable);
+			}
+
+			// Also register with IEditorResolverService so VS Code routes
+			// matching file opens to this custom editor. This is a fallback
+			// for when CustomEditorContribution's manifest-based registration
+			// hasn't fired yet (e.g. extension activates lazily on first open).
+			// Priority is `option` so VS Code's builtin factory (from the
+			// manifest contribution) takes precedence when both are registered.
+			const EditorResolver = Services?.EditorResolver;
+			const Priority = Services?.RegisteredEditorPriority;
+			if (
+				typeof EditorResolver?.registerEditor === "function" &&
+				Selector.length > 0 &&
+				Priority
+			) {
+				for (const S of Selector) {
+					const GlobPattern =
+						typeof S === "string"
+							? S
+							: typeof (S as any)?.filenamePattern === "string"
+								? (S as any).filenamePattern
+								: null;
+					if (!GlobPattern) continue;
+					try {
+						EditorResolver.registerEditor(
+							GlobPattern,
+							{
+								id: ViewType,
+								label: String(
+									(Options as any)["displayName"] ?? ViewType,
+								),
+								priority: Priority.option,
+							},
+							{},
+							{
+								// createEditorInput MUST NOT return undefined/null -
+								// VS Code would crash trying to read .editor on the
+								// result. We throw so the resolver falls through to
+								// CustomEditorContribution's builtin factory, which
+								// is tried first (higher priority) and is the
+								// canonical path for custom editors. Our registration
+								// here serves primarily to trigger the
+								// onCustomEditor:* activation event so the extension
+								// activates and registers its provider.
+								createEditorInput: () => {
+									throw new Error(
+										`[Sky:CEL] defer-to-builtin:${ViewType}`,
+									);
+								},
+							},
+						);
+					} catch {
+						// Non-fatal: manifest-based registration still works.
+					}
+				}
+			}
 		} catch (Error) {
 			try {
 				const W = globalThis as any;

@@ -189,6 +189,61 @@ export default async (Dependencies: {
 				});
 			});
 		}
+		// Wire Monaco model content changes → Mountain → Cocoon `onDidChangeTextDocument`.
+		// Debounce at 300ms per model so fast typists don't flood Mountain with IPC.
+		// This is the critical path for LSP (diagnostics, completions, etc.) to see
+		// up-to-date content.
+		if (CodeEditorService) {
+			const PendingChanges = new Map<
+				string,
+				ReturnType<typeof setTimeout>
+			>();
+
+			const FlushChanges = (Ed: any) => {
+				const Uri = Ed?.getModel?.()?.uri?.toString?.();
+				if (!Uri) return;
+				const Content = Ed?.getModel?.()?.getValue?.() ?? "";
+				const Version = Ed?.getModel?.()?.getVersionId?.() ?? 1;
+				Invoke("MountainIPCInvoke", {
+					method: "sky:model:contentChanged",
+					params: [{ uri: Uri, content: Content, version: Version }],
+				}).catch(() => {});
+			};
+
+			const SetupEditorListener = (Ed: any) => {
+				if (!Ed || (Ed as any).__celContentListened) return;
+				(Ed as any).__celContentListened = true;
+				Ed.onDidChangeModelContent?.(() => {
+					const Uri = Ed?.getModel?.()?.uri?.toString?.() ?? "";
+					if (!Uri) return;
+					if (PendingChanges.has(Uri))
+						clearTimeout(PendingChanges.get(Uri)!);
+					PendingChanges.set(
+						Uri,
+						setTimeout(() => {
+							PendingChanges.delete(Uri);
+							FlushChanges(Ed);
+						}, 300),
+					);
+				});
+			};
+
+			// Wire into all currently-open editors
+			const ExistingEditors: any[] =
+				CodeEditorService.listCodeEditors?.() ?? [];
+			for (const Ed of ExistingEditors) {
+				try {
+					SetupEditorListener(Ed);
+				} catch {}
+			}
+
+			// Wire into future editors
+			CodeEditorService.onCodeEditorAdd?.((Ed: any) => {
+				try {
+					SetupEditorListener(Ed);
+				} catch {}
+			});
+		}
 	} catch {
 		/* workbench events not yet available */
 	}

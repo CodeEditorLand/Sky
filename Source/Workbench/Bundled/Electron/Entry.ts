@@ -131,8 +131,7 @@ const LandDisabled = (() => {
 // up). InstallLandWorkbench() is idempotent and dispatches
 // `cel:wind-ready` for downstream subscribers (SkyBridge, Astro
 // components, in-page Wind tasks). Skipped under `Disable=true` so
-// the bisect mode keeps the workbench probe-free. (IT-01 from
-// `.claude/workflow/05-Open-Threads.md`.)
+// the bisect mode keeps the workbench probe-free.
 if (!LandDisabled) {
 	window.addEventListener(
 		"cel:services-ready",

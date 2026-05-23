@@ -461,4 +461,48 @@ export default async (Dependencies: {
 		);
 		TryUpdateScmGroup(Payload);
 	});
+
+	// `sky://scm/provider/changed` - Mountain emits this when an extension
+	// updates `sourceControl.inputBox.value`, `commitTemplate`, or similar
+	// via `$scm:updateSourceControl`. We find the matching shim's InputModel
+	// and apply the new value so the workbench commit input shows the extension-set text.
+	await Register("sky://scm/provider/changed", (Payload: any) => {
+		const Handle: number | undefined =
+			typeof Payload?.handle === "number" ? Payload.handle : undefined;
+		if (Handle === undefined) return;
+		const Shim = ScmShimByHandle.get(Handle);
+		if (!Shim) return;
+		// Update input box text model if inputBoxValue changed
+		const NewValue = Payload?.provider?.inputBox?.value;
+		if (typeof NewValue === "string") {
+			try {
+				const InputModel = (Shim as any).Provider?.inputBoxTextModel;
+				if (InputModel?.setValue) {
+					InputModel.setValue(NewValue);
+				} else if (InputModel?.applyEdits) {
+					const LineCount = InputModel.getLineCount?.() ?? 1;
+					const LastCol =
+						InputModel.getLineMaxColumn?.(LineCount) ?? 1;
+					InputModel.applyEdits([
+						{
+							range: {
+								startLineNumber: 1,
+								startColumn: 1,
+								endLineNumber: LineCount,
+								endColumn: LastCol,
+							},
+							text: NewValue,
+							forceMoveMarkers: true,
+						},
+					]);
+				}
+			} catch {
+				/* InputModel may not support setValue on all VS Code versions */
+			}
+		}
+		// Fire provider change event so SCM panel re-renders
+		try {
+			(Shim as any).Provider?.onDidChange?._emitter?.fire?.();
+		} catch {}
+	});
 };

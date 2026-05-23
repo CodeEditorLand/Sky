@@ -40,6 +40,8 @@ import BuildPipeline from "@codeeditorland/output/Configuration/Plugin/Index.js"
 import type { Plugin as OutputPlugin } from "@codeeditorland/output/Configuration/Plugin/Type.js";
 import { defineConfig } from "astro/config";
 
+import BakeExtensionManifest from "./Source/Function/Build/BakeExtensionManifest";
+import CompressBundle from "./Source/Function/Build/CompressBundle";
 // -----------------------------------------------------------------------------
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
@@ -810,6 +812,8 @@ export default defineConfig({
 				},
 			},
 		},
+		!On ? CompressBundle : null,
+		!On ? BakeExtensionManifest : null,
 	],
 
 	output: "static",

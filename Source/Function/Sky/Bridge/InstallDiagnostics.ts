@@ -100,51 +100,72 @@ export default async (Dependencies: {
 				void Error;
 			}
 		}
-		// One-time success-path confirmation. Also checks the Problems panel
-		// view filter state and clears `activeFile` if it was left on, which
-		// causes "count shows but panel empty" - the status bar reads from
-		// IMarkerService (unfiltered) while the panel reads from
-		// IMarkersView.filteredGroups which respects the activeFile toggle.
+		// One-time first-push: initialize the Problems panel and clear any
+		// persisted activeFile filter.
+		//
+		// Root cause of "count shows but panel empty":
+		//   MarkersView.reInitialize() (bulk read from IMarkerService) only
+		//   fires when the panel becomes VISIBLE via onDidChangeMarkersViewVisibility.
+		//   If markers arrive before the panel has ever been opened,
+		//   onMarkerChanged subscriptions are inactive and updates are lost.
+		//   getViewWithId returns null if the ViewPaneContainer isn't yet
+		//   instantiated. openView(id, false) forces initialization without
+		//   stealing focus, triggers reInitialize(), and returns the live
+		//   IMarkersView so we can also clear the persisted activeFile filter
+		//   (stored in Memento across sessions) which causes "count shows but
+		//   panel empty" when restored as true.
 		if (!MarkersBridgeFirstSuccessLogged && PushedTotal > 0) {
 			MarkersBridgeFirstSuccessLogged = true;
 
-			// Read back from IMarkerService to confirm markers are stored.
 			const AllStored =
 				(Markers.read as (...args: unknown[]) => unknown[])?.() ?? [];
 
-			// Check the Problems panel view filter state. `getViewWithId`
-			// returns the view regardless of whether it's currently focused;
-			// if the panel is open, the view instance exists. Clear
-			// `activeFile` if it was on so all markers are visible, not just
-			// the active file's.
 			try {
 				const ViewsSvc = (Services as any)?.Views;
-				const MarkersView = ViewsSvc?.getViewWithId?.(
-					"workbench.panel.markers.view",
-				) as any;
-				const FilterStats = MarkersView?.getFilterStats?.() as
-					| { total: number; filtered: number }
-					| undefined;
-				const ActiveFileWasOn =
-					MarkersView?.filters?.activeFile === true;
-				if (ActiveFileWasOn) {
-					MarkersView.filters.activeFile = false;
+				if (typeof ViewsSvc?.openView === "function") {
+					void (
+						ViewsSvc.openView(
+							"workbench.panel.markers.view",
+							false, // reveal without stealing focus
+						) as Promise<any>
+					)
+						?.then?.((View: any) => {
+							const FilterStats = View?.getFilterStats?.() as
+								| { total: number; filtered: number }
+								| undefined;
+							const ActiveFileWasOn =
+								View?.filters?.activeFile === true;
+							if (ActiveFileWasOn) {
+								View.filters.activeFile = false;
+							}
+							Invoke("MountainIPCInvoke", {
+								method: "diagnostic:log",
+								params: [
+									"markers-bridge",
+									`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} stored=${AllStored.length} firstUri=${FirstUri.slice(0, 200)} firstSeverity=${FirstSeverity ?? "?"} firstMsgLen=${FirstMessageLength} filterTotal=${FilterStats?.total ?? "?"} filterFiltered=${FilterStats?.filtered ?? "?"} activeFileCleared=${ActiveFileWasOn}`,
+								],
+							}).catch(() => {});
+						})
+						?.catch?.(() => {
+							Invoke("MountainIPCInvoke", {
+								method: "diagnostic:log",
+								params: [
+									"markers-bridge",
+									`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} stored=${AllStored.length} openView=failed`,
+								],
+							}).catch(() => {});
+						});
+				} else {
+					Invoke("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: [
+							"markers-bridge",
+							`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} stored=${AllStored.length} openView=unavailable`,
+						],
+					}).catch(() => {});
 				}
-				Invoke("MountainIPCInvoke", {
-					method: "diagnostic:log",
-					params: [
-						"markers-bridge",
-						`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} stored=${AllStored.length} firstUri=${FirstUri.slice(0, 200)} firstSeverity=${FirstSeverity ?? "?"} firstMsgLen=${FirstMessageLength} filterTotal=${FilterStats?.total ?? "?"} filterFiltered=${FilterStats?.filtered ?? "?"} activeFileCleared=${ActiveFileWasOn}`,
-					],
-				}).catch(() => {});
 			} catch {
-				Invoke("MountainIPCInvoke", {
-					method: "diagnostic:log",
-					params: [
-						"markers-bridge",
-						`first-push owner=${Owner} uris=${Changed.length} markers=${PushedTotal} stored=${AllStored.length} firstUri=${FirstUri.slice(0, 200)} firstSeverity=${FirstSeverity ?? "?"} firstMsgLen=${FirstMessageLength}`,
-					],
-				}).catch(() => {});
+				// non-fatal
 			}
 		}
 	});

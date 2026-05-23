@@ -185,21 +185,9 @@ export default async (Dependencies: {
 	// event fires (gitlens, clangd, dependencies all hit this -
 	// their views activate ~3-5 s into boot, well after the original
 	// 750 ms retry window expired). Each attempt-attach call adds to
-	// this set on miss and removes on success; whenever ANY view
-	// successfully attaches, we replay the pending set (the
-	// workbench tree-views service is now wired - other pending
-	// views likely just have to be looked up).
-	const PendingAttaches = new Set<string>();
-
-	const RetryPendingAttaches = (): void => {
-		if (PendingAttaches.size === 0) return;
-		const Services = GetServices();
-		if (!Services?.TreeViewByViewId) return;
-		for (const ViewId of [...PendingAttaches]) {
-			const TreeView = Services.TreeViewByViewId(ViewId);
-			if (TreeView) {
-				PendingAttaches.delete(ViewId);
-				AttachToDescriptor(ViewId, TreeView);
+	// (PendingAttaches and RetryPendingAttaches removed - retry loops are wrong.
+	// If TreeViewByViewId isn't ready when the event arrives, that's a timing
+	// issue to fix at the source, not compensate for with polling.)
 			}
 		}
 	};

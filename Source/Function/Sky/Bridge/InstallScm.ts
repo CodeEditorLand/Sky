@@ -416,61 +416,18 @@ export default async (Dependencies: {
 		Group.ResourceStates = RawStates;
 	};
 
-	// `sky://scm/register` may arrive before `__CEL_SERVICES__.SCM` is
-	// populated (the workbench ExposeAccessor fires ~200-400ms after the
-	// first Sky bridge tick). Retry up to 10× at 200ms intervals so the
-	// SCM provider always lands in the live workbench service even when
-	// vscode.git activates early.
-	const TryRegisterScmProviderWithRetry = async (
-		Payload: any,
-		Retries = 0,
-	): Promise<void> => {
-		const Services: any = (globalThis as any).__CEL_SERVICES__;
-		if (Services?.SCM && Services?.URI && Services?.Emitter) {
-			TryRegisterScmProvider(Payload);
-			return;
-		}
-		if (Retries < 10) {
-			await new Promise((R) => window.setTimeout(R, 200));
-			return TryRegisterScmProviderWithRetry(Payload, Retries + 1);
-		}
-		// Exhausted retries - still fire the DOM event so custom
-		// Sky-side components that don't depend on ISCMService still see it.
-		document.dispatchEvent(
-			new CustomEvent("cel:scm:register:fallback", { detail: Payload }),
-		);
-	};
-
 	await Register("sky://scm/register", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:register", { detail: Payload }),
 		);
-		void TryRegisterScmProviderWithRetry(Payload);
+		TryRegisterScmProvider(Payload);
 	});
-	// `sky://scm/registerGroup` arrives immediately after `sky://scm/register`.
-	// If __CEL_SERVICES__.Emitter or URI aren't ready yet (same 200-400ms race
-	// as the provider), TryRegisterScmGroup returns early and the group is
-	// permanently lost - unlike TryRegisterScmProvider, there was no retry.
-	const TryRegisterScmGroupWithRetry = async (
-		Payload: any,
-		Retries = 0,
-	): Promise<void> => {
-		const Services: any = (globalThis as any).__CEL_SERVICES__;
-		if (Services?.Emitter && Services?.URI) {
-			TryRegisterScmGroup(Payload);
-			return;
-		}
-		if (Retries < 10) {
-			await new Promise((R) => window.setTimeout(R, 200));
-			return TryRegisterScmGroupWithRetry(Payload, Retries + 1);
-		}
-	};
 
 	await Register("sky://scm/registerGroup", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:registerGroup", { detail: Payload }),
 		);
-		void TryRegisterScmGroupWithRetry(Payload);
+		TryRegisterScmGroup(Payload);
 	});
 	await Register("sky://scm/unregister", (Payload: any) => {
 		document.dispatchEvent(

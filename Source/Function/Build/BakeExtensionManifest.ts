@@ -176,13 +176,19 @@ export default {
 			}
 
 			let CacheMtime = 0;
+			let CacheStub = false;
 			try {
 				CacheMtime = (await Fs.stat(DebugPath)).mtimeMs;
+				const CacheContent = JSON.parse(
+					await Fs.readFile(DebugPath, "utf8"),
+				) as { count?: number };
+				if (!CacheContent.count || CacheContent.count === 0)
+					CacheStub = true;
 			} catch {
 				/* no cache yet */
 			}
 
-			let AnyNewer = !BundleExists;
+			let AnyNewer = !BundleExists || CacheStub;
 			if (!AnyNewer) {
 				for (const Ext of All) {
 					try {

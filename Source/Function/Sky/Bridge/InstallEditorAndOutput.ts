@@ -480,7 +480,7 @@ export default async (Dependencies: {
 								FileOp.uri ?? FileOp.newUri ?? FileOp.to;
 							if (TargetUri) {
 								await Invoke("MountainIPCInvoke", {
-									method: "FileSystem.WriteFile",
+									method: "file:writeFile",
 									params: [TargetUri, ""],
 								}).catch(() => {});
 							}
@@ -489,7 +489,7 @@ export default async (Dependencies: {
 							const ToUri = FileOp.newUri ?? FileOp.to;
 							if (FromUri && ToUri) {
 								await Invoke("MountainIPCInvoke", {
-									method: "FileSystem.Rename",
+									method: "file:rename",
 									params: [
 										FromUri,
 										ToUri,
@@ -506,7 +506,7 @@ export default async (Dependencies: {
 								FileOp.uri ?? FileOp.oldUri ?? FileOp.from;
 							if (TargetUri) {
 								await Invoke("MountainIPCInvoke", {
-									method: "FileSystem.Delete",
+									method: "file:delete",
 									params: [
 										TargetUri,
 										{

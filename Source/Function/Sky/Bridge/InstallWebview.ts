@@ -275,6 +275,37 @@ export default async (Dependencies: {
 		}
 	});
 
+	// Webview options: `webview.setOptions` notification (via WebviewLifecycle)
+	// and `webview.setOptions` sendRequest (via Webview.rs effect). Both now
+	// emit `sky://webview/setOptions`. Applies `enableScripts`, `enableForms`,
+	// `localResourceRoots` etc. to the parked overlay webview.
+	await Register("sky://webview/setOptions", (Payload: any) => {
+		const Handle: string | number =
+			Payload?.handle ?? Payload?.viewId ?? "";
+		const Options = Payload?.options ?? Payload;
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:setOptions", { detail: Payload }),
+		);
+		if (!Options) return;
+		const Registry: Map<string, any> | undefined = (globalThis as any)
+			.__CEL_WEBVIEW_VIEWS__;
+		const HandleRegistry: Map<string | number, any> | undefined = (
+			globalThis as any
+		).__CEL_WEBVIEW_PANELS__ as Map<string | number, any> | undefined;
+		const Entry =
+			(typeof Handle === "string" && Registry?.get(Handle)) ||
+			HandleRegistry?.get(Handle);
+		if (!Entry) return;
+		try {
+			const Webview = Entry?.webview ?? Entry;
+			if (typeof Webview?.setOptions === "function") {
+				Webview.setOptions(Options);
+			}
+		} catch {
+			/* swallow */
+		}
+	});
+
 	// Webview-view post-message bridge: Cocoon `view.webview.postMessage(msg)`
 	// fires `webview.postMessage` notification with `{handle, viewId,
 	// message}`. The general `sky://webview/post-message` listener

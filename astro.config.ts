@@ -1158,7 +1158,7 @@ export default defineConfig({
 			},
 			// Sourcemaps: inline in dev (On=true) for WKWebView DevTools usability;
 			// disabled in prod to avoid shipping 3×-larger bundle artifacts.
-			sourcemap: On ? "inline" : false,
+			sourcemap: On ? true : false,
 			manifest: false,
 			minify: false,
 			cssMinify: false,

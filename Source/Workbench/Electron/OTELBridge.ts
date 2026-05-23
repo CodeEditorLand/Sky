@@ -82,6 +82,10 @@ const HrTimeNano = (Ms: number): string =>
 const ScheduleFlush = (): void => {
 	if (FlushTimer) return;
 
+	// Don't re-arm once we know the collector is unreachable - stops the
+	// 2-second fetch/SubresourceLoader allocation loop in the profiler.
+	if (CollectorAvailable === false) return;
+
 	FlushTimer = setTimeout(Flush, BatchIntervalMs);
 };
 

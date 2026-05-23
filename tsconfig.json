@@ -34,7 +34,9 @@
 
 		"typeRoots": ["./node_modules/@types", "./node_modules"],
 
-		"types": ["astro/client", "astro/env"]
+		"types": ["astro/client", "astro/env"],
+
+		"composite": true
 	},
 
 	"exclude": ["Target", "node_modules"],

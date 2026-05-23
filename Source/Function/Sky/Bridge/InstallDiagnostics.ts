@@ -5,35 +5,24 @@
  *
  * Mountain emits `sky://diagnostics/changed` after each `Diagnostic.Set`
  * from Cocoon's `vscode.languages.createDiagnosticCollection().set(...)`.
- * Without a renderer-side consumer that pushes into the workbench's
- * `IMarkerService`, the data lands in Mountain's `DiagnosticsMap` but
- * the editor never paints red squiggles and the Problems panel stays
- * empty - every language extension's compile errors / lint warnings /
- * type errors are invisible.
+ * We translate per-URI marker arrays into `IMarkerService.changeOne(owner,
+ * URI, markers)` calls. `Markers.changeOne` REPLACES the marker set for
+ * that URI under the given owner - matching VS Code's `MainThreadDiagnostics`
+ * behaviour where each `set()` call overwrites the previous diagnostic state.
  *
- * Payload shape (from `DiagnosticProvider.SetDiagnostics`): `{ owner,
- * changedURIs: [{ uri, markers }] }`. We translate per-URI marker
- * arrays into `IMarkerService.changeOne(owner, URI, markers)` calls.
- * `Markers.changeOne` REPLACES the marker set for that URI under the
- * given owner - matching VS Code's `MainThreadDiagnostics` behaviour
- * where each `set()` call overwrites the previous diagnostic state.
+ * ## How VS Code's Problems panel works (do not change this)
  *
- * ## Why the Problems panel needs `openView`
+ * - `IMarkerService.changeOne()` stores markers and fires `onMarkerChanged`
+ * - The Problems panel (`MarkersView`) subscribes to `onMarkerChanged` when
+ *   it is visible, and calls `reInitialize()` (bulk-read from IMarkerService)
+ *   when it first becomes visible
+ * - The status bar badge reads from `IMarkerService.read()` directly
+ * - This is ad-hoc and reactive - we never force the panel open
  *
- * `MarkersView.reInitialize()` (the bulk read from `IMarkerService`) only
- * runs inside `onDidChangeMarkersViewVisibility(true)`. Until the panel
- * has been opened at least once, the `onMarkerChanged` subscription in
- * `onVisibleDisposables` does not exist, and `MicrotaskEmitter.fire()`
- * silently drops events when `hasListeners() === false`. Markers ARE
- * stored in `MarkerService._data` via `changeOne`, but nobody re-reads
- * them until the panel opens. `openView(id, false)` triggers
- * `setVisible(true)` → `reInitialize()` → bulk `markerService.read()`
- * → `markersModel.setResourceMarkers(...)` → panel renders.
- *
- * This must fire on EVERY batch where the panel is not yet visible, not
- * just the first one. A one-shot guard means a second language server
- * (e.g. rust-analyzer activating after TypeScript) never triggers the
- * panel population.
+ * The only additional thing we do: if the panel is already open and the
+ * persisted `activeFile` filter (stored in Memento across sessions) is on,
+ * clear it so all markers are visible. This mirrors what VS Code's own
+ * MainThreadDiagnostics does when diagnostics first arrive.
  */
 
 export default async (Dependencies: {
@@ -52,7 +41,6 @@ export default async (Dependencies: {
 			revive?(value: unknown): unknown;
 		};
 		Views?: {
-			openView?(id: string, focus: boolean): Promise<unknown>;
 			getViewWithId?(id: string): unknown;
 		};
 		[key: string]: unknown;
@@ -60,11 +48,6 @@ export default async (Dependencies: {
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { Register, GetServices, Invoke } = Dependencies;
-
-	// Throttle: don't call openView more than once per second during rapid
-	// multi-file diagnostic batches (rust-analyzer can fire 50+ events/sec).
-	let LastOpenViewMs = 0;
-	const OpenViewThrottleMs = 1000;
 
 	// Revive a marker's relatedInformation[].resource fields from URI strings
 	// to real URI instances so MarkersView's label service can render them.
@@ -90,6 +73,10 @@ export default async (Dependencies: {
 		});
 	};
 
+	// One-time: clear the persisted activeFile filter if the panel is already
+	// open. Only runs once per session - no openView, no force-showing.
+	let ActiveFilterChecked = false;
+
 	await Register("sky://diagnostics/changed", (Payload: any) => {
 		const Services = GetServices();
 		const Markers = (Services as any)?.Markers;
@@ -110,8 +97,6 @@ export default async (Dependencies: {
 			return;
 		}
 
-		let PushedTotal = 0;
-
 		for (const Entry of Changed) {
 			try {
 				const Uri = Entry?.uri;
@@ -127,8 +112,8 @@ export default async (Dependencies: {
 							? Uri
 							: URICtor.from(Uri);
 
-				// Revive relatedInformation resource URIs before passing to
-				// IMarkerService so MarkersView can render related-info links.
+				// Revive relatedInformation resource URIs so MarkersView
+				// label service can render related-info links.
 				const FinalMarkers = RawMarkers.map((M: any) => {
 					if (
 						!M ||
@@ -146,65 +131,37 @@ export default async (Dependencies: {
 				});
 
 				Markers.changeOne(Owner, RealUri, FinalMarkers);
-				PushedTotal += FinalMarkers.length;
 			} catch {
 				// Swallow - one bad entry must not stop the rest.
 			}
 		}
 
-		if (PushedTotal === 0) return;
-
-		// Open the Problems panel if it is not currently visible so that
-		// MarkersView.reInitialize() bulk-reads the stored markers. This is
-		// required on EVERY batch where the panel is closed, not just the
-		// first - a language server that activates after the first batch
-		// (e.g. rust-analyzer starting after TypeScript) would otherwise
-		// never populate the panel.
-		const Now = Date.now();
-		if (Now - LastOpenViewMs < OpenViewThrottleMs) return;
-
-		const ViewsSvc = (Services as any)?.Views;
-		if (typeof ViewsSvc?.openView !== "function") return;
-
-		// Skip openView when the panel is already visible - the active
-		// onMarkerChanged subscription inside onVisibleDisposables handles
-		// incremental updates automatically.
-		const Existing =
-			typeof ViewsSvc?.getViewWithId === "function"
-				? (ViewsSvc.getViewWithId(
-						"workbench.panel.markers.view",
-					) as any)
-				: null;
-		if (Existing?.isVisible?.() === true) return;
-
-		LastOpenViewMs = Now;
-
-		void (
-			ViewsSvc.openView(
-				"workbench.panel.markers.view",
-				false,
-			) as Promise<any>
-		)
-			?.then?.((View: any) => {
-				// Clear the persisted activeFile filter (stored in Memento
-				// across sessions) which causes "count shows but panel empty"
-				// when the user had toggled "Filter by Active File" in a
-				// previous session.
-				if (View?.filters?.activeFile === true) {
+		// One-time: if the Problems panel is already open and the persisted
+		// activeFile filter is on, clear it so all markers are visible.
+		// This is the only UI intervention - we never force the panel open.
+		if (!ActiveFilterChecked) {
+			ActiveFilterChecked = true;
+			try {
+				const ViewsSvc = (Services as any)?.Views;
+				const View =
+					typeof ViewsSvc?.getViewWithId === "function"
+						? (ViewsSvc.getViewWithId(
+								"workbench.panel.markers.view",
+							) as any)
+						: null;
+				if (View?.isVisible?.() && View?.filters?.activeFile === true) {
 					View.filters.activeFile = false;
+					Invoke("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: [
+							"markers-bridge",
+							`cleared activeFile filter for owner=${Owner}`,
+						],
+					}).catch(() => {});
 				}
-				// Log for diagnostics - now runs per-batch not just once.
-				const Stats = View?.getFilterStats?.() as
-					| { total: number; filtered: number }
-					| undefined;
-				Invoke("MountainIPCInvoke", {
-					method: "diagnostic:log",
-					params: [
-						"markers-bridge",
-						`open-panel owner=${Owner} uris=${Changed.length} pushed=${PushedTotal} filterTotal=${Stats?.total ?? "?"} filterFiltered=${Stats?.filtered ?? "?"} activeFileCleared=${View?.filters?.activeFile === false}`,
-					],
-				}).catch(() => {});
-			})
-			?.catch?.(() => {});
+			} catch {
+				// Non-fatal.
+			}
+		}
 	});
 };

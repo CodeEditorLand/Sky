@@ -696,6 +696,40 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		await import("./Bridge/InstallEditorOperations.js")
 	).default({ Register, GetServices, Invoke: invoke });
 
+	// ---- Inline completions (Copilot / Roo ghost text) ----
+	// Registers a Land InlineCompletionsProvider with Monaco's
+	// ILanguageFeaturesService that forwards requests to Mountain →
+	// Cocoon's registered `vscode.languages.registerInlineCompletionItemProvider`
+	// providers. B4 (Anchor) wired the Mountain/Cocoon gRPC pipeline;
+	// this module wires the Monaco/workbench side.
+	void (async () => {
+		try {
+			await (
+				await import("./Bridge/InstallInlineCompletions.js")
+			).default({ GetServices, Invoke: invoke });
+		} catch {
+			/* non-fatal: inline ghost text won't work but boot is unaffected */
+		}
+	})();
+
+	// ---- Tree view reveal ----
+	// Extension calls `treeView.reveal(element)` → Mountain emits this →
+	// Sky opens the view and scrolls to the element.
+	await Register("sky://tree-view/reveal", (Payload: any) => {
+		try {
+			const ViewId = Payload?.viewId ?? "";
+			if (!ViewId) return;
+			const Services = GetServices();
+			// Open the view (makes it visible if it's collapsed)
+			const ViewsService = (Services as any)?.Views;
+			if (ViewsService?.openView) {
+				void ViewsService.openView(ViewId, !!Payload?.options?.focus).catch(() => {});
+			}
+		} catch {
+			/* swallow - non-fatal */
+		}
+	});
+
 	// ---- Native ----
 	await Register("sky://native/openExternal", ({ url }: any) => {
 		if (url) window.open(url, "_blank", "noopener,noreferrer");

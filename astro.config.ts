@@ -1152,8 +1152,9 @@ export default defineConfig({
 					},
 				},
 			},
-			// Disable sourcemaps and minification to reduce memory
-			sourcemap: false,
+			// Sourcemaps: inline in dev (On=true) for WKWebView DevTools usability;
+			// disabled in prod to avoid shipping 3×-larger bundle artifacts.
+			sourcemap: On ? "inline" : false,
 			manifest: false,
 			minify: false,
 			cssMinify: false,

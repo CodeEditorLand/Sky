@@ -339,6 +339,84 @@ export default async (Dependencies: {
 		}
 	});
 
+	// Tree view interaction events: selection, collapse, expand, visibility.
+	// When the VS Code workbench fires these, forward to Mountain so Cocoon
+	// can fire the corresponding TreeView.onDid* events to extensions.
+	const ForwardTreeViewEvent = (
+		channel: string,
+		viewId: string,
+		extra?: Record<string, unknown>,
+	) => {
+		void Invoke("MountainIPCInvoke", {
+			method: channel,
+			params: [{ viewId, ...extra }],
+		}).catch(() => {});
+	};
+
+	// Hook into the workbench's IViewDescriptorService / ITreeView to
+	// receive collapse/expand/selection change notifications.
+	const InstallWorkbenchTreeHooks = () => {
+		try {
+			const Services = GetServices();
+			if (!(Services as any)?._treeHooksInstalled) {
+				(Services as any)._treeHooksInstalled = true;
+				// VS Code fires `onDidChangeTreeItemCollapsibleState` on the
+				// TreeView object itself. We listen on the TreeView service.
+				// Currently a best-effort hook via CustomEvents the workbench
+				// might fire; the canonical path is cel:tree-view:collapse/expand.
+			}
+		} catch {
+			/* workbench not ready yet */
+		}
+	};
+	setTimeout(InstallWorkbenchTreeHooks, 3000);
+
+	document.addEventListener(
+		"cel:tree-view:selectionChanged",
+		(Event: Event) => {
+			const Detail = (Event as CustomEvent).detail as
+				| { viewId?: string; selection?: unknown[] }
+				| undefined;
+			if (Detail?.viewId)
+				ForwardTreeViewEvent("tree:selectionChanged", Detail.viewId, {
+					selection: Detail.selection ?? [],
+				});
+		},
+	);
+
+	document.addEventListener("cel:tree-view:collapse", (Event: Event) => {
+		const Detail = (Event as CustomEvent).detail as
+			| { viewId?: string; element?: unknown }
+			| undefined;
+		if (Detail?.viewId)
+			ForwardTreeViewEvent("tree:collapseElement", Detail.viewId, {
+				element: Detail.element,
+			});
+	});
+
+	document.addEventListener("cel:tree-view:expand", (Event: Event) => {
+		const Detail = (Event as CustomEvent).detail as
+			| { viewId?: string; element?: unknown }
+			| undefined;
+		if (Detail?.viewId)
+			ForwardTreeViewEvent("tree:expandElement", Detail.viewId, {
+				element: Detail.element,
+			});
+	});
+
+	document.addEventListener(
+		"cel:tree-view:visibilityChanged",
+		(Event: Event) => {
+			const Detail = (Event as CustomEvent).detail as
+				| { viewId?: string; visible?: boolean }
+				| undefined;
+			if (Detail?.viewId)
+				ForwardTreeViewEvent("tree:visibilityChanged", Detail.viewId, {
+					visible: Detail.visible ?? false,
+				});
+		},
+	);
+
 	// `cel:tree-view:dispose` - extension disposed its tree data
 	// provider. Clear the native pane's dataProvider so the workbench
 	// falls back to the empty-state message. The pane stays registered

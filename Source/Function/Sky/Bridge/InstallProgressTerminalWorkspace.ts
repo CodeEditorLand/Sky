@@ -62,6 +62,12 @@ export default async (Dependencies: {
 	await Register("sky://progress/complete", ({ id }: any) => {
 		DismissProgress(id);
 	});
+	// `sky://progress/end` is a separate SkyEvent (SkyEvent::ProgressEnd)
+	// emitted by Mountain's Wind-IPC progress handlers. Without this handler
+	// Wind-initiated progress bars never dismiss in Sky.
+	await Register("sky://progress/end", ({ id }: any) => {
+		DismissProgress(id);
+	});
 
 	const TerminalCommand = (Id: string): void => {
 		const Result = GetWorkbench()?.commands.executeCommand(

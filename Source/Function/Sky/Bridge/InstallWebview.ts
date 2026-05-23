@@ -732,6 +732,30 @@ export default async (Dependencies: {
 		);
 	});
 
+	// ---- Webview dispose ----
+	// Mountain emits `sky://webview/dispose` from DisposeWebviewPanel.rs,
+	// WebviewDispose.rs, and WebviewDispose gRPC notification when an
+	// extension calls `panel.dispose()`. This handler was previously in
+	// InstallTasksAndDecorations.ts and was accidentally removed.
+	// Without it, panels are never cleaned up and stale DOM nodes accumulate.
+	await Register("sky://webview/dispose", ({ panelId }: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:webview:dispose", { detail: { panelId } }),
+		);
+		// Clean up from the registered panels map if the handle is present.
+		const Handle = panelId ?? "";
+		if (Handle) {
+			try {
+				const PanelRegistry: Map<string, any> | undefined = (
+					globalThis as any
+				).__CEL_WEBVIEW_PANELS__;
+				PanelRegistry?.delete(String(Handle));
+			} catch {
+				/* non-fatal */
+			}
+		}
+	});
+
 	// ---- Custom editors ----
 	// Mountain emits `sky://webview/registerCustomEditor` with payload
 	// `{ method: "webview.registerCustomEditor", handle: <number>,

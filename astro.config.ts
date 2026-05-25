@@ -813,7 +813,11 @@ export default defineConfig({
 			},
 		},
 		!On ? CompressBundle : null,
-		!On ? BakeExtensionManifest : null,
+		// BakeExtensionManifest runs in both dev and production so Mountain
+		// always gets a warm extension cache (count>0). It has built-in
+		// staleness detection and only rewrites when a package.json changes,
+		// so it adds <10ms to repeated dev builds once the cache is hot.
+		BakeExtensionManifest,
 	],
 
 	output: "static",

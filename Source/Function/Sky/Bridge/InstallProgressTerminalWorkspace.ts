@@ -105,6 +105,53 @@ export default async (Dependencies: {
 		TerminalDispatch("cel:terminal:exit")({ id }),
 	);
 
+	// Hook ITerminalService.onDidChangeActiveInstance so the Cocoon
+	// extension host's `vscode.window.activeTerminal` stays accurate when
+	// the user switches between terminal tabs in the UI.
+	const WireActiveTerminalTracking = (): void => {
+		try {
+			const TerminalSvc = (globalThis as any).__CEL_SERVICES__?.Terminal;
+
+			if (!TerminalSvc?.onDidChangeActiveInstance) {
+				return;
+			}
+
+			TerminalSvc.onDidChangeActiveInstance((Instance: any) => {
+				const TermId: number | null =
+					typeof Instance?.instanceId === "number"
+						? Instance.instanceId
+						: null;
+
+				try {
+					const Tauri =
+						(globalThis as any).__TAURI__?.core?.invoke ??
+						(globalThis as any).__TAURI__?.invoke;
+
+					if (typeof Tauri === "function") {
+						Tauri("MountainIPCInvoke", {
+							method: "localPty:setActive",
+							params: [TermId],
+						}).catch(() => {});
+					}
+				} catch {
+					/* swallow - never let tracking break the terminal */
+				}
+			});
+		} catch {
+			/* swallow - ITerminalService may not be populated yet */
+		}
+	};
+
+	if ((globalThis as any).__CEL_SERVICES__?.Terminal) {
+		WireActiveTerminalTracking();
+	} else {
+		window.addEventListener(
+			"cel:services-ready",
+			() => WireActiveTerminalTracking(),
+			{ once: true },
+		);
+	}
+
 	await Register(
 		"sky://workspaces/changed",
 

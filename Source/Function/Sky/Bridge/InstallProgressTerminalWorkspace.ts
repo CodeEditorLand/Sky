@@ -115,7 +115,10 @@ export default async (Dependencies: {
 			if (typeof Tauri !== "function") return;
 
 			// OSC 633 ; A = prompt start → shell integration is active.
-			if (!IntegrationActivated.has(Id) && Data.includes("\x1b]633;A\x07")) {
+			if (
+				!IntegrationActivated.has(Id) &&
+				Data.includes("\x1b]633;A\x07")
+			) {
 				IntegrationActivated.add(Id);
 				Tauri("MountainIPCInvoke", {
 					method: "localPty:setShellIntegrationActive",
@@ -140,10 +143,7 @@ export default async (Dependencies: {
 	};
 
 	await Register("sky://terminal/data", ({ id, data }: any) => {
-		if (
-			typeof data === "string" &&
-			data.includes("\x1b]633;")
-		) {
+		if (typeof data === "string" && data.includes("\x1b]633;")) {
 			NotifyShellOsc(id as number, data);
 		}
 		TerminalDispatch("cel:terminal:data")({ id, data });

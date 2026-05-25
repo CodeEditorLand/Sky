@@ -57,11 +57,43 @@ export default async (Dependencies: {
 	// EditorService. Registering SimpleRelays here caused double-handling:
 	// both the DOM relay and the real handler fired on every Mountain emit.
 
-	// Editor decorations - 16ms-batched create/dispose.
+	// Editor decorations - real workbench `ICodeEditorService.registerDecorationType`
+	// call. The previous DOM-event-only relay was inert: the workbench never
+	// learned the decoration type existed, so when `setDecorationsByType` was
+	// later called with the same key, Monaco's renderer had no styling registered
+	// and silently rendered nothing. Every extension that uses
+	// `createTextEditorDecorationType` (ESLint squiggles, GitLens current-line
+	// blame, Error Lens inline messages, Continue inline completions) appeared
+	// to no-op.
+	//
+	// Real registration: pull `ICodeEditorService` from `__CEL_SERVICES__`,
+	// call `registerDecorationType("ext", key, options)`. The "ext" description
+	// is the standard MainThreadCodeEditors marker so workbench code paths that
+	// inspect the parentTypeKey still recognise these as extension-origin.
 	await Register(
 		"sky://decoration/createTextEditorDecorationType",
 
 		(Payload: any) => {
+			// Batch may carry many decoration registrations in one tick.
+			const Entries: any[] = Array.isArray(Payload?.batch)
+				? Payload.batch
+				: [Payload];
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			const CodeEditor = Services?.CodeEditor;
+			if (!CodeEditor?.registerDecorationType) {
+				DispatchDecorationBatch("cel:decoration:create", Payload);
+				return;
+			}
+			for (const Entry of Entries) {
+				try {
+					const Key = String(Entry?.key ?? "");
+					if (!Key) continue;
+					const Options = Entry?.options ?? {};
+					CodeEditor.registerDecorationType("ext", Key, Options);
+				} catch {
+					/* swallow per-entry - one bad reg mustn't kill the rest */
+				}
+			}
 			DispatchDecorationBatch("cel:decoration:create", Payload);
 		},
 	);
@@ -70,6 +102,21 @@ export default async (Dependencies: {
 		"sky://decoration/disposeTextEditorDecorationType",
 
 		(Payload: any) => {
+			const Entries: any[] = Array.isArray(Payload?.batch)
+				? Payload.batch
+				: [Payload];
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			const CodeEditor = Services?.CodeEditor;
+			if (CodeEditor?.removeDecorationType) {
+				for (const Entry of Entries) {
+					try {
+						const Key = String(Entry?.key ?? "");
+						if (Key) CodeEditor.removeDecorationType(Key);
+					} catch {
+						/* swallow */
+					}
+				}
+			}
 			DispatchDecorationBatch("cel:decoration:dispose", Payload);
 		},
 	);

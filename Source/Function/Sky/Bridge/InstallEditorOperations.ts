@@ -46,17 +46,38 @@ export default async (Dependencies: {
 				const Uri = Entry?.uri;
 				const RangesOrOptions = Entry?.rangesOrOptions ?? [];
 				if (!Key || !Uri) continue;
-				// Find Monaco editor matching the URI.
 				const Editors: any[] =
 					CodeEditorService?.listCodeEditors?.() ?? [];
 				for (const Ed of Editors) {
 					try {
 						const EditorUri = Ed?.getModel?.()?.uri?.toString?.();
 						if (
-							EditorUri === Uri ||
-							EditorUri?.endsWith(Uri.split("/").pop() ?? "")
+							EditorUri !== Uri &&
+							!EditorUri?.endsWith(Uri.split("/").pop() ?? "")
 						) {
-							Ed.setDecorations?.(Key, RangesOrOptions);
+							continue;
+						}
+						// Monaco's CodeEditor exposes `setDecorationsByType
+						// (description, decorationTypeKey, decorations)` -
+						// the form that resolves styling against the
+						// type registered through `registerDecorationType`.
+						// The earlier `editor.setDecorations(key, ranges)`
+						// call hit a different API (the deprecated
+						// `editor.setDecorations` no longer exists on
+						// current Monaco), so decorations silently dropped.
+						// "ext" matches the description we registered in
+						// `InstallTasksAndDecorations.ts`.
+						if (typeof Ed.setDecorationsByType === "function") {
+							Ed.setDecorationsByType(
+								"ext",
+								Key,
+								RangesOrOptions,
+							);
+						} else if (typeof Ed.setDecorations === "function") {
+							// Older Monaco fallback - kept for graceful
+							// degradation, but the registered-type path
+							// above is what production paint relies on.
+							Ed.setDecorations(Key, RangesOrOptions);
 						}
 					} catch {
 						/* skip bad editor */

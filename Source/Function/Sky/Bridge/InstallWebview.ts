@@ -77,7 +77,31 @@ export default async (Dependencies: {
 		// shape mismatch, or the Layout part not ready yet) we fall back
 		// to the historical no-op placeholder so the set-html listener
 		// at least doesn't throw on `webview.html = X` assignment.
+		// Forward panel-mode webview events back to the extension via Cocoon's
+		// notification stream. Stock VS Code's MainThreadWebviewPanels owns
+		// this lifecycle directly; in Land that path is replaced by the
+		// Cocoon proxy in CreateWebviewPanel.ts, so we have to push the
+		// workbench events back through `cocoon:notify` keyed by the
+		// handle that Cocoon's proxy emitter listens on
+		// (`webview.message:<handle>` / `webview.dispose:<handle>` /
+		// `webview.viewState:<handle>`).
+		const NotifyForPanel = (Method: string, NotifyPayload: any) => {
+			try {
+				const Inv =
+					(globalThis as any).__TAURI__?.core?.invoke ??
+					(globalThis as any).__TAURI__?.invoke;
+				if (typeof Inv !== "function") return;
+				Inv("MountainIPCInvoke", {
+					method: "cocoon:notify",
+					params: [Method, NotifyPayload],
+				}).catch(() => null);
+			} catch {
+				/* swallow */
+			}
+		};
+
 		let RealOverlayWebview: any = null;
+		let RealWebviewInput: any = null;
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
 			const WebviewPanels = Services?.WebviewPanels;
@@ -86,15 +110,37 @@ export default async (Dependencies: {
 				WebviewPanels &&
 				typeof WebviewPanels.openWebview === "function"
 			) {
+				// Origin must be stable per (viewType, extensionId) for
+				// session storage / cookies to stick. Use the viewType as a
+				// best-effort stable seed - real extension identity isn't
+				// available on the Sky side, so this approximates upstream's
+				// `ExtensionKeyedWebviewOriginStore`.
+				const Origin = `webview-panel-${ViewType}`;
 				const WebviewInput = WebviewPanels.openWebview(
 					{
-						origin: undefined,
+						origin: Origin,
 						providedViewType: ViewType,
 						title: Title,
-						options: { purpose: "webviewView" },
+						// `disableServiceWorker: true` matches the
+						// `Patch/Webview/Iframe/Service/Worker.ts` transform
+						// that strips SW registration from `pre/index.html`.
+						// WKWebView in Tauri refuses to register SWs on
+						// `vscode-webview://` so leaving SW enabled stalls
+						// the iframe handshake forever.
+						options: {
+							disableServiceWorker: true,
+							retainContextWhenHidden: true,
+						},
 						contentOptions: {
 							allowScripts: true,
 							allowForms: true,
+							// localResourceRoots default = no restrictions;
+							// extensions populate this via webview.setOptions
+							// once they've activated. Leaving it undefined
+							// (= unrestricted in upstream) prevents the
+							// "blocked extension resource" failure mode on
+							// first paint.
+							localResourceRoots: undefined,
 						},
 						extension: undefined,
 					},
@@ -103,6 +149,7 @@ export default async (Dependencies: {
 					undefined,
 					{ preserveFocus: true },
 				);
+				RealWebviewInput = WebviewInput ?? null;
 				RealOverlayWebview = WebviewInput?.webview ?? null;
 			}
 		} catch {
@@ -112,7 +159,88 @@ export default async (Dependencies: {
 			RealOverlayWebview &&
 			typeof RealOverlayWebview.setHtml === "function"
 		) {
-			HandleRegistry.set(Handle, { webview: RealOverlayWebview });
+			HandleRegistry.set(Handle, {
+				webview: RealOverlayWebview,
+				input: RealWebviewInput,
+			});
+
+			// Subscribe to the panel webview's events and forward them to
+			// the extension via Cocoon's emitter. Without these subscriptions
+			// extensions get a non-functional panel: postMessage from the
+			// iframe never reaches their `webview.onDidReceiveMessage`
+			// listener, `panel.onDidDispose` never fires when the user
+			// closes the editor tab, and `panel.onDidChangeViewState`
+			// stays silent through every group-change.
+			try {
+				RealOverlayWebview.onMessage?.((Message: unknown) => {
+					NotifyForPanel("webview.message", {
+						handle: Handle,
+						message: Message,
+					});
+				});
+			} catch {
+				/* swallow */
+			}
+
+			// IEditorService-driven viewState pushes. The WebviewInput
+			// extends EditorInput, so `onWillDispose` fires when the user
+			// closes the tab (or the editor is replaced).
+			try {
+				RealWebviewInput?.onWillDispose?.(() => {
+					NotifyForPanel("webview.dispose", { handle: Handle });
+					HandleRegistry.delete(Handle);
+				});
+			} catch {
+				/* swallow */
+			}
+
+			// Active / visible tracking: hook IEditorService.onDidActiveEditorChange
+			// once globally and route per-handle. We don't have a per-input
+			// visibility event; the active-change emitter is the closest
+			// approximation upstream's MainThreadWebviewPanels uses too.
+			try {
+				const Services: any = (globalThis as any).__CEL_SERVICES__;
+				const EditorService = Services?.Editor;
+				if (
+					EditorService &&
+					typeof EditorService.onDidActiveEditorChange === "function"
+				) {
+					const Subscription = EditorService.onDidActiveEditorChange(
+						() => {
+							const Active = EditorService.activeEditor;
+							const IsActive = Active === RealWebviewInput;
+							NotifyForPanel("webview.viewState", {
+								handle: Handle,
+								active: IsActive,
+								visible: IsActive,
+								viewColumn: 1,
+							});
+						},
+					);
+					RealWebviewInput?.onWillDispose?.(() => {
+						try {
+							Subscription?.dispose?.();
+						} catch {
+							/* swallow */
+						}
+					});
+				}
+			} catch {
+				/* swallow */
+			}
+
+			// If any HTML arrived BEFORE openWebview returned (race against
+			// the extension's `panel.webview.html = "..."` setter that runs
+			// inside `createWebviewPanel`), replay it now so first paint
+			// doesn't miss.
+			try {
+				const Pending = PendingWebviewHtmlByHandle.get(Handle);
+				if (Pending) {
+					RealOverlayWebview.setHtml(Pending);
+				}
+			} catch {
+				/* swallow */
+			}
 		} else {
 			// Fallback placeholder. Sky's set-html listener will write
 			// to `_pendingHtml` via the html setter; once a future panel
@@ -345,66 +473,35 @@ export default async (Dependencies: {
 	// the parked workbench view's webview when a viewId match exists.
 	await Register("sky://webview/postMessage", (Payload: any) => {
 		const ViewId: string = String(Payload?.viewId ?? "");
+		const Handle: string | number =
+			Payload?.handle != null ? Payload.handle : "";
 		const Message = Payload?.message;
-		// Diagnostic: log entry
-		Invoke("MountainIPCInvoke", {
-			method: "diagnostic:log",
-			params: [
-				"webview-bridge",
-				"postMessage-entry viewId=" +
-					ViewId +
-					" hasMsg=" +
-					(Message != null) +
-					" msgType=" +
-					(Message?.type ?? "?"),
-			],
-		}).catch(() => {});
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:post-message", {
 				detail: { ...Payload, viewId: ViewId, message: Message },
 			}),
 		);
-		if (!ViewId) return;
+		// Resolution priority: viewId → sidebar `IWebviewViewService` view;
+		// handle → editor-area panel created via `IWebviewWorkbenchService`.
+		// Stock VS Code's MainThreadWebviewPanels keys panels by `handle`;
+		// our Cocoon proxy in CreateWebviewPanel.ts mirrors that, so the
+		// fallback by-handle lookup is what makes panel-mode postMessage
+		// actually reach the iframe. Previously only viewId was checked,
+		// silently dropping every panel-mode postMessage.
 		const Registry: Map<string, any> | undefined = (globalThis as any)
 			.__CEL_WEBVIEW_VIEWS__;
-		const ParkedView = Registry?.get(ViewId);
-		// Diagnostic: log registry state
-		Invoke("MountainIPCInvoke", {
-			method: "diagnostic:log",
-			params: [
-				"webview-bridge",
-				"postMessage-registry viewId=" +
-					ViewId +
-					" found=" +
-					!!ParkedView +
-					" hasPostMessage=" +
-					!!ParkedView?.webview?.postMessage,
-			],
-		}).catch(() => {});
-		if (!ParkedView?.webview?.postMessage) return;
+		const HandleRegistry: Map<string | number, any> | undefined = (
+			globalThis as any
+		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__;
+		const Target =
+			(ViewId && Registry?.get(ViewId)) ||
+			(Handle !== "" && HandleRegistry?.get(Handle));
+		const Webview = Target?.webview ?? Target;
+		if (typeof Webview?.postMessage !== "function") return;
 		try {
-			Invoke("MountainIPCInvoke", {
-				method: "diagnostic:log",
-				params: [
-					"webview-bridge",
-					"postMessage-calling viewId=" +
-						ViewId +
-						" msgType=" +
-						(Message?.type ?? "?"),
-				],
-			}).catch(() => {});
-			ParkedView.webview.postMessage(Message);
-		} catch (_e) {
-			Invoke("MountainIPCInvoke", {
-				method: "diagnostic:log",
-				params: [
-					"webview-bridge",
-					"postMessage-error viewId=" +
-						ViewId +
-						" error=" +
-						String(_e).slice(0, 120),
-				],
-			}).catch(() => {});
+			Webview.postMessage(Message);
+		} catch {
+			/* swallow - dead webview, message simply drops */
 		}
 	});
 

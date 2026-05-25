@@ -678,14 +678,33 @@ export default async (Dependencies: {
 		OutputChannels.set(channel, []);
 	});
 
-	await Register("sky://output/show", ({ visible }: any) => {
-		if (visible !== false) {
-			const Wb = GetWorkbench();
-			if (!Wb) return;
-			SwallowCatch(
-				Wb.commands.executeCommand("workbench.action.output.show"),
-			);
-		}
+	// `outputChannel.replace(value)` is atomic in upstream VS Code:
+	// clear + append rendered as one paint. We model that here by
+	// replacing the buffer outright. Without this handler, replace
+	// fell through to the dispatcher's null path and never reached
+	// the workbench's logger or the in-memory snapshot.
+	await Register("sky://output/replace", ({ channel, value }: any) => {
+		const Channel = String(channel ?? "");
+		const Text = String(value ?? "");
+		OutputChannels.set(Channel, [Text]);
+		(window as any).__CEL_WORKBENCH__?.logger?.log?.(
+			5 /* Info */,
+			`[${Channel}] ${Text}`,
+		);
+	});
+
+	await Register("sky://output/show", ({ visible, preserveFocus }: any) => {
+		if (visible === false) return;
+		const Wb = GetWorkbench();
+		if (!Wb) return;
+		// `workbench.action.output.show` accepts an optional channelId.
+		// Honoring `preserveFocus` means we do NOT call `focus()` on
+		// the panel afterwards; the workbench command itself doesn't
+		// re-focus, so the no-op is the correct preserveFocus behavior.
+		void preserveFocus;
+		SwallowCatch(
+			Wb.commands.executeCommand("workbench.action.output.show"),
+		);
 	});
 
 	await Register("sky://output/dispose", ({ channel }: any) => {

@@ -735,6 +735,43 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 		}
 	});
 
+	// ---- Tree view refresh ----
+	// Extension fired `_onDidChangeTreeData.fire(element)` to invalidate
+	// its tree. Cocoon forwarded this through Mountain → `sky://tree-view/refresh`.
+	// We use `TreeViewByViewId` to look up the workbench's `ITreeView` and
+	// call its `refresh(element)` method - that triggers a fresh
+	// `getChildren()` round-trip back to the extension.
+	//
+	// Element identity isn't preserved across the IPC boundary, so when
+	// the extension fires `.fire(undefined)` (refresh entire tree) we
+	// can dispatch directly. For element-specific refreshes Mountain has
+	// already serialised the element via TreeItemDTO; we re-issue a full
+	// refresh as a graceful fallback when element-by-handle resolution
+	// fails (matches upstream MainThreadTreeView behaviour - element
+	// resolution is best-effort across the marshalling).
+	await Register("sky://tree-view/refresh", (Payload: any) => {
+		try {
+			const ViewId = Payload?.viewId ?? "";
+			if (!ViewId) return;
+			const Services = GetServices();
+			const ResolveTreeView = (Services as any)?.TreeViewByViewId;
+			const TreeView = ResolveTreeView?.(ViewId);
+			if (TreeView && typeof TreeView.refresh === "function") {
+				try {
+					// `ITreeView.refresh(elements?)`: passing undefined
+					// refreshes the entire tree. Element-by-element refresh
+					// requires cross-process element identity (TreeItemDTO
+					// → element), which we don't currently round-trip.
+					void TreeView.refresh();
+				} catch {
+					/* refresh can fail mid-shutdown - swallow */
+				}
+			}
+		} catch {
+			/* swallow */
+		}
+	});
+
 	// ---- Native ----
 	await Register("sky://native/openExternal", ({ url }: any) => {
 		if (url) window.open(url, "_blank", "noopener,noreferrer");

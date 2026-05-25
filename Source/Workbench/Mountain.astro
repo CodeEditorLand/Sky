@@ -130,7 +130,7 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 			setTimeout(async () => {
 				try {
 					const { InstallSkyBridge } =
-						await import("@codeeditorland/sky/Source/Function/Sky/Bridge.js");
+						await import("../Function/Sky/Bridge.js");
 					await InstallSkyBridge();
 					performance.mark("land:mountain:skybridge:installed");
 				} catch (Error) {

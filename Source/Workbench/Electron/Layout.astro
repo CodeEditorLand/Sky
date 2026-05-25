@@ -48,7 +48,7 @@ import TelemetryBridge from "../TelemetryBridge.astro";
 		//    the workbench starts pumping events to empty listeners.
 		try {
 			const { InstallSkyBridge } =
-				await import("@codeeditorland/sky/Source/Function/Sky/Bridge.js");
+				await import("../../Function/Sky/Bridge.js");
 			await InstallSkyBridge();
 			performance.mark("land:electron:skybridge:installed");
 		} catch (Error) {

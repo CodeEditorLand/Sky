@@ -161,7 +161,7 @@ const Disable =
 		if (import.meta.env.Disable !== "true") {
 			try {
 				const { InstallSkyBridge } =
-					await import("@codeeditorland/sky/Source/Function/Sky/Bridge.js");
+					await import("../../../Function/Sky/Bridge.js");
 				await InstallSkyBridge();
 				performance.mark("land:bundled:electron:skybridge:installed");
 			} catch (Error) {

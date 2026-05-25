@@ -216,6 +216,84 @@ export default async (Dependencies: {
 						}).catch(() => {});
 					} catch {}
 				});
+
+				// Scroll / visible-ranges change. Monaco's
+				// `onDidScrollChange` fires per frame while the user
+				// scrolls; debounce to 60ms so we ship at most ~16fps
+				// of IPC. Payload mirrors VS Code's
+				// `TextEditorVisibleRangesChangeEvent` shape - a
+				// single `visibleRanges` array. Subscribers (code lens
+				// providers, "Open Reference in Peek View", `vscode.git`'s
+				// minimap) consume this to lazy-load decorations.
+				let ScrollFlushTimer: ReturnType<typeof setTimeout> | null =
+					null;
+				Ed.onDidScrollChange?.(() => {
+					if (ScrollFlushTimer !== null) return;
+					ScrollFlushTimer = setTimeout(() => {
+						ScrollFlushTimer = null;
+						try {
+							const Uri = Ed.getModel?.()?.uri?.toString?.();
+							if (!Uri) return;
+							const VisibleRanges =
+								typeof Ed.getVisibleRanges === "function"
+									? Ed.getVisibleRanges()
+									: [];
+							Invoke("MountainIPCInvoke", {
+								method: "sky:editor:visibleRangesChanged",
+								params: [
+									{
+										uri: Uri,
+										viewColumn: GetViewColumn(),
+										visibleRanges: VisibleRanges,
+									},
+								],
+							}).catch(() => {});
+						} catch {
+							/* swallow */
+						}
+					}, 60);
+				});
+
+				// Editor option changes (tab size, word wrap, etc.).
+				// VS Code exposes `TextEditorOptions`; the workbench's
+				// option-mutation surfaces fire `onDidChangeConfiguration`
+				// on Monaco. Forward the resolved options so the
+				// `vscode.window.onDidChangeTextEditorOptions` event
+				// fires for extensions reading active editor options.
+				Ed.onDidChangeConfiguration?.((E: any) => {
+					try {
+						const Uri = Ed.getModel?.()?.uri?.toString?.();
+						if (!Uri) return;
+						const Opts = Ed.getOptions?.();
+						const TabSize = Opts?.get?.(
+							/* EditorOption.tabSize */ undefined,
+						);
+						const InsertSpaces =
+							Ed.getModel?.()?.getOptions?.()?.insertSpaces;
+						Invoke("MountainIPCInvoke", {
+							method: "sky:editor:optionsChanged",
+							params: [
+								{
+									uri: Uri,
+									viewColumn: GetViewColumn(),
+									options: {
+										tabSize:
+											typeof TabSize === "number"
+												? TabSize
+												: undefined,
+										insertSpaces:
+											typeof InsertSpaces === "boolean"
+												? InsertSpaces
+												: undefined,
+										changedConfiguration: E,
+									},
+								},
+							],
+						}).catch(() => {});
+					} catch {
+						/* swallow */
+					}
+				});
 				// IDisposable from Monaco is either { dispose() } or a function.
 				if (D && typeof D.dispose === "function") {
 					SelectionDisposable = () => D.dispose();
@@ -281,6 +359,110 @@ export default async (Dependencies: {
 		}
 	} catch {
 		/* workbench events not yet available */
+	}
+
+	// ---- onDidChangeVisibleTextEditors ----
+	// Subscribe to IEditorService.onDidVisibleEditorsChange and forward
+	// every change as a single Mountain IPC call. Mountain then fans out
+	// to Cocoon as `$acceptVisibleEditorsChanged` so extensions hooking
+	// `vscode.window.onDidChangeVisibleTextEditors` (linters, lazy code
+	// lens, diagnostic clearers) react when the user opens / closes /
+	// switches tabs. Without this, those subscribers never fire and
+	// stale diagnostics accumulate against closed files.
+	try {
+		const Services = GetServices();
+		const EditorService = (Services as any)?.Editor;
+		if (EditorService?.onDidVisibleEditorsChange) {
+			EditorService.onDidVisibleEditorsChange(() => {
+				try {
+					const Visible: any[] =
+						EditorService.visibleTextEditorControls ??
+						EditorService.visibleEditorPanes ??
+						[];
+					const Uris: string[] = [];
+					for (const Pane of Visible) {
+						try {
+							const Uri =
+								Pane?.getModel?.()?.uri?.toString?.() ??
+								Pane?.input?.resource?.toString?.() ??
+								Pane?.input?.editorInput?.resource?.toString?.();
+							if (Uri) Uris.push(Uri);
+						} catch {
+							/* one pane failed, keep iterating */
+						}
+					}
+					Invoke("MountainIPCInvoke", {
+						method: "sky:editor:visibleChanged",
+						params: [{ uris: Uris }],
+					}).catch(() => {});
+				} catch {
+					/* swallow - workbench may be tearing down */
+				}
+			});
+		}
+	} catch {
+		/* IEditorService not yet exposed */
+	}
+
+	// ---- onDidChangeTabs / onDidChangeTabGroups ----
+	// Tab-level events are produced by IEditorGroupsService when the user
+	// opens, closes, moves, or pins a tab. The workbench fires
+	// `onDidChangeActiveGroup` and `onDidAddGroup` / `onDidRemoveGroup` at
+	// group granularity; tab-level changes per group come through each
+	// group's own `onDidModelChange` event (the group model holds the
+	// ordered editor list = tabs).
+	try {
+		const Services = GetServices();
+		const EditorGroups = (Services as any)?.EditorGroups;
+		if (EditorGroups?.onDidChangeActiveGroup) {
+			const FlushTabs = () => {
+				try {
+					const Groups: any[] = EditorGroups.groups ?? [];
+					const Snapshot = Groups.map((G) => ({
+						id: G?.id,
+						isActive: G?.id === EditorGroups.activeGroup?.id,
+						tabs: (G?.editors ?? []).map((E: any) => ({
+							label:
+								typeof E?.getName === "function"
+									? E.getName()
+									: (E?.name ?? ""),
+							uri:
+								E?.resource?.toString?.() ??
+								E?.editorInput?.resource?.toString?.() ??
+								"",
+						})),
+					}));
+					Invoke("MountainIPCInvoke", {
+						method: "sky:editor:tabsChanged",
+						params: [{ groups: Snapshot }],
+					}).catch(() => {});
+				} catch {
+					/* swallow */
+				}
+			};
+
+			EditorGroups.onDidChangeActiveGroup?.(FlushTabs);
+			EditorGroups.onDidAddGroup?.(FlushTabs);
+			EditorGroups.onDidRemoveGroup?.(FlushTabs);
+
+			// Wire per-group model changes so opening / closing / moving
+			// a tab inside a group triggers FlushTabs. The wiring lasts
+			// for the lifetime of the group; new groups inherit the
+			// hook via `onDidAddGroup` re-flushing the snapshot.
+			const HookGroup = (G: any) => {
+				try {
+					if (!G || G.__celTabsHooked) return;
+					G.__celTabsHooked = true;
+					G.onDidModelChange?.(FlushTabs);
+				} catch {
+					/* swallow */
+				}
+			};
+			for (const G of EditorGroups.groups ?? []) HookGroup(G);
+			EditorGroups.onDidAddGroup?.(HookGroup);
+		}
+	} catch {
+		/* IEditorGroupsService not yet exposed */
 	}
 
 	// ---- editor.revealRange - scroll Monaco to a range ----

@@ -97,7 +97,7 @@ const Relays: Array<readonly [string, Handler]> = [
 			try {
 				const Views = (globalThis as any).__CEL_SERVICES__?.Views;
 				if (typeof Views?.openView === "function") {
-					Views.openView(viewId, false)?.catch?.(() => null);
+					Views.openView(viewId);
 				}
 			} catch {
 				/* workbench may not be ready yet */

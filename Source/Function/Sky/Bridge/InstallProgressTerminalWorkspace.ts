@@ -97,9 +97,57 @@ export default async (Dependencies: {
 		TerminalDispatch("cel:terminal:create")({ id, name, pid }),
 	);
 
-	await Register("sky://terminal/data", ({ id, data }: any) =>
-		TerminalDispatch("cel:terminal:data")({ id, data }),
-	);
+	// OSC 633 relay: parse shell integration sequences from terminal data
+	// and forward to Mountain → Cocoon so extensions can read
+	// `terminal.shellIntegration.cwd` and detect integration activation.
+	//
+	//   OSC 633 ; A  = prompt start (integration active signal)
+	//   OSC 633 ; P ; cwd=<path>  = current working directory update
+	const OscCwdPattern = /\x1b\]633;P;cwd=([^\x07\x1b]*)\x07/g;
+	// Terminals for which we have already notified integration activation.
+	const IntegrationActivated = new globalThis.Set<number>();
+
+	const NotifyShellOsc = (Id: number, Data: string): void => {
+		try {
+			const Tauri =
+				(globalThis as any).__TAURI__?.core?.invoke ??
+				(globalThis as any).__TAURI__?.invoke;
+			if (typeof Tauri !== "function") return;
+
+			// OSC 633 ; A = prompt start → shell integration is active.
+			if (!IntegrationActivated.has(Id) && Data.includes("\x1b]633;A\x07")) {
+				IntegrationActivated.add(Id);
+				Tauri("MountainIPCInvoke", {
+					method: "localPty:setShellIntegrationActive",
+					params: [Id],
+				}).catch(() => {});
+			}
+
+			// OSC 633 ; P ; cwd=<path> = CWD update.
+			OscCwdPattern.lastIndex = 0;
+			let Match: RegExpExecArray | null;
+			while ((Match = OscCwdPattern.exec(Data)) !== null) {
+				const Cwd = decodeURIComponent(Match[1] ?? "");
+				if (!Cwd) continue;
+				Tauri("MountainIPCInvoke", {
+					method: "localPty:setCwd",
+					params: [Id, Cwd],
+				}).catch(() => {});
+			}
+		} catch {
+			/* swallow - never break terminal data rendering */
+		}
+	};
+
+	await Register("sky://terminal/data", ({ id, data }: any) => {
+		if (
+			typeof data === "string" &&
+			data.includes("\x1b]633;")
+		) {
+			NotifyShellOsc(id as number, data);
+		}
+		TerminalDispatch("cel:terminal:data")({ id, data });
+	});
 
 	await Register("sky://terminal/exit", ({ id }: any) =>
 		TerminalDispatch("cel:terminal:exit")({ id }),

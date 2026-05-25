@@ -102,10 +102,22 @@ export default async (Dependencies: {
 	// `terminal.shellIntegration.cwd` and detect integration activation.
 	//
 	//   OSC 633 ; A  = prompt start (integration active signal)
+	//   OSC 633 ; C  = command output begins (execution started)
+	//   OSC 633 ; D[;<exitCode>] = command finished
+	//   OSC 633 ; E ; <commandLine> = explicit command-line capture
 	//   OSC 633 ; P ; cwd=<path>  = current working directory update
 	const OscCwdPattern = /\x1b\]633;P;cwd=([^\x07\x1b]*)\x07/g;
+	const OscEndPattern = /\x1b\]633;D(?:;(-?\d+))?\x07/g;
+	const OscCmdLinePattern = /\x1b\]633;E;([^\x07\x1b]*)\x07/g;
 	// Terminals for which we have already notified integration activation.
 	const IntegrationActivated = new globalThis.Set<number>();
+	// Per-terminal in-flight execution snapshot. Holds the most recent
+	// command-line + cwd seen via OSC 633 ; E / ; P so the eventual
+	// OSC 633 ; D can carry full TerminalShellExecution context.
+	const InflightExecution = new globalThis.Map<
+		number,
+		{ commandLine: string; cwd: string }
+	>();
 
 	const NotifyShellOsc = (Id: number, Data: string): void => {
 		try {
@@ -132,10 +144,87 @@ export default async (Dependencies: {
 			while ((Match = OscCwdPattern.exec(Data)) !== null) {
 				const Cwd = decodeURIComponent(Match[1] ?? "");
 				if (!Cwd) continue;
+				// Stash for the next D-event so it carries the cwd
+				// at the time of execution.
+				const Inflight = InflightExecution.get(Id) ?? {
+					commandLine: "",
+					cwd: "",
+				};
+				Inflight.cwd = Cwd;
+				InflightExecution.set(Id, Inflight);
+
 				Tauri("MountainIPCInvoke", {
 					method: "localPty:setCwd",
 					params: [Id, Cwd],
 				}).catch(() => {});
+			}
+
+			// OSC 633 ; E ; <commandLine> = the shell tells us exactly
+			// which command is about to execute (zsh / bash with the
+			// VS Code shell integration script send this right before
+			// the C marker). Stash for the start/end events.
+			OscCmdLinePattern.lastIndex = 0;
+			while ((Match = OscCmdLinePattern.exec(Data)) !== null) {
+				const CommandLine = decodeURIComponent(Match[1] ?? "");
+				const Inflight = InflightExecution.get(Id) ?? {
+					commandLine: "",
+					cwd: "",
+				};
+				Inflight.commandLine = CommandLine;
+				InflightExecution.set(Id, Inflight);
+			}
+
+			// OSC 633 ; C = command output begins. Fire
+			// `terminalShellExecutionStart` so
+			// `vscode.window.onDidStartTerminalShellExecution`
+			// subscribers see the execution with whatever
+			// commandLine/cwd we've captured (often present from
+			// OSC 633 ; E which precedes C on integration-aware shells).
+			if (Data.includes("\x1b]633;C\x07")) {
+				const Inflight = InflightExecution.get(Id) ?? {
+					commandLine: "",
+					cwd: "",
+				};
+				Tauri("MountainIPCInvoke", {
+					method: "localPty:shellExecutionStart",
+					params: [
+						{
+							id: Id,
+							commandLine: Inflight.commandLine,
+							cwd: Inflight.cwd,
+						},
+					],
+				}).catch(() => {});
+			}
+
+			// OSC 633 ; D[;<exitCode>] = command finished. Fire
+			// `terminalShellExecutionEnd` carrying the captured
+			// commandLine + cwd + exit code (negative when unknown).
+			OscEndPattern.lastIndex = 0;
+			while ((Match = OscEndPattern.exec(Data)) !== null) {
+				const ExitCode =
+					Match[1] !== undefined ? Number.parseInt(Match[1], 10) : -1;
+				const Inflight = InflightExecution.get(Id) ?? {
+					commandLine: "",
+					cwd: "",
+				};
+				Tauri("MountainIPCInvoke", {
+					method: "localPty:shellExecutionEnd",
+					params: [
+						{
+							id: Id,
+							commandLine: Inflight.commandLine,
+							cwd: Inflight.cwd,
+							exitCode: Number.isFinite(ExitCode) ? ExitCode : -1,
+						},
+					],
+				}).catch(() => {});
+				// Reset the in-flight snapshot - the next command will
+				// re-populate via OSC 633 ; E or arrive directly at C.
+				InflightExecution.set(Id, {
+					commandLine: "",
+					cwd: Inflight.cwd,
+				});
 			}
 		} catch {
 			/* swallow - never break terminal data rendering */

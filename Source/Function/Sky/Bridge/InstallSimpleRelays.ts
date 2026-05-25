@@ -85,6 +85,26 @@ const Relays: Array<readonly [string, Handler]> = [
 		SimpleRelay("cel:languages:setDocumentLanguage"),
 	],
 
+	// `sky://tree-view/reveal` - extension called `treeView.reveal(element)`.
+	// Opens and focuses the specified tree view panel in the workbench.
+	[
+		"sky://tree-view/reveal",
+		({ viewId }: any): void => {
+			if (!viewId) return;
+			document.dispatchEvent(
+				new CustomEvent("cel:tree-view:reveal", { detail: { viewId } }),
+			);
+			try {
+				const Views = (globalThis as any).__CEL_SERVICES__?.Views;
+				if (typeof Views?.openView === "function") {
+					Views.openView(viewId, false)?.catch?.(() => null);
+				}
+			} catch {
+				/* workbench may not be ready yet */
+			}
+		},
+	],
+
 	// `sky://language/configure` - Cocoon called `vscode.languages.setLanguageConfiguration`.
 	// Relay as DOM event AND directly call Monaco's API so bracket-matching,
 	// auto-indent, and comment-toggling work for the configured language.

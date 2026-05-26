@@ -664,33 +664,62 @@ export default async (Dependencies: {
 		GetOrCreateChannel(id, name);
 	});
 
+	// Re-route through the real `IOutputService` exposed on
+	// `__CEL_SERVICES__.Output` (Accessor.ts). Calling
+	// `Output.getChannel(id).append(text)` is the only path that
+	// actually paints into the Output panel; the previous
+	// `__CEL_WORKBENCH__.logger.log()` call wrote to the workbench's
+	// *diagnostic* logger (a separate console sink) and never reached
+	// the panel. We keep the in-memory `OutputChannels` map populated
+	// as a fallback snapshot for any bridge that reads it directly,
+	// and swallow errors so an extension that races channel creation
+	// can't crash the bridge.
 	await Register("sky://output/append", ({ channel, text }: any) => {
-		const Lines = GetOrCreateChannel(channel);
-		Lines.push(text);
-		(window as any).__CEL_WORKBENCH__?.logger?.log?.(
-			5 /* Info */,
-
-			`[${channel}] ${text}`,
-		);
+		const Channel = String(channel ?? "");
+		const Text = String(text ?? "");
+		const Lines = GetOrCreateChannel(Channel);
+		Lines.push(Text);
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			Services?.Output?.getChannel?.(Channel)?.append?.(Text);
+		} catch {
+			/* swallow - never throw out of an append; the in-memory
+			   snapshot above keeps the bridge consistent */
+		}
+		invoke("MountainIPCInvoke", {
+			method: "diagnostic:log",
+			params: [
+				"output",
+				`[SkyBridge] output/append channel=${Channel} len=${Text.length}`,
+			],
+		}).catch(() => {});
 	});
 
 	await Register("sky://output/clear", ({ channel }: any) => {
-		OutputChannels.set(channel, []);
+		const Channel = String(channel ?? "");
+		OutputChannels.set(Channel, []);
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			Services?.Output?.getChannel?.(Channel)?.clear?.();
+		} catch {
+			/* swallow */
+		}
 	});
 
 	// `outputChannel.replace(value)` is atomic in upstream VS Code:
-	// clear + append rendered as one paint. We model that here by
-	// replacing the buffer outright. Without this handler, replace
-	// fell through to the dispatcher's null path and never reached
-	// the workbench's logger or the in-memory snapshot.
+	// clear + append rendered as one paint. We mirror that by calling
+	// `IOutputChannel.replace()` directly and updating the in-memory
+	// snapshot in one step.
 	await Register("sky://output/replace", ({ channel, value }: any) => {
 		const Channel = String(channel ?? "");
 		const Text = String(value ?? "");
 		OutputChannels.set(Channel, [Text]);
-		(window as any).__CEL_WORKBENCH__?.logger?.log?.(
-			5 /* Info */,
-			`[${Channel}] ${Text}`,
-		);
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			Services?.Output?.getChannel?.(Channel)?.replace?.(Text);
+		} catch {
+			/* swallow */
+		}
 	});
 
 	await Register("sky://output/show", ({ visible, preserveFocus }: any) => {

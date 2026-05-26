@@ -22,7 +22,7 @@ const ServiceName = "fiddee";
 const ServiceVersion = "0.0.1";
 
 // `Capture=false` is the master telemetry kill shared with Mountain /
-// Cocoon. `OTLPEnabled=false` disables only this pipe.
+// Cocoon. `Emit=false` disables only this pipe.
 // Default is "false" so telemetry is completely disabled unless
 // explicitly opted in.
 const TelemetryCaptureEnabled =
@@ -31,20 +31,20 @@ const TelemetryCaptureEnabled =
 
 const OTLPPipeEnabled =
 	TelemetryCaptureEnabled &&
-	((import.meta.env as Record<string, string | undefined>)["OTLPEnabled"] ??
+	((import.meta.env as Record<string, string | undefined>)["Emit"] ??
 		"false") === "true";
 
-// Build-baked endpoint from `import.meta.env.OTLPEndpoint`
+// Build-baked endpoint from `import.meta.env.Pipe`
 // (`astro.config.ts` Vite define). Falls back to the docker-compose
 // default if the env var is missing. In the Vite dev server, `/v1/traces`
 // is proxied; in Tauri desktop it must be the real collector URL.
-const ConfiguredOTLPEndpoint =
-	(import.meta.env as Record<string, string | undefined>)["OTLPEndpoint"] ??
+const ConfiguredPipe =
+	(import.meta.env as Record<string, string | undefined>)["Pipe"] ??
 	"http://127.0.0.1:4318";
 
-const OTLPEndpoint =
+const Pipe =
 	typeof (window as any).__TAURI_INTERNALS__ !== "undefined"
-		? `${ConfiguredOTLPEndpoint.replace(/\/$/, "")}/v1/traces`
+		? `${ConfiguredPipe.replace(/\/$/, "")}/v1/traces`
 		: "/v1/traces";
 
 const BatchIntervalMs = 2000;
@@ -202,7 +202,7 @@ const Flush = (): void => {
 	//     -e COLLECTOR_OTLP_HTTP_CORS_ALLOWED_HEADERS='Content-Type' \
 	//     -p 4318:4318 -p 16686:16686 jaegertracing/jaeger:2
 	try {
-		fetch(OTLPEndpoint, {
+		fetch(Pipe, {
 			method: "POST",
 			body: JSON.stringify(Payload),
 			headers: { "Content-Type": "application/json" },

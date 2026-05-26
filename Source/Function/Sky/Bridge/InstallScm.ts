@@ -115,7 +115,27 @@ export default async (Dependencies: {
 			return;
 		const ScmId: string = String(Payload?.scmId ?? Payload?.id ?? "");
 		if (!ScmId) return;
-		if (ScmShimRegistry.has(ScmId)) return;
+		const ScmHandleNumber: number | undefined =
+			typeof Payload?.handle === "number" ? Payload.handle : undefined;
+		// Multi-repo workspaces (vscode.git scanning nested submodules under
+		// Land/Dependency/Microsoft) call `createSourceControl` once per
+		// repository, all with `scmId="git"` and a UNIQUE numeric handle.
+		// Keying the shim by `ScmId` alone collapses every repo into a
+		// single workbench provider AND lets the per-handle group registers
+		// pile groups onto that shared provider, producing the visible
+		// "Merge Changes / Untracked / Merge Changes" duplication. Key by
+		// handle when one is supplied so each repo gets its own provider.
+		const RegistryKey =
+			ScmHandleNumber !== undefined
+				? `${ScmId}#${ScmHandleNumber}`
+				: ScmId;
+		if (ScmShimRegistry.has(RegistryKey)) return;
+		if (
+			ScmHandleNumber !== undefined &&
+			ScmShimByHandle.has(ScmHandleNumber)
+		) {
+			return;
+		}
 		try {
 			const RootUri =
 				typeof Payload?.rootUri === "string" &&
@@ -136,9 +156,12 @@ export default async (Dependencies: {
 			// extension-host RPC channel; not the case here).
 			let InputModel: any = null;
 			if (Services.Models && Services.URI) {
+				// Per-handle URI so co-existing providers don't collide on
+				// the same `cel-scm-input:/git/input` model - the workbench
+				// requires unique model identity per `inputBoxTextModel`.
 				const InputUri = Services.URI.from({
 					scheme: "cel-scm-input",
-					path: `/${ScmId}/input`,
+					path: `/${ScmId}/${ScmHandleNumber ?? "default"}/input`,
 				});
 				const Existing = Services.Models.getModel
 					? Services.Models.getModel(InputUri)
@@ -198,10 +221,6 @@ export default async (Dependencies: {
 				},
 			};
 			const Repository = Services.SCM.registerSCMProvider(Provider);
-			const ScmHandleNumber: number | undefined =
-				typeof Payload?.handle === "number"
-					? Payload.handle
-					: undefined;
 			const Shim: CelSCMShim = {
 				Provider,
 				Repository,
@@ -209,7 +228,7 @@ export default async (Dependencies: {
 				Groups: new Map(),
 				ResourceGroupsEmitter,
 			};
-			ScmShimRegistry.set(ScmId, Shim);
+			ScmShimRegistry.set(RegistryKey, Shim);
 			if (ScmHandleNumber !== undefined) {
 				ScmShimByHandle.set(ScmHandleNumber, Shim);
 			}
@@ -242,21 +261,38 @@ export default async (Dependencies: {
 	const TryUnregisterScmProvider = (Payload: any): void => {
 		const ScmId: string = String(Payload?.scmId ?? Payload?.id ?? "");
 		if (!ScmId) return;
-		const Entry = ScmShimRegistry.get(ScmId);
+		const ScmHandleNumber: number | undefined =
+			typeof Payload?.handle === "number" ? Payload.handle : undefined;
+		// Prefer handle-keyed lookup (the multi-repo case) and fall back
+		// to the bare scmId for unregisters that arrived without a handle.
+		let Entry: CelSCMShim | undefined;
+		let RegistryKey: string | undefined;
+		if (
+			ScmHandleNumber !== undefined &&
+			ScmShimByHandle.has(ScmHandleNumber)
+		) {
+			Entry = ScmShimByHandle.get(ScmHandleNumber);
+			RegistryKey = `${ScmId}#${ScmHandleNumber}`;
+		} else if (ScmShimRegistry.has(ScmId)) {
+			Entry = ScmShimRegistry.get(ScmId);
+			RegistryKey = ScmId;
+		}
 		if (!Entry) return;
 		try {
 			Entry.Repository?.dispose?.();
 			Entry.Provider?.dispose?.();
 		} catch {}
-		ScmShimRegistry.delete(ScmId);
+		if (RegistryKey) ScmShimRegistry.delete(RegistryKey);
 		if (Entry.ScmHandle !== undefined) {
 			ScmShimByHandle.delete(Entry.ScmHandle);
 		}
 	};
 
 	// Match the wire payload's `scmHandle` (numeric, from
-	// `RegisterScmResourceGroup.rs:78`) against our registry. Falls
-	// back to a linear scan when the payload only carries `scmId`.
+	// `RegisterScmResourceGroup.rs:78`) against our registry. Each repo
+	// has a UNIQUE handle, so handle-lookup is the authoritative key in
+	// multi-repo workspaces; the legacy `scmId` fallback covers payloads
+	// that arrived before the producer started emitting handles.
 	const ResolveScmShim = (Payload: any): CelSCMShim | null => {
 		const Handle = Payload?.scmHandle;
 		if (typeof Handle === "number") {
@@ -265,8 +301,21 @@ export default async (Dependencies: {
 		}
 		const ScmId = Payload?.scmId ?? Payload?.providerId;
 		if (typeof ScmId === "string") {
-			const ById = ScmShimRegistry.get(ScmId);
-			if (ById) return ById;
+			// With per-handle keys, `ScmId` alone is ambiguous; a bare
+			// `scmId` lookup only resolves when exactly one provider with
+			// that id is registered.
+			if (ScmShimRegistry.has(ScmId)) {
+				return ScmShimRegistry.get(ScmId) ?? null;
+			}
+			let SoleMatch: CelSCMShim | null = null;
+			let Count = 0;
+			for (const [Key, Shim] of ScmShimRegistry) {
+				if (Key === ScmId || Key.startsWith(`${ScmId}#`)) {
+					SoleMatch = Shim;
+					Count += 1;
+				}
+			}
+			if (Count === 1) return SoleMatch;
 		}
 		return null;
 	};

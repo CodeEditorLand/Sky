@@ -1,10 +1,11 @@
 /**
  * Local mirror of Mountain's output-channel registry. Sky listens to
  * the `sky://output/*` event family and accumulates channel content
- * here so the workbench's Output panel - whose proper IOutputService
- * hookup is still pending - has a place to read from once we wire
- * the real path. Stock VS Code's `OutputChannel.append` writes go
- * through `IOutputChannelModelService`; this map is the holding pen.
+ * here as a snapshot. The actual Output panel paint now goes through
+ * `__CEL_SERVICES__.Output?.getChannel(id)?.append(text)` (the real
+ * `IOutputService` exposed in `Service/CEL/Expose/Accessor.ts`) -
+ * see `InstallEditorAndOutput.ts`'s `sky://output/append` handler.
+ * This map remains as a snapshot any bridge or test can read.
  *
  * Returned bag exposes the underlying map plus a `GetOrCreate`
  * factory that announces channel creation through the workbench

@@ -898,11 +898,11 @@ export default defineConfig({
 			"import.meta.env.Capture": JSON.stringify(
 				process.env["Capture"] ?? "true",
 			),
-			"import.meta.env.OTLPEndpoint": JSON.stringify(
-				process.env["OTLPEndpoint"] ?? "http://127.0.0.1:4318",
+			"import.meta.env.Pipe": JSON.stringify(
+				process.env["Pipe"] ?? "http://127.0.0.1:4318",
 			),
-			"import.meta.env.OTLPEnabled": JSON.stringify(
-				process.env["OTLPEnabled"] ?? "true",
+			"import.meta.env.Emit": JSON.stringify(
+				process.env["Emit"] ?? "true",
 			),
 			"import.meta.env.Trace": JSON.stringify(
 				process.env["Trace"] ?? "all",

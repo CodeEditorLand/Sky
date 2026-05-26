@@ -470,6 +470,14 @@ export default async (Dependencies: {
 		const Services = GetServices();
 		const EditorService = (Services as any)?.Editor;
 		if (EditorService?.onDidVisibleEditorsChange) {
+			// Dedupe consecutive identical snapshots - the workbench fires
+			// `onDidVisibleEditorsChange` from multiple internal sources for
+			// a single user action (active editor change, group focus change,
+			// tab reorder). Sending the same URI array repeatedly produces
+			// duplicated `$acceptVisibleEditorsChanged` callbacks in Cocoon
+			// for every interaction, which inflates IPC traffic and (with
+			// the `applyDecorations` re-run cost) shows up as input lag.
+			let LastVisibleSerialized = "";
 			EditorService.onDidVisibleEditorsChange(() => {
 				try {
 					const Visible: any[] =
@@ -488,6 +496,9 @@ export default async (Dependencies: {
 							/* one pane failed, keep iterating */
 						}
 					}
+					const Serialized = Uris.join("\n");
+					if (Serialized === LastVisibleSerialized) return;
+					LastVisibleSerialized = Serialized;
 					Invoke("MountainIPCInvoke", {
 						method: "sky:editor:visibleChanged",
 						params: [{ uris: Uris }],
@@ -512,6 +523,14 @@ export default async (Dependencies: {
 		const Services = GetServices();
 		const EditorGroups = (Services as any)?.EditorGroups;
 		if (EditorGroups?.onDidChangeActiveGroup) {
+			// `FlushTabs` is bound to three group-level events plus every
+			// per-group `onDidModelChange`. A single tab-click fires three to
+			// four of these in close succession; without a snapshot dedupe
+			// every click sends three identical `sky:editor:tabsChanged`
+			// payloads to Mountain, which re-fans to Cocoon and re-runs every
+			// extension's tab/diagnostic listener. Compare the serialised
+			// snapshot to the last one we shipped and bail when they match.
+			let LastTabsSerialized = "";
 			const FlushTabs = () => {
 				try {
 					const Groups: any[] = EditorGroups.groups ?? [];
@@ -529,6 +548,9 @@ export default async (Dependencies: {
 								"",
 						})),
 					}));
+					const Serialized = JSON.stringify(Snapshot);
+					if (Serialized === LastTabsSerialized) return;
+					LastTabsSerialized = Serialized;
 					Invoke("MountainIPCInvoke", {
 						method: "sky:editor:tabsChanged",
 						params: [{ groups: Snapshot }],

@@ -32,6 +32,10 @@ interface ServicesProbe {
 
 		info?: (m: string) => unknown;
 	};
+
+	Commands?: {
+		executeCommand?: (CommandId: string, ...Args: unknown[]) => unknown;
+	};
 }
 
 export default async (Dependencies: {
@@ -77,16 +81,58 @@ export default async (Dependencies: {
 		);
 	});
 
-	// Extension lifecycle: install / uninstall. Pure DOM relays for
-	// now; the workbench's IExtensionGalleryService doesn't expose a
-	// public "I just installed extension X" hook from outside Cocoon.
+	// Extension lifecycle: install / uninstall.
+	//
+	// Mountain emits these after `extensions:install` (VsixInstaller)
+	// succeeds and after a successful `extensions:uninstall`. Stock
+	// VS Code's Extensions view does not subscribe to a public hook
+	// firing from outside its own `IExtensionGalleryService` install
+	// pipeline, so the view stays stale unless we poke it.
+	//
+	// The workbench command `workbench.extensions.action.refreshExtension`
+	// is the same action the "Refresh" toolbar button triggers - it
+	// calls `IExtensionsWorkbenchService.queryLocal()` internally,
+	// which re-reads `IExtensionManagementService.getInstalled()` and
+	// rebuilds the view model. Executing it on every install/uninstall
+	// makes the sidebar refresh live without a workbench reload.
+	//
+	// The `CustomEvent` dispatch is kept so any Wind orchestration
+	// layer or React component can also listen at the DOM level.
+	const RefreshExtensionsView = (Services: ServicesProbe | null): void => {
+		try {
+			const Execute = Services?.Commands?.executeCommand;
+
+			if (typeof Execute === "function") {
+				const Result = Execute.call(
+					Services!.Commands,
+					"workbench.extensions.action.refreshExtension",
+				) as unknown;
+
+				if (
+					Result &&
+					typeof (Result as { catch?: unknown }).catch === "function"
+				) {
+					(
+						Result as { catch: (handler: () => void) => unknown }
+					).catch(() => {});
+				}
+			}
+		} catch {
+			/* swallow - the CustomEvent dispatch below still fires */
+		}
+	};
+
 	await Register("sky://extensions/installed", (Payload: any) => {
+		RefreshExtensionsView(GetServices());
+
 		document.dispatchEvent(
 			new CustomEvent("cel:extensions:installed", { detail: Payload }),
 		);
 	});
 
 	await Register("sky://extensions/uninstalled", (Payload: any) => {
+		RefreshExtensionsView(GetServices());
+
 		document.dispatchEvent(
 			new CustomEvent("cel:extensions:uninstalled", { detail: Payload }),
 		);

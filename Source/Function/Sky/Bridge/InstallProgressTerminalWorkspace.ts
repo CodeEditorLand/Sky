@@ -118,6 +118,12 @@ export default async (Dependencies: {
 		number,
 		{ commandLine: string; cwd: string }
 	>();
+	// Terminals for which `interactedWith=true` has been notified. Stock
+	// VS Code flips `ITerminalInstance.interactedWith` on OSC 633 ; B
+	// (command-input-begins) - the shell tells us the user is typing the
+	// next command. We notify Mountain once per terminal and never reset
+	// (matches VS Code's "interaction is sticky" semantics).
+	const InteractedTerminals = new globalThis.Set<number>();
 
 	const NotifyShellOsc = (Id: number, Data: string): void => {
 		try {
@@ -172,6 +178,23 @@ export default async (Dependencies: {
 				};
 				Inflight.commandLine = CommandLine;
 				InflightExecution.set(Id, Inflight);
+			}
+
+			// OSC 633 ; B = command-input-begins. Stock VS Code marks the
+			// `ITerminalInstance.interactedWith` flag here - the shell tells
+			// us the user is now typing the next command. Notify Mountain
+			// once per terminal so `vscode.window.onDidChangeTerminalState`
+			// subscribers see `state.isInteractedWith` flip from false to
+			// true. Sticky: never re-notify or reset.
+			if (
+				!InteractedTerminals.has(Id) &&
+				Data.includes("\x1b]633;B\x07")
+			) {
+				InteractedTerminals.add(Id);
+				Tauri("MountainIPCInvoke", {
+					method: "localPty:setInteracted",
+					params: [{ id: Id, interactedWith: true }],
+				}).catch(() => {});
 			}
 
 			// OSC 633 ; C = command output begins. Fire

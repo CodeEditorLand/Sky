@@ -361,6 +361,103 @@ export default async (Dependencies: {
 		/* workbench events not yet available */
 	}
 
+	// ---- onDidChangeTextEditorDiffInformation ----
+	// When the active editor pane is a diff editor (file vs git index,
+	// vs disk, vs HEAD, …), Monaco's diff widget exposes `onDidUpdateDiff`
+	// which fires once the diff computation settles. Stock VS Code
+	// re-emits this as `vscode.window.onDidChangeTextEditorDiffInformation`
+	// so extensions surfacing diff-relative annotations (GitLens, Pull
+	// Requests, Git Graph) can refresh their inline counters.
+	//
+	// We subscribe at active-editor changes: each time the user opens a
+	// diff (or moves between diffs), check whether the active pane's
+	// control quacks like a diff editor and hook `onDidUpdateDiff`. The
+	// per-diff disposable is dropped on the next active-editor change.
+	try {
+		const Services = GetServices();
+		const EditorService = (Services as any)?.Editor;
+		if (EditorService?.onDidActiveEditorChange) {
+			let DiffDisposable: (() => void) | null = null;
+			const HookDiff = () => {
+				// Tear down any previous diff subscription so we never
+				// accumulate listeners across editor switches.
+				try {
+					DiffDisposable?.();
+				} catch {
+					/* swallow */
+				}
+				DiffDisposable = null;
+				try {
+					const Pane = EditorService.activeEditorPane;
+					const Control = Pane?.getControl?.();
+					// Diff widgets expose both `getOriginalEditor()` and
+					// `getModifiedEditor()` plus `onDidUpdateDiff`.
+					if (
+						!Control ||
+						typeof Control.onDidUpdateDiff !== "function" ||
+						typeof Control.getModifiedEditor !== "function"
+					) {
+						return;
+					}
+					const Modified = Control.getModifiedEditor();
+					const ModifiedUri =
+						Modified?.getModel?.()?.uri?.toString?.() ?? null;
+					const Original = Control.getOriginalEditor?.();
+					const OriginalUri =
+						Original?.getModel?.()?.uri?.toString?.() ?? null;
+					const Emit = () => {
+						try {
+							// `getLineChanges()` returns the diff hunk
+							// array (or null while a computation is in
+							// flight). The shape mirrors VS Code's
+							// `LineChange[]`: `{
+							//   originalStartLineNumber,
+							//   originalEndLineNumber,
+							//   modifiedStartLineNumber,
+							//   modifiedEndLineNumber,
+							//   charChanges?
+							// }`.
+							const Changes =
+								typeof Control.getLineChanges === "function"
+									? (Control.getLineChanges() ?? [])
+									: [];
+							Invoke("MountainIPCInvoke", {
+								method: "sky:editor:diffInformationChanged",
+								params: [
+									{
+										modifiedUri: ModifiedUri,
+										originalUri: OriginalUri,
+										changes: Changes,
+									},
+								],
+							}).catch(() => {});
+						} catch {
+							/* swallow */
+						}
+					};
+					// Emit once at hook-time (initial diff is settled by
+					// the time `onDidActiveEditorChange` fires for a diff
+					// pane), then again on every recomputation.
+					Emit();
+					const D = Control.onDidUpdateDiff(Emit);
+					if (D && typeof D.dispose === "function") {
+						DiffDisposable = () => D.dispose();
+					} else if (typeof D === "function") {
+						DiffDisposable = D;
+					}
+				} catch {
+					/* swallow - diff editor may have torn down mid-hook */
+				}
+			};
+			EditorService.onDidActiveEditorChange(HookDiff);
+			// And hook the current active pane on first wire-up so a diff
+			// that was already open at boot fires immediately.
+			HookDiff();
+		}
+	} catch {
+		/* IEditorService not yet exposed */
+	}
+
 	// ---- onDidChangeVisibleTextEditors ----
 	// Subscribe to IEditorService.onDidVisibleEditorsChange and forward
 	// every change as a single Mountain IPC call. Mountain then fans out
@@ -449,11 +546,53 @@ export default async (Dependencies: {
 			// a tab inside a group triggers FlushTabs. The wiring lasts
 			// for the lifetime of the group; new groups inherit the
 			// hook via `onDidAddGroup` re-flushing the snapshot.
+			//
+			// Per-group `onDidMoveEditor` covers the
+			// `vscode.window.onDidChangeTextEditorViewColumn` event.
+			// Stock VS Code fires when an editor is moved between groups
+			// (split-view shuffle, drag-and-drop tab to another column,
+			// `View: Move Editor to Group` command). The group's event
+			// carries `{editor, target?}` - target identifies the
+			// destination group when the move is cross-group.
+			const NotifyViewColumnChange = (
+				MovedEditor: any,
+				TargetGroup: any,
+			) => {
+				try {
+					const Uri =
+						MovedEditor?.resource?.toString?.() ??
+						MovedEditor?.editorInput?.resource?.toString?.() ??
+						null;
+					if (!Uri) return;
+					// Destination group's index → 1-based viewColumn.
+					// Fall back to current activeGroup index if target
+					// is omitted (intra-group move).
+					const DestIdx =
+						typeof TargetGroup?.index === "number"
+							? TargetGroup.index
+							: typeof EditorGroups.activeGroup?.index ===
+								  "number"
+								? EditorGroups.activeGroup.index
+								: 0;
+					Invoke("MountainIPCInvoke", {
+						method: "sky:editor:viewColumnChanged",
+						params: [{ uri: Uri, viewColumn: DestIdx + 1 }],
+					}).catch(() => {});
+				} catch {
+					/* swallow */
+				}
+			};
 			const HookGroup = (G: any) => {
 				try {
 					if (!G || G.__celTabsHooked) return;
 					G.__celTabsHooked = true;
 					G.onDidModelChange?.(FlushTabs);
+					G.onDidMoveEditor?.((E: any) => {
+						NotifyViewColumnChange(
+							E?.editor ?? null,
+							E?.target ?? G,
+						);
+					});
 				} catch {
 					/* swallow */
 				}

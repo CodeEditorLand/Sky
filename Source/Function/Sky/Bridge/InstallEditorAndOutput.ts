@@ -660,8 +660,21 @@ export default async (Dependencies: {
 		);
 	});
 
-	await Register("sky://output/create", ({ id, name }: any) => {
-		GetOrCreateChannel(id, name);
+	await Register("sky://output/create", (Payload: any) => {
+		// Producers send either `{id, name}` (Mountain `output:create` arm)
+		// or `{handle, name}` (Cocoon `outputChannel.create`). Normalise so
+		// the channel registry keys match what `sky://output/append` looks
+		// up below.
+		const Id = String(
+			Payload?.id ??
+				Payload?.channel ??
+				Payload?.handle ??
+				Payload?.name ??
+				"",
+		);
+		const Name = String(Payload?.name ?? Payload?.label ?? Id);
+		if (!Id) return;
+		GetOrCreateChannel(Id, Name);
 	});
 
 	// Re-route through the real `IOutputService` exposed on
@@ -674,9 +687,16 @@ export default async (Dependencies: {
 	// as a fallback snapshot for any bridge that reads it directly,
 	// and swallow errors so an extension that races channel creation
 	// can't crash the bridge.
-	await Register("sky://output/append", ({ channel, text }: any) => {
-		const Channel = String(channel ?? "");
-		const Text = String(text ?? "");
+	await Register("sky://output/append", (Payload: any) => {
+		// Mountain's emit shape varies across paths: the coalescer flushes
+		// `{channel, value}`, the legacy per-append emit forwards Cocoon's
+		// raw `{handle, name, value}` verbatim, and a small minority of
+		// callers send `{channel, text}`. Read every field shape so the
+		// Output panel populates regardless of which producer is active.
+		const Channel = String(
+			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
+		);
+		const Text = String(Payload?.text ?? Payload?.value ?? "");
 		const Lines = GetOrCreateChannel(Channel);
 		Lines.push(Text);
 		try {
@@ -695,8 +715,11 @@ export default async (Dependencies: {
 		}).catch(() => {});
 	});
 
-	await Register("sky://output/clear", ({ channel }: any) => {
-		const Channel = String(channel ?? "");
+	await Register("sky://output/clear", (Payload: any) => {
+		const Channel = String(
+			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
+		);
+		if (!Channel) return;
 		OutputChannels.set(Channel, []);
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
@@ -710,9 +733,12 @@ export default async (Dependencies: {
 	// clear + append rendered as one paint. We mirror that by calling
 	// `IOutputChannel.replace()` directly and updating the in-memory
 	// snapshot in one step.
-	await Register("sky://output/replace", ({ channel, value }: any) => {
-		const Channel = String(channel ?? "");
-		const Text = String(value ?? "");
+	await Register("sky://output/replace", (Payload: any) => {
+		const Channel = String(
+			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
+		);
+		const Text = String(Payload?.value ?? Payload?.text ?? "");
+		if (!Channel) return;
 		OutputChannels.set(Channel, [Text]);
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
@@ -722,21 +748,45 @@ export default async (Dependencies: {
 		}
 	});
 
-	await Register("sky://output/show", ({ visible, preserveFocus }: any) => {
-		if (visible === false) return;
+	await Register("sky://output/show", (Payload: any) => {
+		if (Payload?.visible === false) return;
+		const Channel = String(
+			Payload?.channel ?? Payload?.id ?? Payload?.handle ?? "",
+		);
+		const PreserveFocus = Payload?.preserveFocus === true;
+		// Prefer the live IOutputService - `showChannel(id, preserveFocus)`
+		// reveals the panel AND switches to the requested channel, which
+		// the generic `workbench.action.output.show` command can't do
+		// without an extra argument shape that varies by VS Code version.
+		try {
+			const Services: any = (globalThis as any).__CEL_SERVICES__;
+			if (
+				Channel &&
+				typeof Services?.Output?.showChannel === "function"
+			) {
+				const Result = Services.Output.showChannel(
+					Channel,
+					PreserveFocus,
+				);
+				if (Result && typeof Result.catch === "function") {
+					Result.catch(() => {});
+				}
+				return;
+			}
+		} catch {
+			/* fall through to the workbench command */
+		}
 		const Wb = GetWorkbench();
 		if (!Wb) return;
-		// `workbench.action.output.show` accepts an optional channelId.
-		// Honoring `preserveFocus` means we do NOT call `focus()` on
-		// the panel afterwards; the workbench command itself doesn't
-		// re-focus, so the no-op is the correct preserveFocus behavior.
-		void preserveFocus;
 		SwallowCatch(
 			Wb.commands.executeCommand("workbench.action.output.show"),
 		);
 	});
 
-	await Register("sky://output/dispose", ({ channel }: any) => {
-		OutputChannels.delete(channel);
+	await Register("sky://output/dispose", (Payload: any) => {
+		const Channel = String(
+			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
+		);
+		if (Channel) OutputChannels.delete(Channel);
 	});
 };

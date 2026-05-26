@@ -44,8 +44,51 @@ const PhaseRelay: Handler = (Payload: any): void => {
 	);
 };
 
+// Map a Cocoon-side severity string to VS Code's `Severity` enum value
+// (`Ignore=0`, `Info=1`, `Warning=2`, `Error=3`). INotificationService's
+// `notify(notification)` reads the `severity` field as a number; passing a
+// string makes the workbench fall back to `Info` and silently drops the
+// `error`/`warning` styling we want for `showErrorMessage` calls.
+const SeverityFromString = (Raw: unknown): number => {
+	if (typeof Raw === "number") return Raw;
+	const Str = String(Raw ?? "").toLowerCase();
+	if (Str === "error") return 3;
+	if (Str === "warning" || Str === "warn") return 2;
+	return 1;
+};
+
+const NotificationShowHandler: Handler = (Payload: any): void => {
+	document.dispatchEvent(
+		new CustomEvent("cel:notification:show", { detail: Payload }),
+	);
+	// Drive the live workbench toast directly so extensions that call
+	// `vscode.window.showInformationMessage(...)` without action buttons
+	// actually surface a notification - the prior CustomEvent-only relay
+	// reached no UI surface in production.
+	try {
+		const Svc = (globalThis as any).__CEL_SERVICES__?.Notification;
+		if (!Svc) return;
+		const Severity = SeverityFromString(
+			Payload?.severity ?? Payload?.Severity,
+		);
+		const Message = String(
+			Payload?.message ?? Payload?.Message ?? Payload?.text ?? "",
+		);
+		if (!Message) return;
+		Svc.notify?.({
+			severity: Severity,
+			message: Message,
+			source: Payload?.source ?? Payload?.extension ?? undefined,
+			silent: Payload?.silent === true,
+			sticky: Payload?.sticky === true,
+		});
+	} catch {
+		/* swallow - notification service may not be live yet */
+	}
+};
+
 const Relays: Array<readonly [string, Handler]> = [
-	["sky://notification/show", SimpleRelay("cel:notification:show")],
+	["sky://notification/show", NotificationShowHandler],
 
 	[
 		"sky://notification/progress-begin",
@@ -79,10 +122,51 @@ const Relays: Array<readonly [string, Handler]> = [
 
 	["sky://statusbar/set-message", SimpleRelay("cel:statusbar:set-message")],
 
+	// `sky://languages/setDocumentLanguage` - Cocoon called
+	// `vscode.languages.setTextDocumentLanguage(doc, lang)`. Relay as a
+	// CustomEvent for any subscriber AND swap the live Monaco model's
+	// language directly so highlighting / tokenisation switch in place
+	// without re-opening the file.
 	[
 		"sky://languages/setDocumentLanguage",
-
-		SimpleRelay("cel:languages:setDocumentLanguage"),
+		(Payload: any): void => {
+			document.dispatchEvent(
+				new CustomEvent("cel:languages:setDocumentLanguage", {
+					detail: Payload,
+				}),
+			);
+			try {
+				const Services = (globalThis as any).__CEL_SERVICES__;
+				const Monaco =
+					(globalThis as any).monaco ?? (window as any).monaco;
+				const Uri = String(Payload?.uri ?? "");
+				const Language = String(
+					Payload?.languageId ?? Payload?.language ?? "",
+				);
+				if (!Uri || !Language) return;
+				const ParsedUri =
+					Services?.URI && typeof Services.URI.parse === "function"
+						? Services.URI.parse(Uri)
+						: null;
+				const Model = (() => {
+					try {
+						if (
+							ParsedUri &&
+							typeof Services?.Models?.getModel === "function"
+						)
+							return Services.Models.getModel(ParsedUri);
+						if (Monaco?.editor?.getModel && ParsedUri)
+							return Monaco.editor.getModel(ParsedUri);
+					} catch {}
+					return null;
+				})();
+				if (Model && Monaco?.editor?.setModelLanguage) {
+					Monaco.editor.setModelLanguage(Model, Language);
+				}
+			} catch {
+				/* swallow - Monaco / model may not be ready */
+			}
+		},
 	],
 
 	// `sky://tree-view/reveal` - extension called `treeView.reveal(element)`.

@@ -190,11 +190,69 @@ export default async (Dependencies: {
 			// Returning a cached array reference would break the
 			// re-render heuristic, so build a fresh array each get.
 			const ProviderGroupsList: any[] = [];
+			// Multi-repo workspaces (Land's submodules) all share
+			// `label="Git"`; the SCM viewlet renders identical "Git"
+			// headers and the user can't tell repos apart. Derive a
+			// per-repo display label from the rootUri's basename so
+			// `Land/Element/Mountain/.git` shows up as "Mountain", its
+			// submodules as their own folder names, etc.
+			const RawLabel = String(Payload?.label ?? ScmId);
+			const RootUriPath: string =
+				typeof Payload?.rootUri === "string"
+					? Payload.rootUri
+					: typeof (Payload?.rootUri as any)?.path === "string"
+						? (Payload.rootUri as any).path
+						: "";
+			const RootBasename = (() => {
+				try {
+					const Cleaned = RootUriPath.replace(/^file:\/\//, "");
+					const Trimmed = Cleaned.replace(/\/+$/, "");
+					const Last = Trimmed.split("/").filter(Boolean).pop();
+					return Last && Last.length > 0 ? Last : "";
+				} catch {
+					return "";
+				}
+			})();
+			const DisplayLabel =
+				RootBasename && RawLabel.toLowerCase() === "git"
+					? `${RawLabel} (${RootBasename})`
+					: RawLabel;
+			// `IObservable<T>`-shaped facade. The workbench's SCM viewlet
+			// reads `provider.count.get()` etc. and may also call `.read()`
+			// / `.onDidChange()` / `.map()` on the observable. We expose a
+			// minimal shim that covers the read paths the viewlet exercises
+			// and ignores the reactive subscription paths (count badge
+			// re-renders via the `onDidChange` emitter on the provider, not
+			// the per-field observable).
+			const StaticObservable = <T>(
+				Read: () => T,
+			): {
+				get(): T;
+				read(): T;
+				onDidChange: { dispose(): void };
+				map<R>(transform: (value: T) => R): { get(): R; read(): R };
+			} => ({
+				get: Read,
+				read: Read,
+				onDidChange: { dispose: () => {} },
+				map: <R>(Transform: (value: T) => R) => {
+					const Lazy = (): R => Transform(Read());
+					return { get: Lazy, read: Lazy };
+				},
+			});
+			const CountObservable = StaticObservable<number>(() => {
+				let Total = 0;
+				for (const G of ProviderGroupsList) {
+					const R = (G as any)?.resources;
+					if (Array.isArray(R)) Total += R.length;
+				}
+				return Total;
+			});
 			const Provider = {
 				id: ScmId,
 				providerId: ScmId,
-				label: String(Payload?.label ?? ScmId),
-				name: String(Payload?.label ?? ScmId),
+				label: DisplayLabel,
+				name: DisplayLabel,
 				rootUri: RootUri,
 				get groups() {
 					return ProviderGroupsList;
@@ -202,13 +260,23 @@ export default async (Dependencies: {
 				onDidChange: ChangeEmitter.event,
 				onDidChangeResourceGroups: ResourceGroupsEmitter.event,
 				onDidChangeResources: ResourcesEmitter.event,
-				count: { get: () => 0 } as any,
-				commitTemplate: { get: () => "" } as any,
-				contextValue: { get: () => undefined } as any,
-				artifactProvider: { get: () => undefined } as any,
-				historyProvider: { get: () => undefined } as any,
-				actionButton: { get: () => undefined } as any,
-				statusBarCommands: { get: () => [] } as any,
+				// Derived live count - sums resources across all groups so
+				// the activity-bar badge and titlebar repo summary reflect
+				// the real pending-changes total. Shape matches stock VS
+				// Code's `IObservable<number | undefined>` so workbench
+				// code can call `.get()` / `.read()` / `.map(fn)` without
+				// crashing.
+				count: CountObservable,
+				commitTemplate: StaticObservable<string>(() => ""),
+				contextValue: StaticObservable<string | undefined>(
+					() => undefined,
+				),
+				artifactProvider: StaticObservable<undefined>(() => undefined),
+				historyProvider: StaticObservable<undefined>(() => undefined),
+				actionButton: StaticObservable<undefined>(() => undefined),
+				statusBarCommands: StaticObservable<readonly unknown[]>(
+					() => [],
+				),
 				inputBoxTextModel: InputModel,
 				getOriginalResource: async () => null,
 				dispose: () => {
@@ -466,6 +534,25 @@ export default async (Dependencies: {
 		// parameter slot and cause "Spread syntax requires iterable" when empty.
 		Group.Group.splice(0, Group.Group.resources.length, Resources);
 		Group.ResourceStates = RawStates;
+		// Provider-level change notifier - the SCM viewlet's title-bar
+		// count, the activity-bar badge, and the Source Control welcome
+		// suppression all read `provider.count`/`provider.onDidChange`.
+		// Without firing here the resource-row tree updates but the badge
+		// keeps showing the stale (or "undefined") count we saw on boot.
+		try {
+			const Emitter = (Shim.Provider as any)?.onDidChange;
+			if (Emitter && typeof Emitter._emitter?.fire === "function") {
+				Emitter._emitter.fire();
+			}
+		} catch {
+			/* swallow - workbench may already have torn the provider down */
+		}
+		// Re-fire the resource-groups event too so the panel re-iterates
+		// `provider.groups`; without this, late-arriving group entries
+		// from the replay pass can end up invisible.
+		try {
+			Shim.ResourceGroupsEmitter?.fire?.();
+		} catch {}
 	};
 
 	await Register("sky://scm/register", (Payload: any) => {

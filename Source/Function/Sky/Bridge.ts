@@ -61,7 +61,9 @@ void (async () => {
 	const Tracking = (await import("./Bridge/CelDispatchTracking.js")).default(
 		invoke,
 	);
+
 	_CelConsumers = { has: (T: string) => Tracking.HasConsumer(T) };
+
 	_CelDispatchLog = Tracking.Log;
 })();
 
@@ -182,9 +184,13 @@ interface CelUriCtor {
 
 	from(components: {
 		scheme: string;
+
 		authority?: string;
+
 		path?: string;
+
 		query?: string;
+
 		fragment?: string;
 	}): CelUri;
 
@@ -206,9 +212,13 @@ interface CelUri {
 
 	with(change: {
 		scheme?: string;
+
 		authority?: string;
+
 		path?: string;
+
 		query?: string;
+
 		fragment?: string;
 	}): CelUri;
 
@@ -290,8 +300,10 @@ let BuildOpenArg: (Source: unknown) => unknown = (S) => S;
 // placeholders so the rest of this file's downstream call sites read
 // unchanged.
 let OutputChannels = new Map<string, string[]>();
+
 let GetOrCreateChannel: (Id: string, Name?: string) => string[] = (Id) => {
 	if (!OutputChannels.has(Id)) OutputChannels.set(Id, []);
+
 	return OutputChannels.get(Id)!;
 };
 
@@ -335,6 +347,7 @@ let GetOrCreateChannel: (Id: string, Name?: string) => string[] = (Id) => {
  * "purple overlays / panels not rendering properly" in the renderer.
  */
 let _SkyBridgeInstalled = false;
+
 let _SkyBridgeInstallPromise: Promise<void> | null = null;
 
 /**
@@ -353,21 +366,26 @@ let _SkyBridgeInstallPromise: Promise<void> | null = null;
 const ResolveLandDisabled = (): boolean => {
 	try {
 		const Meta = (import.meta as { env?: Record<string, unknown> }).env;
+
 		if (Meta) {
 			const Flag = Meta["Disable"];
+
 			if (Flag === "true" || Flag === true || Flag === "1") return true;
 		}
 	} catch {
 		/* no-op */
 	}
+
 	try {
 		if (typeof localStorage !== "undefined") {
 			const Stored = localStorage.getItem("Disable");
+
 			if (Stored === "1" || Stored === "true") return true;
 		}
 	} catch {
 		/* no-op */
 	}
+
 	return false;
 };
 
@@ -382,50 +400,68 @@ export async function InstallSkyBridge(): Promise<void> {
 		} catch {
 			/* no-op */
 		}
+
 		_SkyBridgeInstalled = true;
+
 		return;
 	}
+
 	if (_SkyBridgeInstalled) {
 		return;
 	}
+
 	if (_SkyBridgeInstallPromise) {
 		return _SkyBridgeInstallPromise;
 	}
+
 	_SkyBridgeInstallPromise = (async () => {
 		try {
 			await _InstallSkyBridgeOnce();
+
 			_SkyBridgeInstalled = true;
 		} finally {
 			_SkyBridgeInstallPromise = null;
 		}
 	})();
+
 	return _SkyBridgeInstallPromise;
 }
 
 async function _InstallSkyBridgeOnce(): Promise<void> {
 	const Cleanups: Array<() => void> = [];
+
 	// Hydrate the extracted DOM-bridge factories. Both modules return a
 	// closure-bound bag (Progress) or a single function (Notification);
 	// keep the local symbol names identical to the pre-extraction shape
 	// so every downstream call site reads unchanged.
 	const Progress = (await import("./Bridge/Progress.js")).default();
+
 	const ShowProgress = Progress.Show;
+
 	const UpdateProgress = Progress.Update;
+
 	const DismissProgress = Progress.Dismiss;
+
 	const ShowNotification = (await import("./Bridge/Notification.js")).default(
 		GetWorkbench,
 	);
+
 	{
 		const Build = (await import("./Bridge/BuildOpenArg.js")).default;
+
 		BuildOpenArg = (Source: unknown) => Build(GetServices, Source);
 	}
+
 	{
 		const Output = (await import("./Bridge/OutputChannels.js")).default(
 			GetWorkbench,
 		);
+
 		OutputChannels = Output.Channels;
+
 		GetOrCreateChannel = Output.GetOrCreate;
 	}
+
 	// `ApplyHtmlToWebview` is needed by `InstallWebview`. Load it here so
 	// the install-time local is available by the time the webview import
 	// call runs below. The module also stashes itself on
@@ -433,8 +469,10 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// callback (which runs later, inside the workbench) can still find it.
 	const ApplyHtmlToWebview = (await import("./Bridge/ApplyHtmlToWebview.js"))
 		.default;
+
 	const Register = async (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => {
 		// Centralized try/catch wrapper: a single bad handler must not
@@ -456,10 +494,12 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 				}).catch(() => {});
 			}
 		};
+
 		try {
 			const Unlisten = await listen<any>(Channel, (Event) =>
 				SafeHandler(Event.payload),
 			);
+
 			Cleanups.push(Unlisten);
 		} catch (RegisterError) {
 			// Tauri's `listen()` can reject if the IPC bridge is torn
@@ -485,6 +525,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// listener below can reference it.
 	const ResolveUiRequest = (
 		RequestIdentifier: string,
+
 		Result: unknown,
 	): Promise<void> =>
 		invoke<void>("ResolveUIRequest", {
@@ -720,13 +761,18 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	await Register("sky://tree-view/reveal", (Payload: any) => {
 		try {
 			const ViewId = Payload?.viewId ?? "";
+
 			if (!ViewId) return;
+
 			const Services = GetServices();
+
 			// Open the view (makes it visible if it's collapsed)
 			const ViewsService = (Services as any)?.Views;
+
 			if (ViewsService?.openView) {
 				void ViewsService.openView(
 					ViewId,
+
 					!!Payload?.options?.focus,
 				).catch(() => {});
 			}
@@ -752,10 +798,15 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	await Register("sky://tree-view/refresh", (Payload: any) => {
 		try {
 			const ViewId = Payload?.viewId ?? "";
+
 			if (!ViewId) return;
+
 			const Services = GetServices();
+
 			const ResolveTreeView = (Services as any)?.TreeViewByViewId;
+
 			const TreeView = ResolveTreeView?.(ViewId);
+
 			if (TreeView && typeof TreeView.refresh === "function") {
 				try {
 					// `ITreeView.refresh(elements?)`: passing undefined
@@ -813,6 +864,7 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			"[SkyBridge] All sky:// event channels registered\n",
 		);
 	}
+
 	// Replay drain - implementation in `Bridge/ReplayEvents.ts`.
 	await (await import("./Bridge/ReplayEvents.js")).default(invoke);
 }

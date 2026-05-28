@@ -78,22 +78,31 @@ export default async (Dependencies: {
 			const Entries: any[] = Array.isArray(Payload?.batch)
 				? Payload.batch
 				: [Payload];
+
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			const CodeEditor = Services?.CodeEditor;
+
 			if (!CodeEditor?.registerDecorationType) {
 				DispatchDecorationBatch("cel:decoration:create", Payload);
+
 				return;
 			}
+
 			for (const Entry of Entries) {
 				try {
 					const Key = String(Entry?.key ?? "");
+
 					if (!Key) continue;
+
 					const Options = Entry?.options ?? {};
+
 					CodeEditor.registerDecorationType("ext", Key, Options);
 				} catch {
 					/* swallow per-entry - one bad reg mustn't kill the rest */
 				}
 			}
+
 			DispatchDecorationBatch("cel:decoration:create", Payload);
 		},
 	);
@@ -105,18 +114,23 @@ export default async (Dependencies: {
 			const Entries: any[] = Array.isArray(Payload?.batch)
 				? Payload.batch
 				: [Payload];
+
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			const CodeEditor = Services?.CodeEditor;
+
 			if (CodeEditor?.removeDecorationType) {
 				for (const Entry of Entries) {
 					try {
 						const Key = String(Entry?.key ?? "");
+
 						if (Key) CodeEditor.removeDecorationType(Key);
 					} catch {
 						/* swallow */
 					}
 				}
 			}
+
 			DispatchDecorationBatch("cel:decoration:dispose", Payload);
 		},
 	);

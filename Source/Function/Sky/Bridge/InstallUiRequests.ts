@@ -20,16 +20,23 @@
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	ShowNotification: (
 		severity: string,
+
 		message: string,
+
 		actions?: string[],
+
 		onAction?: (label: string | null) => void,
 	) => void;
+
 	ResolveUiRequest: (
 		RequestIdentifier: string,
+
 		Result: unknown,
 	) => Promise<void>;
 }): Promise<void> => {
@@ -44,23 +51,32 @@ export default async (Dependencies: {
 	await Register("sky://ui/show-message-request", (RawPayload: any) => {
 		if (RawPayload?.RequestIdentifier) {
 			const Inner = RawPayload.Payload ?? {};
+
 			const Severity = Inner?.Severity ?? Inner?.severity ?? "info";
+
 			const Message = Inner?.Message ?? Inner?.message ?? "";
+
 			const Options = Inner?.Options ?? Inner?.options ?? {};
+
 			const Actions: Array<{ title: string }> = Array.isArray(
 				Options?.Actions ?? Options?.actions,
 			)
 				? (Options?.Actions ?? Options?.actions)
 				: [];
+
 			if (Actions.length === 0) {
 				ShowNotification(Severity, Message, []);
+
 				void ResolveUiRequest(RawPayload.RequestIdentifier, null);
+
 				return;
 			}
+
 			// Prefer INotificationService for proper VS Code notification
 			// toasts with clickable action buttons.
 			const NotificationSvc = (globalThis as any).__CEL_SERVICES__
 				?.Notification;
+
 			if (
 				NotificationSvc &&
 				typeof NotificationSvc.notify === "function"
@@ -72,14 +88,21 @@ export default async (Dependencies: {
 						warning: 2,
 						error: 3,
 					};
+
 					const Level = SeverityEnum[Severity.toLowerCase()] ?? 1;
+
 					const RequestId = RawPayload.RequestIdentifier;
+
 					let Resolved = false;
+
 					const ResolveOnce = (Title: string | null) => {
 						if (Resolved) return;
+
 						Resolved = true;
+
 						void ResolveUiRequest(RequestId, Title);
 					};
+
 					NotificationSvc.notify({
 						severity: Level,
 						message: Message,
@@ -95,17 +118,21 @@ export default async (Dependencies: {
 							})),
 						},
 					});
+
 					// Timeout fallback - if the toast is dismissed without
 					// clicking a button, resolve null after 60 s so Mountain
 					// doesn't hang.
 					window.setTimeout(() => ResolveOnce(null), 60_000);
+
 					return;
 				} catch {
 					// Fall through to prompt fallback
 				}
 			}
+
 			// Prompt fallback
 			let Picked: string | null = null;
+
 			if (Actions.length === 1) {
 				if (
 					window.confirm(`${Message}
@@ -119,66 +146,95 @@ export default async (Dependencies: {
 					`${Message}
 
 Choose: ${Actions.map((A) => A.title).join(" / ")}`,
+
 					Actions[0].title,
 				);
+
 				if (Choice && Actions.some((A) => A.title === Choice)) {
 					Picked = Choice;
 				}
 			}
+
 			void ResolveUiRequest(RawPayload.RequestIdentifier, Picked);
+
 			return;
 		}
+
 		// Legacy passive shape - still used by telemetry / toast channels.
 		ShowNotification(
 			RawPayload?.severity ?? "info",
+
 			RawPayload?.message ?? "",
+
 			RawPayload?.actions,
 		);
 	});
 
 	await Register(
 		"sky://ui/show-input-box-request",
+
 		({ RequestIdentifier, Payload }: any) => {
 			if (!RequestIdentifier) return;
+
 			const Options = Payload ?? {};
+
 			// Prefer IQuickInputService.createInputBox() for a native VS Code
 			// input box experience. Falls back to window.prompt() when the
 			// workbench service isn't available yet.
 			const QI = (globalThis as any).__CEL_SERVICES__?.QuickInput;
+
 			if (QI && typeof QI.createInputBox === "function") {
 				try {
 					const IB = QI.createInputBox();
+
 					IB.placeholder =
 						Options?.Prompt ??
 						Options?.PlaceHolder ??
 						Options?.prompt ??
 						Options?.placeHolder ??
 						"";
+
 					IB.prompt =
 						Options?.Prompt ?? Options?.prompt ?? IB.placeholder;
+
 					IB.value = Options?.Value ?? Options?.value ?? "";
+
 					IB.password = !!(Options?.Password ?? Options?.password);
+
 					IB.title = Options?.Title ?? Options?.title ?? "";
+
 					IB.step = Options?.Step ?? Options?.step;
+
 					IB.totalSteps = Options?.TotalSteps ?? Options?.totalSteps;
+
 					IB.ignoreFocusOut = !!(
 						Options?.IgnoreFocusOut ?? Options?.ignoreFocusOut
 					);
+
 					let Resolved = false;
+
 					const Resolve = (Value: string | undefined) => {
 						if (Resolved) return;
+
 						Resolved = true;
+
 						IB.dispose();
+
 						void ResolveUiRequest(RequestIdentifier, Value);
 					};
+
 					IB.onDidAccept(() => Resolve(IB.value));
+
 					IB.onDidHide(() => Resolve(undefined));
+
 					IB.show();
+
 					return;
 				} catch {
 					// Fall through to window.prompt()
 				}
 			}
+
 			// DOM fallback
 			const Answer = window.prompt(
 				Options?.Prompt ??
@@ -186,10 +242,13 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 					Options?.prompt ??
 					Options?.placeHolder ??
 					"",
+
 				Options?.Value ?? Options?.value ?? "",
 			);
+
 			void ResolveUiRequest(
 				RequestIdentifier,
+
 				Answer === null ? undefined : Answer,
 			);
 		},
@@ -197,39 +256,53 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 
 	await Register(
 		"sky://ui/show-quick-pick-request",
+
 		({ RequestIdentifier, Payload }: any) => {
 			if (!RequestIdentifier) return;
+
 			const Items = Payload?.Items ?? Payload?.items ?? [];
+
 			const Options = Payload?.Options ?? Payload?.options ?? {};
+
 			// Prefer IQuickInputService.createQuickPick() so the native VS Code
 			// quick-pick widget renders (keyboard nav, fuzzy-match, theming).
 			// Fall back to the existing CustomEvent+DOM path when unavailable.
 			const QI = (globalThis as any).__CEL_SERVICES__?.QuickInput;
+
 			if (QI && typeof QI.createQuickPick === "function") {
 				try {
 					const Picker = QI.createQuickPick();
+
 					Picker.placeholder =
 						Options?.PlaceHolder ??
 						Options?.placeHolder ??
 						Options?.Placeholder ??
 						"";
+
 					Picker.title = Options?.Title ?? Options?.title ?? "";
+
 					Picker.step = Options?.Step ?? Options?.step;
+
 					Picker.totalSteps =
 						Options?.TotalSteps ?? Options?.totalSteps;
+
 					Picker.matchOnDescription = !!(
 						Options?.MatchOnDescription ??
 						Options?.matchOnDescription
 					);
+
 					Picker.matchOnDetail = !!(
 						Options?.MatchOnDetail ?? Options?.matchOnDetail
 					);
+
 					Picker.canSelectMany = !!(
 						Options?.CanPickMany ?? Options?.canPickMany
 					);
+
 					Picker.ignoreFocusOut = !!(
 						Options?.IgnoreFocusOut ?? Options?.ignoreFocusOut
 					);
+
 					// Normalise items to the shape IQuickInputService expects.
 					Picker.items = (Array.isArray(Items) ? Items : []).map(
 						(Item: any) => ({
@@ -243,54 +316,74 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 							alwaysShow: !!Item?.alwaysShow,
 						}),
 					);
+
 					let Resolved = false;
+
 					const Resolve = (Value: unknown) => {
 						if (Resolved) return;
+
 						Resolved = true;
+
 						Picker.dispose();
+
 						void ResolveUiRequest(RequestIdentifier, Value);
 					};
+
 					Picker.onDidAccept(() => {
 						const Sel = Picker.canSelectMany
 							? Picker.selectedItems
 							: (Picker.selectedItems[0] ?? null);
+
 						Resolve(Sel);
 					});
+
 					Picker.onDidHide(() => Resolve(null));
+
 					Picker.show();
+
 					return;
 				} catch {
 					// Fall through to CustomEvent path
 				}
 			}
+
 			// CustomEvent path - existing behaviour
 			document.dispatchEvent(
 				new CustomEvent("cel:quickpick:show", {
 					detail: { RequestIdentifier, Items, Options },
 				}),
 			);
+
 			const FallbackTimer = window.setTimeout(() => {
 				const PickedLabels = Array.isArray(Items)
 					? Items.filter((Item: any) => Item?.picked).map(
 							(Item: any) => Item?.label ?? null,
 						)
 					: [];
+
 				const Fallback = Options?.canPickMany
 					? PickedLabels
 					: (PickedLabels[0] ?? null);
+
 				void ResolveUiRequest(RequestIdentifier, Fallback);
 			}, 30_000);
+
 			document.addEventListener(
 				"cel:quickpick:resolve",
+
 				(Event: any) => {
 					if (Event?.detail?.RequestIdentifier !== RequestIdentifier)
 						return;
+
 					window.clearTimeout(FallbackTimer);
+
 					void ResolveUiRequest(
 						RequestIdentifier,
+
 						Event?.detail?.Result ?? null,
 					);
 				},
+
 				{ once: true },
 			);
 		},
@@ -302,28 +395,42 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 	// OnAction callback, then ultimately to window.confirm/prompt.
 	await Register(
 		"sky://ui/show-message-with-actions-request",
+
 		({ RequestIdentifier, Payload }: any) => {
 			if (!RequestIdentifier) return;
+
 			const Message = Payload?.Message ?? Payload?.message ?? "";
+
 			const Severity = Payload?.Severity ?? Payload?.severity ?? "info";
+
 			const Actions: Array<{ title: string }> =
 				Payload?.Actions ?? Payload?.actions ?? [];
+
 			const RequestId = RequestIdentifier;
+
 			let Resolved = false;
+
 			const ResolveOnce = (Picked: string | null) => {
 				if (Resolved) return;
+
 				Resolved = true;
+
 				void ResolveUiRequest(RequestId, Picked);
 			};
+
 			if (Actions.length === 0) {
 				// No buttons - just show and resolve null immediately.
 				ShowNotification(Severity, Message, []);
+
 				ResolveOnce(null);
+
 				return;
 			}
+
 			// Tier 1: INotificationService.notify() with action callbacks.
 			const NotificationSvc = (globalThis as any).__CEL_SERVICES__
 				?.Notification;
+
 			if (
 				NotificationSvc &&
 				typeof NotificationSvc.notify === "function"
@@ -335,7 +442,9 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 						warning: 2,
 						error: 3,
 					};
+
 					const Level = SeverityEnum[Severity.toLowerCase()] ?? 1;
+
 					NotificationSvc.notify({
 						severity: Level,
 						message: Message,
@@ -351,18 +460,24 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 							})),
 						},
 					});
+
 					window.setTimeout(() => ResolveOnce(null), 60_000);
+
 					return;
 				} catch {
 					// Fall through to DOM toast
 				}
 			}
+
 			// Tier 2: DOM toast with OnAction callback so button clicks
 			// still resolve the Mountain oneshot.
 			ShowNotification(
 				Severity,
+
 				Message,
+
 				Actions.map((A) => A.title),
+
 				(Label) => ResolveOnce(Label),
 			);
 		},

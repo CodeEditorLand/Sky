@@ -51,9 +51,13 @@ const PhaseRelay: Handler = (Payload: any): void => {
 // `error`/`warning` styling we want for `showErrorMessage` calls.
 const SeverityFromString = (Raw: unknown): number => {
 	if (typeof Raw === "number") return Raw;
+
 	const Str = String(Raw ?? "").toLowerCase();
+
 	if (Str === "error") return 3;
+
 	if (Str === "warning" || Str === "warn") return 2;
+
 	return 1;
 };
 
@@ -61,20 +65,26 @@ const NotificationShowHandler: Handler = (Payload: any): void => {
 	document.dispatchEvent(
 		new CustomEvent("cel:notification:show", { detail: Payload }),
 	);
+
 	// Drive the live workbench toast directly so extensions that call
 	// `vscode.window.showInformationMessage(...)` without action buttons
 	// actually surface a notification - the prior CustomEvent-only relay
 	// reached no UI surface in production.
 	try {
 		const Svc = (globalThis as any).__CEL_SERVICES__?.Notification;
+
 		if (!Svc) return;
+
 		const Severity = SeverityFromString(
 			Payload?.severity ?? Payload?.Severity,
 		);
+
 		const Message = String(
 			Payload?.message ?? Payload?.Message ?? Payload?.text ?? "",
 		);
+
 		if (!Message) return;
+
 		Svc.notify?.({
 			severity: Severity,
 			message: Message,
@@ -129,25 +139,33 @@ const Relays: Array<readonly [string, Handler]> = [
 	// without re-opening the file.
 	[
 		"sky://languages/setDocumentLanguage",
+
 		(Payload: any): void => {
 			document.dispatchEvent(
 				new CustomEvent("cel:languages:setDocumentLanguage", {
 					detail: Payload,
 				}),
 			);
+
 			try {
 				const Services = (globalThis as any).__CEL_SERVICES__;
+
 				const Monaco =
 					(globalThis as any).monaco ?? (window as any).monaco;
+
 				const Uri = String(Payload?.uri ?? "");
+
 				const Language = String(
 					Payload?.languageId ?? Payload?.language ?? "",
 				);
+
 				if (!Uri || !Language) return;
+
 				const ParsedUri =
 					Services?.URI && typeof Services.URI.parse === "function"
 						? Services.URI.parse(Uri)
 						: null;
+
 				const Model = (() => {
 					try {
 						if (
@@ -155,11 +173,14 @@ const Relays: Array<readonly [string, Handler]> = [
 							typeof Services?.Models?.getModel === "function"
 						)
 							return Services.Models.getModel(ParsedUri);
+
 						if (Monaco?.editor?.getModel && ParsedUri)
 							return Monaco.editor.getModel(ParsedUri);
 					} catch {}
+
 					return null;
 				})();
+
 				if (Model && Monaco?.editor?.setModelLanguage) {
 					Monaco.editor.setModelLanguage(Model, Language);
 				}
@@ -173,13 +194,17 @@ const Relays: Array<readonly [string, Handler]> = [
 	// Opens and focuses the specified tree view panel in the workbench.
 	[
 		"sky://tree-view/reveal",
+
 		({ viewId }: any): void => {
 			if (!viewId) return;
+
 			document.dispatchEvent(
 				new CustomEvent("cel:tree-view:reveal", { detail: { viewId } }),
 			);
+
 			try {
 				const Views = (globalThis as any).__CEL_SERVICES__?.Views;
+
 				if (typeof Views?.openView === "function") {
 					Views.openView(viewId);
 				}
@@ -194,19 +219,25 @@ const Relays: Array<readonly [string, Handler]> = [
 	// auto-indent, and comment-toggling work for the configured language.
 	[
 		"sky://language/configure",
+
 		(Payload: any): void => {
 			document.dispatchEvent(
 				new CustomEvent("cel:language:configure", { detail: Payload }),
 			);
+
 			try {
 				const MonacoGlobal =
 					(globalThis as any).monaco ?? (window as any).monaco;
+
 				const LanguageId: string =
 					Payload?.language ?? Payload?.languageId ?? "";
+
 				const Config = Payload?.configuration ?? Payload;
+
 				if (MonacoGlobal?.languages && LanguageId && Config) {
 					MonacoGlobal.languages.setLanguageConfiguration(
 						LanguageId,
+
 						Config,
 					);
 				}

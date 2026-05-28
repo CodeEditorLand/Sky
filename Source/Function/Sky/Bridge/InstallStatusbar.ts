@@ -63,6 +63,7 @@ export default async (Dependencies: {
 
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	GetServices: () => ServicesProbe | null;
 }): Promise<{ SetOrUpdateEntry: (Payload: any) => void }> => {
 	const { Register, GetServices } = Dependencies;

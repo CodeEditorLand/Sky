@@ -20,11 +20,17 @@ type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 
 interface ReplaySummary {
 	treeViews?: number;
+
 	scmProviders?: number;
+
 	scmGroups?: number;
+
 	scmResourceUpdates?: number;
+
 	commands?: number;
+
 	terminals?: number;
+
 	terminalDataBytes?: number;
 }
 
@@ -34,7 +40,9 @@ export default async (Invoke: Invoke): Promise<void> => {
 			method: "sky:replay-events",
 			params: [],
 		})) as ReplaySummary | undefined;
+
 		const Summary = `tree-views=${Replay?.treeViews ?? 0} scm=${Replay?.scmProviders ?? 0} scm-groups=${Replay?.scmGroups ?? 0} scm-resource-updates=${Replay?.scmResourceUpdates ?? 0} commands=${Replay?.commands ?? 0} terminals=${Replay?.terminals ?? 0} terminal-bytes=${Replay?.terminalDataBytes ?? 0}`;
+
 		// Mountain's RenderDevLog accepts both PascalCase and lowercase
 		// param names depending on the dev-log build profile; pass both
 		// for forward/backward compatibility across vendored versions.

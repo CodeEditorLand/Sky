@@ -28,20 +28,28 @@
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	GetServices: () => {
 		Markers?: {
 			changeOne(owner: string, uri: unknown, markers: unknown[]): void;
+
 			read(...args: unknown[]): unknown[];
 		};
+
 		URI?: {
 			parse(value: string): unknown;
+
 			from(components: object): unknown;
+
 			revive?(value: unknown): unknown;
 		};
+
 		[key: string]: unknown;
 	} | null;
+
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { Register, GetServices, Invoke } = Dependencies;
@@ -50,19 +58,25 @@ export default async (Dependencies: {
 	// to real URI instances so MarkersView's label service can render them.
 	const ReviveRelatedInformation = (
 		RelInfos: unknown[],
+
 		URICtor: any,
 	): unknown[] => {
 		if (!Array.isArray(RelInfos) || !URICtor) return RelInfos;
+
 		return RelInfos.map((RI: any) => {
 			if (!RI || typeof RI !== "object") return RI;
+
 			const Raw = RI.resource;
+
 			if (!Raw) return RI;
+
 			try {
 				const Revived =
 					URICtor.revive?.(Raw) ??
 					(typeof Raw === "string"
 						? URICtor.parse(Raw)
 						: URICtor.from(Raw));
+
 				return { ...RI, resource: Revived };
 			} catch {
 				return RI;
@@ -72,9 +86,13 @@ export default async (Dependencies: {
 
 	await Register("sky://diagnostics/changed", (Payload: any) => {
 		const Services = GetServices();
+
 		const Markers = (Services as any)?.Markers;
+
 		const URICtor = (Services as any)?.URI;
+
 		const Owner = String(Payload?.owner ?? "");
+
 		const Changed = Array.isArray(Payload?.changedURIs)
 			? Payload.changedURIs
 			: [];
@@ -87,15 +105,18 @@ export default async (Dependencies: {
 					`owner=${Owner} uris=${Changed.length} pushable=false markers=${typeof Markers?.changeOne} uri=${!!URICtor}`,
 				],
 			}).catch(() => {});
+
 			return;
 		}
 
 		for (const Entry of Changed) {
 			try {
 				const Uri = Entry?.uri;
+
 				const RawMarkers: unknown[] = Array.isArray(Entry?.markers)
 					? Entry.markers
 					: [];
+
 				if (!Uri) continue;
 
 				const RealUri =
@@ -114,10 +135,12 @@ export default async (Dependencies: {
 						!Array.isArray(M.relatedInformation)
 					)
 						return M;
+
 					return {
 						...M,
 						relatedInformation: ReviveRelatedInformation(
 							M.relatedInformation,
+
 							URICtor,
 						),
 					};

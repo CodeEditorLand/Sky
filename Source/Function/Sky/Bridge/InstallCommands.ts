@@ -43,8 +43,11 @@ export default async (Dependencies: {
 
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	GetServices: () => ServicesProbe | null;
+
 	Invoke: Invoke;
+
 	ResolveUiRequest: ResolveUiRequest;
 }): Promise<void> => {
 	const { Register, GetServices, Invoke, ResolveUiRequest } = Dependencies;
@@ -53,16 +56,23 @@ export default async (Dependencies: {
 
 	await Register("sky://command/execute", async (RawPayload: any) => {
 		const Services = GetServices();
+
 		if (!Services?.Commands) return;
+
 		const RequestIdentifier = RawPayload?.RequestIdentifier;
+
 		const Payload = RawPayload?.Payload ?? RawPayload;
+
 		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
+
 		const Arguments = Array.isArray(Payload?.args) ? Payload.args : [];
+
 		try {
 			const Result = await Services.Commands.executeCommand(
 				Id,
 				...Arguments,
 			);
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, Result ?? null);
 			}
@@ -76,6 +86,7 @@ export default async (Dependencies: {
 					Error,
 				],
 			}).catch(() => {});
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, null);
 			}
@@ -99,6 +110,7 @@ export default async (Dependencies: {
 
 				(...AllArguments: unknown[]) => {
 					const CallerArguments = AllArguments.slice(1);
+
 					return Invoke("ResolveUIRequest", {
 						RequestID: `command:${Id}`,
 						Result: { cid: Id, args: CallerArguments },
@@ -130,14 +142,18 @@ export default async (Dependencies: {
 
 	await Register("sky://command/unregister", (Payload: any) => {
 		const Id = String(Payload?.id ?? Payload?.commandId ?? "");
+
 		if (!Id) return;
+
 		const Disposable = RegisteredCommands.get(Id);
+
 		if (Disposable) {
 			try {
 				Disposable.dispose();
 			} catch {
 				/* swallow */
 			}
+
 			RegisteredCommands.delete(Id);
 		}
 	});

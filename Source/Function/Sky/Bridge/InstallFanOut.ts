@@ -12,8 +12,10 @@
  * per-listener `safeStringify` / Emitter try/catch).
  */
 type Handler = (Payload: any) => void;
+
 type Tracking = {
 	HasConsumer: (DomEvent: string) => boolean;
+
 	Log: (DomEvent: string, HasConsumer: boolean) => void;
 };
 
@@ -22,15 +24,20 @@ const ChannelToDomEvent = (Channel: string): string =>
 
 export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
+
 	Channels: readonly string[];
+
 	Tracking: Tracking;
 }): Promise<void> => {
 	const { Register, Channels, Tracking } = Dependencies;
+
 	for (const Channel of Channels) {
 		await Register(Channel, (Payload: any) => {
 			let DomEvent = "";
+
 			try {
 				DomEvent = ChannelToDomEvent(Channel);
+
 				document.dispatchEvent(
 					new CustomEvent(DomEvent, { detail: Payload }),
 				);
@@ -46,8 +53,10 @@ export default async (Dependencies: {
 				} catch {
 					/* swallow - console may be replaced */
 				}
+
 				return;
 			}
+
 			try {
 				Tracking.Log(DomEvent, Tracking.HasConsumer(DomEvent));
 			} catch {

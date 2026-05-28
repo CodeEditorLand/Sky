@@ -82,10 +82,14 @@ const LoadPostHog = async (): Promise<any> => {
 
 		return await new Promise((Resolve) => {
 			const Script = document.createElement("script");
+
 			Script.src = `${AssetsHost}/static/array.js`;
+
 			Script.async = true;
+
 			Script.onload = () => {
 				const PH = (window as any).posthog;
+
 				if (PH) {
 					PH.init(PostHogAPIKey, {
 						api_host: PostHogHost,
@@ -142,6 +146,7 @@ const LoadPostHog = async (): Promise<any> => {
 								$platform: navigator.platform,
 								$tier: "sky",
 							});
+
 							Resolve(Instance);
 						},
 					});
@@ -149,7 +154,9 @@ const LoadPostHog = async (): Promise<any> => {
 					Resolve(null);
 				}
 			};
+
 			Script.onerror = () => Resolve(null);
+
 			document.head.appendChild(Script);
 		});
 	} catch {
@@ -463,16 +470,19 @@ const Initialize = async (): Promise<void> => {
 							? RawError
 							: `polyfill[${Category}] failure`,
 					);
+
 		const Properties: Record<string, unknown> = {
 			polyfill_category: Category,
 			$exception_type: `land:polyfill:${Category}`,
 			$exception_origin: "polyfill",
 		};
+
 		if (Detail) {
 			for (const [Key, Value] of Object.entries(Detail)) {
 				Properties[`polyfill_${Key.toLowerCase()}`] = Value;
 			}
 		}
+
 		PH.captureException(ErrorObj, Properties);
 	});
 
@@ -538,9 +548,13 @@ const Initialize = async (): Promise<void> => {
 			if (!Entry.name.startsWith("land:")) continue;
 
 			const Parts = Entry.name.split(":");
+
 			const Category = Parts[1] || "unknown";
+
 			const Action = Parts.slice(2).join(":");
+
 			const Component = ComponentMap[Category] || "all";
+
 			const IsError = Entry.name.includes("error");
 
 			if (IsError) {
@@ -581,6 +595,7 @@ const Initialize = async (): Promise<void> => {
 	// === Error capture: window.onerror ===
 	window.addEventListener("error", (Event) => {
 		if (!Event.message || Event.message === "Script error.") return;
+
 		PH.captureException(Event.error || new Error(Event.message), {
 			$component: "vscode",
 			$exception_source: Event.filename,
@@ -593,9 +608,13 @@ const Initialize = async (): Promise<void> => {
 	// === Error capture: unhandled promise rejections ===
 	window.addEventListener("unhandledrejection", (Event) => {
 		const Reason = Event.reason;
+
 		if (!Reason) return;
+
 		const Message = String(Reason.message || Reason);
+
 		if (Message.includes("Canceled")) return;
+
 		PH.captureException(
 			Reason instanceof Error ? Reason : new Error(Message),
 
@@ -686,12 +705,14 @@ const Initialize = async (): Promise<void> => {
 
 		(Event) => {
 			const Target = Event.target as HTMLElement;
+
 			if (Target && Target !== window && "src" in Target) {
 				PH.capture("land:resource:error", {
 					$component: "sky",
 					tag: Target.tagName,
 					src: (Target as HTMLScriptElement).src?.slice(0, 200),
 				});
+
 				try {
 					performance.mark("land:resource:error", {
 						detail: {
@@ -715,6 +736,7 @@ const Initialize = async (): Promise<void> => {
 		const Navigation = performance.getEntriesByType(
 			"navigation",
 		)[0] as PerformanceNavigationTiming;
+
 		if (Navigation) {
 			PH.capture("land:boot:timing", {
 				$component: "sky",

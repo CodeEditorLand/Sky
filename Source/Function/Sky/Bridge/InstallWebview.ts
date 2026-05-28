@@ -27,9 +27,12 @@
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	ApplyHtmlToWebview: (view: any, html: string) => string;
+
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { Register, ApplyHtmlToWebview, Invoke } = Dependencies;
@@ -44,13 +47,18 @@ export default async (Dependencies: {
 	// handle so a late resolve can replay it onto the real workbench
 	// `IOverlayWebview` via `setHtml(html)`.
 	const PendingWebviewHtml = new Map<string, string>();
+
 	const PendingWebviewHtmlByHandle = new Map<string | number, string>();
+
 	(globalThis as any).__CEL_WEBVIEW_PENDING_HTML__ = PendingWebviewHtml;
+
 	(globalThis as any).__CEL_WEBVIEW_PENDING_HTML_BY_HANDLE__ =
 		PendingWebviewHtmlByHandle;
+
 	(globalThis as any).__CEL_WEBVIEW_APPLY_HTML__ = ApplyHtmlToWebview;
 
 	let WebviewCreateFirstLogged = false;
+
 	await Register("sky://webview/create", (Payload: any) => {
 		const Handle =
 			Payload?.handle != null
@@ -58,14 +66,19 @@ export default async (Dependencies: {
 				: Array.isArray(Payload?.args)
 					? Payload.args[0]
 					: undefined;
+
 		if (Handle == null) return;
+
 		const HandleRegistry: Map<string | number, any> = ((
 			globalThis as any
 		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ ??= new Map());
+
 		const ViewType = String(Payload?.viewType ?? Payload?.args?.[1] ?? "");
+
 		const Title = String(
 			Payload?.title ?? Payload?.args?.[2] ?? ViewType ?? "",
 		);
+
 		// Try to materialise a REAL workbench webview-panel via
 		// `IWebviewWorkbenchService.openWebview`. When the workbench-side
 		// service is wired (see CELExposeAccessor's `WebviewPanels` slot)
@@ -90,7 +103,9 @@ export default async (Dependencies: {
 				const Inv =
 					(globalThis as any).__TAURI__?.core?.invoke ??
 					(globalThis as any).__TAURI__?.invoke;
+
 				if (typeof Inv !== "function") return;
+
 				Inv("MountainIPCInvoke", {
 					method: "cocoon:notify",
 					params: [Method, NotifyPayload],
@@ -101,10 +116,14 @@ export default async (Dependencies: {
 		};
 
 		let RealOverlayWebview: any = null;
+
 		let RealWebviewInput: any = null;
+
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			const WebviewPanels = Services?.WebviewPanels;
+
 			if (
 				ViewType &&
 				WebviewPanels &&
@@ -116,6 +135,7 @@ export default async (Dependencies: {
 				// available on the Sky side, so this approximates upstream's
 				// `ExtensionKeyedWebviewOriginStore`.
 				const Origin = `webview-panel-${ViewType}`;
+
 				const WebviewInput = WebviewPanels.openWebview(
 					{
 						origin: Origin,
@@ -144,17 +164,24 @@ export default async (Dependencies: {
 						},
 						extension: undefined,
 					},
+
 					ViewType,
+
 					Title,
+
 					undefined,
+
 					{ preserveFocus: true },
 				);
+
 				RealWebviewInput = WebviewInput ?? null;
+
 				RealOverlayWebview = WebviewInput?.webview ?? null;
 			}
 		} catch {
 			/* swallow - fall back to placeholder */
 		}
+
 		if (
 			RealOverlayWebview &&
 			typeof RealOverlayWebview.setHtml === "function"
@@ -188,6 +215,7 @@ export default async (Dependencies: {
 			try {
 				RealWebviewInput?.onWillDispose?.(() => {
 					NotifyForPanel("webview.dispose", { handle: Handle });
+
 					HandleRegistry.delete(Handle);
 				});
 			} catch {
@@ -200,7 +228,9 @@ export default async (Dependencies: {
 			// approximation upstream's MainThreadWebviewPanels uses too.
 			try {
 				const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 				const EditorService = Services?.Editor;
+
 				if (
 					EditorService &&
 					typeof EditorService.onDidActiveEditorChange === "function"
@@ -208,7 +238,9 @@ export default async (Dependencies: {
 					const Subscription = EditorService.onDidActiveEditorChange(
 						() => {
 							const Active = EditorService.activeEditor;
+
 							const IsActive = Active === RealWebviewInput;
+
 							NotifyForPanel("webview.viewState", {
 								handle: Handle,
 								active: IsActive,
@@ -217,6 +249,7 @@ export default async (Dependencies: {
 							});
 						},
 					);
+
 					RealWebviewInput?.onWillDispose?.(() => {
 						try {
 							Subscription?.dispose?.();
@@ -235,6 +268,7 @@ export default async (Dependencies: {
 			// doesn't miss.
 			try {
 				const Pending = PendingWebviewHtmlByHandle.get(Handle);
+
 				if (Pending) {
 					RealOverlayWebview.setHtml(Pending);
 				}
@@ -259,8 +293,10 @@ export default async (Dependencies: {
 				},
 			});
 		}
+
 		if (!WebviewCreateFirstLogged) {
 			WebviewCreateFirstLogged = true;
+
 			Invoke("MountainIPCInvoke", {
 				method: "diagnostic:log",
 				params: [
@@ -289,6 +325,7 @@ export default async (Dependencies: {
 	// the panel paints. Falls back to `cel:webview:set-html` DOM event
 	// for any Sky-side observer that wants the raw payload.
 	let WebviewSetHtmlFirstLogged = false;
+
 	await Register("sky://webview/set-html", (Payload: any) => {
 		// Mountain's Effect-dispatcher path emits the payload directly
 		// from Cocoon's `{ handle, viewId, html }` (webview-view path)
@@ -298,35 +335,46 @@ export default async (Dependencies: {
 		// handle→view registry lookup so panel-mode webviews still get
 		// their html applied.
 		const ViewId: string = String(Payload?.viewId ?? "");
+
 		const Handle: string | number =
 			Payload?.handle != null ? Payload.handle : "";
+
 		const Html: string = String(Payload?.html ?? Payload?.value ?? "");
+
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:set-html", { detail: Payload }),
 		);
+
 		const Registry: Map<string, any> | undefined = (globalThis as any)
 			.__CEL_WEBVIEW_VIEWS__;
+
 		const HandleRegistry: Map<string | number, any> | undefined = (
 			globalThis as any
 		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__;
+
 		const ParkedView =
 			(ViewId && Registry?.get(ViewId)) ||
 			(Handle !== "" && HandleRegistry?.get(Handle));
+
 		// Always cache so a late resolve can replay - even if a parked
 		// view was found, the resolver may build a fresh proxy on
 		// re-attach and we want the latest html available.
 		if (ViewId) {
 			PendingWebviewHtml.set(ViewId, Html);
 		}
+
 		if (Handle !== "") {
 			PendingWebviewHtmlByHandle.set(Handle, Html);
 		}
+
 		const Applied = ApplyHtmlToWebview(ParkedView, Html);
+
 		// One-time confirmation log for the FIRST set-html that arrives.
 		// Tells us at-a-glance whether the bridge sees the kebab-case
 		// channel + canonicalised payload AND which apply-strategy hit.
 		if (!WebviewSetHtmlFirstLogged) {
 			WebviewSetHtmlFirstLogged = true;
+
 			// Snapshot the first 320 chars + the first <script src=...>
 			// match so log dissection can tell at-a-glance whether
 			// Roo's HTML actually carries its bundle reference. Strip
@@ -397,6 +445,7 @@ export default async (Dependencies: {
 		if (!Entry) return;
 		try {
 			const Webview = Entry?.webview ?? Entry;
+
 			if (typeof Webview?.setTitle === "function")
 				Webview.setTitle(Title);
 		} catch {}
@@ -415,19 +464,27 @@ export default async (Dependencies: {
 	// doesn't survive JSON), so treat null as no-change.
 	await Register("sky://webview/updateView", (Payload: any) => {
 		const ViewId: string = String(Payload?.viewId ?? "");
+
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:updateView", { detail: Payload }),
 		);
+
 		if (!ViewId) return;
+
 		const Registry: Map<string, any> | undefined = (globalThis as any)
 			.__CEL_WEBVIEW_VIEWS__;
+
 		const ParkedView = Registry?.get(ViewId);
+
 		if (!ParkedView) return;
+
 		try {
 			if (Payload?.title != null)
 				ParkedView.title = String(Payload.title);
+
 			if (Payload?.description != null)
 				ParkedView.description = String(Payload.description);
+
 			if (Payload?.badge != null) ParkedView.badge = Payload.badge;
 		} catch (_e) {
 			/* swallow */
@@ -441,22 +498,31 @@ export default async (Dependencies: {
 	await Register("sky://webview/setOptions", (Payload: any) => {
 		const Handle: string | number =
 			Payload?.handle ?? Payload?.viewId ?? "";
+
 		const Options = Payload?.options ?? Payload;
+
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:setOptions", { detail: Payload }),
 		);
+
 		if (!Options) return;
+
 		const Registry: Map<string, any> | undefined = (globalThis as any)
 			.__CEL_WEBVIEW_VIEWS__;
+
 		const HandleRegistry: Map<string | number, any> | undefined = (
 			globalThis as any
 		).__CEL_WEBVIEW_PANELS__ as Map<string | number, any> | undefined;
+
 		const Entry =
 			(typeof Handle === "string" && Registry?.get(Handle)) ||
 			HandleRegistry?.get(Handle);
+
 		if (!Entry) return;
+
 		try {
 			const Webview = Entry?.webview ?? Entry;
+
 			if (typeof Webview?.setOptions === "function") {
 				Webview.setOptions(Options);
 			}
@@ -473,14 +539,18 @@ export default async (Dependencies: {
 	// the parked workbench view's webview when a viewId match exists.
 	await Register("sky://webview/postMessage", (Payload: any) => {
 		const ViewId: string = String(Payload?.viewId ?? "");
+
 		const Handle: string | number =
 			Payload?.handle != null ? Payload.handle : "";
+
 		const Message = Payload?.message;
+
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:post-message", {
 				detail: { ...Payload, viewId: ViewId, message: Message },
 			}),
 		);
+
 		// Resolution priority: viewId → sidebar `IWebviewViewService` view;
 		// handle → editor-area panel created via `IWebviewWorkbenchService`.
 		// Stock VS Code's MainThreadWebviewPanels keys panels by `handle`;
@@ -490,14 +560,19 @@ export default async (Dependencies: {
 		// silently dropping every panel-mode postMessage.
 		const Registry: Map<string, any> | undefined = (globalThis as any)
 			.__CEL_WEBVIEW_VIEWS__;
+
 		const HandleRegistry: Map<string | number, any> | undefined = (
 			globalThis as any
 		).__CEL_WEBVIEW_VIEWS_BY_HANDLE__;
+
 		const Target =
 			(ViewId && Registry?.get(ViewId)) ||
 			(Handle !== "" && HandleRegistry?.get(Handle));
+
 		const Webview = Target?.webview ?? Target;
+
 		if (typeof Webview?.postMessage !== "function") return;
+
 		try {
 			Webview.postMessage(Message);
 		} catch {
@@ -522,6 +597,7 @@ export default async (Dependencies: {
 	// `Provider.resolveWebviewView(view, ctx)` and the extension
 	// populates `view.webview.html`.
 	const WebviewViewResolvers = new Map<string, number>();
+
 	// Once-per-session diagnostic so we can confirm at-a-glance from
 	// `Mountain.dev.log` that this listener is actually wired into the
 	// bundle, what shape Mountain hands us, and whether ViewId resolves.
@@ -531,12 +607,17 @@ export default async (Dependencies: {
 	// so extension-host re-registration after a hot-reload doesn't spam
 	// the IPC channel.
 	let WebviewRegisterViewFirstLogged = false;
+
 	await Register("sky://webview/registerView", (Payload: any) => {
 		const Args = Array.isArray(Payload?.args) ? Payload.args : [];
+
 		const Handle = Args[0] ?? Payload?.handle;
+
 		const ViewId: string = String(Args[1] ?? Payload?.viewId ?? "");
+
 		if (!WebviewRegisterViewFirstLogged) {
 			WebviewRegisterViewFirstLogged = true;
+
 			Invoke("MountainIPCInvoke", {
 				method: "diagnostic:log",
 				params: [
@@ -545,7 +626,9 @@ export default async (Dependencies: {
 				],
 			}).catch(() => {});
 		}
+
 		if (!ViewId) return;
+
 		// Defensive: a malformed payload (Mountain emit shape drift,
 		// missing handle, etc.) shouldn't kill the rest of the
 		// listener pipeline. Track + DOM-dispatch are best-effort;
@@ -559,6 +642,7 @@ export default async (Dependencies: {
 			 * String()-coerced above, but keep the guard so a future
 			 * payload-shape change can't poison the registry */
 		}
+
 		try {
 			document.dispatchEvent(
 				new CustomEvent("cel:webview:registerView", {
@@ -578,6 +662,7 @@ export default async (Dependencies: {
 				],
 			}).catch(() => {});
 		}
+
 		// Failure-only trace - the original log fired on every
 		// webview-register event, saturating the IPC channel during
 		// extension boot. The triage value lives entirely in the
@@ -585,6 +670,7 @@ export default async (Dependencies: {
 		// missing we want to know why webviews aren't attaching.
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			if (!Services?.WebviewViews?.register) {
 				Invoke("MountainIPCInvoke", {
 					method: "diagnostic:log",
@@ -593,8 +679,10 @@ export default async (Dependencies: {
 						`registerView viewId=${ViewId} handle=${Handle} hasRegister=false`,
 					],
 				}).catch(() => {});
+
 				return;
 			}
+
 			// Probe the workbench's `_resolvers` map straight after the
 			// register call. If it doesn't contain our viewType the
 			// `_resolvers` reference is on a different instance than the
@@ -619,6 +707,7 @@ export default async (Dependencies: {
 					} catch {
 						/* invoke may be unavailable mid-teardown */
 					}
+
 					// Bridge the workbench-supplied WebviewView into a
 					// Cocoon-visible reference. The extension's
 					// `resolveWebviewView(view, ctx)` callback runs in
@@ -636,16 +725,20 @@ export default async (Dependencies: {
 						const Registry: Map<string, any> = ((
 							globalThis as any
 						).__CEL_WEBVIEW_VIEWS__ ??= new Map());
+
 						Registry.set(ViewId, WebviewView);
+
 						// Also register by handle so the set-html listener
 						// can fall back to a handle lookup for payloads that
 						// don't carry viewId (panel-mode webviews).
 						const HandleRegistry: Map<string | number, any> = ((
 							globalThis as any
 						).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ ??= new Map());
+
 						if (Handle != null && Handle !== "") {
 							HandleRegistry.set(Handle, WebviewView);
 						}
+
 						// Drain any pending HTML that arrived BEFORE this
 						// resolver fired. Cocoon's `view.webview.html =
 						// "<html>"` setter inside `resolveWebviewView` runs
@@ -656,24 +749,30 @@ export default async (Dependencies: {
 						// even though the chain is wired correctly.
 						const PendingByViewId: Map<string, string> | undefined =
 							(globalThis as any).__CEL_WEBVIEW_PENDING_HTML__;
+
 						const PendingByHandle:
 							| Map<string | number, string>
 							| undefined = (globalThis as any)
 							.__CEL_WEBVIEW_PENDING_HTML_BY_HANDLE__;
+
 						const ApplyHtml = (globalThis as any)
 							.__CEL_WEBVIEW_APPLY_HTML__ as
 							| ((view: any, html: string) => string)
 							| undefined;
+
 						const PendingHtml =
 							(ViewId && PendingByViewId?.get(ViewId)) ||
 							(Handle != null &&
 								Handle !== "" &&
 								PendingByHandle?.get(Handle)) ||
 							"";
+
 						let ReplayApplied: string | "none" = "none";
+
 						if (PendingHtml && typeof ApplyHtml === "function") {
 							ReplayApplied = ApplyHtml(WebviewView, PendingHtml);
 						}
+
 						Invoke("MountainIPCInvoke", {
 							method: "diagnostic:log",
 							params: [
@@ -684,6 +783,7 @@ export default async (Dependencies: {
 					} catch (_e) {
 						/* ignore */
 					}
+
 					// Forward workbench → extension events into Cocoon's
 					// notification stream. Each subscribe returns a
 					// disposable; the workbench will dispose the View
@@ -696,7 +796,9 @@ export default async (Dependencies: {
 							const Inv =
 								(globalThis as any).__TAURI__?.core?.invoke ??
 								(globalThis as any).__TAURI__?.invoke;
+
 							if (typeof Inv !== "function") return;
+
 							Inv("MountainIPCInvoke", {
 								method: "cocoon:notify",
 								params: [Method, NotifyPayload],
@@ -705,6 +807,7 @@ export default async (Dependencies: {
 							/* swallow */
 						}
 					};
+
 					try {
 						WebviewView.webview?.onDidReceiveMessage?.(
 							(Message: unknown) => {
@@ -718,6 +821,7 @@ export default async (Dependencies: {
 					} catch (_e) {
 						/* swallow */
 					}
+
 					try {
 						WebviewView.onDidChangeVisibility?.(() => {
 							Notify("webview.viewState", {
@@ -726,6 +830,7 @@ export default async (Dependencies: {
 								visible: !!WebviewView.visible,
 							});
 						});
+
 						// Stock workbench `WebviewViewService.resolve` is
 						// only invoked when the pane is being revealed -
 						// `WebviewView.visible` is `true` at that moment by
@@ -747,20 +852,24 @@ export default async (Dependencies: {
 					} catch (_e) {
 						/* swallow */
 					}
+
 					try {
 						WebviewView.onDispose?.(() => {
 							Notify("webview.dispose", {
 								handle: Handle,
 								viewId: ViewId,
 							});
+
 							const Registry: Map<string, any> | undefined = (
 								globalThis as any
 							).__CEL_WEBVIEW_VIEWS__;
+
 							Registry?.delete(ViewId);
 						});
 					} catch (_e) {
 						/* swallow */
 					}
+
 					// Trigger the Cocoon provider's resolveWebviewView
 					// callback by dispatching a `webview.resolveView`
 					// request via Mountain → Cocoon. Failure logs to
@@ -771,6 +880,7 @@ export default async (Dependencies: {
 						const Inv =
 							(globalThis as any).__TAURI__?.core?.invoke ??
 							(globalThis as any).__TAURI__?.invoke;
+
 						if (typeof Inv === "function") {
 							await Inv("MountainIPCInvoke", {
 								method: "cocoon:request",
@@ -785,6 +895,7 @@ export default async (Dependencies: {
 					}
 				},
 			});
+
 			// Defensive: nudge the WebviewViewPane's resolution chain by
 			// touching `Services.Views.openView(viewId)` if the pane is
 			// already body-visible. The workbench's `WebviewViewPane.
@@ -799,6 +910,7 @@ export default async (Dependencies: {
 			// visible so we don't force-open every collapsed sidebar.
 			try {
 				const Visible = Services?.Views?.isViewVisible?.(ViewId);
+
 				if (
 					Visible &&
 					typeof Services?.Views?.openView === "function"
@@ -808,6 +920,7 @@ export default async (Dependencies: {
 			} catch {
 				/* swallow - openView is best-effort */
 			}
+
 			// One-shot post-register probe: confirm our resolver actually
 			// landed in the workbench's `_resolvers` map. Bracket access
 			// because `_resolvers` is a TS-private field; JS doesn't
@@ -817,18 +930,23 @@ export default async (Dependencies: {
 			// know the bridge is talking to the wrong service.
 			if (!(globalThis as any).__CEL_REGISTER_VIEW_VERIFIED__) {
 				(globalThis as any).__CEL_REGISTER_VIEW_VERIFIED__ = true;
+
 				try {
 					const Resolvers = Services.WebviewViews?._resolvers;
+
 					const HasResolver =
 						typeof Resolvers?.has === "function"
 							? Resolvers.has(ViewId)
 							: undefined;
+
 					const AwaitingRevival =
 						Services.WebviewViews?._awaitingRevival;
+
 					const HasPending =
 						typeof AwaitingRevival?.has === "function"
 							? AwaitingRevival.has(ViewId)
 							: undefined;
+
 					Invoke("MountainIPCInvoke", {
 						method: "diagnostic:log",
 						params: [
@@ -863,9 +981,11 @@ export default async (Dependencies: {
 			try {
 				const Message =
 					(RegisterError as any)?.message ?? String(RegisterError);
+
 				const Kind = String(Message).includes("already registered")
 					? "dup"
 					: "error";
+
 				Invoke("MountainIPCInvoke", {
 					method: "diagnostic:log",
 					params: [
@@ -881,9 +1001,13 @@ export default async (Dependencies: {
 
 	await Register("sky://webview/unregisterView", (Payload: any) => {
 		const Args = Array.isArray(Payload?.args) ? Payload.args : [];
+
 		const Handle = Args[0] ?? Payload?.handle;
+
 		const ViewId: string = String(Args[1] ?? Payload?.viewId ?? "");
+
 		if (ViewId) WebviewViewResolvers.delete(ViewId);
+
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:unregisterView", {
 				detail: { handle: Handle, viewId: ViewId, payload: Payload },
@@ -903,12 +1027,17 @@ export default async (Dependencies: {
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:reveal", { detail: Payload }),
 		);
+
 		const Handle: string | number =
 			Payload?.handle ?? Payload?.viewId ?? Payload?.args?.[0] ?? "";
+
 		const ViewId: string = String(Payload?.viewId ?? "");
+
 		const PreserveFocus: boolean = !!(Payload?.preserveFocus ?? false);
+
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			if (ViewId && Services?.Views) {
 				Services.Views.openView?.(ViewId, !PreserveFocus);
 			} else {
@@ -917,8 +1046,11 @@ export default async (Dependencies: {
 				).__CEL_WEBVIEW_VIEWS_BY_HANDLE__ as
 					| Map<string | number, any>
 					| undefined;
+
 				const Entry = HandleRegistry?.get(Handle);
+
 				const Webview = Entry?.webview ?? Entry;
+
 				if (typeof Webview?.focus === "function" && !PreserveFocus)
 					Webview.focus();
 			}
@@ -931,13 +1063,16 @@ export default async (Dependencies: {
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:dispose", { detail: { panelId } }),
 		);
+
 		// Clean up from the registered panels map if the handle is present.
 		const Handle = panelId ?? "";
+
 		if (Handle) {
 			try {
 				const PanelRegistry: Map<string, any> | undefined = (
 					globalThis as any
 				).__CEL_WEBVIEW_PANELS__;
+
 				PanelRegistry?.delete(String(Handle));
 			} catch {
 				/* non-fatal */
@@ -957,14 +1092,17 @@ export default async (Dependencies: {
 	// wiring and is deferred - the registration capability alone is
 	// what makes the viewType discoverable in the editor picker.
 	const CustomEditorCapabilityHandles = new Map<string, any>();
+
 	await Register("sky://webview/registerCustomEditor", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:webview:registerCustomEditor", {
 				detail: Payload,
 			}),
 		);
+
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			if (!Services?.CustomEditor?.registerCustomEditorCapabilities)
 				return;
 
@@ -976,6 +1114,7 @@ export default async (Dependencies: {
 			const Args: unknown[] = Array.isArray(Payload?.args)
 				? Payload.args
 				: [];
+
 			const ViewType: string = String(
 				Payload?.viewType ??
 					(typeof Args[1] === "string" && Args[1].length > 0
@@ -1006,12 +1145,14 @@ export default async (Dependencies: {
 			const Disposable =
 				Services.CustomEditor.registerCustomEditorCapabilities(
 					ViewType,
+
 					{
 						supportsMultipleEditorsPerDocument: Boolean(
 							Options["supportsMultipleEditorsPerDocument"],
 						),
 					},
 				);
+
 			if (Disposable != null) {
 				CustomEditorCapabilityHandles.set(ViewType, Disposable);
 			}
@@ -1023,7 +1164,9 @@ export default async (Dependencies: {
 			// Priority is `option` so VS Code's builtin factory (from the
 			// manifest contribution) takes precedence when both are registered.
 			const EditorResolver = Services?.EditorResolver;
+
 			const Priority = Services?.RegisteredEditorPriority;
+
 			if (
 				typeof EditorResolver?.registerEditor === "function" &&
 				Selector.length > 0 &&
@@ -1036,10 +1179,13 @@ export default async (Dependencies: {
 							: typeof (S as any)?.filenamePattern === "string"
 								? (S as any).filenamePattern
 								: null;
+
 					if (!GlobPattern) continue;
+
 					try {
 						EditorResolver.registerEditor(
 							GlobPattern,
+
 							{
 								id: ViewType,
 								label: String(
@@ -1047,7 +1193,9 @@ export default async (Dependencies: {
 								),
 								priority: Priority.option,
 							},
+
 							{},
+
 							{
 								// createEditorInput MUST NOT return undefined/null -
 								// VS Code would crash trying to read .editor on the
@@ -1073,6 +1221,7 @@ export default async (Dependencies: {
 		} catch (Error) {
 			try {
 				const W = globalThis as any;
+
 				if (W?.process?.env?.Trace?.includes?.("cel-customeditor")) {
 					(W.console || console).warn(
 						`[Sky:CEL-CustomEditor] registerCapability failed: ${
@@ -1091,8 +1240,10 @@ export default async (Dependencies: {
 				detail: Payload,
 			}),
 		);
+
 		try {
 			const Args = Array.isArray(Payload?.args) ? Payload.args : [];
+
 			// `webview.unregisterCustomEditor` takes only the handle, not
 			// the viewType - dispose every capability we registered for
 			// this Cocoon process. There's no reverse handle→viewType
@@ -1100,11 +1251,13 @@ export default async (Dependencies: {
 			// handle in a form we tracked, so dispose-all is the safe
 			// fallback when Cocoon shuts down.
 			void Args;
+
 			for (const [, Disposable] of CustomEditorCapabilityHandles) {
 				try {
 					Disposable?.dispose?.();
 				} catch {}
 			}
+
 			CustomEditorCapabilityHandles.clear();
 		} catch {}
 	});

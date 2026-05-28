@@ -13,17 +13,22 @@
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	GetServices: () => {
 		CodeEditorService?: {
 			listCodeEditors?(): unknown[];
+
 			onDidChangeActiveCodeEditor?(
 				handler: (editor: unknown) => void,
 			): void;
 		};
+
 		[key: string]: unknown;
 	} | null;
+
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { Register, GetServices, Invoke } = Dependencies;
@@ -36,27 +41,37 @@ export default async (Dependencies: {
 	// `{ batch: [{ decorationTypeKey, uri, rangesOrOptions }] }`.
 	await Register("sky://decoration/set-ranges", (Payload: any) => {
 		const Services = GetServices();
+
 		const CodeEditorService = (Services as any)?.CodeEditorService;
+
 		const Entries: any[] = Array.isArray(Payload?.batch)
 			? Payload.batch
 			: [Payload];
+
 		for (const Entry of Entries) {
 			try {
 				const Key = Entry?.decorationTypeKey;
+
 				const Uri = Entry?.uri;
+
 				const RangesOrOptions = Entry?.rangesOrOptions ?? [];
+
 				if (!Key || !Uri) continue;
+
 				const Editors: any[] =
 					CodeEditorService?.listCodeEditors?.() ?? [];
+
 				for (const Ed of Editors) {
 					try {
 						const EditorUri = Ed?.getModel?.()?.uri?.toString?.();
+
 						if (
 							EditorUri !== Uri &&
 							!EditorUri?.endsWith(Uri.split("/").pop() ?? "")
 						) {
 							continue;
 						}
+
 						// Monaco's CodeEditor exposes `setDecorationsByType
 						// (description, decorationTypeKey, decorations)` -
 						// the form that resolves styling against the
@@ -70,7 +85,9 @@ export default async (Dependencies: {
 						if (typeof Ed.setDecorationsByType === "function") {
 							Ed.setDecorationsByType(
 								"ext",
+
 								Key,
+
 								RangesOrOptions,
 							);
 						} else if (typeof Ed.setDecorations === "function") {
@@ -94,19 +111,27 @@ export default async (Dependencies: {
 	// Payload: `{ uri, edits: [{range, text}] }`.
 	await Register("sky://editor/apply-text-edits", (Payload: any) => {
 		const Services = GetServices();
+
 		const CodeEditorService = (Services as any)?.CodeEditorService;
+
 		const Uri = Payload?.uri;
+
 		const Edits: any[] = Array.isArray(Payload?.edits) ? Payload.edits : [];
+
 		if (!Uri || !Edits.length) return;
+
 		const Editors: any[] = CodeEditorService?.listCodeEditors?.() ?? [];
+
 		for (const Ed of Editors) {
 			try {
 				const EditorUri = Ed?.getModel?.()?.uri?.toString?.();
+
 				if (
 					EditorUri !== Uri &&
 					!EditorUri?.endsWith(Uri.split("/").pop() ?? "")
 				)
 					continue;
+
 				// Convert to Monaco edit operations and apply.
 				// Handles both VS Code 0-based Range (_start._line) and
 				// already-1-based Monaco ranges (startLineNumber).
@@ -116,16 +141,21 @@ export default async (Dependencies: {
 						: typeof Val?.line === "number"
 							? Val.line + 1
 							: Fb;
+
 				const ExtC = (Val: any, Fb: number): number =>
 					typeof Val?._character === "number"
 						? Val._character + 1
 						: typeof Val?.character === "number"
 							? Val.character + 1
 							: Fb;
+
 				const Ops = Edits.map((E: any) => {
 					const R = E.range ?? E._range ?? {};
+
 					const S = R._start ?? R.start ?? {};
+
 					const En = R._end ?? R.end ?? {};
+
 					return {
 						range: {
 							startLineNumber: R.startLineNumber ?? ExtL(S, 1),
@@ -137,7 +167,9 @@ export default async (Dependencies: {
 						forceMoveMarkers: true,
 					};
 				});
+
 				Ed.executeEdits?.("extension-host", Ops);
+
 				break;
 			} catch {
 				/* skip */
@@ -151,6 +183,7 @@ export default async (Dependencies: {
 	// selection.
 	try {
 		const Services = GetServices();
+
 		const CodeEditorService = (Services as any)?.CodeEditorService;
 
 		// Resolve the view column (1-based) for the active editor group.
@@ -159,7 +192,9 @@ export default async (Dependencies: {
 		const GetViewColumn = (): number => {
 			try {
 				const Groups = (Services as any)?.EditorGroups;
+
 				const Idx = Groups?.activeGroup?.index;
+
 				return typeof Idx === "number" ? Idx + 1 : 1;
 			} catch {
 				return 1;
@@ -172,12 +207,15 @@ export default async (Dependencies: {
 		// switch - once per listener - doubling all downstream IPC calls.
 		if (CodeEditorService?.onDidChangeActiveCodeEditor) {
 			let SelectionDisposable: (() => void) | null = null;
+
 			CodeEditorService.onDidChangeActiveCodeEditor((Ed: any) => {
 				// Fire active-editor IPC (was the first standalone subscription).
 				try {
 					const Uri = Ed?.getModel?.()?.uri?.toString?.();
+
 					if (Uri) {
 						const Sels = Ed?.getSelections?.() ?? [];
+
 						Invoke("MountainIPCInvoke", {
 							method: "sky:editor:activeChanged",
 							params: [
@@ -190,20 +228,27 @@ export default async (Dependencies: {
 						}).catch(() => {});
 					}
 				} catch {}
+
 				// Dispose the previous editor's selection listener to prevent
 				// unbounded accumulation (one permanent listener per switch).
 				try {
 					SelectionDisposable?.();
 				} catch {}
+
 				SelectionDisposable = null;
+
 				if (!Ed) return;
+
 				const D = Ed.onDidChangeCursorSelection?.((E: any) => {
 					try {
 						const Uri = Ed.getModel?.()?.uri?.toString?.();
+
 						if (!Uri) return;
+
 						const Sels = E?.selection
 							? [E.selection, ...(E.secondarySelections ?? [])]
 							: [];
+
 						Invoke("MountainIPCInvoke", {
 							method: "sky:editor:selectionChanged",
 							params: [
@@ -227,17 +272,23 @@ export default async (Dependencies: {
 				// minimap) consume this to lazy-load decorations.
 				let ScrollFlushTimer: ReturnType<typeof setTimeout> | null =
 					null;
+
 				Ed.onDidScrollChange?.(() => {
 					if (ScrollFlushTimer !== null) return;
+
 					ScrollFlushTimer = setTimeout(() => {
 						ScrollFlushTimer = null;
+
 						try {
 							const Uri = Ed.getModel?.()?.uri?.toString?.();
+
 							if (!Uri) return;
+
 							const VisibleRanges =
 								typeof Ed.getVisibleRanges === "function"
 									? Ed.getVisibleRanges()
 									: [];
+
 							Invoke("MountainIPCInvoke", {
 								method: "sky:editor:visibleRangesChanged",
 								params: [
@@ -263,13 +314,18 @@ export default async (Dependencies: {
 				Ed.onDidChangeConfiguration?.((E: any) => {
 					try {
 						const Uri = Ed.getModel?.()?.uri?.toString?.();
+
 						if (!Uri) return;
+
 						const Opts = Ed.getOptions?.();
+
 						const TabSize = Opts?.get?.(
 							/* EditorOption.tabSize */ undefined,
 						);
+
 						const InsertSpaces =
 							Ed.getModel?.()?.getOptions?.()?.insertSpaces;
+
 						Invoke("MountainIPCInvoke", {
 							method: "sky:editor:optionsChanged",
 							params: [
@@ -294,6 +350,7 @@ export default async (Dependencies: {
 						/* swallow */
 					}
 				});
+
 				// IDisposable from Monaco is either { dispose() } or a function.
 				if (D && typeof D.dispose === "function") {
 					SelectionDisposable = () => D.dispose();
@@ -302,6 +359,7 @@ export default async (Dependencies: {
 				}
 			});
 		}
+
 		// Wire Monaco model content changes → Mountain → Cocoon `onDidChangeTextDocument`.
 		// Debounce at 300ms per model so fast typists don't flood Mountain with IPC.
 		// This is the critical path for LSP (diagnostics, completions, etc.) to see
@@ -314,9 +372,13 @@ export default async (Dependencies: {
 
 			const FlushChanges = (Ed: any) => {
 				const Uri = Ed?.getModel?.()?.uri?.toString?.();
+
 				if (!Uri) return;
+
 				const Content = Ed?.getModel?.()?.getValue?.() ?? "";
+
 				const Version = Ed?.getModel?.()?.getVersionId?.() ?? 1;
+
 				Invoke("MountainIPCInvoke", {
 					method: "sky:model:contentChanged",
 					params: [{ uri: Uri, content: Content, version: Version }],
@@ -325,16 +387,23 @@ export default async (Dependencies: {
 
 			const SetupEditorListener = (Ed: any) => {
 				if (!Ed || (Ed as any).__celContentListened) return;
+
 				(Ed as any).__celContentListened = true;
+
 				Ed.onDidChangeModelContent?.(() => {
 					const Uri = Ed?.getModel?.()?.uri?.toString?.() ?? "";
+
 					if (!Uri) return;
+
 					if (PendingChanges.has(Uri))
 						clearTimeout(PendingChanges.get(Uri)!);
+
 					PendingChanges.set(
 						Uri,
+
 						setTimeout(() => {
 							PendingChanges.delete(Uri);
+
 							FlushChanges(Ed);
 						}, 300),
 					);
@@ -344,6 +413,7 @@ export default async (Dependencies: {
 			// Wire into all currently-open editors
 			const ExistingEditors: any[] =
 				CodeEditorService.listCodeEditors?.() ?? [];
+
 			for (const Ed of ExistingEditors) {
 				try {
 					SetupEditorListener(Ed);
@@ -375,9 +445,12 @@ export default async (Dependencies: {
 	// per-diff disposable is dropped on the next active-editor change.
 	try {
 		const Services = GetServices();
+
 		const EditorService = (Services as any)?.Editor;
+
 		if (EditorService?.onDidActiveEditorChange) {
 			let DiffDisposable: (() => void) | null = null;
+
 			const HookDiff = () => {
 				// Tear down any previous diff subscription so we never
 				// accumulate listeners across editor switches.
@@ -386,10 +459,14 @@ export default async (Dependencies: {
 				} catch {
 					/* swallow */
 				}
+
 				DiffDisposable = null;
+
 				try {
 					const Pane = EditorService.activeEditorPane;
+
 					const Control = Pane?.getControl?.();
+
 					// Diff widgets expose both `getOriginalEditor()` and
 					// `getModifiedEditor()` plus `onDidUpdateDiff`.
 					if (
@@ -399,12 +476,17 @@ export default async (Dependencies: {
 					) {
 						return;
 					}
+
 					const Modified = Control.getModifiedEditor();
+
 					const ModifiedUri =
 						Modified?.getModel?.()?.uri?.toString?.() ?? null;
+
 					const Original = Control.getOriginalEditor?.();
+
 					const OriginalUri =
 						Original?.getModel?.()?.uri?.toString?.() ?? null;
+
 					const Emit = () => {
 						try {
 							// `getLineChanges()` returns the diff hunk
@@ -421,6 +503,7 @@ export default async (Dependencies: {
 								typeof Control.getLineChanges === "function"
 									? (Control.getLineChanges() ?? [])
 									: [];
+
 							Invoke("MountainIPCInvoke", {
 								method: "sky:editor:diffInformationChanged",
 								params: [
@@ -435,11 +518,14 @@ export default async (Dependencies: {
 							/* swallow */
 						}
 					};
+
 					// Emit once at hook-time (initial diff is settled by
 					// the time `onDidActiveEditorChange` fires for a diff
 					// pane), then again on every recomputation.
 					Emit();
+
 					const D = Control.onDidUpdateDiff(Emit);
+
 					if (D && typeof D.dispose === "function") {
 						DiffDisposable = () => D.dispose();
 					} else if (typeof D === "function") {
@@ -449,7 +535,9 @@ export default async (Dependencies: {
 					/* swallow - diff editor may have torn down mid-hook */
 				}
 			};
+
 			EditorService.onDidActiveEditorChange(HookDiff);
+
 			// And hook the current active pane on first wire-up so a diff
 			// that was already open at boot fires immediately.
 			HookDiff();
@@ -468,7 +556,9 @@ export default async (Dependencies: {
 	// stale diagnostics accumulate against closed files.
 	try {
 		const Services = GetServices();
+
 		const EditorService = (Services as any)?.Editor;
+
 		if (EditorService?.onDidVisibleEditorsChange) {
 			// Dedupe consecutive identical snapshots - the workbench fires
 			// `onDidVisibleEditorsChange` from multiple internal sources for
@@ -478,27 +568,35 @@ export default async (Dependencies: {
 			// for every interaction, which inflates IPC traffic and (with
 			// the `applyDecorations` re-run cost) shows up as input lag.
 			let LastVisibleSerialized = "";
+
 			EditorService.onDidVisibleEditorsChange(() => {
 				try {
 					const Visible: any[] =
 						EditorService.visibleTextEditorControls ??
 						EditorService.visibleEditorPanes ??
 						[];
+
 					const Uris: string[] = [];
+
 					for (const Pane of Visible) {
 						try {
 							const Uri =
 								Pane?.getModel?.()?.uri?.toString?.() ??
 								Pane?.input?.resource?.toString?.() ??
 								Pane?.input?.editorInput?.resource?.toString?.();
+
 							if (Uri) Uris.push(Uri);
 						} catch {
 							/* one pane failed, keep iterating */
 						}
 					}
+
 					const Serialized = Uris.join("\n");
+
 					if (Serialized === LastVisibleSerialized) return;
+
 					LastVisibleSerialized = Serialized;
+
 					Invoke("MountainIPCInvoke", {
 						method: "sky:editor:visibleChanged",
 						params: [{ uris: Uris }],
@@ -521,7 +619,9 @@ export default async (Dependencies: {
 	// ordered editor list = tabs).
 	try {
 		const Services = GetServices();
+
 		const EditorGroups = (Services as any)?.EditorGroups;
+
 		if (EditorGroups?.onDidChangeActiveGroup) {
 			// `FlushTabs` is bound to three group-level events plus every
 			// per-group `onDidModelChange`. A single tab-click fires three to
@@ -531,9 +631,11 @@ export default async (Dependencies: {
 			// extension's tab/diagnostic listener. Compare the serialised
 			// snapshot to the last one we shipped and bail when they match.
 			let LastTabsSerialized = "";
+
 			const FlushTabs = () => {
 				try {
 					const Groups: any[] = EditorGroups.groups ?? [];
+
 					const Snapshot = Groups.map((G) => ({
 						id: G?.id,
 						isActive: G?.id === EditorGroups.activeGroup?.id,
@@ -548,9 +650,13 @@ export default async (Dependencies: {
 								"",
 						})),
 					}));
+
 					const Serialized = JSON.stringify(Snapshot);
+
 					if (Serialized === LastTabsSerialized) return;
+
 					LastTabsSerialized = Serialized;
+
 					Invoke("MountainIPCInvoke", {
 						method: "sky:editor:tabsChanged",
 						params: [{ groups: Snapshot }],
@@ -561,7 +667,9 @@ export default async (Dependencies: {
 			};
 
 			EditorGroups.onDidChangeActiveGroup?.(FlushTabs);
+
 			EditorGroups.onDidAddGroup?.(FlushTabs);
+
 			EditorGroups.onDidRemoveGroup?.(FlushTabs);
 
 			// Wire per-group model changes so opening / closing / moving
@@ -578,6 +686,7 @@ export default async (Dependencies: {
 			// destination group when the move is cross-group.
 			const NotifyViewColumnChange = (
 				MovedEditor: any,
+
 				TargetGroup: any,
 			) => {
 				try {
@@ -585,7 +694,9 @@ export default async (Dependencies: {
 						MovedEditor?.resource?.toString?.() ??
 						MovedEditor?.editorInput?.resource?.toString?.() ??
 						null;
+
 					if (!Uri) return;
+
 					// Destination group's index → 1-based viewColumn.
 					// Fall back to current activeGroup index if target
 					// is omitted (intra-group move).
@@ -596,6 +707,7 @@ export default async (Dependencies: {
 								  "number"
 								? EditorGroups.activeGroup.index
 								: 0;
+
 					Invoke("MountainIPCInvoke", {
 						method: "sky:editor:viewColumnChanged",
 						params: [{ uri: Uri, viewColumn: DestIdx + 1 }],
@@ -604,14 +716,19 @@ export default async (Dependencies: {
 					/* swallow */
 				}
 			};
+
 			const HookGroup = (G: any) => {
 				try {
 					if (!G || G.__celTabsHooked) return;
+
 					G.__celTabsHooked = true;
+
 					G.onDidModelChange?.(FlushTabs);
+
 					G.onDidMoveEditor?.((E: any) => {
 						NotifyViewColumnChange(
 							E?.editor ?? null,
+
 							E?.target ?? G,
 						);
 					});
@@ -619,7 +736,9 @@ export default async (Dependencies: {
 					/* swallow */
 				}
 			};
+
 			for (const G of EditorGroups.groups ?? []) HookGroup(G);
+
 			EditorGroups.onDidAddGroup?.(HookGroup);
 		}
 	} catch {
@@ -635,21 +754,31 @@ export default async (Dependencies: {
 	// 3=NearTop, 4=NearTopIfOutsideViewport
 	await Register("sky://editor/revealRange", (Payload: any) => {
 		const Services = GetServices();
+
 		const CodeEditorService = (Services as any)?.CodeEditorService;
+
 		if (!CodeEditorService) return;
+
 		const Uri = Payload?.uri;
+
 		const R = Payload?.range;
+
 		const RevealType = Payload?.revealType ?? 1; // Center
+
 		if (!Uri || !R) return;
+
 		const Editors: any[] = CodeEditorService.listCodeEditors?.() ?? [];
+
 		for (const Ed of Editors) {
 			try {
 				const EdUri = Ed?.getModel?.()?.uri?.toString?.();
+
 				if (
 					EdUri !== Uri &&
 					!EdUri?.endsWith(Uri.split("/").pop() ?? "")
 				)
 					continue;
+
 				// Monaco range is 1-based; payload already in Mountain
 				// 1-based form.
 				const MonacoRange = {
@@ -660,7 +789,9 @@ export default async (Dependencies: {
 					endLineNumber: R?.endLineNumber ?? (R?.end?.line ?? 0) + 1,
 					endColumn: R?.endColumn ?? (R?.end?.character ?? 0) + 1,
 				};
+
 				Ed.revealRange?.(MonacoRange, RevealType);
+
 				break;
 			} catch {
 				/* skip */

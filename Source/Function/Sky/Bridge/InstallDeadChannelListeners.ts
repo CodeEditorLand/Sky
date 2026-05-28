@@ -44,7 +44,9 @@ export default async (Dependencies: {
 
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	GetServices: () => ServicesProbe | null;
+
 	SetOrUpdateEntry: (Payload: any) => void;
 }): Promise<void> => {
 	const { Register, GetServices, SetOrUpdateEntry } = Dependencies;
@@ -66,9 +68,12 @@ export default async (Dependencies: {
 	await Register("sky://configuration/changed", (Payload: any) => {
 		try {
 			const Services = GetServices() as any;
+
 			const Reload = Services?.Configuration?.reloadConfiguration;
+
 			if (typeof Reload === "function") {
 				const Result = Reload.call(Services.Configuration);
+
 				if (Result && typeof Result.catch === "function") {
 					Result.catch(() => {});
 				}
@@ -76,6 +81,7 @@ export default async (Dependencies: {
 		} catch {
 			/* swallow - workbench may not have Configuration yet */
 		}
+
 		document.dispatchEvent(
 			new CustomEvent("cel:configuration:changed", { detail: Payload }),
 		);
@@ -105,6 +111,7 @@ export default async (Dependencies: {
 			if (typeof Execute === "function") {
 				const Result = Execute.call(
 					Services!.Commands,
+
 					"workbench.extensions.action.refreshExtension",
 				) as unknown;
 
@@ -146,14 +153,20 @@ export default async (Dependencies: {
 	await Register("sky://security/incident", (Payload: any) => {
 		try {
 			const Services = GetServices() as any;
+
 			const Notification = Services?.Notification;
+
 			if (Notification) {
 				const Type = String(Payload?.type ?? "security");
+
 				const Extension = Payload?.ext ?? Payload?.extensionId;
+
 				const Message = Extension
 					? `[${Type}] ${Extension}: ${Payload?.message ?? ""}`
 					: `[${Type}] ${Payload?.message ?? ""}`;
+
 				const Severity = Number(Payload?.severity ?? 2);
+
 				if (Severity >= 3 && typeof Notification.error === "function") {
 					Notification.error(Message);
 				} else if (
@@ -168,6 +181,7 @@ export default async (Dependencies: {
 		} catch {
 			/* swallow - never throw from a security listener */
 		}
+
 		document.dispatchEvent(
 			new CustomEvent("cel:security:incident", { detail: Payload }),
 		);
@@ -191,6 +205,7 @@ export default async (Dependencies: {
 				],
 			}).catch(() => {});
 		}
+
 		document.dispatchEvent(
 			new CustomEvent("cel:statusbar:create", { detail: Payload }),
 		);
@@ -202,15 +217,20 @@ export default async (Dependencies: {
 	await Register("sky://terminal/processId", (Payload: any) => {
 		try {
 			const Land = globalThis as any;
+
 			const Map_ =
 				Land.__CEL_TERMINAL_PIDS__ ??
 				(Land.__CEL_TERMINAL_PIDS__ = new Map<string, number>());
+
 			const Id = String(Payload?.id ?? "");
+
 			const Pid = Number(Payload?.pid ?? 0);
+
 			if (Id && Pid > 0) Map_.set(Id, Pid);
 		} catch {
 			/* swallow */
 		}
+
 		document.dispatchEvent(
 			new CustomEvent("cel:terminal:processId", { detail: Payload }),
 		);

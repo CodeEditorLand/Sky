@@ -115,14 +115,17 @@ export default (GetServices: () => Record<string, unknown> | null): void => {
 		setTimeout(() => {
 			try {
 				const Snapshot = (S as any)?.ViewRegistrySnapshot?.();
+
 				if (!Snapshot) {
 					ToMountain(
 						"view-registry",
 
 						"snapshot accessor missing on __CEL_SERVICES__",
 					);
+
 					return;
 				}
+
 				ToMountain(
 					"view-registry",
 

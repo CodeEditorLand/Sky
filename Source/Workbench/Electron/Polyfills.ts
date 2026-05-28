@@ -24,12 +24,19 @@ try {
 	// later wires a real handler via `Set(...)`; before that, calls are
 	// no-op'd.
 	await import("@codeeditorland/output/Configuration/Polyfill/Telemetry.js");
+
 	await import("@codeeditorland/output/Configuration/Polyfill/Process/Polyfill.js");
+
 	await import("@codeeditorland/output/Configuration/Polyfill/File/Protocol/Shim.js");
+
 	await import("@codeeditorland/output/Configuration/Polyfill/File/System/Polyfill.js");
+
 	await import("@codeeditorland/output/Configuration/Polyfill/IPC/Renderer/Shim.js");
+
 	await import("@codeeditorland/output/Configuration/Polyfill/Child/Process/Polyfill.js");
+
 	await import("@codeeditorland/output/Configuration/Polyfill/Native/Module/Polyfill.js");
+
 	await import("@codeeditorland/output/Configuration/Polyfill/Shared/Process/Proxy.js");
 } catch (_Error: unknown) {}
 

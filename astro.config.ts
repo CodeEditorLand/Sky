@@ -67,10 +67,14 @@ import { External, Host, Link, On } from "./Source/Function/Debug";
 // -----------------------------------------------------------------------------
 const BundledVariants = [
 	"electron",
+
 	"browser",
+
 	"sessions",
+
 	"workbench",
 ] as const;
+
 type BundledVariant = (typeof BundledVariants)[number];
 
 const BundledList = (process.env["Pack"] ?? "")
@@ -85,10 +89,13 @@ const BundledOutputDir = "Static/Bundled";
 const BundledActive = BundledList.length > 0;
 
 const BundledInputs: Record<string, string> = {};
+
 for (const Variant of BundledList) {
 	const Pascal = Variant[0]!.toUpperCase() + Variant.slice(1);
+
 	BundledInputs[`Bundled/${Pascal}/workbench`] = resolve(
 		process.cwd(),
+
 		`Source/Workbench/Bundled/${Pascal}/Entry.ts`,
 	);
 }
@@ -115,14 +122,17 @@ if (BundledActive) {
 // -----------------------------------------------------------------------------
 type InstallExtensionDepsOutcome = {
 	Installed: number;
+
 	BundleWarning?: string;
 };
 
 const InstallExtensionDeps = async (
 	ExtensionDirectory: string,
+
 	PackageJsonRaw: string,
 ): Promise<InstallExtensionDepsOutcome> => {
 	let Pkg: Record<string, unknown>;
+
 	try {
 		Pkg = JSON.parse(PackageJsonRaw);
 	} catch {
@@ -131,14 +141,18 @@ const InstallExtensionDeps = async (
 
 	const Dependencies =
 		(Pkg["dependencies"] as Record<string, string> | undefined) ?? {};
+
 	const DependencyCount = Object.keys(Dependencies).length;
 
 	// Surface a warning when a web-worker entrypoint lives in the manifest
 	// but the compiled browser bundle is missing.
 	let BundleWarning: string | undefined;
+
 	const Browser = Pkg["browser"] as string | undefined;
+
 	if (Browser) {
 		const BrowserBundle = join(ExtensionDirectory, Browser);
+
 		if (!existsSync(BrowserBundle)) {
 			BundleWarning = `browser entrypoint ${Browser} does not resolve`;
 		}
@@ -149,14 +163,17 @@ const InstallExtensionDeps = async (
 	}
 
 	const NodeModulesPath = join(ExtensionDirectory, "node_modules");
+
 	if (existsSync(NodeModulesPath)) {
 		// Already populated - trust the source tree's cached install.
 		return { Installed: 0, BundleWarning };
 	}
 
 	const InstallOutcome = await RunNpmInstall(ExtensionDirectory);
+
 	return {
 		Installed: InstallOutcome ? DependencyCount : 0,
+
 		BundleWarning,
 	};
 };
@@ -165,28 +182,40 @@ const RunNpmInstall = (Cwd: string): Promise<boolean> =>
 	new Promise((ResolvePromise) => {
 		const Child = spawn(
 			"npm",
+
 			[
 				"install",
+
 				"--production",
+
 				"--no-audit",
+
 				"--no-fund",
+
 				"--no-save",
+
 				"--ignore-scripts",
+
 				"--silent",
 			],
+
 			{
 				cwd: Cwd,
 				stdio: ["ignore", "pipe", "pipe"],
 				env: { ...process.env, npm_config_loglevel: "error" },
 			},
 		);
+
 		let Stderr = "";
+
 		Child.stderr?.on("data", (Chunk) => {
 			Stderr += String(Chunk);
 		});
+
 		Child.on("error", () => {
 			ResolvePromise(false);
 		});
+
 		Child.on("close", (Code) => {
 			if (Code === 0) {
 				ResolvePromise(true);
@@ -196,6 +225,7 @@ const RunNpmInstall = (Cwd: string): Promise<boolean> =>
 						Stderr ? `: ${Stderr.trim().slice(0, 200)}` : ""
 					}`,
 				);
+
 				ResolvePromise(false);
 			}
 		});
@@ -239,7 +269,9 @@ export default defineConfig({
 			hooks: {
 				"astro:build:done": async ({ dir }) => {
 					const BuildStart = performance.now();
+
 					const StepTimings: Record<string, number> = {};
+
 					const StepMark = (Step: string) => {
 						StepTimings[Step] = performance.now() - BuildStart;
 					};
@@ -248,14 +280,19 @@ export default defineConfig({
 
 					const Destination = join(
 						TargetDir,
+
 						"Static",
+
 						"Application",
+
 						"vs",
 					);
 
 					const StaticApplicationDir = join(
 						TargetDir,
+
 						"Static",
+
 						"Application",
 					);
 
@@ -284,6 +321,7 @@ export default defineConfig({
 						VSOutput: {
 							From: resolve(
 								process.cwd(),
+
 								"../Output/Target/Microsoft/VSCode/vs",
 							),
 							To: Destination,
@@ -291,14 +329,17 @@ export default defineConfig({
 						VSRootFiles: {
 							OutputRoot: resolve(
 								process.cwd(),
+
 								"../Output/Target/Microsoft/VSCode",
 							),
 							DependencyOutBuild: resolve(
 								process.cwd(),
+
 								"../../Dependency/Microsoft/Dependency/Editor/out-build",
 							),
 							DependencyOut: resolve(
 								process.cwd(),
+
 								"../../Dependency/Microsoft/Dependency/Editor/out",
 							),
 							Destination: StaticApplicationDir,
@@ -306,6 +347,7 @@ export default defineConfig({
 						Supplement: {
 							From: resolve(
 								process.cwd(),
+
 								"../../Dependency/Microsoft/Dependency/Editor/out/vs",
 							),
 							To: Destination,
@@ -313,6 +355,7 @@ export default defineConfig({
 						Worker: {
 							From: resolve(
 								process.cwd(),
+
 								"node_modules/@codeeditorland/worker/Target/Worker.js",
 							),
 							To: join(TargetDir, "Worker.js"),
@@ -321,33 +364,42 @@ export default defineConfig({
 							LocalRoot: resolve(process.cwd(), "node_modules"),
 							DependencyRoot: resolve(
 								process.cwd(),
+
 								"../../Dependency/Microsoft/Dependency/Editor/node_modules",
 							),
 							Destination: join(
 								TargetDir,
+
 								"Static/Application/node_modules",
 							),
 						},
 						Addons: {
 							Destination: join(
 								TargetDir,
+
 								"Static/Application/node_modules",
 							),
 						},
 						TauriMainProcessService: {
 							OutputService: resolve(
 								process.cwd(),
+
 								"node_modules/@codeeditorland/output/Configuration/Service/Tauri/Main/Process/Service.js",
 							),
 							WindService: resolve(
 								process.cwd(),
+
 								"node_modules/@codeeditorland/wind/Target/Service/TauriMainProcessService.js",
 							),
 							Destination: join(
 								Destination,
+
 								"platform",
+
 								"ipc",
+
 								"electron-browser",
+
 								"TauriMainProcessService.js",
 							),
 						},
@@ -367,6 +419,7 @@ export default defineConfig({
 						Log: (Message) =>
 							console.log(`[CopyVSCode] ${Message}`),
 					});
+
 					StepMark("pipeline");
 
 					// -------------------------------------------------
@@ -394,9 +447,13 @@ export default defineConfig({
 					if (process.env["Electron"] === "true") {
 						const WorkbenchJS = join(
 							Destination,
+
 							"code",
+
 							"electron-browser",
+
 							"workbench",
+
 							"workbench.js",
 						);
 
@@ -415,8 +472,10 @@ export default defineConfig({
 							// 8b: Add performance.mark checkpoints inside load()
 							Content = Content.replace(
 								"const configuration2 = await resolveWindowConfiguration()",
+
 								`performance.mark("land:wb:resolveConfig");const configuration2 = await resolveWindowConfiguration()`,
 							);
+
 							// 8b-fix: Ensure profile URIs exist for reviveProfile(),
 							// and backfill every init-data field VS Code assumes is
 							// non-null. Each missing field produced a concrete
@@ -440,49 +499,71 @@ export default defineConfig({
 							// via Tauri IPC, the assignment overwrites our default.
 							Content = Content.replace(
 								"setupNLS(configuration2)",
+
 								[
 									`if(configuration2.profiles){`,
+
 									`const _S="vscode-userdata";`,
+
 									`const _fix=(p)=>{if(!p)return;`,
+
 									`if(!p.location)p.location={scheme:_S,path:"/User/profiles/"+(p.id||"default")};`,
+
 									`if(!p.promptsHome)p.promptsHome={scheme:_S,path:"/User/prompts"};`,
+
 									`if(!p.extensionsResource)p.extensionsResource={scheme:_S,path:"/User/extensions.json"};`,
+
 									`if(!p.mcpResource)p.mcpResource={scheme:_S,path:"/User/mcp.json"};`,
+
 									`};`,
+
 									`_fix(configuration2.profiles.profile);`,
+
 									`if(Array.isArray(configuration2.profiles.all))configuration2.profiles.all.forEach(_fix);`,
+
 									`}`,
+
 									// Backfill colorScheme so nativeHostColorSchemeService's
 									// `initial.highContrast` read (nativeHostColorSchemeService.ts:46)
 									// and the subsequent promise-resolved `update({highContrast,dark})`
 									// never destructure from undefined.
 									`if(!configuration2.colorScheme)configuration2.colorScheme={dark:false,highContrast:false};`,
+
 									// Backfill detectedProfiles so terminalPlatformConfiguration's
 									// .map call doesn't explode on cold boots where the terminal
 									// profile detection hasn't completed yet.
 									`if(!Array.isArray(configuration2.detectedProfiles))configuration2.detectedProfiles=[];`,
+
 									// Backfill external-terminal per-OS config so
 									// externalTerminal.electron-browser doesn't destructure
 									// .windows / .osx / .linux from undefined.
 									`if(!configuration2.externalTerminal)configuration2.externalTerminal={windows:{},osx:{},linux:{}};`,
+
 									// Backfill perfMarks so timerService's marks.filter()
 									// doesn't fire on a missing array.
 									`if(!Array.isArray(configuration2.perfMarks))configuration2.perfMarks=[];`,
+
 									// Backfill an empty backupPath so base/common/path
 									// validators that assume a string get one. Empty
 									// string is also what the browser workbench carries.
 									`if(typeof configuration2.backupPath!=="string")configuration2.backupPath="";`,
+
 									`performance.mark("land:wb:setupNLS");setupNLS(configuration2)`,
 								].join(""),
 							);
+
 							Content = Content.replace(
 								"const result2 = await import(workbenchUrl)",
+
 								`performance.mark("land:wb:importModule");const result2 = await import(workbenchUrl)`,
 							);
+
 							Content = Content.replace(
 								"return { result: result2, configuration: configuration2 }",
+
 								`performance.mark("land:wb:importDone");return { result: result2, configuration: configuration2 }`,
 							);
+
 							// 8c: Wrap result.main(configuration) with try/catch + await,
 							// bookended by Atom H1c diagnostic:log invokes that route to
 							// Mountain.dev.log. Confirms whether each post-nav page reload
@@ -491,10 +572,14 @@ export default defineConfig({
 							// boot completes.
 							Content = Content.replace(
 								"result.main(configuration)",
+
 								[
 									`performance.mark("land:wb:main");`,
+
 									`try{`,
+
 									`const _L=(tag,msg,...extras)=>{try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"diagnostic:log",params:[tag,msg,...extras]});}catch{}};`,
+
 									// Phase advance lives here rather than in a top-
 									// level Astro `<script type="module">` because
 									// Astro/Vite bundles every module block in
@@ -509,18 +594,25 @@ export default defineConfig({
 									// advances, so a duplicate from Mountain.astro
 									// is safe.
 									`const _A=(phase)=>{try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"lifecycle:advancePhase",params:[phase]}).catch(()=>{performance.mark("land:wb:phase:"+phase+":error");});performance.mark("land:wb:phase:"+phase+":sent");}catch{performance.mark("land:wb:phase:"+phase+":threw");}};`,
+
 									`_L("wb:boot","pre-main href="+location.href+" search="+location.search,{folderUri:configuration?.folderUri??null,workspace:configuration?.workspace??null,windowId:configuration?.windowId??null});`,
+
 									// Phase 3 (Restored): workbench DOM mount +
 									// first paint are imminent. Fire before main()
 									// so Mountain stops its 8 s fallback timer.
 									`_A(3);`,
+
 									`await result.main(configuration);`,
+
 									`performance.mark("land:wb:mainDone");`,
+
 									`_L("wb:boot","post-main completed","reloadCount="+(performance.getEntriesByType?performance.getEntriesByType("navigation")?.length??-1:-1));`,
+
 									// Phase 4 (Eventually): long-tail background
 									// work. Delay lets paint settle before
 									// Mountain schedules anything aggressive.
 									`setTimeout(()=>_A(4),1500);`,
+
 									// `monaco.extensions` was never exposed on the
 									// global in modern VS Code (the workbench keeps
 									// its ExtensionService inside the DI container,
@@ -534,7 +626,9 @@ export default defineConfig({
 									// astro.config.ts if the probe is ever needed
 									// again.
 									`}catch(_e){performance.mark("land:wb:mainError");`,
+
 									`try{const I=globalThis.__TAURI__?.core?.invoke??globalThis.__TAURI__?.invoke;if(typeof I==="function")I("MountainIPCInvoke",{method:"diagnostic:log",params:["wb:boot","main-threw",String(_e?.message||_e),String(_e?.stack||"").slice(0,400)]});}catch{}`,
+
 									`}`,
 								].join(""),
 							);
@@ -547,6 +641,7 @@ export default defineConfig({
 						} catch (Error) {
 							console.warn(
 								"[CopyVSCode] Step 8: workbench.js error surfacing failed:",
+
 								Error,
 							);
 						}
@@ -557,15 +652,21 @@ export default defineConfig({
 					if (process.env["Electron"] === "true") {
 						const DesktopMainJS = join(
 							Destination,
+
 							"workbench",
+
 							"electron-browser",
+
 							"desktop.main.js",
 						);
+
 						try {
 							let Content = await readFile(
 								DesktopMainJS,
+
 								"utf-8",
 							);
+
 							// Patches use IIFE wrappers (()=>{log;return expr})() for
 							// expression contexts, and statement prepends for statement contexts.
 							// CP5-7 are inside Promise.all([...]) so we log BEFORE the array.
@@ -595,18 +696,22 @@ export default defineConfig({
 									`performance.mark("land:desktop:CP6:Workbench");const workbench = new Workbench(`,
 								],
 							];
+
 							for (const [Search, Replace] of Patches) {
 								if (Content.includes(Search)) {
 									Content = Content.replace(Search, Replace);
 								}
 							}
+
 							await writeFile(DesktopMainJS, Content, "utf-8");
+
 							console.log(
 								"[CopyVSCode] Step 9: Patched desktop.main.js with checkpoint logging",
 							);
 						} catch (Error) {
 							console.warn(
 								"[CopyVSCode] Step 9: desktop.main.js checkpoint patching failed:",
+
 								Error,
 							);
 						}
@@ -630,19 +735,25 @@ export default defineConfig({
 					} else {
 						const ExtensionsTarget = join(
 							TargetDir,
+
 							"Static/Application/extensions",
 						);
+
 						const ExtensionsSources = [
 							resolve(
 								process.cwd(),
+
 								"../../Dependency/Microsoft/Dependency/Editor/.build/extensions",
 							),
 							resolve(
 								process.cwd(),
+
 								"../../Dependency/Microsoft/Dependency/Editor/extensions",
 							),
 						];
+
 						let ExtensionsCopied = false;
+
 						// Atom S1: auto-install runtime deps into each
 						// copied extension so Cocoon doesn't crash on
 						// `require('byline')` etc. when the source tree
@@ -651,41 +762,57 @@ export default defineConfig({
 						// runs that pre-populate the cache.
 						const AutoInstallDeps =
 							process.env["Install"] !== "false";
+
 						const InstallLog: Array<{
 							Name: string;
+
 							Installed: number;
 						}> = [];
+
 						const BundleWarnings: string[] = [];
+
 						for (const ExtensionsSource of ExtensionsSources) {
 							try {
 								const ExtDirs = await readdir(ExtensionsSource);
+
 								let Copied = 0;
+
 								for (const Ext of ExtDirs) {
 									const Source = join(ExtensionsSource, Ext);
+
 									const PkgPath = join(
 										Source,
+
 										"package.json",
 									);
+
 									try {
 										const PkgRaw = await readFile(
 											PkgPath,
+
 											"utf8",
 										);
+
 										const Dest = join(
 											ExtensionsTarget,
+
 											Ext,
 										);
+
 										await cp(Source, Dest, {
 											recursive: true,
 										});
+
 										Copied++;
 
 										if (AutoInstallDeps) {
 											const Outcome =
 												await InstallExtensionDeps(
 													Dest,
+
 													PkgRaw,
 												);
+
 											if (Outcome.Installed > 0) {
 												InstallLog.push({
 													Name: Ext,
@@ -693,6 +820,7 @@ export default defineConfig({
 														Outcome.Installed,
 												});
 											}
+
 											if (Outcome.BundleWarning) {
 												BundleWarnings.push(
 													`${Ext}: ${Outcome.BundleWarning}`,
@@ -703,36 +831,45 @@ export default defineConfig({
 										// Skip dirs without package.json or broken extensions
 									}
 								}
+
 								if (Copied > 0) {
 									console.log(
 										`[CopyVSCode] Step 13: Copied ${Copied} built-in extensions from ${ExtensionsSource}`,
 									);
+
 									ExtensionsCopied = true;
+
 									break;
 								}
 							} catch {
 								// Source dir not found, try next
 							}
 						}
+
 						if (!ExtensionsCopied) {
 							console.warn(
 								"[CopyVSCode] Step 13: No built-in extensions found",
 							);
 						}
+
 						if (InstallLog.length > 0) {
 							const Total = InstallLog.reduce(
 								(Sum, Item) => Sum + Item.Installed,
+
 								0,
 							);
+
 							console.log(
 								`[CopyVSCode] Step 13: Auto-installed runtime deps for ${InstallLog.length} extension(s), ${Total} packages total`,
 							);
+
 							for (const Item of InstallLog) {
 								console.log(
 									`[CopyVSCode] Step 13:   - ${Item.Name} (${Item.Installed} packages)`,
 								);
 							}
 						}
+
 						if (BundleWarnings.length > 0) {
 							// Missing browser bundles are the normal state when
 							// the Electron profile is the primary target - the
@@ -749,6 +886,7 @@ export default defineConfig({
 										`[CopyVSCode] Step 13: bundle warning - ${Warning}`,
 									);
 								}
+
 								console.warn(
 									`[CopyVSCode] Step 13: run 'npm run compile-web-extensions-build' in Dependency/Microsoft/Dependency/Editor/ to generate missing browser bundles`,
 								);
@@ -757,6 +895,7 @@ export default defineConfig({
 					}
 
 					StepMark("done");
+
 					console.log("[CopyVSCode] ✓ Assets ready in Target/");
 
 					// PostHog build telemetry - debug only, skipped in production
@@ -791,9 +930,11 @@ export default defineConfig({
 								},
 								timestamp: new Date().toISOString(),
 							});
+
 							const Url = new URL(
 								`${process.env["Beam"] ?? "https://eu.i.posthog.com"}/capture/`,
 							);
+
 							const Req = request({
 								hostname: Url.hostname,
 								port: Number(Url.port) || 443,
@@ -804,8 +945,11 @@ export default defineConfig({
 									"Content-Length": Buffer.byteLength(Body),
 								},
 							});
+
 							Req.on("error", () => {});
+
 							Req.write(Body);
+
 							Req.end();
 						} catch {}
 					}
@@ -857,6 +1001,7 @@ export default defineConfig({
 					.filter(([Key]) => Key.startsWith("Tier"))
 					.map(([Key, Value]) => [
 						`import.meta.env.${Key}`,
+
 						JSON.stringify(Value),
 					]),
 			),
@@ -977,6 +1122,7 @@ export default defineConfig({
 						) {
 							return true;
 						}
+
 						// VS Code's contribution-point side-effect imports
 						// (`extensions.contribution`, `scm.contribution`,
 						// `files.contribution`, every `*.viewlet.js` …) are
@@ -995,6 +1141,7 @@ export default defineConfig({
 						//     Microsoft/VSCode/` (lowercase o - exports map)
 						if (BundledActive) {
 							const NormalisedId = Id.replace(/\\/g, "/");
+
 							if (
 								NormalisedId.includes(
 									"/Output/Target/Microsoft/VSCode/",
@@ -1009,6 +1156,7 @@ export default defineConfig({
 								return true;
 							}
 						}
+
 						return "no-external";
 					},
 				},
@@ -1023,6 +1171,7 @@ export default defineConfig({
 						if (BundledActive) {
 							return id === "vscode";
 						}
+
 						return (
 							// Absolute browser URL paths (/vs/...) - Rollup treats / as filesystem,
 							// but these are real browser URLs served at runtime. Mark external.
@@ -1126,6 +1275,7 @@ export default defineConfig({
 								"",
 							)}-[hash].js`;
 						}
+
 						if (chunkInfo.name === "entry") return "app.js";
 
 						return chunkInfo.name
@@ -1146,16 +1296,19 @@ export default defineConfig({
 								"",
 							)}-[hash].js`;
 						}
+
 						return "_astro/[name]-[hash].js";
 					},
 					assetFileNames: (assetInfo) => {
 						const Name = assetInfo.name ?? "";
+
 						if (
 							BundledActive &&
 							(Name.endsWith(".css") || Name.endsWith(".woff2"))
 						) {
 							return `${BundledOutputDir}/[name]-[hash][extname]`;
 						}
+
 						return "_astro/[name]-[hash][extname]";
 					},
 				},
@@ -1426,6 +1579,7 @@ export default defineConfig({
 				enforce: "pre",
 				resolveId(Source: string, Importer: string | undefined) {
 					if (!Importer) return null;
+
 					if (
 						!Source.endsWith("/Entry.js") &&
 						!Source.endsWith("/Entry.ts") &&
@@ -1434,20 +1588,26 @@ export default defineConfig({
 					) {
 						return null;
 					}
+
 					const ImporterNormalised = Importer.replace(/\\/g, "/");
+
 					const Match = ImporterNormalised.match(
 						/\/Workbench\/Bundled\/(\w+)\/Layout\.astro/,
 					);
+
 					if (!Match) return null;
+
 					if (BundledList.includes(Match[1]!.toLowerCase())) {
 						return null;
 					}
+
 					return `\0BundledEntryStub:${Match[1]!.toLowerCase()}`;
 				},
 				load(Identifier: string) {
 					if (Identifier.startsWith("\0BundledEntryStub:")) {
 						return "export default {};";
 					}
+
 					// Belt-and-suspenders: if Astro/Vite somehow resolves the
 					// real Entry.ts path before our `resolveId` runs (e.g.,
 					// through the page input map for a future profile, or a
@@ -1458,10 +1618,13 @@ export default defineConfig({
 					const Match = Identifier.replace(/\\/g, "/").match(
 						/(?:^|\/)Source\/Workbench\/Bundled\/(\w+)\/Entry\.(?:ts|js)$/,
 					);
+
 					if (!Match) return null;
+
 					if (BundledList.includes(Match[1]!.toLowerCase())) {
 						return null;
 					}
+
 					return "export default {};";
 				},
 			},
@@ -1488,6 +1651,7 @@ export default defineConfig({
 						) {
 							result = result.replace(
 								/new URL\(`([^`]*webWorkerExtensionHostIframe\.html[^`]*)`, import\.meta\.url\)/g,
+
 								"new URL(`$1`/* @vite-ignore */, import.meta.url)",
 							);
 

@@ -20,13 +20,17 @@ export default (
 	} | null,
 ): {
 	Channels: Map<string, string[]>;
+
 	GetOrCreate: (Id: string, Name?: string) => string[];
 } => {
 	const Channels = new Map<string, string[]>();
+
 	const GetOrCreate = (Id: string, Name?: string): string[] => {
 		if (!Channels.has(Id)) {
 			Channels.set(Id, []);
+
 			const Wb = GetWorkbench();
+
 			if (Wb && Name) {
 				// `executeCommand` returns a Thenable; `.catch` may be
 				// absent on minimal Thenable shapes, so call it
@@ -34,10 +38,13 @@ export default (
 				const ShowResult = Wb.commands.executeCommand(
 					"workbench.action.output.show",
 				) as { catch?: (handler: () => unknown) => unknown };
+
 				ShowResult.catch?.(() => undefined);
 			}
 		}
+
 		return Channels.get(Id)!;
 	};
+
 	return { Channels, GetOrCreate };
 };

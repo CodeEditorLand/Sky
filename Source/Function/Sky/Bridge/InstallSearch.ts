@@ -22,22 +22,32 @@
 
 interface CelUri {
 	readonly scheme: string;
+
 	readonly path: string;
+
 	readonly fsPath: string;
+
 	with(change: {
 		scheme?: string;
+
 		authority?: string;
+
 		path?: string;
 	}): CelUri;
+
 	toString(skipEncoding?: boolean): string;
 }
 
 interface CelUriCtor {
 	file(path: string): CelUri;
+
 	parse(value: string, strict?: boolean): CelUri;
+
 	from(components: {
 		scheme: string;
+
 		authority?: string;
+
 		path?: string;
 	}): CelUri;
 }
@@ -45,7 +55,9 @@ interface CelUriCtor {
 interface CelSearchService {
 	registerSearchResultProvider(
 		scheme: string,
+
 		type: number,
+
 		provider: unknown,
 	): { dispose(): void };
 }
@@ -53,9 +65,12 @@ interface CelSearchService {
 export default async (Dependencies: {
 	GetServices: () => {
 		Search?: CelSearchService;
+
 		URI?: CelUriCtor;
+
 		[key: string]: unknown;
 	} | null;
+
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { GetServices, Invoke } = Dependencies;
@@ -67,9 +82,13 @@ export default async (Dependencies: {
 	const FolderFromQuery = (Query: any): string | null => {
 		const Folder =
 			Query?.folderQueries?.[0]?.folder ?? Query?.folder ?? null;
+
 		if (!Folder) return null;
+
 		if (typeof Folder === "string") return Folder;
+
 		const Path = Folder?.fsPath ?? Folder?.path ?? "";
+
 		return Path || null;
 	};
 
@@ -91,7 +110,9 @@ export default async (Dependencies: {
 		FsPath: string,
 	): CelUri | { scheme: string; path: string; fsPath: string } => {
 		const Ctor = GetServices()?.URI;
+
 		if (Ctor) return Ctor.file(FsPath);
+
 		// Last-resort fallback when `__CEL_SERVICES__.URI` somehow
 		// missed the patch. The result is a POJO with the right
 		// shape but no `.with()` - the workbench will still throw
@@ -130,10 +151,13 @@ export default async (Dependencies: {
 	// and merged them away to nothing visible.
 	const MatchFromHit = (Hit: any) => {
 		const Raw = String(Hit?.resource ?? Hit?.uri ?? "");
+
 		const OsPath = Raw.replace(/^file:\/\//, "");
 		type LineHit = {
 			preview: string;
+
 			lineNumber: number;
+
 			columns: Array<{ start: number; end: number }>;
 		};
 		const PerLineMatches: LineHit[] = Array.isArray(Hit?.matches)
@@ -201,6 +225,7 @@ export default async (Dependencies: {
 				// 'this._oneLinePreviewText.substring')". Source was
 				// also off-by-one (line and column too high by 1).
 				const SourceLine = Math.max(0, M.lineNumber - 1);
+
 				const RangeLocations =
 					M.columns.length > 0
 						? M.columns.map((C) => ({
@@ -233,6 +258,7 @@ export default async (Dependencies: {
 									},
 								},
 							];
+
 				return {
 					previewText: M.preview,
 					rangeLocations: RangeLocations,
@@ -243,23 +269,34 @@ export default async (Dependencies: {
 
 	const Provider = {
 		getAIName: async () => undefined,
+
 		textSearch: async (
 			Query: any,
+
 			OnProgress?: (Item: unknown) => void,
+
 			_Token?: unknown,
 		) => {
 			const Pattern = String(Query?.contentPattern?.pattern ?? "");
+
 			if (!Pattern) {
 				return { results: [], messages: [], limitHit: false };
 			}
+
 			const IsRegex = Boolean(Query?.contentPattern?.isRegExp);
+
 			const IsCaseSensitive = Boolean(
 				Query?.contentPattern?.isCaseSensitive,
 			);
+
 			const IsWordMatch = Boolean(Query?.contentPattern?.isWordMatch);
+
 			const Include = Object.keys(Query?.includePattern ?? {})[0] ?? "**";
+
 			const Exclude = Object.keys(Query?.excludePattern ?? {})[0] ?? "";
+
 			const MaxResults = Number(Query?.maxResults ?? 1000);
+
 			try {
 				const Raw = (await Invoke("MountainIPCInvoke", {
 					method: "search:findInFiles",
@@ -273,16 +310,24 @@ export default async (Dependencies: {
 						MaxResults,
 					],
 				})) as any[];
+
 				const Results: any[] = [];
+
 				let LineMatchCount = 0;
+
 				let OnProgressCalled = 0;
+
 				const HasOnProgress = typeof OnProgress === "function";
+
 				for (const Hit of Raw ?? []) {
 					const Match = MatchFromHit(Hit);
+
 					LineMatchCount += Match.results?.length ?? 0;
+
 					if (HasOnProgress) {
 						try {
 							OnProgress?.(Match);
+
 							OnProgressCalled++;
 						} catch (ProgressErr) {
 							Invoke("MountainIPCInvoke", {
@@ -294,10 +339,14 @@ export default async (Dependencies: {
 							}).catch(() => {});
 						}
 					}
+
 					Results.push(Match);
 				}
+
 				void LineMatchCount;
+
 				void OnProgressCalled;
+
 				return {
 					results: Results,
 					messages: [],
@@ -311,9 +360,11 @@ export default async (Dependencies: {
 						`textSearch failed: ${Error instanceof globalThis.Error ? Error.message : String(Error)}`,
 					],
 				}).catch(() => {});
+
 				return { results: [], messages: [], limitHit: false };
 			}
 		},
+
 		fileSearch: async (Query: any, _Token?: unknown) => {
 			// IFileQuery.filePattern is the user's typed filename
 			// fragment (e.g. "set" matches "settings.ts"). Mountain's
@@ -321,11 +372,15 @@ export default async (Dependencies: {
 			// as `**/<pattern>*` to get prefix-substring matching -
 			// a close approximation to VS Code's fuzzy file matcher.
 			const Raw = String(Query?.filePattern ?? "").trim();
+
 			const FolderRoot = FolderFromQuery(Query);
+
 			const Glob = Raw
 				? `**/*${Raw}*`
 				: (Object.keys(Query?.includePattern ?? {})[0] ?? "**");
+
 			const MaxResults = Number(Query?.maxResults ?? 500);
+
 			try {
 				// Positional contract for `search:findFiles` (see
 				// `Mountain/Source/IPC/WindServiceHandlers/Search.rs::handle_search_find_files`):
@@ -338,6 +393,7 @@ export default async (Dependencies: {
 					method: "search:findFiles",
 					params: [Glob, null, MaxResults],
 				})) as string[];
+
 				const Results = (Files ?? []).map((Uri) => ({
 					resource: MakeFileUri(
 						String(Uri).replace(/^file:\/\//, ""),

@@ -24,9 +24,13 @@ interface ServicesProbe {
 	URI?: {
 		from(parts: {
 			scheme: string;
+
 			authority?: string;
+
 			path?: string;
+
 			query?: string;
+
 			fragment?: string;
 		}): unknown;
 	};

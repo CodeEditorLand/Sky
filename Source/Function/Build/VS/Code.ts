@@ -9,7 +9,9 @@
  */
 
 import { cp, mkdir, readFile, rm } from "node:fs/promises";
+
 import { dirname, join } from "node:path";
+
 import process from "node:process";
 
 /**
@@ -31,6 +33,7 @@ import process from "node:process";
  *   relative import paths used by VSCode modules.
  */
 export async function copyVSCodeOutput(): Promise<void> {
+
 	const VSCodeOutput =
 		"node_modules/@codeeditorland/output/Target/Microsoft/VSCode";
 
@@ -51,7 +54,9 @@ export async function copyVSCodeOutput(): Promise<void> {
 			await import("node:fs").then((fs) => {
 				if (fs.existsSync(candidate)) {
 					sourcePath = candidate;
+
 					console.log(`[BuildVSCode] Found source at: ${candidate}`);
+
 					return true;
 				}
 			});
@@ -104,6 +109,7 @@ export async function copyVSCodeOutput(): Promise<void> {
  * Verify that the VSCode output has the expected files.
  */
 async function verifyVSCodeOutput(vscodePath: string): Promise<void> {
+
 	const fs = await import("node:fs");
 
 	const requiredFiles = [
@@ -133,8 +139,10 @@ async function verifyVSCodeOutput(vscodePath: string): Promise<void> {
  * Main entry point for standalone execution.
  */
 if (import.meta.url === `file://${process.argv[1]}`) {
+
 	copyVSCodeOutput().catch((error) => {
 		console.error("[BuildVSCode] Build failed:", error);
+
 		process.exit(1);
 	});
 }

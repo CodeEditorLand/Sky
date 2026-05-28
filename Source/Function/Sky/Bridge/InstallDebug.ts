@@ -50,6 +50,7 @@ const Relays: Array<readonly [string, Handler]> = [
 
 export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
+
 	GetServices?: () => Record<string, unknown> | null;
 }): Promise<void> => {
 	const { Register, GetServices } = Dependencies;
@@ -68,19 +69,26 @@ export default async (Dependencies: {
 					detail: Payload,
 				}),
 			);
+
 			try {
 				const Services = GetServices();
+
 				const DebugService = (Services as any)?.Debug;
+
 				if (!DebugService?.addBreakpoints) return;
+
 				const Breakpoints = Array.isArray(Payload)
 					? Payload
 					: (Payload?.breakpoints ?? []);
+
 				if (Breakpoints.length === 0) return;
+
 				// Convert to workbench IBreakpoint shape
 				const Bps = Breakpoints.map((B: any) => {
 					const Uri = (Services as any)?.URI?.parse?.(
 						B?.location?.uri ?? B?.uri ?? "",
 					);
+
 					return {
 						uri: Uri,
 						lineNumber:
@@ -97,6 +105,7 @@ export default async (Dependencies: {
 						logMessage: B?.logMessage,
 					};
 				}).filter((B: any) => B.uri);
+
 				if (Bps.length > 0) {
 					void DebugService.addBreakpoints(Bps).catch(() => {});
 				}
@@ -111,23 +120,32 @@ export default async (Dependencies: {
 					detail: Payload,
 				}),
 			);
+
 			try {
 				const Services = GetServices();
+
 				const DebugService = (Services as any)?.Debug;
+
 				if (!DebugService?.removeBreakpoints) return;
+
 				const Breakpoints = Array.isArray(Payload)
 					? Payload
 					: (Payload?.breakpoints ?? []);
+
 				if (Breakpoints.length === 0) return;
+
 				// Remove by URI+line matching
 				const Existing: any[] =
 					DebugService.getModel?.()?.getBreakpoints?.() ?? [];
+
 				const ToRemove = Existing.filter((Bp: any) => {
 					return Breakpoints.some((B: any) => {
 						const UriStr = B?.location?.uri ?? B?.uri ?? "";
+
 						return Bp.uri?.toString?.() === UriStr;
 					});
 				});
+
 				if (ToRemove.length > 0) {
 					void DebugService.removeBreakpoints(ToRemove).catch(
 						() => {},

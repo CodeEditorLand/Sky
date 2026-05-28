@@ -22,29 +22,41 @@
 
 type CelSCMGroupShim = {
 	GroupHandle: string;
+
 	GroupId: string;
+
 	ResourceStates: any[];
+
 	Group: any;
+
 	ChangeEmitter: any;
+
 	ChangeResourcesEmitter: any;
 };
+
 type CelSCMShim = {
 	Provider: any;
+
 	Repository: any;
+
 	ScmHandle: number | undefined;
+
 	Groups: Map<string, CelSCMGroupShim>;
+
 	ResourceGroupsEmitter: any;
 };
 
 export default async (Dependencies: {
 	Register: (
 		Channel: string,
+
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
 }): Promise<void> => {
 	const { Register } = Dependencies;
 
 	const ScmShimRegistry = new Map<string, CelSCMShim>();
+
 	const ScmShimByHandle = new Map<number, CelSCMShim>();
 
 	// Build a minimal `ISCMResource` from a Cocoon-side resource state
@@ -56,12 +68,16 @@ export default async (Dependencies: {
 	// `sourceUri` and stash whatever else is present without requiring it.
 	const BuildScmResource = (
 		Services: any,
+
 		Group: any,
+
 		Raw: any,
 	): any | null => {
 		const UriField =
 			Raw?.resourceUri ?? Raw?.sourceUri ?? Raw?.uri ?? Raw?.path;
+
 		let SourceUri: any = null;
+
 		if (UriField && typeof UriField === "object") {
 			// Cocoon's URI hydration may already have produced a
 			// real `URI`-shaped object; if not, reconstruct via
@@ -88,35 +104,55 @@ export default async (Dependencies: {
 				SourceUri = null;
 			}
 		}
+
 		if (!SourceUri) return null;
+
 		const Decorations = Raw?.decorations ?? {};
+
 		return {
 			sourceUri: SourceUri,
+
 			resourceGroup: Group,
+
 			decorations: {
 				icon: Decorations.iconPath ?? Decorations.icon,
+
 				iconDark: Decorations.iconDarkPath ?? Decorations.iconDark,
+
 				tooltip: Decorations.tooltip,
+
 				strikeThrough: Decorations.strikeThrough,
+
 				faded: Decorations.faded,
+
 				letter: Decorations.letter,
+
 				color: Decorations.color,
 			},
+
 			contextValue: Raw?.contextValue,
+
 			command: Raw?.command,
+
 			multiDiffEditorOriginalUri: Raw?.multiDiffEditorOriginalUri,
+
 			multiDiffEditorModifiedUri: Raw?.multiDiffEditorModifiedUri,
 		};
 	};
 
 	const TryRegisterScmProvider = (Payload: any): void => {
 		const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 		if (!Services || !Services.SCM || !Services.URI || !Services.Emitter)
 			return;
+
 		const ScmId: string = String(Payload?.scmId ?? Payload?.id ?? "");
+
 		if (!ScmId) return;
+
 		const ScmHandleNumber: number | undefined =
 			typeof Payload?.handle === "number" ? Payload.handle : undefined;
+
 		// Multi-repo workspaces (vscode.git scanning nested submodules under
 		// Land/Dependency/Microsoft) call `createSourceControl` once per
 		// repository, all with `scmId="git"` and a UNIQUE numeric handle.
@@ -129,13 +165,16 @@ export default async (Dependencies: {
 			ScmHandleNumber !== undefined
 				? `${ScmId}#${ScmHandleNumber}`
 				: ScmId;
+
 		if (ScmShimRegistry.has(RegistryKey)) return;
+
 		if (
 			ScmHandleNumber !== undefined &&
 			ScmShimByHandle.has(ScmHandleNumber)
 		) {
 			return;
 		}
+
 		try {
 			const RootUri =
 				typeof Payload?.rootUri === "string" &&
@@ -155,6 +194,7 @@ export default async (Dependencies: {
 			// instantiates - which only happens with a live
 			// extension-host RPC channel; not the case here).
 			let InputModel: any = null;
+
 			if (Services.Models && Services.URI) {
 				// Per-handle URI so co-existing providers don't collide on
 				// the same `cel-scm-input:/git/input` model - the workbench
@@ -163,9 +203,11 @@ export default async (Dependencies: {
 					scheme: "cel-scm-input",
 					path: `/${ScmId}/${ScmHandleNumber ?? "default"}/input`,
 				});
+
 				const Existing = Services.Models.getModel
 					? Services.Models.getModel(InputUri)
 					: null;
+
 				if (Existing) {
 					InputModel = Existing;
 				} else {
@@ -173,23 +215,30 @@ export default async (Dependencies: {
 						Services.Languages && Services.Languages.createById
 							? Services.Languages.createById("scminput")
 							: null;
+
 					InputModel = Services.Models.createModel(
 						"",
+
 						LanguageSelection,
+
 						InputUri,
 					);
 				}
 			}
 
 			const ChangeEmitter = new Services.Emitter();
+
 			const ResourceGroupsEmitter = new Services.Emitter();
+
 			const ResourcesEmitter = new Services.Emitter();
+
 			// `provider.groups` is a live list backed by our `Groups`
 			// map; the workbench's SCM panel iterates it on every
 			// `onDidChangeResourceGroups` fire to rebuild the tree.
 			// Returning a cached array reference would break the
 			// re-render heuristic, so build a fresh array each get.
 			const ProviderGroupsList: any[] = [];
+
 			// Multi-repo workspaces (Land's submodules) all share
 			// `label="Git"`; the SCM viewlet renders identical "Git"
 			// headers and the user can't tell repos apart. Derive a
@@ -197,12 +246,14 @@ export default async (Dependencies: {
 			// `Land/Element/Mountain/.git` shows up as "Mountain", its
 			// submodules as their own folder names, etc.
 			const RawLabel = String(Payload?.label ?? ScmId);
+
 			const RootUriPath: string =
 				typeof Payload?.rootUri === "string"
 					? Payload.rootUri
 					: typeof (Payload?.rootUri as any)?.path === "string"
 						? (Payload.rootUri as any).path
 						: "";
+
 			const RootBasename = (() => {
 				try {
 					const Cleaned = RootUriPath.replace(/^file:\/\//, "");
@@ -228,24 +279,34 @@ export default async (Dependencies: {
 				Read: () => T,
 			): {
 				get(): T;
+
 				read(): T;
+
 				onDidChange: { dispose(): void };
+
 				map<R>(transform: (value: T) => R): { get(): R; read(): R };
 			} => ({
 				get: Read,
+
 				read: Read,
+
 				onDidChange: { dispose: () => {} },
+
 				map: <R>(Transform: (value: T) => R) => {
 					const Lazy = (): R => Transform(Read());
+
 					return { get: Lazy, read: Lazy };
 				},
 			});
 			const CountObservable = StaticObservable<number>(() => {
 				let Total = 0;
+
 				for (const G of ProviderGroupsList) {
 					const R = (G as any)?.resources;
+
 					if (Array.isArray(R)) Total += R.length;
 				}
+
 				return Total;
 			});
 			const Provider = {
@@ -281,8 +342,11 @@ export default async (Dependencies: {
 				getOriginalResource: async () => null,
 				dispose: () => {
 					ChangeEmitter.dispose?.();
+
 					ResourceGroupsEmitter.dispose?.();
+
 					ResourcesEmitter.dispose?.();
+
 					try {
 						InputModel?.dispose?.();
 					} catch {}
@@ -314,6 +378,7 @@ export default async (Dependencies: {
 			// register.
 			try {
 				const W = globalThis as any;
+
 				if (W?.process?.env?.Trace?.includes?.("cel-scm")) {
 					(W.console || console).warn(
 						`[Sky:CEL-SCM] registerSCMProvider failed for "${ScmId}": ${
@@ -380,6 +445,7 @@ export default async (Dependencies: {
 			for (const [Key, Shim] of ScmShimRegistry) {
 				if (Key === ScmId || Key.startsWith(`${ScmId}#`)) {
 					SoleMatch = Shim;
+
 					Count += 1;
 				}
 			}
@@ -424,27 +490,38 @@ export default async (Dependencies: {
 				_resourceTree: null as any,
 				get resourceTree() {
 					const Self: any = this;
+
 					if (Self._resourceTree) return Self._resourceTree;
+
 					const Svc: any =
 						(globalThis as any).__CEL_SERVICES__ ?? Services;
+
 					const ResourceTreeCtor = Svc?.ResourceTree;
+
 					const ExtUri =
 						Svc?.UriIdentity?.extUri ??
 						(Svc?.URI ? { isEqual: () => false } : null);
+
 					const TreeRoot =
 						(Shim.Provider?.rootUri as any) ||
 						(Svc?.URI?.file ? Svc.URI.file("/") : null);
+
 					if (!ResourceTreeCtor || !TreeRoot) return null;
+
 					try {
 						Self._resourceTree = new ResourceTreeCtor(
 							Self,
+
 							TreeRoot,
+
 							ExtUri,
 						);
+
 						for (const Resource of Self.resources) {
 							try {
 								Self._resourceTree.add(
 									Resource.sourceUri,
+
 									Resource,
 								);
 							} catch {
@@ -452,6 +529,7 @@ export default async (Dependencies: {
 								// the whole tree.
 							}
 						}
+
 						return Self._resourceTree;
 					} catch {
 						return null;
@@ -459,17 +537,22 @@ export default async (Dependencies: {
 				},
 				splice: (
 					Start: number,
+
 					DeleteCount: number,
+
 					ToInsert: any[],
 				) => {
 					(Group.resources as any[]).splice(
 						Start,
+
 						DeleteCount,
 						...ToInsert,
 					);
+
 					// Invalidate tree cache so next read rebuilds it
 					// against the updated `resources` array.
 					(Group as any)._resourceTree = null;
+
 					ChangeResourcesEmitter.fire();
 				},
 			};
@@ -487,6 +570,7 @@ export default async (Dependencies: {
 		} catch (Error) {
 			try {
 				const W = globalThis as any;
+
 				if (W?.process?.env?.Trace?.includes?.("cel-scm")) {
 					(W.console || console).warn(
 						`[Sky:CEL-SCM] registerGroup failed for "${GroupId}": ${
@@ -514,6 +598,7 @@ export default async (Dependencies: {
 			for (const Candidate of Shim.Groups.values()) {
 				if (Candidate.GroupId === GroupId) {
 					Group = Candidate;
+
 					break;
 				}
 			}
@@ -559,6 +644,7 @@ export default async (Dependencies: {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:register", { detail: Payload }),
 		);
+
 		TryRegisterScmProvider(Payload);
 	});
 
@@ -566,18 +652,21 @@ export default async (Dependencies: {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:registerGroup", { detail: Payload }),
 		);
+
 		TryRegisterScmGroup(Payload);
 	});
 	await Register("sky://scm/unregister", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:unregister", { detail: Payload }),
 		);
+
 		TryUnregisterScmProvider(Payload);
 	});
 	await Register("sky://scm/updateGroup", (Payload: any) => {
 		document.dispatchEvent(
 			new CustomEvent("cel:scm:updateGroup", { detail: Payload }),
 		);
+
 		TryUpdateScmGroup(Payload);
 	});
 
@@ -588,20 +677,28 @@ export default async (Dependencies: {
 	await Register("sky://scm/provider/changed", (Payload: any) => {
 		const Handle: number | undefined =
 			typeof Payload?.handle === "number" ? Payload.handle : undefined;
+
 		if (Handle === undefined) return;
+
 		const Shim = ScmShimByHandle.get(Handle);
+
 		if (!Shim) return;
+
 		// Update input box text model if inputBoxValue changed
 		const NewValue = Payload?.provider?.inputBox?.value;
+
 		if (typeof NewValue === "string") {
 			try {
 				const InputModel = (Shim as any).Provider?.inputBoxTextModel;
+
 				if (InputModel?.setValue) {
 					InputModel.setValue(NewValue);
 				} else if (InputModel?.applyEdits) {
 					const LineCount = InputModel.getLineCount?.() ?? 1;
+
 					const LastCol =
 						InputModel.getLineMaxColumn?.(LineCount) ?? 1;
+
 					InputModel.applyEdits([
 						{
 							range: {
@@ -619,6 +716,7 @@ export default async (Dependencies: {
 				/* InputModel may not support setValue on all VS Code versions */
 			}
 		}
+
 		// Fire provider change event so SCM panel re-renders
 		try {
 			(Shim as any).Provider?.onDidChange?._emitter?.fire?.();

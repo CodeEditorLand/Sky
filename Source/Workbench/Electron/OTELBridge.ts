@@ -130,9 +130,11 @@ const Flush = (): void => {
 
 						spans: Spans.map((S) => {
 							const IsError = S.Name.includes("error");
+
 							const DetailObj = S.Detail as
 								| Record<string, unknown>
 								| undefined;
+
 							const Attributes = S.Detail
 								? Object.entries(S.Detail).map(([K, V]) => ({
 										key: K,
@@ -145,6 +147,7 @@ const Flush = (): void => {
 										},
 									}))
 								: [];
+
 							const Events = IsError
 								? [
 										{
@@ -170,6 +173,7 @@ const Flush = (): void => {
 										},
 									]
 								: [];
+
 							return {
 								traceId: TraceId,
 								spanId: S.SpanId,
@@ -220,6 +224,7 @@ const Observer = new PerformanceObserver((List) => {
 		if (!Entry.name.startsWith("land:")) continue;
 
 		const Now = performance.timeOrigin + Entry.startTime;
+
 		const Duration =
 			Entry.entryType === "measure"
 				? (Entry as PerformanceMeasure).duration

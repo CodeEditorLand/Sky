@@ -52,6 +52,7 @@ export default (
 					if (typeof Type === "string" && Type.startsWith("cel:")) {
 						Consumers.add(Type);
 					}
+
 					return OriginalAdd(
 						Type,
 

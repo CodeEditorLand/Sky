@@ -69,16 +69,19 @@ if (typeof (globalThis as any).__name !== "function") {
 		) {
 			Parts = Parts.map((Part) => {
 				if (typeof Part !== "string") return Part;
+
 				let Rewritten = Part.replace(
 					/vscode-file:\/\/vscode-app\/Static\/Application\/out\//g,
 
 					`${Origin}/Static/Application/`,
 				);
+
 				Rewritten = Rewritten.replace(
 					/vscode-file:\/\/vscode-app\//g,
 
 					`${Origin}/`,
 				);
+
 				return Rewritten;
 			});
 
@@ -115,6 +118,7 @@ try {
 	for (const Delay of CheckIntervals) {
 		setTimeout(() => {
 			const HasWorkbench = !!document.querySelector(".monaco-workbench");
+
 			performance.mark(`land:workbench:check:${Delay}ms`, {
 				detail: { rendered: HasWorkbench },
 			});

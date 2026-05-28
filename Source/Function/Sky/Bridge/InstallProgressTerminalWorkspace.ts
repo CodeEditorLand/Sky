@@ -26,9 +26,13 @@ export default async (Dependencies: {
 
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
+
 	GetWorkbench: () => Workbench | null;
+
 	ShowProgress: (Id: string, Title?: string, Cancellable?: boolean) => void;
+
 	UpdateProgress: (Id: string, Message?: string, Increment?: number) => void;
+
 	DismissProgress: (Id: string) => void;
 }): Promise<void> => {
 	const {
@@ -62,6 +66,7 @@ export default async (Dependencies: {
 	await Register("sky://progress/complete", ({ id }: any) => {
 		DismissProgress(id);
 	});
+
 	// `sky://progress/end` is a separate SkyEvent (SkyEvent::ProgressEnd)
 	// emitted by Mountain's Wind-IPC progress handlers. Without this handler
 	// Wind-initiated progress bars never dismiss in Sky.
@@ -107,10 +112,14 @@ export default async (Dependencies: {
 	//   OSC 633 ; E ; <commandLine> = explicit command-line capture
 	//   OSC 633 ; P ; cwd=<path>  = current working directory update
 	const OscCwdPattern = /\x1b\]633;P;cwd=([^\x07\x1b]*)\x07/g;
+
 	const OscEndPattern = /\x1b\]633;D(?:;(-?\d+))?\x07/g;
+
 	const OscCmdLinePattern = /\x1b\]633;E;([^\x07\x1b]*)\x07/g;
+
 	// Terminals for which we have already notified integration activation.
 	const IntegrationActivated = new globalThis.Set<number>();
+
 	// Per-terminal in-flight execution snapshot. Holds the most recent
 	// command-line + cwd seen via OSC 633 ; E / ; P so the eventual
 	// OSC 633 ; D can carry full TerminalShellExecution context.
@@ -118,6 +127,7 @@ export default async (Dependencies: {
 		number,
 		{ commandLine: string; cwd: string }
 	>();
+
 	// Terminals for which `interactedWith=true` has been notified. Stock
 	// VS Code flips `ITerminalInstance.interactedWith` on OSC 633 ; B
 	// (command-input-begins) - the shell tells us the user is typing the
@@ -130,6 +140,7 @@ export default async (Dependencies: {
 			const Tauri =
 				(globalThis as any).__TAURI__?.core?.invoke ??
 				(globalThis as any).__TAURI__?.invoke;
+
 			if (typeof Tauri !== "function") return;
 
 			// OSC 633 ; A = prompt start → shell integration is active.
@@ -138,6 +149,7 @@ export default async (Dependencies: {
 				Data.includes("\x1b]633;A\x07")
 			) {
 				IntegrationActivated.add(Id);
+
 				Tauri("MountainIPCInvoke", {
 					method: "localPty:setShellIntegrationActive",
 					params: [Id],
@@ -146,17 +158,24 @@ export default async (Dependencies: {
 
 			// OSC 633 ; P ; cwd=<path> = CWD update.
 			OscCwdPattern.lastIndex = 0;
+
 			let Match: RegExpExecArray | null;
+
 			while ((Match = OscCwdPattern.exec(Data)) !== null) {
 				const Cwd = decodeURIComponent(Match[1] ?? "");
+
 				if (!Cwd) continue;
+
 				// Stash for the next D-event so it carries the cwd
 				// at the time of execution.
 				const Inflight = InflightExecution.get(Id) ?? {
 					commandLine: "",
+
 					cwd: "",
 				};
+
 				Inflight.cwd = Cwd;
+
 				InflightExecution.set(Id, Inflight);
 
 				Tauri("MountainIPCInvoke", {
@@ -170,13 +189,18 @@ export default async (Dependencies: {
 			// VS Code shell integration script send this right before
 			// the C marker). Stash for the start/end events.
 			OscCmdLinePattern.lastIndex = 0;
+
 			while ((Match = OscCmdLinePattern.exec(Data)) !== null) {
 				const CommandLine = decodeURIComponent(Match[1] ?? "");
+
 				const Inflight = InflightExecution.get(Id) ?? {
 					commandLine: "",
+
 					cwd: "",
 				};
+
 				Inflight.commandLine = CommandLine;
+
 				InflightExecution.set(Id, Inflight);
 			}
 
@@ -191,6 +215,7 @@ export default async (Dependencies: {
 				Data.includes("\x1b]633;B\x07")
 			) {
 				InteractedTerminals.add(Id);
+
 				Tauri("MountainIPCInvoke", {
 					method: "localPty:setInteracted",
 					params: [{ id: Id, interactedWith: true }],
@@ -206,8 +231,10 @@ export default async (Dependencies: {
 			if (Data.includes("\x1b]633;C\x07")) {
 				const Inflight = InflightExecution.get(Id) ?? {
 					commandLine: "",
+
 					cwd: "",
 				};
+
 				Tauri("MountainIPCInvoke", {
 					method: "localPty:shellExecutionStart",
 					params: [
@@ -224,13 +251,17 @@ export default async (Dependencies: {
 			// `terminalShellExecutionEnd` carrying the captured
 			// commandLine + cwd + exit code (negative when unknown).
 			OscEndPattern.lastIndex = 0;
+
 			while ((Match = OscEndPattern.exec(Data)) !== null) {
 				const ExitCode =
 					Match[1] !== undefined ? Number.parseInt(Match[1], 10) : -1;
+
 				const Inflight = InflightExecution.get(Id) ?? {
 					commandLine: "",
+
 					cwd: "",
 				};
+
 				Tauri("MountainIPCInvoke", {
 					method: "localPty:shellExecutionEnd",
 					params: [
@@ -242,6 +273,7 @@ export default async (Dependencies: {
 						},
 					],
 				}).catch(() => {});
+
 				// Reset the in-flight snapshot - the next command will
 				// re-populate via OSC 633 ; E or arrive directly at C.
 				InflightExecution.set(Id, {
@@ -258,6 +290,7 @@ export default async (Dependencies: {
 		if (typeof data === "string" && data.includes("\x1b]633;")) {
 			NotifyShellOsc(id as number, data);
 		}
+
 		TerminalDispatch("cel:terminal:data")({ id, data });
 	});
 
@@ -307,7 +340,9 @@ export default async (Dependencies: {
 	} else {
 		window.addEventListener(
 			"cel:services-ready",
+
 			() => WireActiveTerminalTracking(),
+
 			{ once: true },
 		);
 	}

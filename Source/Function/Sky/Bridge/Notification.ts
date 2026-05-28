@@ -19,14 +19,20 @@ export default (
 	} | null,
 ): ((
 	Severity: string,
+
 	Message: string,
+
 	Actions?: string[],
+
 	OnAction?: (Label: string | null) => void,
 ) => void) => {
 	return (
 		Severity: string,
+
 		Message: string,
+
 		Actions?: string[],
+
 		OnAction?: (Label: string | null) => void,
 	): void => {
 		const Wb = GetWorkbench();
@@ -67,12 +73,17 @@ export default (
 
 			Actions.forEach((Label) => {
 				const Btn = document.createElement("button");
+
 				Btn.textContent = Label;
+
 				Btn.style.cssText =
 					"background:#007acc;color:#fff;border:none;border-radius:2px;padding:2px 8px;font-size:11px;cursor:pointer;";
+
 				Btn.onclick = () => {
 					ActionTaken = true;
+
 					Toast.remove();
+
 					// Resolve the Mountain round-trip with the clicked label.
 					try {
 						OnAction?.(Label);
@@ -80,6 +91,7 @@ export default (
 						/* never throw from a button click */
 					}
 				};
+
 				ActionBar.appendChild(Btn);
 			});
 
@@ -90,6 +102,7 @@ export default (
 
 		setTimeout(() => {
 			Toast.remove();
+
 			// If the toast auto-dismissed without a button click, resolve
 			// with null so Mountain's oneshot doesn't hang for 300 s.
 			if (!ActionTaken) {

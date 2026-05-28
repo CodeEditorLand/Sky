@@ -75,6 +75,7 @@ performance.mark("land:bundled:electron:start");
 await import("@codeeditorland/output/Target/Microsoft/VSCode/vs/code/electron-browser/workbench/workbench.js");
 
 performance.mark("land:bundled:electron:imported");
+
 performance.measure(
 	"land:bundled:electron:import",
 
@@ -107,21 +108,26 @@ performance.measure(
 const LandDisabled = (() => {
 	try {
 		const Meta = (import.meta as { env?: Record<string, unknown> }).env;
+
 		if (Meta) {
 			const Flag = Meta["Disable"];
+
 			if (Flag === "true" || Flag === true || Flag === "1") return true;
 		}
 	} catch {
 		/* no-op */
 	}
+
 	try {
 		if (typeof localStorage !== "undefined") {
 			const Stored = localStorage.getItem("Disable");
+
 			if (Stored === "1" || Stored === "true") return true;
 		}
 	} catch {
 		/* no-op */
 	}
+
 	return false;
 })();
 
@@ -140,6 +146,7 @@ if (!LandDisabled) {
 			void (async () => {
 				const { InstallLandWorkbench } =
 					await import("@codeeditorland/wind/Target/Effect/LandWorkbench/LandWorkbenchGlobal.js");
+
 				InstallLandWorkbench();
 			})();
 		},
@@ -152,7 +159,9 @@ if (!LandDisabled) {
 	void (async () => {
 		const { RunCommandCatalogSmokeTest } =
 			await import("../../../Function/SmokeTest/Run/Command/Catalog/Smoke/Test.js");
+
 		await new Promise<void>((Resolve) => setTimeout(Resolve, 0));
+
 		await RunCommandCatalogSmokeTest();
 	})();
 } else {
@@ -165,6 +174,7 @@ if (!LandDisabled) {
 	void (async () => {
 		const { AutoDiagnoseInput } =
 			await import("../../../Function/SmokeTest/Auto/Diagnose/Input.js");
+
 		AutoDiagnoseInput();
 	})();
 }

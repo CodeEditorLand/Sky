@@ -39,11 +39,17 @@ export default async (Dependencies: {
 
 		Handler: (Payload: any) => void | Promise<void>,
 	) => Promise<void>;
+
 	GetWorkbench: () => Workbench | null;
+
 	Invoke: Invoke;
+
 	BuildOpenArg: (Source: unknown) => unknown;
+
 	ResolveUiRequest: ResolveUiRequest;
+
 	GetOrCreateChannel: (Id: string, Name?: string) => string[];
+
 	OutputChannels: Map<string, string[]>;
 }): Promise<void> => {
 	const {
@@ -67,30 +73,39 @@ export default async (Dependencies: {
 
 	await Register("sky://window/close-requested", async () => {
 		const Workbench = GetWorkbench();
+
 		const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 		const ActiveEditorCount = (() => {
 			try {
 				const Editor = Services?.Editor;
+
 				const Snapshot = Editor?.snapshot?.() ?? Editor;
+
 				if (Array.isArray(Snapshot?.visibleEditors)) {
 					return Snapshot.visibleEditors.length;
 				}
+
 				if (Snapshot?.activeEditor) return 1;
 			} catch {
 				/* fall through */
 			}
+
 			return -1;
 		})();
+
 		if (Workbench && ActiveEditorCount !== 0) {
 			try {
 				await Workbench.commands.executeCommand(
 					"workbench.action.closeActiveEditor",
 				);
+
 				return;
 			} catch {
 				/* fall through to actual close */
 			}
 		}
+
 		try {
 			await Invoke("MountainIPCInvoke", {
 				method: "nativeHost:closeWindow",
@@ -103,7 +118,9 @@ export default async (Dependencies: {
 
 	await Register("sky://editor/openDocument", ({ uri, viewColumn }: any) => {
 		const Wb = GetWorkbench();
+
 		if (!Wb) return;
+
 		SwallowCatch(
 			Wb.commands.executeCommand(
 				"vscode.open",
@@ -117,7 +134,9 @@ export default async (Dependencies: {
 
 	await Register("sky://editor/saveAll", () => {
 		const Wb = GetWorkbench();
+
 		if (!Wb) return;
+
 		SwallowCatch(
 			Wb.commands.executeCommand("workbench.action.files.saveAll"),
 		);
@@ -127,21 +146,26 @@ export default async (Dependencies: {
 	// the workbench's ITextFileService and resolves the awaited promise.
 	await Register(
 		"sky://workspace/save",
+
 		async ({ RequestIdentifier, Payload }: any) => {
 			const UriArg =
 				Payload?.external ??
 				Payload?.toString?.() ??
 				(typeof Payload === "string" ? Payload : null);
+
 			try {
 				const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 				const TextFileService =
 					Services?.TextFileService ?? Services?.textFileService;
+
 				if (TextFileService && UriArg) {
 					await TextFileService.save({
 						toString: () => UriArg,
 					} as any);
 				} else {
 					const Wb = GetWorkbench();
+
 					if (Wb) {
 						await Wb.commands.executeCommand(
 							"workbench.action.files.save",
@@ -151,6 +175,7 @@ export default async (Dependencies: {
 			} catch {
 				// Best-effort; Mountain already wrote to disk in SaveOperations.rs.
 			}
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, UriArg ?? null);
 			}
@@ -160,9 +185,11 @@ export default async (Dependencies: {
 	// `workspace.saveAll()` round-trip - saves all dirty documents.
 	await Register(
 		"sky://workspace/saveAll",
+
 		async ({ RequestIdentifier }: any) => {
 			try {
 				const Wb = GetWorkbench();
+
 				if (Wb) {
 					await Wb.commands.executeCommand(
 						"workbench.action.files.saveAll",
@@ -171,6 +198,7 @@ export default async (Dependencies: {
 			} catch {
 				/* best-effort */
 			}
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, true);
 			}
@@ -180,13 +208,16 @@ export default async (Dependencies: {
 	// `workspace.saveAs(uri)` round-trip - opens save-as dialog.
 	await Register(
 		"sky://workspace/saveAs",
+
 		async ({ RequestIdentifier, Payload }: any) => {
 			const UriArg =
 				Payload?.external ??
 				Payload?.toString?.() ??
 				(typeof Payload === "string" ? Payload : null);
+
 			try {
 				const Wb = GetWorkbench();
+
 				if (Wb) {
 					await Wb.commands.executeCommand(
 						"workbench.action.files.saveAs",
@@ -195,6 +226,7 @@ export default async (Dependencies: {
 			} catch {
 				/* best-effort */
 			}
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, UriArg ?? null);
 			}
@@ -210,8 +242,10 @@ export default async (Dependencies: {
 
 		async ({ RequestIdentifier, Payload }: any) => {
 			if (!RequestIdentifier) return;
+
 			try {
 				const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 				// Normalize WorkspaceEdit to a flat list of {resource, edits: TextEdit[]} entries.
 				// Handles multiple wire shapes:
 				//  1. { edits: [{resource|uri, edits|textEdits}] } - standard
@@ -219,13 +253,18 @@ export default async (Dependencies: {
 				//  3. { _edits: [{_type, uri, textEdit}] } - extHostTypes.WorkspaceEdit internal
 				const NormalizedEdits: Array<{
 					resource: unknown;
+
 					edits: unknown[];
 				}> = [];
+
 				const NormalizeUri = (Raw: unknown): unknown => {
 					if (!Raw) return Raw;
+
 					if (typeof Raw === "string") return Raw;
+
 					return Raw;
 				};
+
 				const RawEditsSource: any[] = Array.isArray(Payload?.edits)
 					? Payload.edits
 					: Array.isArray(Payload?._edits)
@@ -233,8 +272,10 @@ export default async (Dependencies: {
 						: Array.isArray(Payload)
 							? Payload
 							: [];
+
 				for (const E of RawEditsSource) {
 					if (!E) continue;
+
 					// extHostTypes.WorkspaceEdit serialized format:
 					// FileEditType.Text = 2: { _type: 2, uri, edit: TextEdit{_range, _newText}, metadata }
 					// FileEditType.File = 1: { _type: 1, from?, to?, options, metadata }
@@ -244,19 +285,24 @@ export default async (Dependencies: {
 						typeof E._type === "string"
 					) {
 						const Type = Number(E._type);
+
 						if (Type === 2) {
 							// Text edit: normalize TextEdit from extHostTypes format
 							const Uri = NormalizeUri(E.uri);
+
 							const RawEdit = E.edit ?? E.textEdit;
+
 							if (Uri && RawEdit) {
 								// TextEdit has _range ({_start:{_line,_character},_end:{...}}) and _newText
 								const RawRange =
 									RawEdit._range ?? RawEdit.range;
+
 								const NewText =
 									RawEdit._newText ??
 									RawEdit.newText ??
 									RawEdit.newText ??
 									"";
+
 								const NormalizedEdit = {
 									range: RawRange
 										? {
@@ -290,17 +336,21 @@ export default async (Dependencies: {
 									newText: NewText,
 									text: NewText,
 								};
+
 								const UriKey =
 									typeof Uri === "string"
 										? Uri
 										: JSON.stringify(Uri);
+
 								const Entry = NormalizedEdits.find((X: any) => {
 									const XKey =
 										typeof X.resource === "string"
 											? X.resource
 											: JSON.stringify(X.resource);
+
 									return XKey === UriKey;
 								});
+
 								if (Entry) {
 									Entry.edits.push(NormalizedEdit);
 								} else {
@@ -311,14 +361,17 @@ export default async (Dependencies: {
 								}
 							}
 						}
+
 						// Type === 1: file operation (rename/create/delete) - handled in fileEdits section
 					} else {
 						const Resource = E.resource ?? E.uri;
+
 						const Edits = Array.isArray(E.edits)
 							? E.edits
 							: Array.isArray(E.textEdits)
 								? E.textEdits
 								: [];
+
 						if (Resource && Edits.length > 0) {
 							NormalizedEdits.push({
 								resource: NormalizeUri(Resource),
@@ -327,11 +380,13 @@ export default async (Dependencies: {
 						}
 					}
 				}
+
 				const RawEdits = NormalizedEdits;
 
 				// Prefer IBulkEditService when accessible (handles rename/create/delete too).
 				const BulkEdit =
 					Services?.BulkEdit ?? Services?.bulkEditService;
+
 				if (
 					BulkEdit &&
 					typeof BulkEdit.apply === "function" &&
@@ -341,29 +396,39 @@ export default async (Dependencies: {
 						// Build VS Code resource text edit array for IBulkEditService.
 						const ExtractUriForBulk = (Raw: any): any => {
 							if (!Raw) return null;
+
 							// Try to hydrate into a real URI using workbench's URI ctor.
 							const UriCtor =
 								Services?.URI ?? (globalThis as any).__cel_URI;
+
 							const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
+
 							const Authority =
 								Raw._authority ?? Raw.authority ?? "";
+
 							const Path = Raw._path ?? Raw.path ?? "";
+
 							if (UriCtor?.from)
 								return UriCtor.from({
 									scheme: Scheme,
 									authority: Authority,
 									path: Path,
 								});
+
 							return Raw;
 						};
+
 						const ResourceEdits = RawEdits.filter(
 							(E: any) => E?.resource || E?.uri,
 						).map((E: any) => ({
 							resource: ExtractUriForBulk(E.resource ?? E.uri),
 							edits: E.edits as any[],
 						}));
+
 						await BulkEdit.apply(ResourceEdits);
+
 						void ResolveUiRequest(RequestIdentifier, true);
+
 						return;
 					} catch {
 						// Fall through to direct model path.
@@ -373,41 +438,57 @@ export default async (Dependencies: {
 				// Direct model path: find Monaco model by URI, execute edits.
 				const ModelService =
 					Services?.ModelService ?? Services?.modelService;
+
 				const ExtractUriString = (Raw: any): string | null => {
 					if (!Raw) return null;
+
 					if (typeof Raw === "string") return Raw;
+
 					// Real toString method (not Object.prototype.toString)
 					if (
 						typeof Raw.toString === "function" &&
 						Raw.toString !== Object.prototype.toString
 					) {
 						const S = Raw.toString();
+
 						if (S && S !== "[object Object]") return S;
 					}
+
 					// Serialized vscode.Uri: has _scheme, _path etc.
 					const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
+
 					const Authority = Raw._authority ?? Raw.authority ?? "";
+
 					const Path = Raw._path ?? Raw.path ?? Raw.fsPath ?? "";
+
 					if (Path) return `${Scheme}://${Authority}${Path}`;
+
 					return null;
 				};
+
 				let Applied = false;
+
 				for (const Entry of RawEdits) {
 					const UriStr =
 						ExtractUriString(Entry?.resource) ??
 						ExtractUriString(Entry?.uri);
+
 					const TextEdits: any[] = Array.isArray(Entry?.edits)
 						? Entry.edits
 						: Array.isArray(Entry?.textEdits)
 							? Entry.textEdits
 							: [];
+
 					if (!UriStr || !TextEdits.length) continue;
+
 					try {
 						const Model =
 							ModelService?.getModel?.({
 								toString: () => UriStr,
 							}) ?? ModelService?.getModel?.(UriStr);
+
 						if (!Model) continue;
+
 						// Handle VS Code 0-based ranges (_start._line from extHostTypes)
 						// and already-1-based Monaco ranges (startLineNumber).
 						const ExtL2 = (Val: any, Fb: number): number =>
@@ -416,16 +497,21 @@ export default async (Dependencies: {
 								: typeof Val?.line === "number"
 									? Val.line + 1
 									: Fb;
+
 						const ExtC2 = (Val: any, Fb: number): number =>
 							typeof Val?._character === "number"
 								? Val._character + 1
 								: typeof Val?.character === "number"
 									? Val.character + 1
 									: Fb;
+
 						const Ops = TextEdits.map((E: any) => {
 							const R = E.range ?? E._range ?? {};
+
 							const S = R._start ?? R.start ?? {};
+
 							const En = R._end ?? R.end ?? {};
+
 							return {
 								range: {
 									startLineNumber:
@@ -439,7 +525,9 @@ export default async (Dependencies: {
 								forceMoveMarkers: true,
 							};
 						});
+
 						Model.applyEdits?.(Ops);
+
 						Applied = true;
 					} catch {
 						/* skip bad entry */
@@ -456,6 +544,7 @@ export default async (Dependencies: {
 						(E: any) => E && Number(E._type) === 1,
 					),
 				];
+
 				for (const FileOp of FileEdits) {
 					try {
 						// extHostTypes FileEditType.File = 1, with from/to fields.
@@ -465,19 +554,23 @@ export default async (Dependencies: {
 							(Number(FileOp._type) === 1 &&
 								!FileOp.from &&
 								FileOp.to);
+
 						const IsRename =
 							FileOp.type === "rename" ||
 							(Number(FileOp._type) === 1 &&
 								FileOp.from &&
 								FileOp.to);
+
 						const IsDelete =
 							FileOp.type === "delete" ||
 							(Number(FileOp._type) === 1 &&
 								FileOp.from &&
 								!FileOp.to);
+
 						if (IsCreate) {
 							const TargetUri =
 								FileOp.uri ?? FileOp.newUri ?? FileOp.to;
+
 							if (TargetUri) {
 								await Invoke("MountainIPCInvoke", {
 									method: "file:writeFile",
@@ -486,7 +579,9 @@ export default async (Dependencies: {
 							}
 						} else if (IsRename) {
 							const FromUri = FileOp.oldUri ?? FileOp.from;
+
 							const ToUri = FileOp.newUri ?? FileOp.to;
+
 							if (FromUri && ToUri) {
 								await Invoke("MountainIPCInvoke", {
 									method: "file:rename",
@@ -504,6 +599,7 @@ export default async (Dependencies: {
 						} else if (IsDelete) {
 							const TargetUri =
 								FileOp.uri ?? FileOp.oldUri ?? FileOp.from;
+
 							if (TargetUri) {
 								await Invoke("MountainIPCInvoke", {
 									method: "file:delete",
@@ -525,6 +621,7 @@ export default async (Dependencies: {
 
 				void ResolveUiRequest(
 					RequestIdentifier,
+
 					Applied || RawEdits.length === 0 ? true : true,
 				);
 			} catch (Error) {
@@ -536,6 +633,7 @@ export default async (Dependencies: {
 						Error,
 					],
 				}).catch(() => {});
+
 				void ResolveUiRequest(RequestIdentifier, false);
 			}
 		},
@@ -543,16 +641,21 @@ export default async (Dependencies: {
 
 	await Register("sky://window/showTextDocument", async (RawPayload: any) => {
 		const RequestIdentifier = RawPayload?.RequestIdentifier;
+
 		const Payload = RawPayload?.Payload ?? RawPayload;
+
 		const UriValue =
 			Payload?.[0]?.uri ?? Payload?.uri ?? Payload?.[0] ?? null;
+
 		const ViewColumn =
 			Payload?.[1]?.viewColumn ??
 			Payload?.viewColumn ??
 			Payload?.[1] ??
 			null;
+
 		try {
 			const Wb = GetWorkbench();
+
 			if (Wb && UriValue) {
 				await Wb.commands.executeCommand(
 					"vscode.open",
@@ -562,6 +665,7 @@ export default async (Dependencies: {
 					ViewColumn,
 				);
 			}
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, {
 					uri: UriValue,
@@ -577,6 +681,7 @@ export default async (Dependencies: {
 					Error,
 				],
 			}).catch(() => {});
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, null);
 			}
@@ -599,6 +704,7 @@ export default async (Dependencies: {
 	//   options  - optional { preview, viewColumn, ... }
 	await Register("sky://editor/diff", async (RawPayload: any) => {
 		const RequestIdentifier = RawPayload?.RequestIdentifier;
+
 		const Payload = RawPayload?.Payload ?? RawPayload;
 
 		// Payload is the raw positional-args array from the extension call.
@@ -611,8 +717,11 @@ export default async (Dependencies: {
 				: [];
 
 		const LeftUri = Args[0] ?? null;
+
 		const RightUri = Args[1] ?? null;
+
 		const Title = typeof Args[2] === "string" ? Args[2] : undefined;
+
 		const Options =
 			Args[3] != null && typeof Args[3] === "object"
 				? (Args[3] as Record<string, unknown>)
@@ -622,15 +731,21 @@ export default async (Dependencies: {
 
 		try {
 			const Wb = GetWorkbench();
+
 			if (Wb && LeftUri != null && RightUri != null) {
 				await Wb.commands.executeCommand(
 					"vscode.diff",
+
 					BuildOpenArg(LeftUri),
+
 					BuildOpenArg(RightUri),
+
 					Title,
+
 					{ viewColumn: ViewColumn, preview: true, ...Options },
 				);
 			}
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, {
 					viewColumn: ViewColumn,
@@ -641,6 +756,7 @@ export default async (Dependencies: {
 				method: "diagnostic:log",
 				params: ["sky-bridge", "[SkyBridge] vscode.diff failed", Error],
 			}).catch(() => {});
+
 			if (RequestIdentifier) {
 				void ResolveUiRequest(RequestIdentifier, null);
 			}
@@ -649,8 +765,11 @@ export default async (Dependencies: {
 
 	await Register("sky://editor/applyEdits", ({ edits }: any) => {
 		if (!Array.isArray(edits) || !edits.length) return;
+
 		const Wb = GetWorkbench();
+
 		if (!Wb) return;
+
 		SwallowCatch(
 			Wb.commands.executeCommand(
 				"workbench.action.applyThemeFromFile",
@@ -672,8 +791,11 @@ export default async (Dependencies: {
 				Payload?.name ??
 				"",
 		);
+
 		const Name = String(Payload?.name ?? Payload?.label ?? Id);
+
 		if (!Id) return;
+
 		GetOrCreateChannel(Id, Name);
 	});
 
@@ -696,16 +818,22 @@ export default async (Dependencies: {
 		const Channel = String(
 			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
 		);
+
 		const Text = String(Payload?.text ?? Payload?.value ?? "");
+
 		const Lines = GetOrCreateChannel(Channel);
+
 		Lines.push(Text);
+
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			Services?.Output?.getChannel?.(Channel)?.append?.(Text);
 		} catch {
 			/* swallow - never throw out of an append; the in-memory
 			   snapshot above keeps the bridge consistent */
 		}
+
 		invoke("MountainIPCInvoke", {
 			method: "diagnostic:log",
 			params: [
@@ -719,10 +847,14 @@ export default async (Dependencies: {
 		const Channel = String(
 			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
 		);
+
 		if (!Channel) return;
+
 		OutputChannels.set(Channel, []);
+
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			Services?.Output?.getChannel?.(Channel)?.clear?.();
 		} catch {
 			/* swallow */
@@ -737,11 +869,16 @@ export default async (Dependencies: {
 		const Channel = String(
 			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
 		);
+
 		const Text = String(Payload?.value ?? Payload?.text ?? "");
+
 		if (!Channel) return;
+
 		OutputChannels.set(Channel, [Text]);
+
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			Services?.Output?.getChannel?.(Channel)?.replace?.(Text);
 		} catch {
 			/* swallow */
@@ -750,34 +887,44 @@ export default async (Dependencies: {
 
 	await Register("sky://output/show", (Payload: any) => {
 		if (Payload?.visible === false) return;
+
 		const Channel = String(
 			Payload?.channel ?? Payload?.id ?? Payload?.handle ?? "",
 		);
+
 		const PreserveFocus = Payload?.preserveFocus === true;
+
 		// Prefer the live IOutputService - `showChannel(id, preserveFocus)`
 		// reveals the panel AND switches to the requested channel, which
 		// the generic `workbench.action.output.show` command can't do
 		// without an extra argument shape that varies by VS Code version.
 		try {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
+
 			if (
 				Channel &&
 				typeof Services?.Output?.showChannel === "function"
 			) {
 				const Result = Services.Output.showChannel(
 					Channel,
+
 					PreserveFocus,
 				);
+
 				if (Result && typeof Result.catch === "function") {
 					Result.catch(() => {});
 				}
+
 				return;
 			}
 		} catch {
 			/* fall through to the workbench command */
 		}
+
 		const Wb = GetWorkbench();
+
 		if (!Wb) return;
+
 		SwallowCatch(
 			Wb.commands.executeCommand("workbench.action.output.show"),
 		);
@@ -787,6 +934,7 @@ export default async (Dependencies: {
 		const Channel = String(
 			Payload?.channel ?? Payload?.name ?? Payload?.handle ?? "",
 		);
+
 		if (Channel) OutputChannels.delete(Channel);
 	});
 };

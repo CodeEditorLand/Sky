@@ -35,24 +35,32 @@ interface CelTreeView {
 				getChildren(element?: {
 					handle?: string;
 				}): Promise<unknown[] | undefined>;
+
 				isTreeEmpty?: boolean;
 		  };
+
 	title?: string;
+
 	description?: string | undefined;
+
 	message?: string | undefined;
+
 	refresh?(
 		treeItems?: readonly unknown[],
+
 		checkboxesChanged?: readonly unknown[],
 	): Promise<void>;
 }
 
 interface CelServices {
 	TreeViewByViewId?: (viewId: string) => CelTreeView | null;
+
 	[key: string]: unknown;
 }
 
 export default async (Dependencies: {
 	GetServices: () => CelServices | null;
+
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { GetServices, Invoke } = Dependencies;
@@ -67,25 +75,30 @@ export default async (Dependencies: {
 	// observers can still use it.
 	const ToTreeItem = (
 		Raw: unknown,
+
 		Fallback: { ViewId: string; ParentHandle: string; Index: number },
 	) => {
 		const Wire = (Raw ?? {}) as Record<string, unknown>;
+
 		const Handle =
 			typeof Wire["handle"] === "string" && Wire["handle"].length > 0
 				? Wire["handle"]
 				: `${Fallback.ViewId}/${Fallback.ParentHandle || "root"}/${Fallback.Index}`;
+
 		const Label =
 			typeof Wire["label"] === "string"
 				? { label: Wire["label"] }
 				: (Wire["label"] as { label?: string } | undefined)?.label
 					? (Wire["label"] as { label: string })
 					: { label: "" };
+
 		const CollapsibleState =
 			Wire["isCollapsed"] === true
 				? 1
 				: typeof Wire["collapsibleState"] === "number"
 					? Wire["collapsibleState"]
 					: 0;
+
 		// Pass through the full set of fields Cocoon's wire DTO
 		// carries. Any field the workbench tree renderer doesn't
 		// read is ignored silently; keeping them lets side-panel
@@ -95,31 +108,44 @@ export default async (Dependencies: {
 			typeof Wire["description"] === "string"
 				? Wire["description"]
 				: undefined;
+
 		const Tooltip =
 			typeof Wire["tooltip"] === "string" ? Wire["tooltip"] : undefined;
+
 		const ContextValue =
 			typeof Wire["contextValue"] === "string"
 				? Wire["contextValue"]
 				: undefined;
+
 		return {
 			handle: Handle,
+
 			collapsibleState: CollapsibleState,
+
 			label: Label,
+
 			icon:
 				typeof Wire["icon"] === "string" && Wire["icon"].length > 0
 					? Wire["icon"]
 					: undefined,
+
 			description: Description,
+
 			tooltip: Tooltip,
+
 			resourceUri: Wire["resourceUri"],
+
 			contextValue: ContextValue,
+
 			command: Wire["command"],
+
 			accessibilityInformation: Wire["accessibilityInformation"],
 		};
 	};
 
 	const ProvideChildren = async (
 		ViewId: string,
+
 		Element?: { handle?: string },
 	): Promise<unknown[]> => {
 		try {
@@ -132,16 +158,20 @@ export default async (Dependencies: {
 					},
 				],
 			})) as { items?: unknown[] };
+
 			const RawItems = Array.isArray(Response?.items)
 				? Response.items
 				: [];
+
 			const ParentHandle = Element?.handle ?? "";
+
 			// Per-item try/catch so a single malformed tree node
 			// (extension-side serialisation glitch, missing
 			// `label`/`handle`) doesn't drop the entire panel
 			// children list. Stock VS Code's renderer skips bad
 			// items rather than failing the parent.
 			const Items: unknown[] = [];
+
 			for (let Index = 0; Index < RawItems.length; Index += 1) {
 				try {
 					Items.push(
@@ -156,6 +186,7 @@ export default async (Dependencies: {
 					 * are still valid */
 				}
 			}
+
 			// Dual-emit: DOM CustomEvent for Sky-side observers
 			// (same shape as the workbench tree renderer sees so
 			// mirror panels don't need a second conversion).
@@ -168,6 +199,7 @@ export default async (Dependencies: {
 					},
 				}),
 			);
+
 			return Items;
 		} catch (Error) {
 			Invoke("RenderDevLog", {
@@ -176,6 +208,7 @@ export default async (Dependencies: {
 				tag: "tree-view",
 				message: `[TreeView] bridge-error view=${ViewId} err=${String(Error)}`,
 			}).catch(() => {});
+
 			return [];
 		}
 	};
@@ -187,6 +220,7 @@ export default async (Dependencies: {
 	// 750 ms retry window expired). Each attempt-attach call adds to
 	const AttachToDescriptor = (
 		ViewId: string,
+
 		TreeView: NonNullable<
 			ReturnType<NonNullable<CelServices["TreeViewByViewId"]>>
 		>,
@@ -197,12 +231,15 @@ export default async (Dependencies: {
 			// any extension that registered their own.
 			return;
 		}
+
 		TreeView.dataProvider = {
 			async getChildren(Element?: { handle?: string }) {
 				const Items = await ProvideChildren(ViewId, Element);
+
 				return Items as any[];
 			},
 		};
+
 		// Subscribe directly to the workbench's ITreeView onDid* events so
 		// Mountain receives selection/collapse/expand/visibility changes.
 		// The DOM cel:tree-view:* events are never dispatched by anyone,
@@ -217,6 +254,7 @@ export default async (Dependencies: {
 				});
 			});
 		}
+
 		if (typeof (TreeView as any).onDidCollapseElement === "function") {
 			(TreeView as any).onDidCollapseElement((E: any) => {
 				ForwardTreeViewEvent("tree:collapseElement", ViewId, {
@@ -224,6 +262,7 @@ export default async (Dependencies: {
 				});
 			});
 		}
+
 		if (typeof (TreeView as any).onDidExpandElement === "function") {
 			(TreeView as any).onDidExpandElement((E: any) => {
 				ForwardTreeViewEvent("tree:expandElement", ViewId, {
@@ -231,6 +270,7 @@ export default async (Dependencies: {
 				});
 			});
 		}
+
 		if (typeof (TreeView as any).onDidChangeVisibility === "function") {
 			(TreeView as any).onDidChangeVisibility((E: any) => {
 				ForwardTreeViewEvent("tree:visibilityChanged", ViewId, {
@@ -242,9 +282,12 @@ export default async (Dependencies: {
 
 	const AttachDataProvider = (ViewId: string): void => {
 		const Services = GetServices();
+
 		const GetTreeView = Services?.TreeViewByViewId;
+
 		const TreeView =
 			typeof GetTreeView === "function" ? GetTreeView(ViewId) : null;
+
 		if (TreeView) {
 			AttachToDescriptor(ViewId, TreeView);
 		}
@@ -252,11 +295,15 @@ export default async (Dependencies: {
 
 	const HandleTreeViewCreate = (Entry: {
 		viewId?: string;
+
 		extensionId?: string;
 	}): void => {
 		const ViewId = Entry?.viewId ?? "";
+
 		if (!ViewId) return;
+
 		AttachDataProvider(ViewId);
+
 		void ProvideChildren(ViewId, undefined);
 	};
 
@@ -264,13 +311,17 @@ export default async (Dependencies: {
 		const Detail = (Event as CustomEvent).detail as
 			| {
 					viewId?: string;
+
 					extensionId?: string;
+
 					views?: Array<{
 						viewId?: string;
+
 						extensionId?: string;
 					}>;
 			  }
 			| undefined;
+
 		// Mountain may deliver a single tree-view registration or a
 		// batch (`{ views: [...] }`) collected within a 16ms flush
 		// window during extension boot. The batch shape avoids
@@ -290,8 +341,11 @@ export default async (Dependencies: {
 		const Detail = (Event as CustomEvent).detail as
 			| { viewId?: string }
 			| undefined;
+
 		const ViewId = Detail?.viewId ?? "";
+
 		if (!ViewId) return;
+
 		// Defensive: `Services?.TreeViewByViewId?.()` itself could
 		// throw (Registry lookup with a freshly disposed view), and
 		// `TreeView.refresh()` may synchronously throw before
@@ -299,9 +353,12 @@ export default async (Dependencies: {
 		// single failure doesn't crash the listener loop.
 		try {
 			const Services = GetServices();
+
 			const TreeView = Services?.TreeViewByViewId?.(ViewId);
+
 			if (TreeView?.refresh) {
 				const RefreshResult = TreeView.refresh();
+
 				if (
 					RefreshResult &&
 					typeof RefreshResult.catch === "function"
@@ -312,6 +369,7 @@ export default async (Dependencies: {
 		} catch {
 			/* swallow - already-disposed view / DI lookup race */
 		}
+
 		// Also re-prime the Sky observers.
 		try {
 			void ProvideChildren(ViewId, undefined);
@@ -325,7 +383,9 @@ export default async (Dependencies: {
 	// can fire the corresponding TreeView.onDid* events to extensions.
 	const ForwardTreeViewEvent = (
 		channel: string,
+
 		viewId: string,
+
 		extra?: Record<string, unknown>,
 	) => {
 		void Invoke("MountainIPCInvoke", {
@@ -336,10 +396,12 @@ export default async (Dependencies: {
 
 	document.addEventListener(
 		"cel:tree-view:selectionChanged",
+
 		(Event: Event) => {
 			const Detail = (Event as CustomEvent).detail as
 				| { viewId?: string; selection?: unknown[] }
 				| undefined;
+
 			if (Detail?.viewId)
 				ForwardTreeViewEvent("tree:selectionChanged", Detail.viewId, {
 					selection: Detail.selection ?? [],
@@ -351,6 +413,7 @@ export default async (Dependencies: {
 		const Detail = (Event as CustomEvent).detail as
 			| { viewId?: string; element?: unknown }
 			| undefined;
+
 		if (Detail?.viewId)
 			ForwardTreeViewEvent("tree:collapseElement", Detail.viewId, {
 				element: Detail.element,
@@ -361,6 +424,7 @@ export default async (Dependencies: {
 		const Detail = (Event as CustomEvent).detail as
 			| { viewId?: string; element?: unknown }
 			| undefined;
+
 		if (Detail?.viewId)
 			ForwardTreeViewEvent("tree:expandElement", Detail.viewId, {
 				element: Detail.element,
@@ -369,10 +433,12 @@ export default async (Dependencies: {
 
 	document.addEventListener(
 		"cel:tree-view:visibilityChanged",
+
 		(Event: Event) => {
 			const Detail = (Event as CustomEvent).detail as
 				| { viewId?: string; visible?: boolean }
 				| undefined;
+
 			if (Detail?.viewId)
 				ForwardTreeViewEvent("tree:visibilityChanged", Detail.viewId, {
 					visible: Detail.visible ?? false,
@@ -388,13 +454,18 @@ export default async (Dependencies: {
 		const Detail = (Event as CustomEvent).detail as
 			| { viewId?: string; handle?: string | number }
 			| undefined;
+
 		const ViewId = Detail?.viewId ?? "";
+
 		if (!ViewId) return;
+
 		// Defensive: setter may throw if the workbench already
 		// torn down the view in a parallel disposal race.
 		try {
 			const Services = GetServices();
+
 			const TreeView = Services?.TreeViewByViewId?.(ViewId);
+
 			if (TreeView && TreeView.dataProvider !== undefined) {
 				TreeView.dataProvider = undefined;
 			}

@@ -18,11 +18,13 @@
 
 export default async (Dependencies: {
 	GetServices: () => Record<string, unknown> | null;
+
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
 	const { GetServices, Invoke } = Dependencies;
 
 	const Services = GetServices();
+
 	const LanguageFeatures = (Services as any)?.LanguageFeatures;
 
 	if (!LanguageFeatures?.inlineCompletionsProvider?.register) {
@@ -44,15 +46,20 @@ export default async (Dependencies: {
 			 */
 			async provideInlineCompletions(
 				Model: unknown,
+
 				Position: unknown,
+
 				_Context: unknown,
+
 				_Token: unknown,
 			) {
 				const Uri =
 					(Model as any)?.uri?.toString?.() ??
 					(Model as any)?.uri ??
 					"";
+
 				const Line = ((Position as any)?.lineNumber ?? 1) - 1; // 0-based
+
 				const Character = ((Position as any)?.column ?? 1) - 1; // 0-based
 
 				if (!Uri) return { items: [] };
@@ -92,10 +99,12 @@ export default async (Dependencies: {
 								: typeof Item?.text === "string"
 									? Item.text
 									: "";
+
 						const InsertText =
 							Item?.isSnippet === true
 								? { snippet: RawText }
 								: RawText;
+
 						return {
 							insertText: InsertText,
 							range: Item?.range,
@@ -116,7 +125,9 @@ export default async (Dependencies: {
 
 			handleItemDidShow(
 				_Completions: unknown,
+
 				_Item: unknown,
+
 				_InsertText: unknown,
 			) {
 				// No-op: telemetry only.
@@ -124,8 +135,11 @@ export default async (Dependencies: {
 
 			handlePartialAccept(
 				_Completions: unknown,
+
 				_Item: unknown,
+
 				_AcceptedCharacters: unknown,
+
 				_Info: unknown,
 			) {
 				// No-op.

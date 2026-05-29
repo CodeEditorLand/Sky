@@ -1,3 +1,0 @@
-{
-	"Message": "feat(Sky): Add OnAction callback to ShowNotification bridge handler\n\nThe ShowNotification function in InstallUiRequests had `actions` typed as `unknown` and lacked an `OnAction` callback, preventing DOM toast round-trip resolution with action-button responses. Extensions invoking ShowNotification received no feedback when users clicked notification actions.\n\nType `actions` as `string[]` and add the `OnAction` callback parameter that fires with the selected action label (or null on auto-dismiss). This completes the notification round-trip plumbing described in the preceding workbench services integration.\n\nNotification actions now resolve correctly through the Mountain oneshot mechanism, matching VS Code's expected behaviour."
-}

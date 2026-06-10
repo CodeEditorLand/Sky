@@ -3,11 +3,7 @@
 	"compilerOptions": {
 		"baseUrl": "./",
 		"ignoreDeprecations": "6.0",
-		"lib": [
-			"ESNext",
-			"DOM",
-			"DOM.Iterable"
-		],
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"moduleResolution": "Bundler",
 		"outDir": "Target",
 		"plugins": [
@@ -16,18 +12,9 @@
 			}
 		],
 		"rootDir": ".",
-		"types": [
-			"astro/client",
-			"astro/env"
-		]
+		"types": ["astro/client", "astro/env"]
 	},
-	"exclude": [
-		"Target",
-		"../Output"
-	],
+	"exclude": ["Target", "../Output"],
 	"extends": "@playform/build/jsconfig",
-	"include": [
-		"Source",
-		".astro/types.d.ts"
-	]
+	"include": ["Source", ".astro/types.d.ts"]
 }

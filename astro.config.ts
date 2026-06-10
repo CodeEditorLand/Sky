@@ -1193,6 +1193,13 @@ export default defineConfig({
 							id.includes(
 								"\\Wind\\Target\\Element\\Wind\\Source\\",
 							) ||
+							// Relative imports from inside Wind's compiled output
+							// that resolve to VSCode internals (e.g. ../../../base/common/buffer.js)
+							id.includes("/base/common/") ||
+							id.includes("/base/browser/") ||
+							id.includes("/base/node/") ||
+							id.includes("/platform/") ||
+							id.includes("/workbench/") ||
 							// Package specifier - catches @codeeditorland/output/Target/Microsoft/VSCode/vs/**
 							id.startsWith(
 								"@codeeditorland/output/Target/Microsoft/VSCode/vs/",
@@ -1688,6 +1695,47 @@ export default defineConfig({
 						if (modified) {
 							return { code: result, map: null };
 						}
+					}
+
+					return null;
+				},
+			},
+
+			// Intercept VSCode-internal relative imports that come from inside
+			// Wind's compiled output (e.g. ../../../base/common/buffer.js from
+			// TauriMainProcessService.js). These resolve correctly at runtime
+			// (the VSCode workbench is served separately) but Rollup can't find
+			// them on disk during the build. Mark them as empty virtuals so the
+			// build completes without errors.
+			{
+				name: "WindTransitiveVSCodeExternals",
+
+				enforce: "pre" as const,
+
+				resolveId(Source: string, Importer: string | undefined) {
+					if (!Importer) return null;
+
+					// Only intercept when coming from inside Wind's compiled output
+					const FromWind =
+						Importer.includes("/Wind/Target/") ||
+						Importer.includes("\\Wind\\Target\\");
+
+					if (!FromWind) return null;
+
+					// Intercept relative imports that look like VSCode internal paths
+					if (
+						Source.includes("/base/common/") ||
+						Source.includes("/base/browser/") ||
+						Source.includes("/base/node/") ||
+						Source.includes("/platform/") ||
+						Source.includes("/workbench/") ||
+						Source.includes("/vs/") ||
+						(Source.startsWith("../") &&
+							(Source.includes("base/") ||
+								Source.includes("platform/") ||
+								Source.includes("workbench/")))
+					) {
+						return { id: "\0wind-vscode-stub", external: true };
 					}
 
 					return null;

@@ -15,8 +15,9 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 	<script type="module">
 		performance.mark("land:browsertest:preload:start");
 		try {
-			const { default: Install } =
-				await import(/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Function/Install/Function/Install");
+			const { default: Install } = await import(
+				/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Function/Install/Function/Install"
+			);
 			await Install();
 			performance.mark("land:browsertest:preload:done");
 		} catch {

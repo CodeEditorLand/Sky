@@ -49,8 +49,7 @@ if (import.meta.env["Render"] === "false") {
 		const BootstrapResult: BootstrapResult = await runBootstrap({
 				skipHealthCheck: true,
 				debugMode: true,
-			}),
-		);
+			});
 
 		performance.mark("land:bootstrap:done", {
 			detail: {

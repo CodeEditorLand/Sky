@@ -1160,62 +1160,64 @@ export default defineConfig({
 						return "no-external";
 					},
 				},
-				external: [
-					...External,
-					(id: string) => {
-						// When a bundled-workbench profile is active, let
-						// Rollup pull every `vs/**` import through the module
-						// graph so Vite can extract CSS, dedup chunks, and
-						// tree-shake. Skipping the external rules here is
-						// the entire point of the bundled tree.
-						if (BundledActive) {
-							// Wind compiled output is always external even in bundled mode:
-							// it carries relative VSCode imports that Rollup can't resolve.
-							if (
-								id.startsWith("@codeeditorland/wind/Target/") ||
-								id.includes("/@codeeditorland/wind/Target/") ||
-								id.includes("/Wind/Target/Element/Wind/Source/")
-							) {
-								return true;
-							}
+				// Single function - Rollup requires external to be either an
+				// array of strings/RegExps OR a function. A mixed array
+				// (strings + function) causes the function to be ignored.
+				// All prefix checks are consolidated here.
+				external: (id: string) => {
+					// String-prefix checks that replace the ...External spread
+					if (
+						id === "@codeeditorland/output" ||
+						id.startsWith("@codeeditorland/output/") ||
+						id === "monaco-editor" ||
+						id.startsWith("monaco-editor/") ||
+						id === "@microsoft/1ds-post-js" ||
+						id === "@microsoft/1ds-core-js" ||
+						id === "@microsoft/1ds-signalr-js" ||
+						// Wind compiled output is always external - it carries
+						// relative VSCode imports that Rollup cannot resolve.
+						id === "@codeeditorland/wind/Target" ||
+						id.startsWith("@codeeditorland/wind/Target/")
+					) {
+						return true;
+					}
 
-							return id === "vscode";
+					if (BundledActive) {
+						// In bundled mode let Rollup walk vs/** for CSS/chunk
+						// extraction. Only Wind and vscode stay external.
+						if (
+							id.includes("/@codeeditorland/wind/Target/") ||
+							id.includes("/Wind/Target/Element/Wind/Source/")
+						) {
+							return true;
 						}
 
-						return (
-							// Absolute browser URL paths (/vs/...) - Rollup treats / as filesystem,
-							// but these are real browser URLs served at runtime. Mark external.
-							id.startsWith("/vs/") ||
-							// Wind compiled output - has relative VSCode imports; always external.
-							id.startsWith("@codeeditorland/wind/Target/") ||
-							id.includes("/@codeeditorland/wind/Target/") ||
-							id.includes("/Wind/Target/Element/Wind/Source/") ||
-							id.includes(
-								"\\Wind\\Target\\Element\\Wind\\Source\\",
-							) ||
-							// Relative imports from inside Wind's compiled output
-							// that resolve to VSCode internals (e.g. ../../../base/common/buffer.js)
-							id.includes("/base/common/") ||
-							id.includes("/base/browser/") ||
-							id.includes("/base/node/") ||
-							id.includes("/platform/") ||
-							id.includes("/workbench/") ||
-							// Package specifier - catches @codeeditorland/output/Target/Microsoft/VSCode/vs/**
-							id.startsWith(
-								"@codeeditorland/output/Target/Microsoft/VSCode/vs/",
-							) ||
-							// Resolved absolute path (after symlink + package.json exports map)
-							id.includes(
-								"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
-							) ||
-							id.includes(
-								"\\@codeeditorland\\output\\Target\\Microsoft\\VSCode\\vs\\",
-							) ||
-							id.startsWith("vs/") ||
-							id === "vscode"
-						);
-					},
-				],
+						return id === "vscode";
+					}
+
+					return (
+						id.startsWith("/vs/") ||
+						id.includes("/@codeeditorland/wind/Target/") ||
+						id.includes("/Wind/Target/Element/Wind/Source/") ||
+						id.includes("\\Wind\\Target\\Element\\Wind\\Source\\") ||
+						id.includes("/base/common/") ||
+						id.includes("/base/browser/") ||
+						id.includes("/base/node/") ||
+						id.includes("/platform/") ||
+						id.includes("/workbench/") ||
+						id.startsWith(
+							"@codeeditorland/output/Target/Microsoft/VSCode/vs/",
+						) ||
+						id.includes(
+							"/@codeeditorland/output/Target/Microsoft/VSCode/vs/",
+						) ||
+						id.includes(
+							"\\@codeeditorland\\output\\Target\\Microsoft\\VSCode\\vs\\",
+						) ||
+						id.startsWith("vs/") ||
+						id === "vscode"
+					);
+				},
 				output: {
 					// Preserve dynamic URL imports in VSCode worker files
 					hoistTransitiveImports: false,

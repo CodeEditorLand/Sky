@@ -144,8 +144,9 @@ if (!LandDisabled) {
 
 		() => {
 			void (async () => {
-				const { InstallLandWorkbench } =
-					await import(/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Effect/LandWorkbench/LandWorkbenchGlobal.js");
+				const { InstallLandWorkbench } = await import(
+					/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Effect/LandWorkbench/LandWorkbenchGlobal.js"
+				);
 
 				InstallLandWorkbench();
 
@@ -153,14 +154,16 @@ if (!LandDisabled) {
 				void (async () => {
 					try {
 						const { invoke } = await import("@tauri-apps/api/core");
-						const WsCfg = await invoke<{ port: number; secret: string }>(
-							"MountainIPCInvoke",
-							{ method: "nativeHost:getWebSocketConfig", params: [] },
-						);
+						const WsCfg = await invoke<{
+							port: number;
+							secret: string;
+						}>("MountainIPCInvoke", {
+							method: "nativeHost:getWebSocketConfig",
+							params: [],
+						});
 						if (WsCfg?.port && WsCfg.port > 0 && WsCfg.secret) {
-							const { InitializeWebSocket } = await import(
-								"@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService"
-							);
+							const { InitializeWebSocket } =
+								await import(/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService");
 							InitializeWebSocket(WsCfg.port, WsCfg.secret);
 						}
 					} catch {}

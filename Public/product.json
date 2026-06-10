@@ -13,7 +13,7 @@
 		"itemUrl": "https://open-vsx.org/extension",
 		"resourceUrlTemplate": "https://open-vsx.org/files/{publisher}/{name}/{version}/{path}"
 	},
-	"documentationUrl": "https://land.playform.cloud",
+	"documentationUrl": "https://editor.land",
 	"introductoryVideosUrl": "",
 	"keyboardShortcutsUrlMac": "",
 	"keyboardShortcutsUrlLinux": "",

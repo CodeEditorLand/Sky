@@ -148,6 +148,23 @@ if (!LandDisabled) {
 					await import("@codeeditorland/wind/Target/Effect/LandWorkbench/LandWorkbenchGlobal.js");
 
 				InstallLandWorkbench();
+
+				// B7-S6: Initialize Mist WebSocket for direct Sky<->Cocoon path.
+				void (async () => {
+					try {
+						const { invoke } = await import("@tauri-apps/api/core");
+						const WsCfg = await invoke<{ port: number; secret: string }>(
+							"MountainIPCInvoke",
+							{ method: "nativeHost:getWebSocketConfig", params: [] },
+						);
+						if (WsCfg?.port && WsCfg.port > 0 && WsCfg.secret) {
+							const { InitializeWebSocket } = await import(
+								"@codeeditorland/wind/Target/Service/TauriMainProcessService"
+							);
+							InitializeWebSocket(WsCfg.port, WsCfg.secret);
+						}
+					} catch {}
+				})();
 			})();
 		},
 

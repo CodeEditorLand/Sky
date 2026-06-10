@@ -145,7 +145,7 @@ if (!LandDisabled) {
 		() => {
 			void (async () => {
 				const { InstallLandWorkbench } =
-					await import("@codeeditorland/wind/Target/Effect/LandWorkbench/LandWorkbenchGlobal.js");
+					await import("@codeeditorland/wind/Target/Element/Wind/Source/Effect/LandWorkbench/LandWorkbenchGlobal.js");
 
 				InstallLandWorkbench();
 
@@ -159,7 +159,7 @@ if (!LandDisabled) {
 						);
 						if (WsCfg?.port && WsCfg.port > 0 && WsCfg.secret) {
 							const { InitializeWebSocket } = await import(
-								"@codeeditorland/wind/Target/Service/TauriMainProcessService"
+								"@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService"
 							);
 							InitializeWebSocket(WsCfg.port, WsCfg.secret);
 						}

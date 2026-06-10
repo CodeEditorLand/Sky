@@ -83,7 +83,7 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 		performance.mark("land:mountain:preload:start");
 		try {
 			const { default: Install } =
-				await import("@codeeditorland/wind/Target/Function/Install/Function/Install");
+				await import("@codeeditorland/wind/Target/Element/Wind/Source/Function/Install/Function/Install");
 			await Install();
 			performance.mark("land:mountain:preload:done");
 			performance.measure(
@@ -101,7 +101,7 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 		performance.mark("land:mountain:bootstrap:start");
 		try {
 			const { runBootstrap } =
-				await import("@codeeditorland/wind/Target/Effect/Bootstrap");
+				await import("@codeeditorland/wind/Target/Element/Wind/Source/Effect/Bootstrap");
 			const { Effect } = await import("effect");
 			await Effect.runPromise(
 				runBootstrap({ skipHealthCheck: true, debugMode: true }),

@@ -3,7 +3,7 @@
  * Zero console.* output. Tracing via performance.mark().
  */
 
-import Install from "@codeeditorland/wind/Target/Function/Install/Function/Install";
+import Install from "@codeeditorland/wind/Target/Element/Wind/Source/Function/Install/Function/Install";
 
 try {
 	performance.mark("land:browserproxy:preload:start");

@@ -389,7 +389,7 @@ export default defineConfig({
 							WindService: resolve(
 								process.cwd(),
 
-								"node_modules/@codeeditorland/wind/Target/Service/TauriMainProcessService.js",
+								"node_modules/@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService.js",
 							),
 							Destination: join(
 								Destination,
@@ -1169,6 +1169,16 @@ export default defineConfig({
 						// tree-shake. Skipping the external rules here is
 						// the entire point of the bundled tree.
 						if (BundledActive) {
+							// Wind compiled output is always external even in bundled mode:
+							// it carries relative VSCode imports that Rollup can't resolve.
+							if (
+								id.startsWith("@codeeditorland/wind/Target/") ||
+								id.includes("/@codeeditorland/wind/Target/") ||
+								id.includes("/Wind/Target/Element/Wind/Source/")
+							) {
+								return true;
+							}
+
 							return id === "vscode";
 						}
 
@@ -1176,6 +1186,11 @@ export default defineConfig({
 							// Absolute browser URL paths (/vs/...) - Rollup treats / as filesystem,
 							// but these are real browser URLs served at runtime. Mark external.
 							id.startsWith("/vs/") ||
+							// Wind compiled output - has relative VSCode imports; always external.
+							id.startsWith("@codeeditorland/wind/Target/") ||
+							id.includes("/@codeeditorland/wind/Target/") ||
+							id.includes("/Wind/Target/Element/Wind/Source/") ||
+							id.includes("\\Wind\\Target\\Element\\Wind\\Source\\") ||
 							// Package specifier - catches @codeeditorland/output/Target/Microsoft/VSCode/vs/**
 							id.startsWith(
 								"@codeeditorland/output/Target/Microsoft/VSCode/vs/",

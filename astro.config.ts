@@ -1190,7 +1190,9 @@ export default defineConfig({
 							id.startsWith("@codeeditorland/wind/Target/") ||
 							id.includes("/@codeeditorland/wind/Target/") ||
 							id.includes("/Wind/Target/Element/Wind/Source/") ||
-							id.includes("\\Wind\\Target\\Element\\Wind\\Source\\") ||
+							id.includes(
+								"\\Wind\\Target\\Element\\Wind\\Source\\",
+							) ||
 							// Package specifier - catches @codeeditorland/output/Target/Microsoft/VSCode/vs/**
 							id.startsWith(
 								"@codeeditorland/output/Target/Microsoft/VSCode/vs/",

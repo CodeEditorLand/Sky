@@ -145,7 +145,7 @@ if (!LandDisabled) {
 		() => {
 			void (async () => {
 				const { InstallLandWorkbench } =
-					await import("@codeeditorland/wind/Target/Element/Wind/Source/Effect/LandWorkbench/LandWorkbenchGlobal.js");
+					await import(/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Effect/LandWorkbench/LandWorkbenchGlobal.js");
 
 				InstallLandWorkbench();
 

@@ -14,7 +14,6 @@
  */
 
 interface BootstrapStage {
-
 	success: boolean;
 
 	stageName: string;
@@ -23,7 +22,6 @@ interface BootstrapStage {
 }
 
 interface BootstrapResult {
-
 	success: boolean;
 
 	totalDuration: number;
@@ -34,22 +32,21 @@ interface BootstrapResult {
 }
 
 if (import.meta.env["Render"] === "false") {
-
 	performance.mark("land:bootstrap:skipped-wind-disabled");
 } else {
-
 	try {
 		performance.mark("land:bootstrap:start");
 
-		const { runBootstrap } =
-			await import("@codeeditorland/wind/Target/Element/Wind/Source/Effect/Bootstrap");
+		const { runBootstrap } = await import(
+			/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Effect/Bootstrap"
+		);
 
 		const { Effect } = await import("effect");
 
 		const BootstrapResult: BootstrapResult = await runBootstrap({
-				skipHealthCheck: true,
-				debugMode: true,
-			});
+			skipHealthCheck: true,
+			debugMode: true,
+		});
 
 		performance.mark("land:bootstrap:done", {
 			detail: {
@@ -91,9 +88,8 @@ if (import.meta.env["Render"] === "false") {
 				);
 
 				if (WsCfg?.port && WsCfg.port > 0 && WsCfg.secret) {
-					const { InitializeWebSocket } = await import(
-						"@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService"
-					);
+					const { InitializeWebSocket } =
+						await import("@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService");
 
 					InitializeWebSocket(WsCfg.port, WsCfg.secret);
 				}

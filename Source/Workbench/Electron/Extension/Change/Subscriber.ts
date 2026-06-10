@@ -69,7 +69,7 @@ export default async (): Promise<void> => {
 
 	try {
 		const Stream =
-			(await import("@codeeditorland/wind/Target/Element/Wind/Source/Effect/Extensions/ChangeStream")) as {
+			(await import(/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Effect/Extensions/ChangeStream")) as {
 				readonly default: unknown;
 			};
 

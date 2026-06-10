@@ -14,6 +14,7 @@
  */
 
 interface BootstrapStage {
+
 	success: boolean;
 
 	stageName: string;
@@ -22,6 +23,7 @@ interface BootstrapStage {
 }
 
 interface BootstrapResult {
+
 	success: boolean;
 
 	totalDuration: number;
@@ -32,8 +34,10 @@ interface BootstrapResult {
 }
 
 if (import.meta.env["Render"] === "false") {
+
 	performance.mark("land:bootstrap:skipped-wind-disabled");
 } else {
+
 	try {
 		performance.mark("land:bootstrap:start");
 
@@ -42,8 +46,7 @@ if (import.meta.env["Render"] === "false") {
 
 		const { Effect } = await import("effect");
 
-		const BootstrapResult: BootstrapResult = await Effect.runPromise(
-			runBootstrap({
+		const BootstrapResult: BootstrapResult = await runBootstrap({
 				skipHealthCheck: true,
 				debugMode: true,
 			}),
@@ -76,6 +79,27 @@ if (import.meta.env["Render"] === "false") {
 			await import("./Extension/Change/Subscriber.js");
 
 		void StartExtensionSubscriber();
+
+		// B7-S6: Initialize Mist WebSocket for direct Sky<->Cocoon path.
+		void (async () => {
+			try {
+				const { invoke } = await import("@tauri-apps/api/core");
+
+				const WsCfg = await invoke<{ port: number; secret: string }>(
+					"MountainIPCInvoke",
+
+					{ method: "nativeHost:getWebSocketConfig", params: [] },
+				);
+
+				if (WsCfg?.port && WsCfg.port > 0 && WsCfg.secret) {
+					const { InitializeWebSocket } = await import(
+						"@codeeditorland/wind/Target/Service/TauriMainProcessService"
+					);
+
+					InitializeWebSocket(WsCfg.port, WsCfg.secret);
+				}
+			} catch {}
+		})();
 	} catch {
 		performance.mark("land:bootstrap:error");
 	}

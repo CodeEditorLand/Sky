@@ -388,9 +388,9 @@ import MountainWorkbench from "../Workbench/Mountain.astro";
 
 ## See Also&#x2001;🔗
 
-- [Sky Documentation](https://editor.land/Doc/sky)
-- [Architecture Overview](https://editor.land/Doc/architecture)
-- [Why `Tauri`](https://editor.land/Doc/why-tauri)
+- [Sky Documentation](https://Editor.Land/Doc/sky)
+- [Architecture Overview](https://Editor.Land/Doc/architecture)
+- [Why `Tauri`](https://Editor.Land/Doc/why-tauri)
 - [`Wind`](https://github.com/CodeEditorLand/Wind)
 - [`Mountain`](https://github.com/CodeEditorLand/Mountain)
 

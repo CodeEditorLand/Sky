@@ -68,11 +68,10 @@ export default async (): Promise<void> => {
 	}
 
 	try {
-		const Stream = (await import(
-			"@codeeditorland/wind/Target/Effect/Extensions/ChangeStream"
-		)) as {
-			readonly default: unknown;
-		};
+		const Stream =
+			(await import("@codeeditorland/wind/Target/Effect/Extensions/ChangeStream")) as {
+				readonly default: unknown;
+			};
 
 		const { Effect, Stream: EffectStream } = await import("effect");
 

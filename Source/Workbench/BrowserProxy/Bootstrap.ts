@@ -24,9 +24,8 @@ interface BootstrapResult {
 }
 
 try {
-	const { runBootstrap } = await import(
-		"@codeeditorland/wind/Target/Effect/Bootstrap"
-	);
+	const { runBootstrap } =
+		await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 
 	// Run the bootstrap with options
 	const bootstrapResult: BootstrapResult = await runBootstrap({

@@ -1735,6 +1735,7 @@ export default defineConfig({
 					if (Source === "./MistWebSocketTransport.js") {
 						return resolve(
 							process.cwd(),
+
 							"node_modules/@codeeditorland/output/Configuration/Service/Tauri/Main/Process/MistWebSocketTransport.js",
 						);
 					}
@@ -1749,6 +1750,7 @@ export default defineConfig({
 
 						return resolve(
 							process.cwd(),
+
 							`node_modules/@codeeditorland/output/Target/Microsoft/VSCode/${RelPath}`,
 						);
 					}

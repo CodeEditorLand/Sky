@@ -13,6 +13,9 @@ Configuration/
 # Astro cache
 .astro/
 
+# TypeScript incremental build cache (stale after path restructures)
+tsconfig.tsbuildinfo
+
 # Environment files
 .env
 .env.local

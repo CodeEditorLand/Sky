@@ -72,6 +72,70 @@ graph TB
 
 ---
 
+## Sky Bridge
+
+`Source/Function/Sky/Bridge.ts` subscribes to all `sky://` Tauri events emitted
+by Mountain and routes them to VS Code workbench APIs or DOM manipulation. The
+bridge is modular: each `Install*` module in `Bridge/` registers a related group
+of channels.
+
+> Mountain is used as a relay for Cocoon↔Sky communication. Sky emits a `sky://`
+> Tauri event → Mountain re-emits as a gRPC notification to Cocoon. This avoids
+> a separate transport while keeping the workbench renderer and the extension
+> host decoupled.
+
+### Bridge Modules
+
+| Module                                | Registered channels / responsibility                                                                                                                                                                                                       |
+| :------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `InstallCommands.ts`                  | `sky://command/execute`, `sky://command/register`, `sky://command/unregister`                                                                                                                                                              |
+| `InstallDebug.ts`                     | `sky://debug/sessionStart`, `sky://debug/sessionEnd`, `sky://debug/consoleAppend`, `sky://debug/dap-message`, `sky://debug/addBreakpoints` → `IDebugService.addBreakpoints()`, `sky://debug/removeBreakpoints`, `sky://customEditor/saved` |
+| `InstallDiagnostics.ts`               | Diagnostic / smoke-test channels                                                                                                                                                                                                           |
+| `InstallEditorAndOutput.ts`           | `sky://workspace/applyEdit`, `sky://workspace/save*`, output channel create/append/clear/show/dispose                                                                                                                                      |
+| `InstallEditorOperations.ts`          | Monaco `onDidChangeModelContent` debounced (300 ms) → `sky:model:contentChanged` → Mountain → Cocoon `onDidChangeTextDocument`; `sky://editor/apply-text-edits` handles both VS Code 0-based and Monaco 1-based ranges                     |
+| `InstallFanOut.ts`                    | Multi-subscriber fan-out for high-frequency events                                                                                                                                                                                         |
+| `InstallInlineCompletions.ts`         | Registers `ILanguageFeaturesService.inlineCompletionsProvider` with a wildcard selector; on trigger, calls `language:provideInlineCompletions` IPC → Mountain's `ProvideInlineCompletionItems` gRPC handler → Cocoon registered providers  |
+| `InstallProgressTerminalWorkspace.ts` | `sky://progress/*`, `sky://terminal/*`, `sky://workspace/*`                                                                                                                                                                                |
+| `InstallScm.ts`                       | `sky://scm/register` with 10×200 ms retry for `__CEL_SERVICES__.SCM` population race; `sky://scm/provider/changed` updates workbench input model                                                                                           |
+| `InstallSearch.ts`                    | `sky://search/*` channels                                                                                                                                                                                                                  |
+| `InstallSimpleRelays.ts`              | Pure DOM-event re-dispatchers for `cel:*` consumer subscriptions; `sky://language/configure` → `monaco.languages.setLanguageConfiguration()`                                                                                               |
+| `InstallStatusbar.ts`                 | `sky://statusbar/update`, `sky://statusbar/dispose`, `sky://statusbar/set-message`                                                                                                                                                         |
+| `InstallTasksAndDecorations.ts`       | Task and decoration channel relays                                                                                                                                                                                                         |
+| `InstallTreeView.ts`                  | Tree-view `onDidChangeSelection`, `onDidCollapse`, `onDidExpand` CustomEvent forwarding; `sky://tree-view/reveal` → `IViewsService.openView()`                                                                                             |
+| `InstallUiRequests.ts`                | `sky://ui/show-message-request`, QuickPick / InputBox round-trips via `IQuickInputService`                                                                                                                                                 |
+| `InstallWebview.ts`                   | `sky://webview/message`, `sky://webview/dispose`                                                                                                                                                                                           |
+
+---
+
+## Build Optimization
+
+### Code Splitting (S1)
+
+For non-bundled profiles (`debug-electron`, etc.) `vs/**` is entirely external,
+so Sky's own module graph would otherwise concatenate into one large chunk. The
+`manualChunks` configuration in `astro.config.ts` splits it into four named
+chunks the browser preloader can fetch in parallel and V8 can parse on separate
+threads:
+
+| Chunk name        | Contents                                                    |
+| :---------------- | :---------------------------------------------------------- |
+| `effect-rt`       | Effect-TS runtime (~800 KB, rarely changes)                 |
+| `wind-effect-gen` | Wind's codegen Effect layer (large, stable, cache-friendly) |
+| `sky-telemetry`   | PostHog + OTLP bridge (never on the synchronous paint path) |
+| `sky-debug`       | SmokeTest / diagnostic harness (debug builds only)          |
+
+The bundled profiles (`Pack=electron`, etc.) must not use `manualChunks` because
+the workbench loader's auto-split boundary (`workbench.js` →
+`workbench.desktop.main.js`) is required for correct initialization order.
+
+### Sourcemaps
+
+Sourcemaps are generated as `"inline"` in dev builds (`On=true`) for WKWebView
+DevTools and profiler symbol resolution. Production builds disable sourcemaps to
+avoid shipping artifacts that are 3× the bundle size.
+
+---
+
 ## Data Flow
 
 The following sequence shows how a user action travels from the Sky UI through

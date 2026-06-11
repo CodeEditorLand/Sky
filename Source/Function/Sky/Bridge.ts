@@ -39,7 +39,7 @@
 // the Wind package avoids maintaining a parallel string table here and
 // catches drift against Mountain's Rust `SkyEvent` enum at type-check
 // time (Wind's TS table is the TS mirror of Common/IPC/SkyEvent.rs).
-import SkyEvent from "@codeeditorland/wind/Target/Element/Wind/Source/IPC/SkyEvent.js";
+import SkyEvent from "@codeeditorland/wind/Target/IPC/SkyEvent.js";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 

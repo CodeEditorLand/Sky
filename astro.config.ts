@@ -389,7 +389,7 @@ export default defineConfig({
 							WindService: resolve(
 								process.cwd(),
 
-								"node_modules/@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService.js",
+								"node_modules/@codeeditorland/wind/Target/Service/TauriMainProcessService.js",
 							),
 							Destination: join(
 								Destination,
@@ -1165,7 +1165,16 @@ export default defineConfig({
 				// (strings + function) causes the function to be ignored.
 				// All prefix checks are consolidated here.
 				external: (id: string) => {
-					// String-prefix checks that replace the ...External spread
+					if (BundledActive) {
+						// In bundled mode Rollup walks @codeeditorland/output so
+						// it can extract CSS and dedup chunks. Only the bare
+						// "vscode" specifier (used inside VS Code's own modules)
+						// stays external.
+						return id === "vscode";
+					}
+
+					// Non-bundled: output, monaco, telemetry, and all VS Code
+					// internal paths are served as pre-built files at runtime.
 					if (
 						id === "@codeeditorland/output" ||
 						id.startsWith("@codeeditorland/output/") ||
@@ -1173,33 +1182,13 @@ export default defineConfig({
 						id.startsWith("monaco-editor/") ||
 						id === "@microsoft/1ds-post-js" ||
 						id === "@microsoft/1ds-core-js" ||
-						id === "@microsoft/1ds-signalr-js" ||
-						// Wind compiled output is always external - it carries
-						// relative VSCode imports that Rollup cannot resolve.
-						id === "@codeeditorland/wind/Target" ||
-						id.startsWith("@codeeditorland/wind/Target/")
+						id === "@microsoft/1ds-signalr-js"
 					) {
 						return true;
 					}
 
-					if (BundledActive) {
-						// In bundled mode let Rollup walk vs/** for CSS/chunk
-						// extraction. Only Wind and vscode stay external.
-						if (
-							id.includes("/@codeeditorland/wind/Target/") ||
-							id.includes("/Wind/Target/Element/Wind/Source/")
-						) {
-							return true;
-						}
-
-						return id === "vscode";
-					}
-
 					return (
 						id.startsWith("/vs/") ||
-						id.includes("/@codeeditorland/wind/Target/") ||
-						id.includes("/Wind/Target/Element/Wind/Source/") ||
-						id.includes("\\Wind\\Target\\Element\\Wind\\Source\\") ||
 						id.includes("/base/common/") ||
 						id.includes("/base/browser/") ||
 						id.includes("/base/node/") ||
@@ -1569,7 +1558,15 @@ export default defineConfig({
 			port: 9999,
 		},
 		plugins: [
-			(await import("vite-plugin-top-level-await")).default(),
+			// vite-plugin-top-level-await polyfills top-level await for browsers
+			// that don't support it natively. Disabled in bundled profiles: the
+			// VS Code workbench files are too large for the NAPI Rust binding and
+			// crash with "Failed to convert rust `String` into napi `string`".
+			// WKWebView (Tauri/macOS) supports top-level await natively, so the
+			// polyfill is not needed.
+			...(BundledActive
+				? []
+				: [(await import("vite-plugin-top-level-await")).default()]),
 
 			// Short-circuit Rollup's walk into Bundled/<Variant> module
 			// graphs the active `Pack` does not select.
@@ -1703,12 +1700,66 @@ export default defineConfig({
 				},
 			},
 
+			// Resolve imports from inside Output's VS Code tree that Rollup
+			// cannot follow via package specifiers due to symlink cycles:
+			//
+			//  1. `./MistWebSocketTransport.js` - imported by the injected
+			//     TauriMainProcessService.js; file was never placed next to it
+			//     in the VS Code tree. Redirect to Output/Configuration/Service/.
+			//
+			//  2. `@codeeditorland/output/Target/Microsoft/VSCode/…` - self-
+			//     referential package import from the same injected file.
+			//     Rollup's symlink-resolved importer path breaks the node_modules
+			//     lookup. Convert to an absolute disk path instead.
+			{
+				name: "ResolveOutputVSCodeInternals",
+
+				enforce: "pre" as const,
+
+				resolveId(Source: string, Importer: string | undefined) {
+					if (!Importer) return null;
+
+					const ImporterNorm = Importer.replace(/\\/g, "/");
+
+					const FromOutputVSCode =
+						ImporterNorm.includes(
+							"/Output/Target/Microsoft/VSCode/",
+						) ||
+						ImporterNorm.includes(
+							"/@codeeditorland/output/Target/Microsoft/VSCode/",
+						);
+
+					if (!FromOutputVSCode) return null;
+
+					// MistWebSocketTransport lives in Configuration/Service, not VS Code tree
+					if (Source === "./MistWebSocketTransport.js") {
+						return resolve(
+							process.cwd(),
+							"node_modules/@codeeditorland/output/Configuration/Service/Tauri/Main/Process/MistWebSocketTransport.js",
+						);
+					}
+
+					// Self-referential @codeeditorland/output/Target/Microsoft/VSCode/…
+					// imports: strip the package prefix, resolve to disk path
+					const OutputVSCodePrefix =
+						"@codeeditorland/output/Target/Microsoft/VSCode/";
+
+					if (Source.startsWith(OutputVSCodePrefix)) {
+						const RelPath = Source.slice(OutputVSCodePrefix.length);
+
+						return resolve(
+							process.cwd(),
+							`node_modules/@codeeditorland/output/Target/Microsoft/VSCode/${RelPath}`,
+						);
+					}
+
+					return null;
+				},
+			},
+
 			// Intercept VSCode-internal relative imports that come from inside
-			// Wind's compiled output (e.g. ../../../base/common/buffer.js from
-			// TauriMainProcessService.js). These resolve correctly at runtime
-			// (the VSCode workbench is served separately) but Rollup can't find
-			// them on disk during the build. Mark them as empty virtuals so the
-			// build completes without errors.
+			// Wind's compiled output. These resolve correctly at runtime but
+			// Rollup can't find them on disk during the build.
 			{
 				name: "WindTransitiveVSCodeExternals",
 
@@ -1717,14 +1768,12 @@ export default defineConfig({
 				resolveId(Source: string, Importer: string | undefined) {
 					if (!Importer) return null;
 
-					// Only intercept when coming from inside Wind's compiled output
 					const FromWind =
 						Importer.includes("/Wind/Target/") ||
 						Importer.includes("\\Wind\\Target\\");
 
 					if (!FromWind) return null;
 
-					// Intercept relative imports that look like VSCode internal paths
 					if (
 						Source.includes("/base/common/") ||
 						Source.includes("/base/browser/") ||

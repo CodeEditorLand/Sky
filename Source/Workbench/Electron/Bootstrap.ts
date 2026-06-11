@@ -38,7 +38,7 @@ if (import.meta.env["Render"] === "false") {
 		performance.mark("land:bootstrap:start");
 
 		const { runBootstrap } = await import(
-			/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Effect/Bootstrap"
+			"@codeeditorland/wind/Target/Effect/Bootstrap"
 		);
 
 		const { Effect } = await import("effect");
@@ -89,7 +89,7 @@ if (import.meta.env["Render"] === "false") {
 
 				if (WsCfg?.port && WsCfg.port > 0 && WsCfg.secret) {
 					const { InitializeWebSocket } = await import(
-						/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Service/TauriMainProcessService"
+						"@codeeditorland/wind/Target/Service/TauriMainProcessService"
 					);
 
 					InitializeWebSocket(WsCfg.port, WsCfg.secret);

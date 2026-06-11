@@ -39,9 +39,6 @@ export const Link = [
 export const External = [
 	"@codeeditorland/output",
 
-	// Wind's compiled Target tree carries relative VSCode imports; always external.
-	"@codeeditorland/wind/Target",
-
 	"monaco-editor",
 
 	"@microsoft/1ds-post-js",

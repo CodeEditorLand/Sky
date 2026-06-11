@@ -25,7 +25,7 @@ interface BootstrapResult {
 
 try {
 	const { runBootstrap } = await import(
-		/* @vite-ignore */ "@codeeditorland/wind/Target/Element/Wind/Source/Effect/Bootstrap"
+		"@codeeditorland/wind/Target/Effect/Bootstrap"
 	);
 
 	// Run the bootstrap with options

@@ -711,7 +711,9 @@ export default async (Dependencies: {
 			// snapshot to the last one we shipped and bail when they match.
 			let LastTabsSerialized = "";
 
-			const FlushTabs = () => {
+			let TabsFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+			const FlushTabsNow = () => {
 				try {
 					const Groups: any[] = EditorGroups.groups ?? [];
 
@@ -730,7 +732,16 @@ export default async (Dependencies: {
 						})),
 					}));
 
-					const Serialized = JSON.stringify(Snapshot);
+					// Lightweight dedupe key: group ids + active flags +
+					// tab label/uri pairs joined on NUL - cheaper than a
+					// full JSON.stringify of the snapshot per event. The
+					// SENT payload below is the untouched snapshot.
+					const Serialized = Snapshot.map(
+						(G) =>
+							`${G.id}\u0000${G.isActive ? 1 : 0}\u0000${G.tabs
+								.map((T: any) => `${T.label}\u0000${T.uri}`)
+								.join("\u0000")}`,
+					).join("\u0001");
 
 					if (Serialized === LastTabsSerialized) return;
 
@@ -743,6 +754,19 @@ export default async (Dependencies: {
 				} catch {
 					/* swallow */
 				}
+			};
+
+			// One click fires up to four of the wired events in close
+			// succession - coalesce them into a single flush per frame;
+			// the snapshot dedupe above stays as the second guard.
+			const FlushTabs = () => {
+				if (TabsFlushTimer !== null) clearTimeout(TabsFlushTimer);
+
+				TabsFlushTimer = setTimeout(() => {
+					TabsFlushTimer = null;
+
+					FlushTabsNow();
+				}, 16);
 			};
 
 			EditorGroups.onDidChangeActiveGroup?.(FlushTabs);

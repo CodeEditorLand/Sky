@@ -57,7 +57,11 @@ let _CelDispatchLog: (
 	HasConsumer: boolean,
 ) => void = () => {};
 
-void (async () => {
+// Diagnostics-only chunk - hydrated at idle time from
+// `_InstallSkyBridgeOnce` so the dynamic import stays off the boot
+// waterfall. The placeholder pair above keeps dispatch sites working
+// (no consumer tracking, no log) until hydration completes.
+const InstallCelDispatchTracking = async (): Promise<void> => {
 	const Tracking = (await import("./Bridge/CelDispatchTracking.js")).default(
 		invoke,
 	);
@@ -65,7 +69,7 @@ void (async () => {
 	_CelConsumers = { has: (T: string) => Tracking.HasConsumer(T) };
 
 	_CelDispatchLog = Tracking.Log;
-})();
+};
 
 // ============================================================================
 // VS Code workbench accessor
@@ -258,13 +262,14 @@ function GetServices(): CelServices | null {
 
 // One-shot diagnostic probe of `__CEL_SERVICES__` shape; implementation
 // in `Bridge/ProbeServices.ts`. Wires itself onto `cel:services-ready`
-// (or fires immediately if services are already ready). Uses a
-// fire-and-forget dynamic import so the probe doesn't block module eval.
-void (async () => {
+// (or fires immediately if services are already ready). Hydrated at
+// idle time from `_InstallSkyBridgeOnce` so the diagnostics-only chunk
+// stays off the boot waterfall.
+const InstallProbeServices = async (): Promise<void> => {
 	const Probe = (await import("./Bridge/ProbeServices.js")).default;
 
 	Probe(() => GetServices() as Record<string, unknown> | null);
-})();
+};
 
 // ============================================================================
 // URI helpers for command arguments
@@ -430,11 +435,49 @@ export async function InstallSkyBridge(): Promise<void> {
 async function _InstallSkyBridgeOnce(): Promise<void> {
 	const Cleanups: Array<() => void> = [];
 
-	// Hydrate the extracted DOM-bridge factories. Both modules return a
-	// closure-bound bag (Progress) or a single function (Notification);
-	// keep the local symbol names identical to the pre-extraction shape
-	// so every downstream call site reads unchanged.
-	const Progress = (await import("./Bridge/Progress.js")).default();
+	// Diagnostics-only modules (consumer tracking + services probe) are
+	// deferred to idle time so their chunks never sit on the boot
+	// waterfall.
+	{
+		const InstallDiagnosticsProbes = (): void => {
+			void InstallCelDispatchTracking().catch(() => {});
+
+			void InstallProbeServices().catch(() => {});
+		};
+
+		if (typeof requestIdleCallback === "function") {
+			requestIdleCallback(() => InstallDiagnosticsProbes());
+		} else {
+			setTimeout(InstallDiagnosticsProbes, 0);
+		}
+	}
+
+	// Hydrate the extracted DOM-bridge factories concurrently. Progress
+	// returns a closure-bound bag, Notification a single function; the
+	// local symbol names stay identical to the pre-extraction shape so
+	// every downstream call site reads unchanged. `ApplyHtmlToWebview`
+	// is needed by `InstallWebview`; the module also stashes itself on
+	// `globalThis.__CEL_WEBVIEW_APPLY_HTML__` so the webview resolve
+	// callback (which runs later, inside the workbench) can still find it.
+	const [Progress, ShowNotification, Build, Output, ApplyHtmlToWebview] =
+		await Promise.all([
+			(async () => (await import("./Bridge/Progress.js")).default())(),
+
+			(async () =>
+				(await import("./Bridge/Notification.js")).default(
+					GetWorkbench,
+				))(),
+
+			(async () => (await import("./Bridge/BuildOpenArg.js")).default)(),
+
+			(async () =>
+				(await import("./Bridge/OutputChannels.js")).default(
+					GetWorkbench,
+				))(),
+
+			(async () =>
+				(await import("./Bridge/ApplyHtmlToWebview.js")).default)(),
+		]);
 
 	const ShowProgress = Progress.Show;
 
@@ -442,33 +485,11 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 
 	const DismissProgress = Progress.Dismiss;
 
-	const ShowNotification = (await import("./Bridge/Notification.js")).default(
-		GetWorkbench,
-	);
+	BuildOpenArg = (Source: unknown) => Build(GetServices, Source);
 
-	{
-		const Build = (await import("./Bridge/BuildOpenArg.js")).default;
+	OutputChannels = Output.Channels;
 
-		BuildOpenArg = (Source: unknown) => Build(GetServices, Source);
-	}
-
-	{
-		const Output = (await import("./Bridge/OutputChannels.js")).default(
-			GetWorkbench,
-		);
-
-		OutputChannels = Output.Channels;
-
-		GetOrCreateChannel = Output.GetOrCreate;
-	}
-
-	// `ApplyHtmlToWebview` is needed by `InstallWebview`. Load it here so
-	// the install-time local is available by the time the webview import
-	// call runs below. The module also stashes itself on
-	// `globalThis.__CEL_WEBVIEW_APPLY_HTML__` so the webview resolve
-	// callback (which runs later, inside the workbench) can still find it.
-	const ApplyHtmlToWebview = (await import("./Bridge/ApplyHtmlToWebview.js"))
-		.default;
+	GetOrCreateChannel = Output.GetOrCreate;
 
 	const Register = async (
 		Channel: string,
@@ -541,203 +562,294 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}).catch(() => {});
 		});
 
-	// Editor + Output bridges - implementation in
-	// `Bridge/InstallEditorAndOutput.ts`. Covers the close-window
-	// short-circuit, file-open / save-all / applyEdit /
-	// showTextDocument round-trips, and the five output channel
-	// lifecycle channels.
-	await (
-		await import("./Bridge/InstallEditorAndOutput.js")
-	).default({
-		Register,
-		GetWorkbench,
-		Invoke: invoke,
-		BuildOpenArg,
-		ResolveUiRequest,
-		GetOrCreateChannel,
-		OutputChannels,
-	});
+	// Installer error isolation: every sub-installer thunk below runs
+	// through this wrapper so one failed installer logs its name and the
+	// rest of the batch still completes.
+	const RunInstaller = async (
+		Name: string,
 
-	// ---- Status Bar ----
-	// Cocoon's `vscode.window.createStatusBarItem(...)` fans via
-	// `statusBar.{update,dispose}` through Mountain's StatusBarLifecycle
-	// notification onto `sky://statusbar/{update,dispose}`, and
-	// `setStatusBarMessage` / direct `StatusBarItem.text =` writes onto
-	// `sky://statusbar/set-entry` via SetStatusBarText. Wire all three
-	// into the native `IStatusbarService` exposed by the workbench
-	// accessor transform, so extension-contributed items render in the
-	// same `.statusbar` DOM as stock items. The DOM CustomEvent fan-out
-	// below (`cel:statusbar:*`) remains for any Sky-side component that
-	// wants to mirror the state in a side panel.
-	//
-	// Statusbar bridge - implementation in `Bridge/InstallStatusbar.ts`.
-	// Returns the `SetOrUpdateEntry` helper so the dead-channel
-	// `sky://statusbar/create` listener (in
-	// `Bridge/InstallDeadChannelListeners.ts`) can route through the
-	// same `IStatusbarService.addEntry` path.
-	const { SetOrUpdateEntry } = await (
-		await import("./Bridge/InstallStatusbar.js")
-	).default({ Register, GetServices });
+		Run: () => Promise<unknown>,
+	): Promise<void> => {
+		try {
+			await Run();
+		} catch (InstallError) {
+			invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					`installer ${Name} failed: ${InstallError instanceof Error ? InstallError.message : String(InstallError)}`,
+				],
+			}).catch(() => {});
+		}
+	};
 
-	// Commands bridge - implementation in `Bridge/InstallCommands.ts`.
-	await (
-		await import("./Bridge/InstallCommands.js")
-	).default({
-		Register,
-		GetServices,
-		Invoke: invoke,
-		ResolveUiRequest,
-	});
+	// The sub-installers are independent of one another - install them
+	// concurrently instead of awaiting each in sequence. The one real
+	// ordering dependency (InstallStatusbar's returned `SetOrUpdateEntry`
+	// feeds InstallDeadChannelListeners) stays chained inside a single
+	// thunk; the replay drain at the end of this function stays LAST so
+	// every listener is registered before buffered events re-emit.
+	await Promise.all([
+		// Editor + Output bridges - implementation in
+		// `Bridge/InstallEditorAndOutput.ts`. Covers the close-window
+		// short-circuit, file-open / save-all / applyEdit /
+		// showTextDocument round-trips, and the five output channel
+		// lifecycle channels.
+		RunInstaller("InstallEditorAndOutput", async () =>
+			(await import("./Bridge/InstallEditorAndOutput.js")).default({
+				Register,
+				GetWorkbench,
+				Invoke: invoke,
+				BuildOpenArg,
+				ResolveUiRequest,
+				GetOrCreateChannel,
+				OutputChannels,
+			}),
+		),
 
-	// Tasks, decorations, workspace edits, output-channel lifecycle,
-	// webview message/post-message/dispose relays.
-	await (
-		await import("./Bridge/InstallTasksAndDecorations.js")
-	).default({ Register });
+		// ---- Status Bar ----
+		// Cocoon's `vscode.window.createStatusBarItem(...)` fans via
+		// `statusBar.{update,dispose}` through Mountain's StatusBarLifecycle
+		// notification onto `sky://statusbar/{update,dispose}`, and
+		// `setStatusBarMessage` / direct `StatusBarItem.text =` writes onto
+		// `sky://statusbar/set-entry` via SetStatusBarText. Wire all three
+		// into the native `IStatusbarService` exposed by the workbench
+		// accessor transform, so extension-contributed items render in the
+		// same `.statusbar` DOM as stock items. The DOM CustomEvent fan-out
+		// (`cel:statusbar:*`) remains for any Sky-side component that
+		// wants to mirror the state in a side panel.
+		//
+		// Statusbar bridge - implementation in `Bridge/InstallStatusbar.ts`.
+		// Returns the `SetOrUpdateEntry` helper so the dead-channel
+		// `sky://statusbar/create` listener (in
+		// `Bridge/InstallDeadChannelListeners.ts`) can route through the
+		// same `IStatusbarService.addEntry` path - which is why the two
+		// installs stay ordered inside this one thunk.
+		RunInstaller(
+			"InstallStatusbar+InstallDeadChannelListeners",
+			async () => {
+				const { SetOrUpdateEntry } = await (
+					await import("./Bridge/InstallStatusbar.js")
+				).default({ Register, GetServices });
 
-	// ---- Search result provider (Land-native) ----
-	// Implementation in `Bridge/InstallSearch.ts`. Routes Mountain's
-	// `search:findFiles` / `search:findInFiles` IPC handlers into the
-	// workbench's `ISearchService` so the Search viewlet shows results.
-	await (
-		await import("./Bridge/InstallSearch.js")
-	).default({ GetServices, Invoke: invoke });
+				// Batch 17 dead-channel listeners (tree-view, configuration,
+				// extensions, security, statusbar, terminal-pid, debug start +
+				// register). Implementation lives in
+				// `Bridge/InstallDeadChannelListeners.ts`; passing the
+				// install-time `Register` + `SetOrUpdateEntry` closures + the
+				// module-level `GetServices` keeps the helper decoupled from
+				// Bridge.ts's install-state while still wiring into the same
+				// Tauri listener registry.
+				await (
+					await import("./Bridge/InstallDeadChannelListeners.js")
+				).default({
+					Register,
+					GetServices,
+					SetOrUpdateEntry,
+				});
+			},
+		),
 
-	// ---- SCM bridge (diagnostic only) ----
-	// Mountain emits `sky://scm/{register,unregister,updateGroup}` when
-	// extensions call `vscode.scm.createSourceControl(...)`, but the stock
-	// VS Code workbench's `ISCMService` is populated by its own in-process
-	// `MainThreadSCM.$registerSourceControl` path and never sees our
-	// events. Until we route Cocoon's SCM traffic into the workbench's
-	// service directly, subscribe here so the channels have a consumer
-	// and the `sky-emit` DevLog tag stops reporting "0 listeners" drops -
-	// the `cel:scm:*` CustomEvents fan out for any Sky-side component
-	// that wants to mirror SCM state in its own UI.
-	// Implementation in `Bridge/InstallScm.ts`.
-	await (await import("./Bridge/InstallScm.js")).default({ Register });
+		// Commands bridge - implementation in `Bridge/InstallCommands.ts`.
+		RunInstaller("InstallCommands", async () =>
+			(await import("./Bridge/InstallCommands.js")).default({
+				Register,
+				GetServices,
+				Invoke: invoke,
+				ResolveUiRequest,
+			}),
+		),
 
-	// Progress + Terminal + Workspaces relays - implementation in
-	// `Bridge/InstallProgressTerminalWorkspace.ts`. Most of these are
-	// thin DOM-event re-dispatchers keyed by Mountain's emit channel.
-	await (
-		await import("./Bridge/InstallProgressTerminalWorkspace.js")
-	).default({
-		Register,
-		GetWorkbench,
-		ShowProgress,
-		UpdateProgress,
-		DismissProgress,
-	});
+		// Tasks, decorations, workspace edits, output-channel lifecycle,
+		// webview message/post-message/dispose relays.
+		RunInstaller("InstallTasksAndDecorations", async () =>
+			(await import("./Bridge/InstallTasksAndDecorations.js")).default({
+				Register,
+			}),
+		),
 
-	// ---- Notifications ----
-	// Cocoon's `vscode.window.show{Information,Warning,Error}Message` routes
-	// through Mountain's `Window.ShowMessage` effect which emits this event.
-	// Sky re-dispatches it as `cel:notification:show` so any notification UI
-	// (toast stack, status bar banner) can subscribe without needing a
-	// direct Tauri listener.
-	// Notification + Quickpick + Dialog + Lifecycle + StatusBarMessage +
-	// Languages relays - implementation in `Bridge/InstallSimpleRelays.ts`.
-	// All channels in this group are 1:1 DOM-event re-dispatchers; the
-	// workbench's own MainThreadStatusBar already paints ephemeral
-	// messages through its native path when extensions call
-	// `$setStatusBarMessage`, so we don't dual-route there.
-	await (
-		await import("./Bridge/InstallSimpleRelays.js")
-	).default({
-		Register,
-	});
+		// ---- Search result provider (Land-native) ----
+		// Implementation in `Bridge/InstallSearch.ts`. Routes Mountain's
+		// `search:findFiles` / `search:findInFiles` IPC handlers into the
+		// workbench's `ISearchService` so the Search viewlet shows results.
+		RunInstaller("InstallSearch", async () =>
+			(await import("./Bridge/InstallSearch.js")).default({
+				GetServices,
+				Invoke: invoke,
+			}),
+		),
 
-	// Generic `sky://*` → `cel:*` fan-out for the long tail of channels
-	// that need only a DOM CustomEvent dispatch + consumer-presence
-	// log. Implementation in `Bridge/InstallFanOut.ts`. Channel set
-	// is sourced from Wind's `SkyEvent` table (single source of truth
-	// mirroring Mountain's Rust enum).
-	await (
-		await import("./Bridge/InstallFanOut.js")
-	).default({
-		Register,
-		Channels: [
-			SkyEvent.DiagnosticsChanged,
-			SkyEvent.ThemeChange,
-			SkyEvent.TreeViewDispose,
-			SkyEvent.TreeViewCreate,
-			SkyEvent.TreeViewRefresh,
-			SkyEvent.TestRegistered,
-			SkyEvent.SCMProviderAdded,
-			SkyEvent.SCMProviderRemoved,
-			SkyEvent.DocumentsOpen,
-			SkyEvent.DocumentsSaved,
-			SkyEvent.DebugStop,
-			SkyEvent.TerminalClosed,
-			SkyEvent.TerminalOpened,
-			SkyEvent.NativeOpenExternal,
-			SkyEvent.TaskTerminate,
-			SkyEvent.EditorApplyEdits,
-			SkyEvent.EditorOpenDocument,
-			SkyEvent.EditorSaveAll,
-			SkyEvent.OutputReplace,
-			SkyEvent.OutputReveal,
-			SkyEvent.StatusBarCreate,
-			SkyEvent.StatusBarDispose,
-			SkyEvent.StatusBarDisposeEntry,
-			SkyEvent.StatusBarSetEntry,
-			SkyEvent.WebviewSetHTML,
-		],
-		Tracking: {
-			HasConsumer: (DomEvent) => _CelConsumers.has(DomEvent),
-			Log: (DomEvent, HasConsumer) =>
-				_CelDispatchLog(DomEvent, HasConsumer),
-		},
-	});
+		// ---- SCM bridge (diagnostic only) ----
+		// Mountain emits `sky://scm/{register,unregister,updateGroup}` when
+		// extensions call `vscode.scm.createSourceControl(...)`, but the stock
+		// VS Code workbench's `ISCMService` is populated by its own in-process
+		// `MainThreadSCM.$registerSourceControl` path and never sees our
+		// events. Until we route Cocoon's SCM traffic into the workbench's
+		// service directly, subscribe here so the channels have a consumer
+		// and the `sky-emit` DevLog tag stops reporting "0 listeners" drops -
+		// the `cel:scm:*` CustomEvents fan out for any Sky-side component
+		// that wants to mirror SCM state in its own UI.
+		// Implementation in `Bridge/InstallScm.ts`.
+		RunInstaller("InstallScm", async () =>
+			(await import("./Bridge/InstallScm.js")).default({ Register }),
+		),
 
-	// ---- Diagnostics → IMarkerService bridge ----
-	// Implementation in `Bridge/InstallDiagnostics.ts`. Translates
-	// Mountain's `sky://diagnostics/changed` payload into
-	// `IMarkerService.changeOne` calls so the editor paints squiggles
-	// and the Problems panel is populated.
-	await (
-		await import("./Bridge/InstallDiagnostics.js")
-	).default({ Register, GetServices, Invoke: invoke });
+		// Progress + Terminal + Workspaces relays - implementation in
+		// `Bridge/InstallProgressTerminalWorkspace.ts`. Most of these are
+		// thin DOM-event re-dispatchers keyed by Mountain's emit channel.
+		RunInstaller("InstallProgressTerminalWorkspace", async () =>
+			(
+				await import("./Bridge/InstallProgressTerminalWorkspace.js")
+			).default({
+				Register,
+				GetWorkbench,
+				ShowProgress,
+				UpdateProgress,
+				DismissProgress,
+			}),
+		),
 
-	// ---- Tree-view data bridge ----
-	// Implementation in `Bridge/InstallTreeView.ts`. Attaches a
-	// `ITreeView.dataProvider` that calls `tree:getChildren` via
-	// `MountainIPCInvoke`, so extension-registered tree views render
-	// in the workbench's native panel. Also wires `cel:tree-view:*`
-	// DOM event listeners for refresh and dispose.
-	if (typeof document !== "undefined") {
-		await (
-			await import("./Bridge/InstallTreeView.js")
-		).default({ GetServices, Invoke: invoke });
-	}
+		// ---- Notifications ----
+		// Cocoon's `vscode.window.show{Information,Warning,Error}Message` routes
+		// through Mountain's `Window.ShowMessage` effect which emits this event.
+		// Sky re-dispatches it as `cel:notification:show` so any notification UI
+		// (toast stack, status bar banner) can subscribe without needing a
+		// direct Tauri listener.
+		// Notification + Quickpick + Dialog + Lifecycle + StatusBarMessage +
+		// Languages relays - implementation in `Bridge/InstallSimpleRelays.ts`.
+		// All channels in this group are 1:1 DOM-event re-dispatchers; the
+		// workbench's own MainThreadStatusBar already paints ephemeral
+		// messages through its native path when extensions call
+		// `$setStatusBarMessage`, so we don't dual-route there.
+		RunInstaller("InstallSimpleRelays", async () =>
+			(await import("./Bridge/InstallSimpleRelays.js")).default({
+				Register,
+			}),
+		),
 
-	// Debug + custom-editor channel relays - implementation in
-	// `Bridge/InstallDebug.ts`. All nine channels are pure DOM-event
-	// re-dispatchers; the workbench's own IDebugService /
-	// ICustomEditorService handle the underlying flows through stock
-	// VS Code internals.
-	await (
-		await import("./Bridge/InstallDebug.js")
-	).default({ Register, GetServices });
+		// Generic `sky://*` → `cel:*` fan-out for the long tail of channels
+		// that need only a DOM CustomEvent dispatch + consumer-presence
+		// log. Implementation in `Bridge/InstallFanOut.ts`. Channel set
+		// is sourced from Wind's `SkyEvent` table (single source of truth
+		// mirroring Mountain's Rust enum).
+		RunInstaller("InstallFanOut", async () =>
+			(await import("./Bridge/InstallFanOut.js")).default({
+				Register,
+				Channels: [
+					SkyEvent.DiagnosticsChanged,
+					SkyEvent.ThemeChange,
+					SkyEvent.TreeViewDispose,
+					SkyEvent.TreeViewCreate,
+					SkyEvent.TreeViewRefresh,
+					SkyEvent.TestRegistered,
+					SkyEvent.SCMProviderAdded,
+					SkyEvent.SCMProviderRemoved,
+					SkyEvent.DocumentsOpen,
+					SkyEvent.DocumentsSaved,
+					SkyEvent.DebugStop,
+					SkyEvent.TerminalClosed,
+					SkyEvent.TerminalOpened,
+					SkyEvent.NativeOpenExternal,
+					SkyEvent.TaskTerminate,
+					SkyEvent.EditorApplyEdits,
+					SkyEvent.EditorOpenDocument,
+					SkyEvent.EditorSaveAll,
+					SkyEvent.OutputReplace,
+					SkyEvent.OutputReveal,
+					SkyEvent.StatusBarCreate,
+					SkyEvent.StatusBarDispose,
+					SkyEvent.StatusBarDisposeEntry,
+					SkyEvent.StatusBarSetEntry,
+					SkyEvent.WebviewSetHTML,
+				],
+				Tracking: {
+					HasConsumer: (DomEvent) => _CelConsumers.has(DomEvent),
+					Log: (DomEvent, HasConsumer) =>
+						_CelDispatchLog(DomEvent, HasConsumer),
+				},
+			}),
+		),
 
-	// ---- Webview extensions ----
-	// Implementation in `Bridge/InstallWebview.ts`. Covers
-	// `sky://webview/create`, `sky://webview/set-html`,
-	// `sky://webview/updateView`, `sky://webview/postMessage`,
-	// `sky://webview/registerView`, `sky://webview/unregisterView`,
-	// `sky://webview/registerCustomEditor`,
-	// `sky://webview/unregisterCustomEditor`.
-	await (
-		await import("./Bridge/InstallWebview.js")
-	).default({ Register, ApplyHtmlToWebview, Invoke: invoke });
+		// ---- Diagnostics → IMarkerService bridge ----
+		// Implementation in `Bridge/InstallDiagnostics.ts`. Translates
+		// Mountain's `sky://diagnostics/changed` payload into
+		// `IMarkerService.changeOne` calls so the editor paints squiggles
+		// and the Problems panel is populated.
+		RunInstaller("InstallDiagnostics", async () =>
+			(await import("./Bridge/InstallDiagnostics.js")).default({
+				Register,
+				GetServices,
+				Invoke: invoke,
+			}),
+		),
 
-	// ---- Editor operations ----
-	// Implementation in `Bridge/InstallEditorOperations.ts`. Covers
-	// `sky://decoration/set-ranges`, `sky://editor/apply-text-edits`,
-	// active-editor/selection push, and `sky://editor/revealRange`.
-	await (
-		await import("./Bridge/InstallEditorOperations.js")
-	).default({ Register, GetServices, Invoke: invoke });
+		// ---- Tree-view data bridge ----
+		// Implementation in `Bridge/InstallTreeView.ts`. Attaches a
+		// `ITreeView.dataProvider` that calls `tree:getChildren` via
+		// `MountainIPCInvoke`, so extension-registered tree views render
+		// in the workbench's native panel. Also wires `cel:tree-view:*`
+		// DOM event listeners for refresh and dispose.
+		RunInstaller("InstallTreeView", async () => {
+			if (typeof document === "undefined") return;
+
+			await (
+				await import("./Bridge/InstallTreeView.js")
+			).default({ GetServices, Invoke: invoke });
+		}),
+
+		// Debug + custom-editor channel relays - implementation in
+		// `Bridge/InstallDebug.ts`. All nine channels are pure DOM-event
+		// re-dispatchers; the workbench's own IDebugService /
+		// ICustomEditorService handle the underlying flows through stock
+		// VS Code internals.
+		RunInstaller("InstallDebug", async () =>
+			(await import("./Bridge/InstallDebug.js")).default({
+				Register,
+				GetServices,
+			}),
+		),
+
+		// ---- Webview extensions ----
+		// Implementation in `Bridge/InstallWebview.ts`. Covers
+		// `sky://webview/create`, `sky://webview/set-html`,
+		// `sky://webview/updateView`, `sky://webview/postMessage`,
+		// `sky://webview/registerView`, `sky://webview/unregisterView`,
+		// `sky://webview/registerCustomEditor`,
+		// `sky://webview/unregisterCustomEditor`.
+		RunInstaller("InstallWebview", async () =>
+			(await import("./Bridge/InstallWebview.js")).default({
+				Register,
+				ApplyHtmlToWebview,
+				Invoke: invoke,
+			}),
+		),
+
+		// ---- Editor operations ----
+		// Implementation in `Bridge/InstallEditorOperations.ts`. Covers
+		// `sky://decoration/set-ranges`, `sky://editor/apply-text-edits`,
+		// active-editor/selection push, and `sky://editor/revealRange`.
+		RunInstaller("InstallEditorOperations", async () =>
+			(await import("./Bridge/InstallEditorOperations.js")).default({
+				Register,
+				GetServices,
+				Invoke: invoke,
+			}),
+		),
+
+		// ---- UI dialogs / notifications ----
+		// Implementation in `Bridge/InstallUiRequests.ts`. Handles
+		// `sky://ui/show-message-request`,
+		// `sky://ui/show-input-box-request`,
+		// `sky://ui/show-quick-pick-request`,
+		// `sky://ui/show-message-with-actions-request`.
+		RunInstaller("InstallUiRequests", async () =>
+			(await import("./Bridge/InstallUiRequests.js")).default({
+				Register,
+				ShowNotification,
+				ResolveUiRequest,
+			}),
+		),
+	]);
 
 	// ---- Inline completions (Copilot / Roo ghost text) ----
 	// Registers a Land InlineCompletionsProvider with Monaco's
@@ -826,32 +938,6 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	// ---- Native ----
 	await Register("sky://native/openExternal", ({ url }: any) => {
 		if (url) window.open(url, "_blank", "noopener,noreferrer");
-	});
-
-	// ---- UI dialogs / notifications ----
-	// Implementation in `Bridge/InstallUiRequests.ts`. Handles
-	// `sky://ui/show-message-request`,
-	// `sky://ui/show-input-box-request`,
-	// `sky://ui/show-quick-pick-request`,
-	// `sky://ui/show-message-with-actions-request`.
-	await (
-		await import("./Bridge/InstallUiRequests.js")
-	).default({ Register, ShowNotification, ResolveUiRequest });
-
-	// Batch 17 dead-channel listeners (tree-view, configuration,
-	// extensions, security, statusbar, terminal-pid, debug start +
-	// register). Implementation lives in
-	// `Bridge/InstallDeadChannelListeners.ts`; passing the install-time
-	// `Register` + `SetOrUpdateEntry` closures + the module-level
-	// `GetServices` keeps the helper decoupled from Bridge.ts's
-	// install-state while still wiring into the same Tauri listener
-	// registry.
-	await (
-		await import("./Bridge/InstallDeadChannelListeners.js")
-	).default({
-		Register,
-		GetServices,
-		SetOrUpdateEntry,
 	});
 
 	// Cleanup helper (call on Tauri window close)

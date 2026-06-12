@@ -24,7 +24,7 @@
 				<picture>
 					<source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/github/stars/CodeEditorLand/Sky?style=flat&label=Star&logo=github&color=black&labelColor=black&logoColor=white&logoWidth=0" />
 					<source media="(prefers-color-scheme: light)" srcset="https://img.shields.io/github/stars/CodeEditorLand/Sky?style=flat&label=Star&logo=github&color=white&labelColor=white&logoColor=black&logoWidth=0" />
-					<img src="https://img.shields.io/github/stars/CodeEditorLand/Sky?style=flat&label=Star&logo=github&color=black&labelColor=black&logoColor=white&logoWidth=0" alt="Star" />
+					<img src="https://img.shields.io/github/stars/CodeEditorLand/Sky?style=flat&label=Star&logo=github&color=black&labelColor=black&logoColor=white&logoWidth=0" alt="Star" title="Star" />
 				</picture>
 			</a>
 			<br />
@@ -53,6 +53,8 @@ from `Mountain` through `Wind` into the DOM, not the other way around."_
 [![NPM Version](https://img.shields.io/npm/v/@codeeditorland/sky.svg)](https://www.npmjs.com/package/@codeeditorland/sky)
 [![Astro Version](https://img.shields.io/badge/Astro-5.x-blue.svg)](https://www.npmjs.com/package/astro)
 [![Effect Version](https://img.shields.io/badge/Effect-3.x-blueviolet.svg)](https://www.npmjs.com/package/effect)
+
+**[@codeeditorland/sky](https://www.npmjs.com/package/@codeeditorland/sky)**&#x2001;📦
 
 ---
 
@@ -137,7 +139,7 @@ and `@playform/inline` integrate with the ~1,450-line
 
 ---
 
-## System Architecture&#x2001;
+## System Architecture
 
 ```mermaid
 graph LR
@@ -413,6 +415,37 @@ import MountainWorkbench from "../Workbench/Mountain.astro";
 	</body>
 </html>
 ```
+
+---
+
+## Security&#x2001;🔒
+
+Sky enforces security at multiple layers:
+
+| Layer | Mechanism |
+|-------|-----------|
+| **Content Security Policy** | Strict CSP enforced via `Base.astro` layout, limiting script sources and inline execution |
+| **Protocol Boundary** | `sky://` event channels segregate UI and backend communication; no direct DOM access from Rust |
+| **WKWebView Sandbox** | macOS WebView process isolation with no filesystem or network access beyond Tauri grants |
+| **Dependency Integrity** | All npm packages pinned via `pnpm-lock.yaml`; `pnpm audit` runs in CI |
+| **Astro Build** | Static generation eliminates server-side rendering attack surface; no runtime Node.js in production |
+| **Tauri CSP** | Tauri's built-in Content Security Policy headers restrict WebView capabilities |
+
+---
+
+## Compatibility
+
+Sky is designed to be compatible with:
+
+| Target | Integration |
+|--------|-------------|
+| **Wind** 🌬️ | Consumes `Effect`-`TS` service layer directly within the same Tauri WebView |
+| **Mountain** ⛰️ | Connects via `SkyBridge` `sky://` Tauri events and `invoke` IPC |
+| **Cocoon** 🦋 | Shares the Tauri WebView; correlated frontend element for extension hosting |
+| **Output** 📦 | Loads VS Code `workbench.js` and `web.main.js` bundles from `@codeeditorland/output` |
+| **Worker** ⚙️ | Integrates service worker for caching, offline support, and dynamic CSS loading |
+| **VS Code Extensions** | Renders extension-contributed UI (webviews, status bar items, tree views) with native fidelity |
+| **Tauri v2** | Built against Tauri v2 API for window management and IPC |
 
 ---
 

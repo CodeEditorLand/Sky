@@ -695,6 +695,23 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			(await import("./Bridge/InstallScm.js")).default({ Register }),
 		),
 
+		// ---- Comments bridge ----
+		// Cocoon's `vscode.comments.createCommentController(id, label)` keeps
+		// thread state in `Context.ExtensionRegistry`. When comment threads are
+		// created/updated/disposed, Mountain forwards the data via
+		// `sky://comments/*` channels. This bridge dispatches `cel:comments:*`
+		// DOM CustomEvents and probes `ICommentService` in `__CEL_SERVICES__`.
+		// If `ICommentService` is not exposed (current state), the bridge logs
+		// the gap and only dispatches DOM events. Once the workbench accessor
+		// plugin exposes `ICommentService`, inline gutter balloons and the
+		// comment-pane will render without code changes.
+		// Implementation in `Bridge/InstallComments.ts`.
+		RunInstaller("InstallComments", async () =>
+			(await import("./Bridge/InstallComments.js")).default({
+				Register,
+			}),
+		),
+
 		// Progress + Terminal + Workspaces relays - implementation in
 		// `Bridge/InstallProgressTerminalWorkspace.ts`. Most of these are
 		// thin DOM-event re-dispatchers keyed by Mountain's emit channel.

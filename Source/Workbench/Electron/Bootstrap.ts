@@ -40,8 +40,6 @@ if (import.meta.env["Render"] === "false") {
 		const { runBootstrap } =
 			await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 
-		const { Effect } = await import("effect");
-
 		const BootstrapResult: BootstrapResult = await runBootstrap({
 			skipHealthCheck: true,
 			debugMode: true,

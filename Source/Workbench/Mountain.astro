@@ -96,16 +96,13 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 		}
 	</script>
 
-	<!-- Wind Effect-TS Bootstrap -->
+	<!-- Wind Bootstrap -->
 	<script type="module">
 		performance.mark("land:mountain:bootstrap:start");
 		try {
 			const { runBootstrap } =
 				await import("@codeeditorland/wind/Target/Effect/Bootstrap");
-			const { Effect } = await import("effect");
-			await Effect.runPromise(
-				runBootstrap({ skipHealthCheck: true, debugMode: true }),
-			);
+			await runBootstrap({ skipHealthCheck: true, debugMode: true });
 			performance.mark("land:mountain:bootstrap:done");
 		} catch {
 			performance.mark("land:mountain:bootstrap:error");

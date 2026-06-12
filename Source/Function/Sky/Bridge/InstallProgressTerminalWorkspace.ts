@@ -191,6 +191,10 @@ export default async (Dependencies: {
 	});
 
 	// `sky://progress/end` is a separate SkyEvent (SkyEvent::ProgressEnd)
+	// Route cancellable progress through the workbench's `IProgressService.withProgress`
+	// directly so the notification Cancel button triggers a `progress.cancel` notification
+	// to the extension host via Cocoon. Existing cancellable entries are tracked in
+	// CancellableProgress for update/complete/end dispatch, mirroring the simple helpers.
 	// emitted by Mountain's Wind-IPC progress handlers. Without this handler
 	// Wind-initiated progress bars never dismiss in Sky.
 	await Register("sky://progress/end", ({ id }: any) => {

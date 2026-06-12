@@ -825,5 +825,15 @@ export default async (Dependencies: {
 				/* skip */
 			}
 		}
+
+		if (!Matched) {
+			Invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					`[SkyBridge] editor/revealRange: no editor matches ${Uri}`,
+				],
+			}).catch(() => {});
+		}
 	});
 };

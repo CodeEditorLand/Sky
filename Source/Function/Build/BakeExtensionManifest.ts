@@ -8,6 +8,8 @@ import { promises as Fs } from "node:fs";
 
 import type { AstroIntegration } from "astro";
 
+import { On } from "../Shared";
+
 interface ExtManifest {
 
 	name?: string;
@@ -147,6 +149,13 @@ const ScanRoot = async (Root: string): Promise<CachedExtension[]> => {
 	return Results;
 };
 
+// Dev-only re-scan debounce (module-level so it survives across the
+// watch-rebuild loop's repeated `astro:build:done` invocations in the
+// same process). Production builds always scan.
+let LastScanAt = 0;
+
+const RescanDebounceMs = 5_000;
+
 export default {
 
 	name: "BakeExtensionManifest",
@@ -158,6 +167,16 @@ export default {
 			const Home = homedir();
 
 			const Start = Date.now();
+
+			if (On && LastScanAt !== 0 && Start - LastScanAt < RescanDebounceMs) {
+				console.log(
+					"[BakeExtensionManifest] Skipping re-scan (last run <5s ago, dev only).",
+				);
+
+				return;
+			}
+
+			LastScanAt = Start;
 
 			const Roots = [
 				join(Target, "Static", "Application", "extensions"),
@@ -193,8 +212,15 @@ export default {
 
 			const All: CachedExtension[] = [];
 
-			for (const Root of Roots) {
-				for (const Ext of await ScanRoot(Root)) {
+			// Scan all roots in parallel; `Promise.all` preserves the
+			// `Roots` array order, so the Seen dedupe below stays
+			// order-stable (earlier roots win the id, as before).
+			const Scanned = await Promise.all(
+				Roots.map((Root) => ScanRoot(Root)),
+			);
+
+			for (const RootResults of Scanned) {
+				for (const Ext of RootResults) {
 					if (!Seen.has(Ext.id)) {
 						Seen.add(Ext.id);
 

@@ -956,6 +956,191 @@ export default defineConfig({
 				},
 			},
 		},
+		// PERF-23: Astro `prefetch` is off and no `<link rel="modulepreload">`
+		// hints are emitted, so the workbench boot chain (Preload →
+		// Polyfills → Bootstrap → Workbench → SkyBridge plus their static
+		// deps) is discovered one module-graph level at a time. Chunk
+		// filenames are hashed, so the hints are derived from the BUILT
+		// output instead of hardcoded names: for each workbench page, parse
+		// its `/_astro/*.js` entry scripts, collect their level-0 dynamic
+		// imports (the unconditional `await import()` boot chain in
+		// Layout.astro) plus all transitive STATIC imports, and inject one
+		// modulepreload link per chunk into the page <head>. Deeper dynamic
+		// imports are deliberately excluded - they may be conditional
+		// (sky-debug / telemetry / bundled-workbench megachunks).
+		//
+		// MUST be registered before CompressBundle: both hook
+		// `astro:build:done` (run in registration order) and CompressBundle
+		// bakes `.br` siblings for `.html` - injecting after it would leave
+		// stale compressed pages.
+		{
+			name: "InjectModulePreload",
+			hooks: {
+				"astro:build:done": async ({ dir }) => {
+					const TargetDir = fileURLToPath(dir);
+
+					const Pages = [
+						"index.html",
+
+						join("Electron", "index.html"),
+
+						join("Mountain", "index.html"),
+					];
+
+					const MaxPreloadLinks = 40;
+
+					const ReadChunk = async (RelativePath: string) => {
+						try {
+							return await readFile(
+								join(TargetDir, RelativePath),
+
+								"utf8",
+							);
+						} catch {
+							return null;
+						}
+					};
+
+					// Extract dep chunk paths (normalized to `_astro/<file>`)
+					// from a built chunk's text: Vite's `__vite__mapDeps`
+					// literal array, static sibling imports, and (for page
+					// entries only) literal dynamic imports.
+					const CollectDeps = (
+						Code: string,
+
+						IncludeDynamic: boolean,
+					): string[] => {
+						const Found = new globalThis.Set<string>();
+
+						for (const Match of Code.matchAll(
+							/m\.f=\[([^\]]*)\]/g,
+						)) {
+							for (const Dep of Match[1]!.matchAll(
+								/"([^"]+\.js)"/g,
+							)) {
+								Found.add(Dep[1]!);
+							}
+						}
+
+						for (const Match of Code.matchAll(
+							/from\s*['"](\.\/[^'"]+\.js)['"]/g,
+						)) {
+							Found.add(`_astro/${Match[1]!.slice(2)}`);
+						}
+
+						for (const Match of Code.matchAll(
+							/import\s*['"](\.\/[^'"]+\.js)['"]/g,
+						)) {
+							Found.add(`_astro/${Match[1]!.slice(2)}`);
+						}
+
+						if (IncludeDynamic) {
+							for (const Match of Code.matchAll(
+								/import\(['"](\.\/[^'"]+\.js)['"]\)/g,
+							)) {
+								Found.add(`_astro/${Match[1]!.slice(2)}`);
+							}
+						}
+
+						return [...Found];
+					};
+
+					for (const Page of Pages) {
+						const PagePath = join(TargetDir, Page);
+
+						if (!existsSync(PagePath)) {
+							continue;
+						}
+
+						let Html = await readFile(PagePath, "utf8");
+
+						// Idempotence guard for repeated build:done runs.
+						if (Html.includes('rel="modulepreload"')) {
+							continue;
+						}
+
+						const Entries = [
+							...Html.matchAll(
+								/<script type="module" src="\/(_astro\/[^"?]+\.js)"/g,
+							),
+						].map((Match) => Match[1]!);
+
+						if (Entries.length === 0) {
+							continue;
+						}
+
+						const Preload = new globalThis.Set<string>();
+
+						const Visited = new globalThis.Set<string>(Entries);
+
+						const Queue: { Path: string; Dynamic: boolean }[] =
+							Entries.map((Entry) => ({
+								Path: Entry,
+
+								Dynamic: true,
+							}));
+
+						while (
+							Queue.length > 0 &&
+							Preload.size < MaxPreloadLinks
+						) {
+							const Next = Queue.shift();
+
+							if (!Next) {
+								break;
+							}
+
+							const Code = await ReadChunk(Next.Path);
+
+							if (Code === null) {
+								continue;
+							}
+
+							for (const Dep of CollectDeps(
+								Code,
+
+								Next.Dynamic,
+							)) {
+								if (Preload.size >= MaxPreloadLinks) {
+									break;
+								}
+
+								if (!Visited.has(Dep)) {
+									Visited.add(Dep);
+
+									Preload.add(Dep);
+
+									Queue.push({
+										Path: Dep,
+
+										Dynamic: false,
+									});
+								}
+							}
+						}
+
+						if (Preload.size === 0) {
+							continue;
+						}
+
+						const Links = [...Preload]
+							.map(
+								(Dep) =>
+									`<link rel="modulepreload" href="/${Dep}" />`,
+							)
+							.join("");
+
+						Html = Html.replace("</head>", `${Links}</head>`);
+
+						await writeFile(PagePath, Html, "utf8");
+
+						console.log(
+							`[InjectModulePreload] ${Page}: injected ${Preload.size} modulepreload hint(s).`,
+						);
+					}
+				},
+			},
+		},
 		!On ? CompressBundle : null,
 		// BakeExtensionManifest runs in both dev and production so Mountain
 		// always gets a warm extension cache (count>0). It has built-in
@@ -1328,11 +1513,24 @@ export default defineConfig({
 					},
 				},
 			},
-			// Sourcemaps: inline in dev (On=true) for WKWebView DevTools usability;
-			// disabled in prod to avoid shipping 3×-larger bundle artifacts.
+			// Sourcemaps: sibling .map files in dev (On=true) for WKWebView
+			// DevTools usability; disabled in prod to avoid shipping
+			// 3×-larger bundle artifacts. Deliberately `true` and NOT
+			// "hidden": the `//# sourceMappingURL=` comment is what lets
+			// DevTools discover the sibling map through the land:// static
+			// server (which serves .map files); only the vscode-file://
+			// handler 204s .map requests, and that tree is built by esbuild,
+			// not this pipeline.
 			sourcemap: On ? true : false,
 			manifest: false,
-			minify: false,
+			// Minify Sky's own chunks in production with the terser config
+			// below (dev stays readable). Bundled profiles skip minify: in
+			// bundled mode the VS Code workbench itself is part of this
+			// Rollup graph (a ~44 MB chunk), so terser would add prohibitive
+			// build time and `drop_console` would strip VS Code's own
+			// logging. Non-bundled builds keep `vs/**` external (see the
+			// `external` fn above), so only Sky-authored chunks are touched.
+			minify: On || BundledActive ? false : "terser",
 			cssMinify: false,
 
 			terserOptions: On

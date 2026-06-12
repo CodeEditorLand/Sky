@@ -1,11 +1,12 @@
 /**
- * Debug + custom-editor channel relays. All eight channels in this
- * group are pure DOM-event re-dispatchers; the workbench's own
+ * Debug + custom-editor channel relays. The channels in the `Relays`
+ * array are pure DOM-event re-dispatchers; the workbench's own
  * `IDebugService` and `ICustomEditorService` already handle the
- * underlying flows through stock VS Code internals. The relays exist
- * so future Sky-side observers (debug-toolbar React component, code-
- * lens overlays for breakpoints, gitlens diff overlays for custom-
- * editor save events) can subscribe via
+ * underlying flows through stock VS Code internals. The two
+ * breakpoint channels additionally wire `IDebugService` directly.
+ * The relays exist so Sky-side observers (debug-toolbar React
+ * component, code-lens overlays for breakpoints, gitlens diff
+ * overlays for custom-editor save events) can subscribe via
  * `document.addEventListener("cel:debug:*" / "cel:customEditor:*")`
  * without each adding its own Tauri listener.
  *
@@ -51,7 +52,7 @@ const Relays: Array<readonly [string, Handler]> = [
 export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
 
-	GetServices?: () => Record<string, unknown> | null;
+	GetServices: () => Record<string, unknown> | null;
 }): Promise<void> => {
 	const { Register, GetServices } = Dependencies;
 
@@ -62,98 +63,94 @@ export default async (Dependencies: {
 	// Wire breakpoint changes to the workbench's IDebugService so breakpoint
 	// glyphs appear in the Monaco gutter when extensions call
 	// `vscode.debug.addBreakpoints()` / `removeBreakpoints()`.
-	if (GetServices) {
-		await Register("sky://debug/addBreakpoints", (Payload: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:debug:addBreakpoints", {
-					detail: Payload,
-				}),
-			);
+	await Register("sky://debug/addBreakpoints", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:addBreakpoints", {
+				detail: Payload,
+			}),
+		);
 
-			try {
-				const Services = GetServices();
+		try {
+			const Services = GetServices();
 
-				const DebugService = (Services as any)?.Debug;
+			const DebugService = (Services as any)?.Debug;
 
-				if (!DebugService?.addBreakpoints) return;
+			if (!DebugService?.addBreakpoints) return;
 
-				const Breakpoints = Array.isArray(Payload)
-					? Payload
-					: (Payload?.breakpoints ?? []);
+			const Breakpoints = Array.isArray(Payload)
+				? Payload
+				: (Payload?.breakpoints ?? []);
 
-				if (Breakpoints.length === 0) return;
+			if (Breakpoints.length === 0) return;
 
-				// Convert to workbench IBreakpoint shape
-				const Bps = Breakpoints.map((B: any) => {
-					const Uri = (Services as any)?.URI?.parse?.(
-						B?.location?.uri ?? B?.uri ?? "",
-					);
+			// Convert to workbench IBreakpoint shape
+			const Bps = Breakpoints.map((B: any) => {
+				const Uri = (Services as any)?.URI?.parse?.(
+					B?.location?.uri ?? B?.uri ?? "",
+				);
 
-					return {
-						uri: Uri,
-						lineNumber:
-							B?.location?.range?.start?.line != null
-								? B.location.range.start.line + 1
-								: (B?.lineNumber ?? 1),
-						column:
-							B?.location?.range?.start?.character != null
-								? B.location.range.start.character + 1
-								: undefined,
-						enabled: B?.enabled !== false,
-						condition: B?.condition,
-						hitCondition: B?.hitCondition,
-						logMessage: B?.logMessage,
-					};
-				}).filter((B: any) => B.uri);
+				return {
+					uri: Uri,
+					lineNumber:
+						B?.location?.range?.start?.line != null
+							? B.location.range.start.line + 1
+							: (B?.lineNumber ?? 1),
+					column:
+						B?.location?.range?.start?.character != null
+							? B.location.range.start.character + 1
+							: undefined,
+					enabled: B?.enabled !== false,
+					condition: B?.condition,
+					hitCondition: B?.hitCondition,
+					logMessage: B?.logMessage,
+				};
+			}).filter((B: any) => B.uri);
 
-				if (Bps.length > 0) {
-					void DebugService.addBreakpoints(Bps).catch(() => {});
-				}
-			} catch {
-				/* non-fatal */
+			if (Bps.length > 0) {
+				void DebugService.addBreakpoints(Bps).catch(() => {});
 			}
-		});
+		} catch {
+			/* non-fatal */
+		}
+	});
 
-		await Register("sky://debug/removeBreakpoints", (Payload: any) => {
-			document.dispatchEvent(
-				new CustomEvent("cel:debug:removeBreakpoints", {
-					detail: Payload,
-				}),
-			);
+	await Register("sky://debug/removeBreakpoints", (Payload: any) => {
+		document.dispatchEvent(
+			new CustomEvent("cel:debug:removeBreakpoints", {
+				detail: Payload,
+			}),
+		);
 
-			try {
-				const Services = GetServices();
+		try {
+			const Services = GetServices();
 
-				const DebugService = (Services as any)?.Debug;
+			const DebugService = (Services as any)?.Debug;
 
-				if (!DebugService?.removeBreakpoints) return;
+			if (!DebugService?.removeBreakpoints) return;
 
-				const Breakpoints = Array.isArray(Payload)
-					? Payload
-					: (Payload?.breakpoints ?? []);
+			const Breakpoints = Array.isArray(Payload)
+				? Payload
+				: (Payload?.breakpoints ?? []);
 
-				if (Breakpoints.length === 0) return;
+			if (Breakpoints.length === 0) return;
 
-				// Remove by URI+line matching
-				const Existing: any[] =
-					DebugService.getModel?.()?.getBreakpoints?.() ?? [];
+			// Remove by URI+line matching
+			const Existing: any[] =
+				DebugService.getModel?.()?.getBreakpoints?.() ?? [];
 
-				const ToRemove = Existing.filter((Bp: any) => {
-					return Breakpoints.some((B: any) => {
-						const UriStr = B?.location?.uri ?? B?.uri ?? "";
+			const ToRemove = Existing.filter((Bp: any) => {
+				return Breakpoints.some((B: any) => {
+					const UriStr = B?.location?.uri ?? B?.uri ?? "";
 
-						return Bp.uri?.toString?.() === UriStr;
-					});
+					return Bp.uri?.toString?.() === UriStr;
 				});
+			});
 
-				if (ToRemove.length > 0) {
-					void DebugService.removeBreakpoints(ToRemove).catch(
-						() => {},
-					);
-				}
-			} catch {
-				/* non-fatal */
+			if (ToRemove.length > 0) {
+				void DebugService.removeBreakpoints(ToRemove).catch(() => {});
 			}
-		});
-	}
+		} catch {
+			/* non-fatal */
+		}
+	});
 };

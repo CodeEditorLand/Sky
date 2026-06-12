@@ -70,6 +70,18 @@ export default async (Dependencies: {
 
 	const StatusbarAccessors = new Map<string, StatusbarAccessor>();
 
+	// Colors arrive as a plain string, a `ThemeColor`-shaped `{ id }`, or a
+	// serialized instance carrying `_id`. The workbench's `isThemeColor`
+	// check requires a string `id` property, so re-shape before handing
+	// the entry to `IStatusbarService`.
+	const NormalizeColor = (Raw: any): unknown => {
+		if (typeof Raw === "string") return Raw;
+
+		const Id = Raw?.id ?? Raw?._id;
+
+		return typeof Id === "string" ? { id: Id } : undefined;
+	};
+
 	const BuildEntry = (Payload: any): StatusbarEntry => ({
 		name: Payload?.name ?? Payload?.extension ?? "extension",
 		text: Payload?.text ?? "",
@@ -78,8 +90,8 @@ export default async (Dependencies: {
 		ariaLabel:
 			Payload?.accessibilityInformation?.label ?? Payload?.text ?? "",
 		role: Payload?.accessibilityInformation?.role,
-		backgroundColor: Payload?.backgroundColor,
-		color: Payload?.color,
+		backgroundColor: NormalizeColor(Payload?.backgroundColor),
+		color: NormalizeColor(Payload?.color),
 	});
 
 	const AlignmentToNumber = (Raw: any): number => {
@@ -100,6 +112,15 @@ export default async (Dependencies: {
 		);
 
 		if (!Id) return;
+
+		// `item.hide()` arrives as `visible: false` - stock VS Code maps
+		// hide to `$disposeEntry`, so drop the accessor; the next
+		// `show()` pushes a full snapshot and re-adds the entry.
+		if (Payload?.visible === false) {
+			DisposeEntry(Payload);
+
+			return;
+		}
 
 		const Existing = StatusbarAccessors.get(Id);
 

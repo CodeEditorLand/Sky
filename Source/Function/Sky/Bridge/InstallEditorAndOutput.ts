@@ -71,6 +71,163 @@ export default async (Dependencies: {
 	const SwallowCatch = (Promise: { catch?: (h: () => void) => void }) =>
 		Promise?.catch?.(() => undefined);
 
+	// Shared apply path for `sky://workspace/applyEdit` and
+	// `sky://editor/applyEdits`: IBulkEditService when exposed (handles
+	// rename/create/delete too), direct Monaco model edits as fallback.
+	// Entries carry `{ resource|uri, edits|textEdits }`; ranges may be
+	// VS Code 0-based (`_start._line`) or Monaco 1-based
+	// (`startLineNumber`).
+	const ApplyEntriesToModels = async (
+		Entries: any[],
+	): Promise<{ Bulk: boolean; Applied: boolean }> => {
+		const Services: any = (globalThis as any).__CEL_SERVICES__;
+
+		// Prefer IBulkEditService when accessible (handles rename/create/delete too).
+		const BulkEdit = Services?.BulkEdit ?? Services?.bulkEditService;
+
+		if (
+			BulkEdit &&
+			typeof BulkEdit.apply === "function" &&
+			Entries.length > 0
+		) {
+			try {
+				// Build VS Code resource text edit array for IBulkEditService.
+				const ExtractUriForBulk = (Raw: any): any => {
+					if (!Raw) return null;
+
+					// Try to hydrate into a real URI using workbench's URI ctor.
+					const UriCtor = Services?.URI ?? (globalThis as any).__cel_URI;
+
+					const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
+
+					const Authority = Raw._authority ?? Raw.authority ?? "";
+
+					const Path = Raw._path ?? Raw.path ?? "";
+
+					if (UriCtor?.from)
+						return UriCtor.from({
+							scheme: Scheme,
+							authority: Authority,
+							path: Path,
+						});
+
+					return Raw;
+				};
+
+				const ResourceEdits = Entries.filter(
+					(E: any) => E?.resource || E?.uri,
+				).map((E: any) => ({
+					resource: ExtractUriForBulk(E.resource ?? E.uri),
+					edits: (E.edits ?? E.textEdits ?? []) as any[],
+				}));
+
+				await BulkEdit.apply(ResourceEdits);
+
+				return { Bulk: true, Applied: true };
+			} catch {
+				// Fall through to direct model path.
+			}
+		}
+
+		// Direct model path: find Monaco model by URI, execute edits.
+		const ModelService = Services?.Models ?? Services?.ModelService;
+
+		const ExtractUriString = (Raw: any): string | null => {
+			if (!Raw) return null;
+
+			if (typeof Raw === "string") return Raw;
+
+			// Real toString method (not Object.prototype.toString)
+			if (
+				typeof Raw.toString === "function" &&
+				Raw.toString !== Object.prototype.toString
+			) {
+				const S = Raw.toString();
+
+				if (S && S !== "[object Object]") return S;
+			}
+
+			// Serialized vscode.Uri: has _scheme, _path etc.
+			const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
+
+			const Authority = Raw._authority ?? Raw.authority ?? "";
+
+			const Path = Raw._path ?? Raw.path ?? Raw.fsPath ?? "";
+
+			if (Path) return `${Scheme}://${Authority}${Path}`;
+
+			return null;
+		};
+
+		// Handle VS Code 0-based ranges (_start._line from extHostTypes)
+		// and already-1-based Monaco ranges (startLineNumber).
+		const ExtL2 = (Val: any, Fb: number): number =>
+			typeof Val?._line === "number"
+				? Val._line + 1
+				: typeof Val?.line === "number"
+					? Val.line + 1
+					: Fb;
+
+		const ExtC2 = (Val: any, Fb: number): number =>
+			typeof Val?._character === "number"
+				? Val._character + 1
+				: typeof Val?.character === "number"
+					? Val.character + 1
+					: Fb;
+
+		let Applied = false;
+
+		for (const Entry of Entries) {
+			const UriStr =
+				ExtractUriString(Entry?.resource) ??
+				ExtractUriString(Entry?.uri);
+
+			const TextEdits: any[] = Array.isArray(Entry?.edits)
+				? Entry.edits
+				: Array.isArray(Entry?.textEdits)
+					? Entry.textEdits
+					: [];
+
+			if (!UriStr || !TextEdits.length) continue;
+
+			try {
+				const Model =
+					ModelService?.getModel?.({
+						toString: () => UriStr,
+					}) ?? ModelService?.getModel?.(UriStr);
+
+				if (!Model) continue;
+
+				const Ops = TextEdits.map((E: any) => {
+					const R = E.range ?? E._range ?? {};
+
+					const S = R._start ?? R.start ?? {};
+
+					const En = R._end ?? R.end ?? {};
+
+					return {
+						range: {
+							startLineNumber: R.startLineNumber ?? ExtL2(S, 1),
+							startColumn: R.startColumn ?? ExtC2(S, 1),
+							endLineNumber: R.endLineNumber ?? ExtL2(En, 1),
+							endColumn: R.endColumn ?? ExtC2(En, 1),
+						},
+						text: E.newText ?? E.text ?? "",
+						forceMoveMarkers: true,
+					};
+				});
+
+				Model.applyEdits?.(Ops);
+
+				Applied = true;
+			} catch {
+				/* skip bad entry */
+			}
+		}
+
+		return { Bulk: false, Applied };
+	};
+
 	await Register("sky://window/close-requested", async () => {
 		const Workbench = GetWorkbench();
 
@@ -244,8 +401,6 @@ export default async (Dependencies: {
 			if (!RequestIdentifier) return;
 
 			try {
-				const Services: any = (globalThis as any).__CEL_SERVICES__;
-
 				// Normalize WorkspaceEdit to a flat list of {resource, edits: TextEdit[]} entries.
 				// Handles multiple wire shapes:
 				//  1. { edits: [{resource|uri, edits|textEdits}] } - standard
@@ -383,155 +538,15 @@ export default async (Dependencies: {
 
 				const RawEdits = NormalizedEdits;
 
-				// Prefer IBulkEditService when accessible (handles rename/create/delete too).
-				const BulkEdit =
-					Services?.BulkEdit ?? Services?.bulkEditService;
+				const ApplyResult = await ApplyEntriesToModels(RawEdits);
 
-				if (
-					BulkEdit &&
-					typeof BulkEdit.apply === "function" &&
-					RawEdits.length > 0
-				) {
-					try {
-						// Build VS Code resource text edit array for IBulkEditService.
-						const ExtractUriForBulk = (Raw: any): any => {
-							if (!Raw) return null;
+				if (ApplyResult.Bulk) {
+					void ResolveUiRequest(RequestIdentifier, true);
 
-							// Try to hydrate into a real URI using workbench's URI ctor.
-							const UriCtor =
-								Services?.URI ?? (globalThis as any).__cel_URI;
-
-							const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
-
-							const Authority =
-								Raw._authority ?? Raw.authority ?? "";
-
-							const Path = Raw._path ?? Raw.path ?? "";
-
-							if (UriCtor?.from)
-								return UriCtor.from({
-									scheme: Scheme,
-									authority: Authority,
-									path: Path,
-								});
-
-							return Raw;
-						};
-
-						const ResourceEdits = RawEdits.filter(
-							(E: any) => E?.resource || E?.uri,
-						).map((E: any) => ({
-							resource: ExtractUriForBulk(E.resource ?? E.uri),
-							edits: E.edits as any[],
-						}));
-
-						await BulkEdit.apply(ResourceEdits);
-
-						void ResolveUiRequest(RequestIdentifier, true);
-
-						return;
-					} catch {
-						// Fall through to direct model path.
-					}
+					return;
 				}
 
-				// Direct model path: find Monaco model by URI, execute edits.
-				const ModelService = Services?.Models ?? Services?.ModelService;
-
-				const ExtractUriString = (Raw: any): string | null => {
-					if (!Raw) return null;
-
-					if (typeof Raw === "string") return Raw;
-
-					// Real toString method (not Object.prototype.toString)
-					if (
-						typeof Raw.toString === "function" &&
-						Raw.toString !== Object.prototype.toString
-					) {
-						const S = Raw.toString();
-
-						if (S && S !== "[object Object]") return S;
-					}
-
-					// Serialized vscode.Uri: has _scheme, _path etc.
-					const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
-
-					const Authority = Raw._authority ?? Raw.authority ?? "";
-
-					const Path = Raw._path ?? Raw.path ?? Raw.fsPath ?? "";
-
-					if (Path) return `${Scheme}://${Authority}${Path}`;
-
-					return null;
-				};
-
-				let Applied = false;
-
-				for (const Entry of RawEdits) {
-					const UriStr =
-						ExtractUriString(Entry?.resource) ??
-						ExtractUriString(Entry?.uri);
-
-					const TextEdits: any[] = Array.isArray(Entry?.edits)
-						? Entry.edits
-						: Array.isArray(Entry?.textEdits)
-							? Entry.textEdits
-							: [];
-
-					if (!UriStr || !TextEdits.length) continue;
-
-					try {
-						const Model =
-							ModelService?.getModel?.({
-								toString: () => UriStr,
-							}) ?? ModelService?.getModel?.(UriStr);
-
-						if (!Model) continue;
-
-						// Handle VS Code 0-based ranges (_start._line from extHostTypes)
-						// and already-1-based Monaco ranges (startLineNumber).
-						const ExtL2 = (Val: any, Fb: number): number =>
-							typeof Val?._line === "number"
-								? Val._line + 1
-								: typeof Val?.line === "number"
-									? Val.line + 1
-									: Fb;
-
-						const ExtC2 = (Val: any, Fb: number): number =>
-							typeof Val?._character === "number"
-								? Val._character + 1
-								: typeof Val?.character === "number"
-									? Val.character + 1
-									: Fb;
-
-						const Ops = TextEdits.map((E: any) => {
-							const R = E.range ?? E._range ?? {};
-
-							const S = R._start ?? R.start ?? {};
-
-							const En = R._end ?? R.end ?? {};
-
-							return {
-								range: {
-									startLineNumber:
-										R.startLineNumber ?? ExtL2(S, 1),
-									startColumn: R.startColumn ?? ExtC2(S, 1),
-									endLineNumber:
-										R.endLineNumber ?? ExtL2(En, 1),
-									endColumn: R.endColumn ?? ExtC2(En, 1),
-								},
-								text: E.newText ?? E.text ?? "",
-								forceMoveMarkers: true,
-							};
-						});
-
-						Model.applyEdits?.(Ops);
-
-						Applied = true;
-					} catch {
-						/* skip bad entry */
-					}
-				}
+				const Applied = ApplyResult.Applied;
 
 				// Fire-and-forget workbench file-ops (create/rename/delete).
 				// Collect from both Payload?.fileEdits (legacy) and _edits with _type=1.
@@ -762,105 +777,12 @@ export default async (Dependencies: {
 		}
 	});
 
-	await Register("sky://editor/applyEdits", ({ edits }: any) => {
+	// Fire-and-forget sibling of `sky://workspace/applyEdit` - same
+	// IBulkEditService / direct-model apply path, no round-trip resolve.
+	await Register("sky://editor/applyEdits", async ({ edits }: any) => {
 		if (!Array.isArray(edits) || !edits.length) return;
 
-		const Services: any = (globalThis as any).__CEL_SERVICES__;
-
-		const ModelService = Services?.Models ?? Services?.ModelService;
-
-		if (!ModelService) return;
-
-		const ExtractUriString = (Raw: any): string | null => {
-			if (!Raw) return null;
-
-			if (typeof Raw === "string") return Raw;
-
-			// Real toString method (not Object.prototype.toString)
-			if (
-				typeof Raw.toString === "function" &&
-				Raw.toString !== Object.prototype.toString
-			) {
-				const S = Raw.toString();
-
-				if (S && S !== "[object Object]") return S;
-			}
-
-			// Serialized vscode.Uri: has _scheme, _path etc.
-			const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
-
-			const Authority = Raw._authority ?? Raw.authority ?? "";
-
-			const Path = Raw._path ?? Raw.path ?? Raw.fsPath ?? "";
-
-			if (Path) return `${Scheme}://${Authority}${Path}`;
-
-			return null;
-		};
-
-		// Handle VS Code 0-based ranges (_start._line from extHostTypes)
-		// and already-1-based Monaco ranges (startLineNumber).
-		const ExtL2 = (Val: any, Fb: number): number =>
-			typeof Val?._line === "number"
-				? Val._line + 1
-				: typeof Val?.line === "number"
-					? Val.line + 1
-					: Fb;
-
-		const ExtC2 = (Val: any, Fb: number): number =>
-			typeof Val?._character === "number"
-				? Val._character + 1
-				: typeof Val?.character === "number"
-					? Val.character + 1
-					: Fb;
-
-		for (const Entry of edits) {
-			if (!Entry) continue;
-
-			const UriStr = ExtractUriString(Entry.uri ?? Entry.resource);
-
-			const TextEdits: any[] = Array.isArray(Entry?.edits)
-				? Entry.edits
-				: Array.isArray(Entry?.textEdits)
-					? Entry.textEdits
-					: [];
-
-			if (!UriStr || !TextEdits.length) continue;
-
-			try {
-				const Model =
-					ModelService?.getModel?.({
-						toString: () => UriStr,
-					}) ?? ModelService?.getModel?.(UriStr);
-
-				if (!Model) continue;
-
-				const Ops = TextEdits.map((E: any) => {
-					const R = E.range ?? E._range ?? {};
-
-					const S = R._start ?? R.start ?? {};
-
-					const En = R._end ?? R.end ?? {};
-
-					return {
-						range: {
-							startLineNumber:
-								R.startLineNumber ?? ExtL2(S, 1),
-							startColumn: R.startColumn ?? ExtC2(S, 1),
-							endLineNumber:
-								R.endLineNumber ?? ExtL2(En, 1),
-							endColumn: R.endColumn ?? ExtC2(En, 1),
-						},
-						text: E.newText ?? E.text ?? "",
-						forceMoveMarkers: true,
-					};
-				});
-
-				Model.applyEdits?.(Ops);
-			} catch {
-				/* skip bad entry */
-			}
-		}
+		await ApplyEntriesToModels(edits);
 	});
 
 	await Register("sky://output/create", (Payload: any) => {

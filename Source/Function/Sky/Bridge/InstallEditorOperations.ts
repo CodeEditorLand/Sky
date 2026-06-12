@@ -510,6 +510,54 @@ export default async (Dependencies: {
 		/* workbench events not yet available */
 	}
 
+	// ---- onDidSaveTextDocument (workbench in-editor saves) ----
+	// `ITextFileService` (exposed as `__CEL_SERVICES__.TextFile`) fires
+	// `files.onDidSave` when the workbench saves a model (Cmd+S, save-all,
+	// auto-save). The buffered save path (file:open / fd write / file:close)
+	// never reaches Mountain's `$acceptModelSaved` notification - only the
+	// unbuffered `file:writeFile` path fires it - so forward the save via
+	// the existing `textFile:save` wire method (stat-only save hint;
+	// `Model/TextfileSave.rs`).
+	try {
+		const Services = GetServices();
+
+		const TextFile = (Services as any)?.TextFile;
+
+		const OnDidSave = TextFile?.files?.onDidSave ?? TextFile?.onDidSave;
+
+		if (typeof OnDidSave === "function") {
+			OnDidSave((E: any) => {
+				try {
+					const Resource = E?.model?.resource ?? E?.resource;
+
+					const Uri = Resource?.toString?.() ?? null;
+
+					if (!Uri) return;
+
+					const VersionId =
+						E?.model?.textEditorModel?.getVersionId?.() ??
+						undefined;
+
+					Invoke("MountainIPCInvoke", {
+						method: "textFile:save",
+						params: [
+							{
+								external: Uri,
+								path: Resource?.path,
+								fsPath: Resource?.fsPath,
+								versionId: VersionId,
+							},
+						],
+					}).catch(() => {});
+				} catch {
+					/* swallow */
+				}
+			});
+		}
+	} catch {
+		/* ITextFileService not yet exposed */
+	}
+
 	// ---- onDidChangeTextEditorDiffInformation ----
 	// When the active editor pane is a diff editor (file vs git index,
 	// vs disk, vs HEAD, …), Monaco's diff widget exposes `onDidUpdateDiff`

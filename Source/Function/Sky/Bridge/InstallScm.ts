@@ -309,6 +309,10 @@ export default async (Dependencies: {
 
 				return Total;
 			});
+			// Mutable backing for `provider.commitTemplate` - updated from
+			// `sky://scm/provider/changed` payloads so the workbench commit
+			// input reflects the extension-set template.
+			let CommitTemplateValue = "";
 			const Provider = {
 				id: ScmId,
 				providerId: ScmId,
@@ -328,7 +332,9 @@ export default async (Dependencies: {
 				// code can call `.get()` / `.read()` / `.map(fn)` without
 				// crashing.
 				count: CountObservable,
-				commitTemplate: StaticObservable<string>(() => ""),
+				commitTemplate: StaticObservable<string>(
+					() => CommitTemplateValue,
+				),
 				contextValue: StaticObservable<string | undefined>(
 					() => undefined,
 				),
@@ -367,6 +373,13 @@ export default async (Dependencies: {
 			// Keep `ProviderGroupsList` reachable from the shim so
 			// the registerGroup handler can mutate it in place.
 			(Shim as any).ProviderGroupsList = ProviderGroupsList;
+			// Stash the provider's own ChangeEmitter and a commit-template
+			// setter so `sky://scm/provider/changed` can update the
+			// observable's backing value and fire the public change event.
+			(Shim as any).ChangeEmitter = ChangeEmitter;
+			(Shim as any).SetCommitTemplate = (Value: string) => {
+				CommitTemplateValue = Value;
+			};
 		} catch (Error) {
 			// Workbench rejected the shim provider (e.g. ITextModel
 			// could not be created on this profile, or `IModelService`
@@ -717,9 +730,30 @@ export default async (Dependencies: {
 			}
 		}
 
-		// Fire provider change event so SCM panel re-renders
+		// Update the mutable commit-template backing the provider's
+		// `commitTemplate` observable when the payload carries one
+		// (`SourceControlManagementProviderDTO.CommitTemplate`, camelCase
+		// on the wire).
+		const NewTemplate =
+			Payload?.provider?.commitTemplate ?? Payload?.commitTemplate;
+
+		if (typeof NewTemplate === "string") {
+			try {
+				(Shim as any).SetCommitTemplate?.(NewTemplate);
+			} catch {}
+		}
+
+		// Fire the shim's stored ChangeEmitter so the SCM panel re-renders;
+		// fall back to the workbench Emitter's private `_emitter` only when
+		// the stored handle is missing.
 		try {
-			(Shim as any).Provider?.onDidChange?._emitter?.fire?.();
+			const StoredEmitter = (Shim as any).ChangeEmitter;
+
+			if (typeof StoredEmitter?.fire === "function") {
+				StoredEmitter.fire();
+			} else {
+				(Shim as any).Provider?.onDidChange?._emitter?.fire?.();
+			}
 		} catch {}
 	});
 };

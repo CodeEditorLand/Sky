@@ -40,9 +40,7 @@
 // catches drift against Mountain's Rust `SkyEvent` enum at type-check
 // time (Wind's TS table is the TS mirror of Common/IPC/SkyEvent.rs).
 import SkyEvent from "@codeeditorland/wind/Target/IPC/SkyEvent.js";
-
 import { invoke } from "@tauri-apps/api/core";
-
 import { listen } from "@tauri-apps/api/event";
 
 // `cel:*` CustomEvent consumer-presence tracking lives in
@@ -50,7 +48,6 @@ import { listen } from "@tauri-apps/api/event";
 // the dispatch line at line ~1985 reads unchanged; the install
 // function below replaces both with the real bag.
 let _CelConsumers: { has: (Type: string) => boolean } = {
-
 	has: () => false,
 };
 
@@ -65,7 +62,6 @@ let _CelDispatchLog: (
 // waterfall. The placeholder pair above keeps dispatch sites working
 // (no consumer tracking, no log) until hydration completes.
 const InstallCelDispatchTracking = async (): Promise<void> => {
-
 	const Tracking = (await import("./Bridge/CelDispatchTracking.js")).default(
 		invoke,
 	);
@@ -88,14 +84,12 @@ const InstallCelDispatchTracking = async (): Promise<void> => {
  * function safe to call from any module-eval context.
  */
 function GetWorkbench(): {
-
 	commands: {
 		executeCommand(id: string, ...args: unknown[]): Promise<unknown>;
 	};
 
 	env: { openUri(target: unknown): Promise<boolean> };
 } | null {
-
 	try {
 		if (typeof window === "undefined") return null;
 
@@ -112,14 +106,12 @@ function GetWorkbench(): {
 // Method surfaces (`addEntry`, `executeCommand`, `registerCommand`) are
 // stable public API and survive the mangler pass.
 interface CelStatusbarEntryAccessor {
-
 	update(entry: unknown): void;
 
 	dispose(): void;
 }
 
 interface CelStatusbarService {
-
 	addEntry(
 		entry: unknown,
 
@@ -132,12 +124,10 @@ interface CelStatusbarService {
 }
 
 interface CelCommandService {
-
 	executeCommand<T = unknown>(id: string, ...args: unknown[]): Promise<T>;
 }
 
 interface CelCommandRegistry {
-
 	registerCommand(
 		id: string,
 
@@ -146,7 +136,6 @@ interface CelCommandRegistry {
 }
 
 interface CelSearchService {
-
 	// `SearchProviderType`: file=0, text=1, aiText=2. Schema is the URI
 	// scheme the provider answers for - "file" for local workspace content.
 	registerSearchResultProvider(
@@ -162,7 +151,6 @@ interface CelSearchService {
 // actually writes to (`dataProvider`) is typed - the rest is optional
 // read-only metadata the stock pane handles.
 interface CelTreeView {
-
 	dataProvider:
 		| undefined
 		| {
@@ -194,7 +182,6 @@ interface CelTreeView {
  * `__CEL_SERVICES__.URI` by `ExposeWorkbenchAccessor`.
  */
 interface CelUriCtor {
-
 	file(path: string): CelUri;
 
 	parse(value: string, strict?: boolean): CelUri;
@@ -215,7 +202,6 @@ interface CelUriCtor {
 }
 
 interface CelUri {
-
 	readonly scheme: string;
 
 	readonly authority: string;
@@ -246,7 +232,6 @@ interface CelUri {
 }
 
 interface CelServices {
-
 	Statusbar: CelStatusbarService;
 
 	Commands: CelCommandService;
@@ -263,7 +248,6 @@ interface CelServices {
 }
 
 function GetServices(): CelServices | null {
-
 	// SSR safety: `window` is undefined during Astro's pre-render
 	// pass. Returning `null` lets every caller keep its existing
 	// `if (!Services) return;` early-return contract.
@@ -282,7 +266,6 @@ function GetServices(): CelServices | null {
 // idle time from `_InstallSkyBridgeOnce` so the diagnostics-only chunk
 // stays off the boot waterfall.
 const InstallProbeServices = async (): Promise<void> => {
-
 	const Probe = (await import("./Bridge/ProbeServices.js")).default;
 
 	Probe(() => GetServices() as Record<string, unknown> | null);
@@ -324,7 +307,6 @@ let BuildOpenArg: (Source: unknown) => unknown = (S) => S;
 let OutputChannels = new Map<string, string[]>();
 
 let GetOrCreateChannel: (Id: string, Name?: string) => string[] = (Id) => {
-
 	if (!OutputChannels.has(Id)) OutputChannels.set(Id, []);
 
 	return OutputChannels.get(Id)!;
@@ -387,7 +369,6 @@ let _SkyBridgeInstallPromise: Promise<void> | null = null;
  * with one rebuild after `Disable=` is unset.
  */
 const ResolveLandDisabled = (): boolean => {
-
 	try {
 		const Meta = (import.meta as { env?: Record<string, unknown> }).env;
 
@@ -414,7 +395,6 @@ const ResolveLandDisabled = (): boolean => {
 };
 
 export async function InstallSkyBridge(): Promise<void> {
-
 	if (ResolveLandDisabled()) {
 		try {
 			if (typeof process !== "undefined" && process.stdout) {
@@ -453,7 +433,6 @@ export async function InstallSkyBridge(): Promise<void> {
 }
 
 async function _InstallSkyBridgeOnce(): Promise<void> {
-
 	const Cleanups: Array<() => void> = [];
 
 	// Diagnostics-only modules (consumer tracking + services probe) are

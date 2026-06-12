@@ -55,7 +55,6 @@ const ServiceKeys = [
 ] as const;
 
 const ToMountain = (Tag: string, Message: string): void => {
-
 	try {
 		const Inv =
 			(globalThis as any).__TAURI__?.core?.invoke ??
@@ -73,7 +72,6 @@ const ToMountain = (Tag: string, Message: string): void => {
 };
 
 export default (GetServices: () => Record<string, unknown> | null): void => {
-
 	const Probe = (): void => {
 		const S = GetServices();
 

@@ -23,14 +23,12 @@
  */
 
 interface ExtensionChangeBase {
-
 	readonly Kind: "Installed" | "Uninstalled";
 
 	readonly Identifier: string;
 }
 
 interface WorkbenchRefreshHost {
-
 	readonly _servicesAccess?: {
 		readonly get?: (
 			Key: unknown,
@@ -39,7 +37,6 @@ interface WorkbenchRefreshHost {
 }
 
 const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
-
 	performance.mark(
 		`land:extensions:${Change.Kind.toLowerCase()}:${Change.Identifier}`,
 	);
@@ -66,7 +63,6 @@ const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
 let ActiveSubscription: { readonly dispose: () => void } | undefined;
 
 export default async (): Promise<void> => {
-
 	if (import.meta.env["Render"] === "false") {
 		performance.mark("land:extensions:subscriber:skipped-wind-disabled");
 
@@ -74,13 +70,12 @@ export default async (): Promise<void> => {
 	}
 
 	try {
-		const { default: WatchExtensionChanges } = (await import(
-			"@codeeditorland/wind/Target/Effect/Extensions/ChangeStream"
-		)) as {
-			readonly default: (
-				Callback: (Change: ExtensionChangeBase) => void,
-			) => Promise<{ readonly dispose: () => void }>;
-		};
+		const { default: WatchExtensionChanges } =
+			(await import("@codeeditorland/wind/Target/Effect/Extensions/ChangeStream")) as {
+				readonly default: (
+					Callback: (Change: ExtensionChangeBase) => void,
+				) => Promise<{ readonly dispose: () => void }>;
+			};
 
 		ActiveSubscription?.dispose();
 

@@ -29,7 +29,6 @@
  */
 
 interface CelTreeView {
-
 	dataProvider:
 		| undefined
 		| {
@@ -54,7 +53,6 @@ interface CelTreeView {
 }
 
 interface CelServices {
-
 	TreeViewByViewId?: (viewId: string) => CelTreeView | null;
 
 	[key: string]: unknown;
@@ -65,7 +63,6 @@ export default async (Dependencies: {
 
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
-
 	const { GetServices, Invoke } = Dependencies;
 
 	// Map Cocoon's `{handle, label: string, isCollapsed, icon: string}`
@@ -91,10 +88,8 @@ export default async (Dependencies: {
 		const Label =
 			typeof Wire["label"] === "string"
 				? { label: Wire["label"] }
-
 				: (Wire["label"] as { label?: string } | undefined)?.label
 					? (Wire["label"] as { label: string })
-
 					: { label: "" };
 
 		const CollapsibleState =
@@ -165,7 +160,6 @@ export default async (Dependencies: {
 			})) as { items?: unknown[] };
 
 			const RawItems = Array.isArray(Response?.items)
-
 				? Response.items
 				: [];
 
@@ -327,7 +321,6 @@ export default async (Dependencies: {
 						extensionId?: string;
 					}>;
 			  }
-
 			| undefined;
 
 		// Mountain may deliver a single tree-view registration or a
@@ -348,7 +341,6 @@ export default async (Dependencies: {
 	document.addEventListener("cel:tree-view:refresh", (Event: Event) => {
 		const Detail = (Event as CustomEvent).detail as
 			| { viewId?: string }
-
 			| undefined;
 
 		const ViewId = Detail?.viewId ?? "";
@@ -408,7 +400,6 @@ export default async (Dependencies: {
 	document.addEventListener("cel:tree-view:dispose", (Event: Event) => {
 		const Detail = (Event as CustomEvent).detail as
 			| { viewId?: string; handle?: string | number }
-
 			| undefined;
 
 		const ViewId = Detail?.viewId ?? "";

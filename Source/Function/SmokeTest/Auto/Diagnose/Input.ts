@@ -21,7 +21,6 @@
  */
 
 interface InputDiagnostic {
-
 	readonly elementTag: string;
 
 	readonly placeholder: string | null;
@@ -49,7 +48,6 @@ interface InputDiagnostic {
 }
 
 const ResolveDisabled = (): boolean => {
-
 	try {
 		const Meta = (import.meta as { env?: Record<string, unknown> }).env;
 
@@ -78,7 +76,6 @@ const ResolveDisabled = (): boolean => {
 const ClassifyEditor = (
 	El: Element | null,
 ): { mode: InputDiagnostic["mode"]; typingExpected: boolean; hint: string } => {
-
 	if (!El) {
 		return {
 			mode: "untyped",
@@ -146,7 +143,6 @@ const ClassifyEditor = (
 };
 
 const Snapshot = (): InputDiagnostic | null => {
-
 	if (typeof document === "undefined") return null;
 
 	const Active = document.activeElement;
@@ -200,7 +196,6 @@ const Snapshot = (): InputDiagnostic | null => {
 };
 
 const Report = (Snap: InputDiagnostic, Reason: string): void => {
-
 	if (typeof console === "undefined") return;
 
 	const Tag = "[Land/AutoDiagnose]";
@@ -221,7 +216,6 @@ const Report = (Snap: InputDiagnostic, Reason: string): void => {
 };
 
 export const AutoDiagnoseInput = (): void => {
-
 	if (!ResolveDisabled()) return;
 
 	if (typeof document === "undefined") return;

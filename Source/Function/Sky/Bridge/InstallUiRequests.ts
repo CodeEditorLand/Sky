@@ -40,7 +40,6 @@ export default async (Dependencies: {
 		Result: unknown,
 	) => Promise<void>;
 }): Promise<void> => {
-
 	const { Register, ShowNotification, ResolveUiRequest } = Dependencies;
 
 	// Atom Q1: Mountain emits this for *every* showMessage call regardless
@@ -62,9 +61,7 @@ export default async (Dependencies: {
 			const Actions: Array<{ title: string }> = Array.isArray(
 				Options?.Actions ?? Options?.actions,
 			)
-
 				? (Options?.Actions ?? Options?.actions)
-
 				: [];
 
 			if (Actions.length === 0) {
@@ -370,11 +367,9 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 
 			const FallbackTimer = window.setTimeout(() => {
 				const PickedLabels = Array.isArray(Items)
-
 					? Items.filter((Item: any) => Item?.picked).map(
 							(Item: any) => Item?.label ?? null,
 						)
-
 					: [];
 
 				const Fallback = Options?.canPickMany
@@ -389,7 +384,6 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 
 				(Event: any) => {
 					if (Event?.detail?.RequestIdentifier !== RequestIdentifier)
-
 						return;
 
 					window.clearTimeout(FallbackTimer);

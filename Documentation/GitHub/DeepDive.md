@@ -1,9 +1,8 @@
 # Sky - Deep Dive
 
-Sky provides the technical foundation UI component layer
-within the Land ecosystem. **Sky** renders the complete editor interface inside
-the Tauri webview using Astro, consuming state and services from the Wind
-service layer.
+Sky provides the technical foundation UI component layer within the Land
+ecosystem. **Sky** renders the complete editor interface inside the Tauri
+webview using Astro, consuming state and services from the Wind service layer.
 
 ---
 

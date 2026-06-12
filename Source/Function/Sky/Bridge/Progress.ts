@@ -17,7 +17,6 @@
 type ProgressLocation = 1 | 10 | 15;
 
 interface NativeProgressEntry {
-
 	Resolve: () => void;
 
 	ReportHandle?: {
@@ -26,23 +25,19 @@ interface NativeProgressEntry {
 }
 
 export default (): {
-
 	Show: (Id: string, Title?: string, Cancellable?: boolean) => void;
 
 	Update: (Id: string, Message?: string, Increment?: number) => void;
 
 	Dismiss: (Id: string) => void;
 } => {
-
 	const ActiveProgress = new Map<string, HTMLElement>();
 
 	const NativeProgress = new Map<string, NativeProgressEntry>();
 
 	const PendingMessages = new Map<
 		string,
-
 		{ message?: string; increment?: number }
-
 	>();
 
 	const ResolveProgressService = (): any => {

@@ -39,7 +39,6 @@
 // catalog falls through to the harness's empty-catalog branch instead
 // of breaking the entire build.
 interface CommandCatalogEntry {
-
 	readonly CommandIdentifier: string;
 
 	readonly Kind: string;
@@ -52,12 +51,10 @@ interface CommandCatalogEntry {
 }
 
 interface CommandCatalogModule {
-
 	readonly CommandCatalog: ReadonlyArray<CommandCatalogEntry>;
 }
 
 const LoadCatalog = async (): Promise<ReadonlyArray<CommandCatalogEntry>> => {
-
 	try {
 		// String concatenation defeats Rollup's static-import analyser.
 		// `@vite-ignore` doubles up the signal: Vite skips the literal
@@ -89,14 +86,12 @@ const LoadCatalog = async (): Promise<ReadonlyArray<CommandCatalogEntry>> => {
 };
 
 interface CommandHostShape {
-
 	executeCommand(command: string, ...rest: unknown[]): Promise<unknown>;
 
 	getCommands?(filterInternal?: boolean): Promise<ReadonlyArray<string>>;
 }
 
 interface SmokeTestSummary {
-
 	readonly total: number;
 
 	readonly known: number;
@@ -109,7 +104,6 @@ interface SmokeTestSummary {
 }
 
 const ResolveQueryFlag = (): boolean => {
-
 	try {
 		if (typeof window === "undefined") return false;
 
@@ -124,7 +118,6 @@ const ResolveQueryFlag = (): boolean => {
 };
 
 const ResolveStorageFlag = (): boolean => {
-
 	try {
 		if (typeof localStorage === "undefined") return false;
 
@@ -137,7 +130,6 @@ const ResolveStorageFlag = (): boolean => {
 };
 
 const ResolveBuildTimeFlag = (): boolean => {
-
 	try {
 		// Vite/Astro replace `import.meta.env.Smoke` at build time with
 		// the value present at compile time. When undefined the
@@ -155,18 +147,15 @@ const ResolveBuildTimeFlag = (): boolean => {
 };
 
 const ShouldRunSmokeTest = (): boolean => {
-
 	return ResolveQueryFlag() || ResolveStorageFlag() || ResolveBuildTimeFlag();
 };
 
 const ResolveCommandHost = (): CommandHostShape | null => {
-
 	try {
 		const Globals = globalThis as Record<string, unknown>;
 
 		const Workbench = Globals["__CEL_WORKBENCH__"] as
 			| { commands?: CommandHostShape }
-
 			| undefined;
 
 		if (Workbench?.commands?.executeCommand) return Workbench.commands;
@@ -179,7 +168,6 @@ const ResolveCommandHost = (): CommandHostShape | null => {
 
 		const Services = Globals["__CEL_SERVICES__"] as
 			| { Commands?: CommandHostShape }
-
 			| undefined;
 
 		if (Services?.Commands?.executeCommand) return Services.Commands;
@@ -193,7 +181,6 @@ const ResolveCommandHost = (): CommandHostShape | null => {
 const ListKnownCommands = async (
 	host: CommandHostShape,
 ): Promise<ReadonlySet<string>> => {
-
 	if (typeof host.getCommands !== "function") return new Set();
 
 	try {
@@ -206,7 +193,6 @@ const ListKnownCommands = async (
 };
 
 const RunOnce = async (): Promise<SmokeTestSummary> => {
-
 	const Started = performance.now();
 
 	const Catalog = await LoadCatalog();
@@ -265,7 +251,6 @@ const RunOnce = async (): Promise<SmokeTestSummary> => {
 };
 
 const ReportSummary = (summary: SmokeTestSummary): void => {
-
 	const Tag = "[Land/SmokeTest/CommandCatalog]";
 
 	if (typeof console === "undefined") return;
@@ -290,7 +275,6 @@ const ReportSummary = (summary: SmokeTestSummary): void => {
 };
 
 export const RunCommandCatalogSmokeTest = async (): Promise<void> => {
-
 	if (!ShouldRunSmokeTest()) return;
 
 	try {

@@ -7,7 +7,6 @@
 
 // Initialize the services proxy
 try {
-
 	// The services proxy will intercept window.vscode API calls
 	// and forward them to Mountain services via IPC
 } catch (error: unknown) {}

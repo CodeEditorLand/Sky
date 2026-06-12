@@ -52,7 +52,6 @@ export default async (Dependencies: {
 
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
-
 	const { Register, GetServices, Invoke } = Dependencies;
 
 	// Revive a marker's relatedInformation[].resource fields from URI strings
@@ -95,7 +94,6 @@ export default async (Dependencies: {
 		const Owner = String(Payload?.owner ?? "");
 
 		const Changed = Array.isArray(Payload?.changedURIs)
-
 			? Payload.changedURIs
 			: [];
 
@@ -116,7 +114,6 @@ export default async (Dependencies: {
 				const Uri = Entry?.uri;
 
 				const RawMarkers: unknown[] = Array.isArray(Entry?.markers)
-
 					? Entry.markers
 					: [];
 
@@ -125,7 +122,6 @@ export default async (Dependencies: {
 				const RealUri =
 					typeof Uri === "string"
 						? URICtor.parse(Uri)
-
 						: Uri && typeof (Uri as any).with === "function"
 							? Uri
 							: URICtor.from(Uri);
@@ -138,7 +134,6 @@ export default async (Dependencies: {
 						typeof M !== "object" ||
 						!Array.isArray(M.relatedInformation)
 					)
-
 						return M;
 
 					return {

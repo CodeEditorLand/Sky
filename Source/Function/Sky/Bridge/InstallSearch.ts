@@ -21,7 +21,6 @@
  */
 
 interface CelUri {
-
 	readonly scheme: string;
 
 	readonly path: string;
@@ -40,7 +39,6 @@ interface CelUri {
 }
 
 interface CelUriCtor {
-
 	file(path: string): CelUri;
 
 	parse(value: string, strict?: boolean): CelUri;
@@ -55,7 +53,6 @@ interface CelUriCtor {
 }
 
 interface CelSearchService {
-
 	registerSearchResultProvider(
 		scheme: string,
 
@@ -76,7 +73,6 @@ export default async (Dependencies: {
 
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
-
 	const { GetServices, Invoke } = Dependencies;
 
 	// Extract the single-folder root URI from a query - Mountain's
@@ -171,12 +167,10 @@ export default async (Dependencies: {
 						Inner?.line_number ?? Inner?.lineNumber ?? 1,
 					),
 					columns: Array.isArray(Inner?.columns)
-
 						? Inner.columns.map((C: any) => ({
 								start: Number(C?.start ?? 0),
 								end: Number(C?.end ?? 0),
 							}))
-
 						: [],
 				}))
 			: // Backwards-compat: also accept a flat per-hit shape
@@ -248,7 +242,6 @@ export default async (Dependencies: {
 									endColumn: C.end,
 								},
 							}))
-
 						: [
 								{
 									source: {

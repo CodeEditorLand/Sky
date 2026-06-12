@@ -13,7 +13,6 @@
  */
 
 try {
-
 	// Single source of truth for polyfills is now `Element/Output/
 	// Source/Polyfill/*`. Importing through Output directly here means a
 	// polyfill fix (e.g. the colon-prefix `MountainIPCInvoke` routing)

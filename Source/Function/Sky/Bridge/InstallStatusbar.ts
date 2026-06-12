@@ -18,7 +18,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
 type StatusbarEntry = {
-
 	name: string;
 
 	text: string;
@@ -37,14 +36,12 @@ type StatusbarEntry = {
 };
 
 interface StatusbarAccessor {
-
 	update(Entry: StatusbarEntry): void;
 
 	dispose(): void;
 }
 
 interface StatusbarService {
-
 	addEntry(
 		Entry: StatusbarEntry,
 
@@ -57,7 +54,6 @@ interface StatusbarService {
 }
 
 interface ServicesProbe {
-
 	Statusbar?: StatusbarService;
 }
 
@@ -70,7 +66,6 @@ export default async (Dependencies: {
 
 	GetServices: () => ServicesProbe | null;
 }): Promise<{ SetOrUpdateEntry: (Payload: any) => void }> => {
-
 	const { Register, GetServices } = Dependencies;
 
 	const StatusbarAccessors = new Map<string, StatusbarAccessor>();

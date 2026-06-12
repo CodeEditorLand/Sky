@@ -20,12 +20,10 @@ type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 export default (
 	Invoke: Invoke,
 ): {
-
 	HasConsumer: (DomEvent: string) => boolean;
 
 	Log: (DomEvent: string, HasConsumer: boolean) => void;
 } => {
-
 	const Consumers = new Set<string>();
 
 	const HasDOM =

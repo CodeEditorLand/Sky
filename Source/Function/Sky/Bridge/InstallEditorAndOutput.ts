@@ -28,7 +28,6 @@ type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 type ResolveUiRequest = (RequestId: string, Result: unknown) => unknown;
 
 interface Workbench {
-
 	commands: { executeCommand: (id: string, ...args: unknown[]) => any };
 
 	env: { openUri(target: unknown): Promise<boolean> };
@@ -53,7 +52,6 @@ export default async (Dependencies: {
 
 	OutputChannels: Map<string, string[]>;
 }): Promise<void> => {
-
 	const {
 		Register,
 
@@ -268,13 +266,10 @@ export default async (Dependencies: {
 				};
 
 				const RawEditsSource: any[] = Array.isArray(Payload?.edits)
-
 					? Payload.edits
 					: Array.isArray(Payload?._edits)
-
 						? Payload._edits
 						: Array.isArray(Payload)
-
 							? Payload
 							: [];
 
@@ -332,7 +327,6 @@ export default async (Dependencies: {
 															?.character ??
 														0) + 1,
 											}
-
 										: {
 												startLineNumber: 1,
 												startColumn: 1,
@@ -373,10 +367,8 @@ export default async (Dependencies: {
 						const Resource = E.resource ?? E.uri;
 
 						const Edits = Array.isArray(E.edits)
-
 							? E.edits
 							: Array.isArray(E.textEdits)
-
 								? E.textEdits
 								: [];
 
@@ -417,7 +409,6 @@ export default async (Dependencies: {
 							const Path = Raw._path ?? Raw.path ?? "";
 
 							if (UriCtor?.from)
-
 								return UriCtor.from({
 									scheme: Scheme,
 									authority: Authority,
@@ -445,8 +436,7 @@ export default async (Dependencies: {
 				}
 
 				// Direct model path: find Monaco model by URI, execute edits.
-				const ModelService =
-					Services?.Models ?? Services?.ModelService;
+				const ModelService = Services?.Models ?? Services?.ModelService;
 
 				const ExtractUriString = (Raw: any): string | null => {
 					if (!Raw) return null;
@@ -483,10 +473,8 @@ export default async (Dependencies: {
 						ExtractUriString(Entry?.uri);
 
 					const TextEdits: any[] = Array.isArray(Entry?.edits)
-
 						? Entry.edits
 						: Array.isArray(Entry?.textEdits)
-
 							? Entry.textEdits
 							: [];
 
@@ -722,10 +710,8 @@ export default async (Dependencies: {
 		// Mountain wraps it: { RequestIdentifier, Payload: [left, right, title?, opts?] }
 		// but may also arrive unwrapped as a bare array for fire-and-forget paths.
 		const Args: unknown[] = Array.isArray(Payload)
-
 			? Payload
 			: Array.isArray(Payload?.args)
-
 				? Payload.args
 				: [];
 
@@ -738,7 +724,6 @@ export default async (Dependencies: {
 		const Options =
 			Args[3] != null && typeof Args[3] === "object"
 				? (Args[3] as Record<string, unknown>)
-
 				: {};
 
 		const ViewColumn = (Options as any)?.viewColumn ?? null;

@@ -14,21 +14,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { spawn } from "node:child_process";
-
 import { existsSync } from "node:fs";
-
 import { cp, readdir, readFile, writeFile } from "node:fs/promises";
-
 import { request } from "node:https";
-
 import { join, resolve } from "node:path";
-
 import { fileURLToPath } from "node:url";
 
 import ApplyPlugins from "@codeeditorland/output/Configuration/Plugin/Apply.js";
-
 import BuildPipeline from "@codeeditorland/output/Configuration/Plugin/Index.js";
-
 // -----------------------------------------------------------------------------
 // OUTPUT PLUGIN PIPELINE
 // -----------------------------------------------------------------------------
@@ -45,13 +38,10 @@ import BuildPipeline from "@codeeditorland/output/Configuration/Plugin/Index.js"
 // The Rest compiler will consume the same modules once its plugin API is
 // wired up - no duplication or rewrite needed.
 import type { Plugin as OutputPlugin } from "@codeeditorland/output/Configuration/Plugin/Type.js";
-
 import { defineConfig } from "astro/config";
 
 import BakeExtensionManifest from "./Source/Function/Build/BakeExtensionManifest";
-
 import CompressBundle from "./Source/Function/Build/CompressBundle";
-
 // -----------------------------------------------------------------------------
 // IMPORT CONTEXT & TRIGGER DEBUG LOGGING
 // -----------------------------------------------------------------------------
@@ -101,7 +91,6 @@ const BundledActive = BundledList.length > 0;
 const BundledInputs: Record<string, string> = {};
 
 for (const Variant of BundledList) {
-
 	const Pascal = Variant[0]!.toUpperCase() + Variant.slice(1);
 
 	BundledInputs[`Bundled/${Pascal}/workbench`] = resolve(
@@ -112,7 +101,6 @@ for (const Variant of BundledList) {
 }
 
 if (BundledActive) {
-
 	console.log(
 		`[Sky/Bundled] Active variants: ${BundledList.join(", ")} -> ${BundledOutputDir}/`,
 	);
@@ -133,7 +121,6 @@ if (BundledActive) {
 // with runtime deps (most built-ins webpack-bundle and have none).
 // -----------------------------------------------------------------------------
 type InstallExtensionDepsOutcome = {
-
 	Installed: number;
 
 	BundleWarning?: string;
@@ -144,7 +131,6 @@ const InstallExtensionDeps = async (
 
 	PackageJsonRaw: string,
 ): Promise<InstallExtensionDepsOutcome> => {
-
 	let Pkg: Record<string, unknown>;
 
 	try {
@@ -276,7 +262,6 @@ export default defineConfig({
 
 		!On
 			? (await import("@playform/compress")).default({ Logger: 1 })
-
 			: null,
 
 		{

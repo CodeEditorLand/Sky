@@ -14,7 +14,6 @@
  */
 
 interface BootstrapStage {
-
 	success: boolean;
 
 	stageName: string;
@@ -23,7 +22,6 @@ interface BootstrapStage {
 }
 
 interface BootstrapResult {
-
 	success: boolean;
 
 	totalDuration: number;
@@ -34,16 +32,13 @@ interface BootstrapResult {
 }
 
 if (import.meta.env["Render"] === "false") {
-
 	performance.mark("land:bootstrap:skipped-wind-disabled");
 } else {
-
 	try {
 		performance.mark("land:bootstrap:start");
 
-		const { runBootstrap } = await import(
-			"@codeeditorland/wind/Target/Effect/Bootstrap"
-		);
+		const { runBootstrap } =
+			await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 
 		const BootstrapResult: BootstrapResult = await runBootstrap({
 			skipHealthCheck: true,
@@ -73,9 +68,8 @@ if (import.meta.env["Render"] === "false") {
 		// so the sidebar refreshes live after a VSIX install (K2/K3) - no
 		// workbench reload required. Fire-and-forget; the subscriber logs
 		// its own performance.mark on start / error / skipped states.
-		const { default: StartExtensionSubscriber } = await import(
-			"./Extension/Change/Subscriber.js"
-		);
+		const { default: StartExtensionSubscriber } =
+			await import("./Extension/Change/Subscriber.js");
 
 		void StartExtensionSubscriber();
 
@@ -91,9 +85,8 @@ if (import.meta.env["Render"] === "false") {
 				);
 
 				if (WsCfg?.port && WsCfg.port > 0 && WsCfg.secret) {
-					const { InitializeWebSocket } = await import(
-						"@codeeditorland/wind/Target/Service/TauriMainProcessService"
-					);
+					const { InitializeWebSocket } =
+						await import("@codeeditorland/wind/Target/Service/TauriMainProcessService");
 
 					InitializeWebSocket(WsCfg.port, WsCfg.secret);
 				}

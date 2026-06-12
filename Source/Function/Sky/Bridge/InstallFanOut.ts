@@ -14,7 +14,6 @@
 type Handler = (Payload: any) => void;
 
 type Tracking = {
-
 	HasConsumer: (DomEvent: string) => boolean;
 
 	Log: (DomEvent: string, HasConsumer: boolean) => void;

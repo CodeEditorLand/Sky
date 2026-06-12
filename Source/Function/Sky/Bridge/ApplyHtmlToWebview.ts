@@ -19,7 +19,6 @@ export default (
 
 	Html: string,
 ): "method" | "setter" | "skipped" => {
-
 	if (!ParkedView?.webview) {
 		return "skipped";
 	}

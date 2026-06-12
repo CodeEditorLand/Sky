@@ -52,7 +52,6 @@ export const External = [
 // The VSCode output is now accessed directly from node_modules/@codeeditorland/output
 export const Static = [
 	{
-
 		src: toGlob(join(cwd, "Public")),
 
 		dest: ".",
@@ -63,7 +62,6 @@ export const Static = [
 
 // Validate that the expected VSCode files exist
 export async function validateVSCodeOutput(): Promise<boolean> {
-
 	try {
 		const fs = await import("node:fs");
 

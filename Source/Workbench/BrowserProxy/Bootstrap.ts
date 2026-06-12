@@ -6,7 +6,6 @@
  */
 
 interface BootstrapStage {
-
 	success: boolean;
 
 	stageName: string;
@@ -15,7 +14,6 @@ interface BootstrapStage {
 }
 
 interface BootstrapResult {
-
 	success: boolean;
 
 	totalDuration: number;
@@ -26,7 +24,6 @@ interface BootstrapResult {
 }
 
 try {
-
 	const { runBootstrap } =
 		await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 

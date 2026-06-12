@@ -19,7 +19,6 @@
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 
 interface ReplaySummary {
-
 	treeViews?: number;
 
 	scmProviders?: number;
@@ -36,7 +35,6 @@ interface ReplaySummary {
 }
 
 export default async (Invoke: Invoke): Promise<void> => {
-
 	try {
 		const Replay = (await Invoke("MountainIPCInvoke", {
 			method: "sky:replay-events",

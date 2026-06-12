@@ -242,11 +242,9 @@ export default async (Dependencies: {
 
 		// Subscribe directly to the workbench's ITreeView onDid* events so
 		// Mountain receives selection/collapse/expand/visibility changes.
-		// The DOM cel:tree-view:* events are never dispatched by anyone,
-		// so the document.addEventListener handlers at the bottom of this
-		// file are dead code for those paths. Direct subscription here is
-		// the canonical path. Checks are defensive: some TreeView
-		// implementations may omit optional event properties.
+		// Direct subscription here is the canonical path. Checks are
+		// defensive: some TreeView implementations may omit optional
+		// event properties.
 		if (typeof (TreeView as any).onDidChangeSelection === "function") {
 			(TreeView as any).onDidChangeSelection((E: any) => {
 				ForwardTreeViewEvent("tree:selectionChanged", ViewId, {
@@ -302,9 +300,12 @@ export default async (Dependencies: {
 
 		if (!ViewId) return;
 
+		// No eager `ProvideChildren` here: the workbench pulls children
+		// through the attached dataProvider when the pane actually
+		// renders, so priming every registration would issue one
+		// `tree:getChildren` IPC round-trip per view at boot for panes
+		// that may never become visible.
 		AttachDataProvider(ViewId);
-
-		void ProvideChildren(ViewId, undefined);
 	};
 
 	document.addEventListener("cel:tree-view:create", (Event: Event) => {
@@ -370,12 +371,10 @@ export default async (Dependencies: {
 			/* swallow - already-disposed view / DI lookup race */
 		}
 
-		// Also re-prime the Sky observers.
-		try {
-			void ProvideChildren(ViewId, undefined);
-		} catch {
-			/* swallow */
-		}
+		// `TreeView.refresh()` re-queries the attached dataProvider's
+		// `getChildren`, which already re-emits `cel:tree-view:items`
+		// for Sky-side observers - no separate `ProvideChildren` call
+		// is needed (it would double every `tree:getChildren` IPC).
 	});
 
 	// Tree view interaction events: selection, collapse, expand, visibility.
@@ -393,58 +392,6 @@ export default async (Dependencies: {
 			params: [{ viewId, ...extra }],
 		}).catch(() => {});
 	};
-
-	document.addEventListener(
-		"cel:tree-view:selectionChanged",
-
-		(Event: Event) => {
-			const Detail = (Event as CustomEvent).detail as
-				| { viewId?: string; selection?: unknown[] }
-				| undefined;
-
-			if (Detail?.viewId)
-				ForwardTreeViewEvent("tree:selectionChanged", Detail.viewId, {
-					selection: Detail.selection ?? [],
-				});
-		},
-	);
-
-	document.addEventListener("cel:tree-view:collapse", (Event: Event) => {
-		const Detail = (Event as CustomEvent).detail as
-			| { viewId?: string; element?: unknown }
-			| undefined;
-
-		if (Detail?.viewId)
-			ForwardTreeViewEvent("tree:collapseElement", Detail.viewId, {
-				element: Detail.element,
-			});
-	});
-
-	document.addEventListener("cel:tree-view:expand", (Event: Event) => {
-		const Detail = (Event as CustomEvent).detail as
-			| { viewId?: string; element?: unknown }
-			| undefined;
-
-		if (Detail?.viewId)
-			ForwardTreeViewEvent("tree:expandElement", Detail.viewId, {
-				element: Detail.element,
-			});
-	});
-
-	document.addEventListener(
-		"cel:tree-view:visibilityChanged",
-
-		(Event: Event) => {
-			const Detail = (Event as CustomEvent).detail as
-				| { viewId?: string; visible?: boolean }
-				| undefined;
-
-			if (Detail?.viewId)
-				ForwardTreeViewEvent("tree:visibilityChanged", Detail.viewId, {
-					visible: Detail.visible ?? false,
-				});
-		},
-	);
 
 	// `cel:tree-view:dispose` - extension disposed its tree data
 	// provider. Clear the native pane's dataProvider so the workbench

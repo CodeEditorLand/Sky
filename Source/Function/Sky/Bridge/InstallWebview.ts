@@ -875,20 +875,50 @@ export default async (Dependencies: {
 					// request via Mountain → Cocoon. Failure logs to
 					// dev-log but doesn't surface - the workbench's
 					// resolver promise must still resolve so the panel
-					// pane unblocks.
+					// pane unblocks. The round-trip is bounded by a 10 s
+					// timeout that RESOLVES (never rejects): a hung
+					// Cocoon request must not pin this resolver past the
+					// workbench's resolve deadline and permanently fail
+					// the view - the parked view repaints when the
+					// extension's `sky://webview/set-html` arrives.
 					try {
 						const Inv =
 							(globalThis as any).__TAURI__?.core?.invoke ??
 							(globalThis as any).__TAURI__?.invoke;
 
 						if (typeof Inv === "function") {
-							await Inv("MountainIPCInvoke", {
-								method: "cocoon:request",
-								params: [
-									"webview.resolveView",
-									{ handle: Handle, viewId: ViewId },
-								],
-							}).catch(() => null);
+							let ResolveViewTimeout: number | undefined;
+
+							await Promise.race([
+								Inv("MountainIPCInvoke", {
+									method: "cocoon:request",
+									params: [
+										"webview.resolveView",
+										{ handle: Handle, viewId: ViewId },
+									],
+								}).catch(() => null),
+
+								new Promise<void>((TimeoutResolve) => {
+									ResolveViewTimeout = window.setTimeout(
+										() => {
+											Invoke("MountainIPCInvoke", {
+												method: "diagnostic:log",
+												params: [
+													"webview-bridge",
+													`resolveView timeout viewId=${ViewId} handle=${String(Handle)} - resolving anyway; set-html will repaint`,
+												],
+											}).catch(() => {});
+
+											TimeoutResolve();
+										},
+										10_000,
+									);
+								}),
+							]);
+
+							if (ResolveViewTimeout !== undefined) {
+								window.clearTimeout(ResolveViewTimeout);
+							}
 						}
 					} catch (_e) {
 						/* swallow */
@@ -1059,24 +1089,65 @@ export default async (Dependencies: {
 		}
 	});
 
-	await Register("sky://webview/dispose", ({ panelId }: any) => {
+	await Register("sky://webview/dispose", (Payload: any) => {
+		const PanelId = Payload?.panelId ?? Payload?.handle ?? "";
+
 		document.dispatchEvent(
-			new CustomEvent("cel:webview:dispose", { detail: { panelId } }),
+			new CustomEvent("cel:webview:dispose", {
+				detail: { panelId: PanelId },
+			}),
 		);
 
-		// Clean up from the registered panels map if the handle is present.
-		const Handle = panelId ?? "";
+		if (PanelId === "") return;
 
-		if (Handle) {
-			try {
-				const PanelRegistry: Map<string, any> | undefined = (
-					globalThis as any
-				).__CEL_WEBVIEW_PANELS__;
+		// Mountain's emitters carry the handle as either a number or a
+		// string depending on the dispatch path, and the registries were
+		// keyed with whatever shape `sky://webview/create` / the
+		// register-view resolver saw - try every coercion.
+		const HandleKeys: Array<string | number> = [PanelId, String(PanelId)];
 
-				PanelRegistry?.delete(String(Handle));
-			} catch {
-				/* non-fatal */
+		if (Number.isFinite(Number(PanelId))) {
+			HandleKeys.push(Number(PanelId));
+		}
+
+		try {
+			const HandleRegistry: Map<string | number, any> | undefined = (
+				globalThis as any
+			).__CEL_WEBVIEW_VIEWS_BY_HANDLE__;
+
+			for (const Key of HandleKeys) {
+				HandleRegistry?.delete(Key);
 			}
+		} catch {
+			/* non-fatal */
+		}
+
+		// Drop the parked HTML for the disposed webview so it doesn't
+		// accumulate for the rest of the session. The by-viewId cache is
+		// not keyed by handle - reverse-look the viewId up through the
+		// resolver registry (the dispose payload itself carries no
+		// viewId on the panel path).
+		try {
+			for (const Key of HandleKeys) {
+				PendingWebviewHtmlByHandle.delete(Key);
+			}
+
+			const ViewId = String(Payload?.viewId ?? "");
+
+			if (ViewId) {
+				PendingWebviewHtml.delete(ViewId);
+			}
+
+			for (const [
+				ResolverViewId,
+				ResolverHandle,
+			] of WebviewViewResolvers) {
+				if (ResolverHandle === Number(PanelId)) {
+					PendingWebviewHtml.delete(ResolverViewId);
+				}
+			}
+		} catch {
+			/* non-fatal */
 		}
 	});
 

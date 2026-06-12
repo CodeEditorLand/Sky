@@ -858,6 +858,16 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 	(window as any).__CEL_SKY_BRIDGE_CLEANUP__ = () =>
 		Cleanups.forEach((F) => F());
 
+	window.addEventListener(
+		"unload",
+
+		() => {
+			(window as any).__CEL_SKY_BRIDGE_CLEANUP__?.();
+		},
+
+		{ once: true },
+	);
+
 	// Always surface via stdout so Mountain captures it under [Cocoon stdout].
 	if (typeof process !== "undefined" && process.stdout) {
 		process.stdout.write(

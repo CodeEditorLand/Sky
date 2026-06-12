@@ -234,6 +234,10 @@ export default async (Dependencies: {
 		if (CodeEditorService?.onDidChangeActiveCodeEditor) {
 			let SelectionDisposable: (() => void) | null = null;
 
+			// Shared across editor switches so the teardown below can
+			// clear a flush still pending from the previous editor.
+			let ScrollFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
 			CodeEditorService.onDidChangeActiveCodeEditor((Ed: any) => {
 				// Fire active-editor IPC (was the first standalone subscription).
 				try {
@@ -262,6 +266,12 @@ export default async (Dependencies: {
 				} catch {}
 
 				SelectionDisposable = null;
+
+				if (ScrollFlushTimer !== null) {
+					clearTimeout(ScrollFlushTimer);
+
+					ScrollFlushTimer = null;
+				}
 
 				if (!Ed) return;
 
@@ -296,9 +306,6 @@ export default async (Dependencies: {
 				// single `visibleRanges` array. Subscribers (code lens
 				// providers, "Open Reference in Peek View", `vscode.git`'s
 				// minimap) consume this to lazy-load decorations.
-				let ScrollFlushTimer: ReturnType<typeof setTimeout> | null =
-					null;
-
 				Ed.onDidScrollChange?.(() => {
 					if (ScrollFlushTimer !== null) return;
 
@@ -396,14 +403,28 @@ export default async (Dependencies: {
 				ReturnType<typeof setTimeout>
 			>();
 
+			// Last version id shipped per URI - undo coalescing and no-op
+			// edits leave the version unchanged, so the full-text resend
+			// can be skipped.
+			const LastFlushedVersion = new Map<string, number>();
+
+			// Content-listener disposables keyed per editor, mirroring how
+			// `SelectionDisposable` above is stored and disposed - torn
+			// down in `onCodeEditorRemove` so stale closures stop firing.
+			const ContentDisposables = new Map<unknown, () => void>();
+
 			const FlushChanges = (Ed: any) => {
 				const Uri = Ed?.getModel?.()?.uri?.toString?.();
 
 				if (!Uri) return;
 
-				const Content = Ed?.getModel?.()?.getValue?.() ?? "";
-
 				const Version = Ed?.getModel?.()?.getVersionId?.() ?? 1;
+
+				if (LastFlushedVersion.get(Uri) === Version) return;
+
+				LastFlushedVersion.set(Uri, Version);
+
+				const Content = Ed?.getModel?.()?.getValue?.() ?? "";
 
 				Invoke("MountainIPCInvoke", {
 					method: "sky:model:contentChanged",
@@ -416,7 +437,7 @@ export default async (Dependencies: {
 
 				(Ed as any).__celContentListened = true;
 
-				Ed.onDidChangeModelContent?.(() => {
+				const D = Ed.onDidChangeModelContent?.(() => {
 					const Uri = Ed?.getModel?.()?.uri?.toString?.() ?? "";
 
 					if (!Uri) return;
@@ -434,6 +455,13 @@ export default async (Dependencies: {
 						}, 300),
 					);
 				});
+
+				// IDisposable from Monaco is either { dispose() } or a function.
+				if (D && typeof D.dispose === "function") {
+					ContentDisposables.set(Ed, () => D.dispose());
+				} else if (typeof D === "function") {
+					ContentDisposables.set(Ed, D);
+				}
 			};
 
 			// Wire into all currently-open editors
@@ -450,6 +478,31 @@ export default async (Dependencies: {
 			CodeEditorService.onCodeEditorAdd?.((Ed: any) => {
 				try {
 					SetupEditorListener(Ed);
+				} catch {}
+			});
+
+			// Dispose the content listener and drop the per-URI bookkeeping
+			// when an editor goes away; clearing the flag lets a re-added
+			// editor be re-wired.
+			CodeEditorService.onCodeEditorRemove?.((Ed: any) => {
+				try {
+					const Uri = Ed?.getModel?.()?.uri?.toString?.() ?? "";
+
+					if (Uri) {
+						const Pending = PendingChanges.get(Uri);
+
+						if (Pending !== undefined) clearTimeout(Pending);
+
+						PendingChanges.delete(Uri);
+
+						LastFlushedVersion.delete(Uri);
+					}
+
+					ContentDisposables.get(Ed)?.();
+
+					ContentDisposables.delete(Ed);
+
+					(Ed as any).__celContentListened = false;
 				} catch {}
 			});
 		}

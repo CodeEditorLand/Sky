@@ -95,10 +95,16 @@ export default async (Dependencies: {
 
 					let Resolved = false;
 
+					let FallbackTimer: number | undefined;
+
 					const ResolveOnce = (Title: string | null) => {
 						if (Resolved) return;
 
 						Resolved = true;
+
+						if (FallbackTimer !== undefined) {
+							window.clearTimeout(FallbackTimer);
+						}
 
 						void ResolveUiRequest(RequestId, Title);
 					};
@@ -121,8 +127,12 @@ export default async (Dependencies: {
 
 					// Timeout fallback - if the toast is dismissed without
 					// clicking a button, resolve null after 60 s so Mountain
-					// doesn't hang.
-					window.setTimeout(() => ResolveOnce(null), 60_000);
+					// doesn't hang. Cleared inside ResolveOnce when a button
+					// click resolves first.
+					FallbackTimer = window.setTimeout(
+						() => ResolveOnce(null),
+						60_000,
+					);
 
 					return;
 				} catch {
@@ -410,10 +420,16 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 
 			let Resolved = false;
 
+			let FallbackTimer: number | undefined;
+
 			const ResolveOnce = (Picked: string | null) => {
 				if (Resolved) return;
 
 				Resolved = true;
+
+				if (FallbackTimer !== undefined) {
+					window.clearTimeout(FallbackTimer);
+				}
 
 				void ResolveUiRequest(RequestId, Picked);
 			};
@@ -461,7 +477,10 @@ Choose: ${Actions.map((A) => A.title).join(" / ")}`,
 						},
 					});
 
-					window.setTimeout(() => ResolveOnce(null), 60_000);
+					FallbackTimer = window.setTimeout(
+						() => ResolveOnce(null),
+						60_000,
+					);
 
 					return;
 				} catch {

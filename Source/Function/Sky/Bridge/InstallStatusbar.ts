@@ -84,7 +84,10 @@ export default async (Dependencies: {
 
 	const BuildEntry = (Payload: any): StatusbarEntry => ({
 		name: Payload?.name ?? Payload?.extension ?? "extension",
-		text: Payload?.text ?? "",
+		text: String(Payload?.text ?? "").replace(
+			/\$\([^)]*(?:~spin)?\)\s*/g,
+			"",
+		),
 		tooltip: Payload?.tooltip,
 		command: Payload?.command,
 		ariaLabel:

@@ -47,10 +47,119 @@ export default async (Dependencies: {
 		DismissProgress,
 	} = Dependencies;
 
+	// Cancellable progress goes through `IProgressService.withProgress`
+	// directly: its third argument (`onDidCancel`) is the only workbench
+	// hook for the notification's Cancel button, and the injected
+	// `ShowProgress` helper does not surface it. Entries are tracked here
+	// so update/complete/end route to the same workbench progress, and the
+	// cancel click is forwarded to the extension host as a
+	// `progress.cancel` notification keyed by the start handle.
+	const CancellableProgress = new Map<
+		string,
+		{
+			Resolve: () => void;
+
+			Report?: {
+				report(Value: { message?: string; increment?: number }): void;
+			};
+		}
+	>();
+
+	const NotifyProgressCancel = (Handle: string): void => {
+		try {
+			const Tauri =
+				(globalThis as any).__TAURI__?.core?.invoke ??
+				(globalThis as any).__TAURI__?.invoke;
+
+			if (typeof Tauri !== "function") return;
+
+			Tauri("MountainIPCInvoke", {
+				method: "cocoon:notify",
+				params: ["progress.cancel", { handle: Handle }],
+			}).catch(() => {});
+		} catch {
+			/* swallow */
+		}
+	};
+
+	const StartCancellableProgress = (Id: string, Title?: string): boolean => {
+		const Svc = (globalThis as any).__CEL_SERVICES__?.Progress;
+
+		if (typeof Svc?.withProgress !== "function") return false;
+
+		try {
+			// Placeholder entry so updates arriving before the task callback
+			// runs still resolve to this progress instead of falling through.
+			CancellableProgress.set(Id, { Resolve: () => {} });
+
+			Svc.withProgress(
+				{
+					// 15 = ProgressLocation.Notification.
+					location: 15,
+					title: Title ?? "Working…",
+					cancellable: true,
+				},
+
+				(Report: {
+					report(Value: {
+						message?: string;
+
+						increment?: number;
+					}): void;
+				}) =>
+					new Promise<void>((Resolve) => {
+						const Entry = CancellableProgress.get(Id);
+
+						if (!Entry) {
+							// Completed or cancelled before the task ran.
+							Resolve();
+
+							return;
+						}
+
+						Entry.Resolve = Resolve;
+
+						Entry.Report = Report;
+					}),
+
+				() => {
+					CancellableProgress.delete(Id);
+
+					NotifyProgressCancel(Id);
+				},
+			);
+
+			return true;
+		} catch {
+			CancellableProgress.delete(Id);
+
+			return false;
+		}
+	};
+
+	const EndCancellableProgress = (Id: string): boolean => {
+		const Entry = CancellableProgress.get(Id);
+
+		if (!Entry) return false;
+
+		CancellableProgress.delete(Id);
+
+		try {
+			Entry.Resolve();
+		} catch {
+			/* swallow */
+		}
+
+		return true;
+	};
+
 	await Register(
 		"sky://progress/start",
 
 		({ id, title, cancellable }: any) => {
+			if (cancellable === true && StartCancellableProgress(id, title))
+				return;
+
 			ShowProgress(id, title, cancellable);
 		},
 	);
@@ -59,11 +168,25 @@ export default async (Dependencies: {
 		"sky://progress/update",
 
 		({ id, message, increment }: any) => {
+			const Entry = CancellableProgress.get(id);
+
+			if (Entry) {
+				try {
+					Entry.Report?.report({ message, increment });
+				} catch {
+					/* swallow */
+				}
+
+				return;
+			}
+
 			UpdateProgress(id, message, increment);
 		},
 	);
 
 	await Register("sky://progress/complete", ({ id }: any) => {
+		if (EndCancellableProgress(id)) return;
+
 		DismissProgress(id);
 	});
 
@@ -71,6 +194,8 @@ export default async (Dependencies: {
 	// emitted by Mountain's Wind-IPC progress handlers. Without this handler
 	// Wind-initiated progress bars never dismiss in Sky.
 	await Register("sky://progress/end", ({ id }: any) => {
+		if (EndCancellableProgress(id)) return;
+
 		DismissProgress(id);
 	});
 

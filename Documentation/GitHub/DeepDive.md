@@ -1,6 +1,6 @@
 # Sky - Deep Dive
 
-This document provides the technical foundation for the Sky UI component layer
+Sky provides the technical foundation UI component layer
 within the Land ecosystem. **Sky** renders the complete editor interface inside
 the Tauri webview using Astro, consuming state and services from the Wind
 service layer.
@@ -198,3 +198,10 @@ recommended deployment always sets `Mountain=true`.
 **Astro configuration** (`astro.config.ts`) resolves Wind and other
 `@codeeditorland/*` packages through Vite aliases, sets `Source/` as the content
 root, and directs build output to `Target/`.
+
+---
+
+**Project Maintainers:** Source Open
+([Source/Open@Editor.Land](mailto:Source/Open@Editor.Land)) |
+[GitHub Repository](https://github.com/CodeEditorLand/Land) |
+[Report an Issue](https://github.com/CodeEditorLand/Land/issues)

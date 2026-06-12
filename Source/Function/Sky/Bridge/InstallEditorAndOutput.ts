@@ -437,7 +437,7 @@ export default async (Dependencies: {
 
 				// Direct model path: find Monaco model by URI, execute edits.
 				const ModelService =
-					Services?.ModelService ?? Services?.modelService;
+					Services?.Models ?? Services?.ModelService;
 
 				const ExtractUriString = (Raw: any): string | null => {
 					if (!Raw) return null;

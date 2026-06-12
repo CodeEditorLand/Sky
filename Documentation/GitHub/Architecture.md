@@ -1,6 +1,6 @@
 # Sky: UI Component Layer ☁️
 
-This document describes `Sky`, the UI component layer of `Land`.
+`Sky` is the UI component layer of `Land`.
 
 - `Sky` is built with the `Astro` framework.
 - It renders the editor interface - editor, side bar, activity bar, status bar,
@@ -299,5 +299,5 @@ Sky/Target/
 
 **Project Maintainers:** Source Open
 ([Source/Open@Editor.Land](mailto:Source/Open@Editor.Land)) |
-[GitHub Repository](https://github.com/CodeEditorLand/Sky) |
-[Report an Issue](https://github.com/CodeEditorLand/Sky/issues)
+[GitHub Repository](https://github.com/CodeEditorLand/Land) |
+[Report an Issue](https://github.com/CodeEditorLand/Land/issues)

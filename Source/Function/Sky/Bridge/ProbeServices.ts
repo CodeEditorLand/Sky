@@ -76,17 +76,10 @@ export default (GetServices: () => Record<string, unknown> | null): void => {
 		const S = GetServices();
 
 		if (!S) {
-			try {
-				invoke("MountainIPCInvoke", {
-					method: "diagnostic:log",
-					params: [
-						"sky-bridge",
-						"[Sky:CEL] __CEL_SERVICES__ missing on probe",
-					],
-				}).catch(() => {});
-			} catch {
-				/* swallow */
-			}
+			ToMountain(
+				"sky-bridge",
+				"[Sky:CEL] __CEL_SERVICES__ missing on probe",
+			);
 
 			ToMountain("cel-services", "__CEL_SERVICES__ missing on probe");
 
@@ -97,14 +90,7 @@ export default (GetServices: () => Record<string, unknown> | null): void => {
 			(K) => `${K}=${S[K] == null ? "null" : typeof S[K]}`,
 		).join(" ");
 
-		try {
-			invoke("MountainIPCInvoke", {
-				method: "diagnostic:log",
-				params: ["sky-bridge", `[Sky:CEL] services-ready ${Shape}`],
-			}).catch(() => {});
-		} catch {
-			/* swallow */
-		}
+		ToMountain("sky-bridge", `[Sky:CEL] services-ready ${Shape}`);
 
 		ToMountain("cel-services", `shape ${Shape}`);
 

@@ -61,16 +61,20 @@ export default async (Dependencies: {
 				const Editors: any[] =
 					CodeEditorService?.listCodeEditors?.() ?? [];
 
+				let Matched = false;
+
 				for (const Ed of Editors) {
 					try {
 						const EditorUri = Ed?.getModel?.()?.uri?.toString?.();
 
-						if (
-							EditorUri !== Uri &&
-							!EditorUri?.endsWith(Uri.split("/").pop() ?? "")
-						) {
+						// Full-URI equality only - suffix matching bled
+						// decorations into unrelated editors that merely
+						// share a basename (e.g. every `index.ts`).
+						if (EditorUri !== Uri) {
 							continue;
 						}
+
+						Matched = true;
 
 						// Monaco's CodeEditor exposes `setDecorationsByType
 						// (description, decorationTypeKey, decorations)` -
@@ -100,6 +104,16 @@ export default async (Dependencies: {
 						/* skip bad editor */
 					}
 				}
+
+				if (!Matched) {
+					Invoke("MountainIPCInvoke", {
+						method: "diagnostic:log",
+						params: [
+							"sky-bridge",
+							`[SkyBridge] decoration/set-ranges: no editor matches ${Uri}`,
+						],
+					}).catch(() => {});
+				}
 			} catch {
 				/* skip bad entry */
 			}
@@ -122,15 +136,17 @@ export default async (Dependencies: {
 
 		const Editors: any[] = CodeEditorService?.listCodeEditors?.() ?? [];
 
+		let Matched = false;
+
 		for (const Ed of Editors) {
 			try {
 				const EditorUri = Ed?.getModel?.()?.uri?.toString?.();
 
-				if (
-					EditorUri !== Uri &&
-					!EditorUri?.endsWith(Uri.split("/").pop() ?? "")
-				)
-					continue;
+				// Full-URI equality only - suffix matching applied edits
+				// to unrelated editors that merely share a basename.
+				if (EditorUri !== Uri) continue;
+
+				Matched = true;
 
 				// Convert to Monaco edit operations and apply.
 				// Handles both VS Code 0-based Range (_start._line) and
@@ -174,6 +190,16 @@ export default async (Dependencies: {
 			} catch {
 				/* skip */
 			}
+		}
+
+		if (!Matched) {
+			Invoke("MountainIPCInvoke", {
+				method: "diagnostic:log",
+				params: [
+					"sky-bridge",
+					`[SkyBridge] editor/apply-text-edits: no editor matches ${Uri}`,
+				],
+			}).catch(() => {});
 		}
 	});
 
@@ -769,15 +795,17 @@ export default async (Dependencies: {
 
 		const Editors: any[] = CodeEditorService.listCodeEditors?.() ?? [];
 
+		let Matched = false;
+
 		for (const Ed of Editors) {
 			try {
 				const EdUri = Ed?.getModel?.()?.uri?.toString?.();
 
-				if (
-					EdUri !== Uri &&
-					!EdUri?.endsWith(Uri.split("/").pop() ?? "")
-				)
-					continue;
+				// Full-URI equality only - suffix matching scrolled
+				// unrelated editors that merely share a basename.
+				if (EdUri !== Uri) continue;
+
+				Matched = true;
 
 				// Monaco range is 1-based; payload already in Mountain
 				// 1-based form.

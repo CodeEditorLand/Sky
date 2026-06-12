@@ -765,17 +765,102 @@ export default async (Dependencies: {
 	await Register("sky://editor/applyEdits", ({ edits }: any) => {
 		if (!Array.isArray(edits) || !edits.length) return;
 
-		const Wb = GetWorkbench();
+		const Services: any = (globalThis as any).__CEL_SERVICES__;
 
-		if (!Wb) return;
+		const ModelService = Services?.Models ?? Services?.ModelService;
 
-		SwallowCatch(
-			Wb.commands.executeCommand(
-				"workbench.action.applyThemeFromFile",
+		if (!ModelService) return;
 
-				edits,
-			),
-		);
+		const ExtractUriString = (Raw: any): string | null => {
+			if (!Raw) return null;
+
+			if (typeof Raw === "string") return Raw;
+
+			// Real toString method (not Object.prototype.toString)
+			if (
+				typeof Raw.toString === "function" &&
+				Raw.toString !== Object.prototype.toString
+			) {
+				const S = Raw.toString();
+
+				if (S && S !== "[object Object]") return S;
+			}
+
+			// Serialized vscode.Uri: has _scheme, _path etc.
+			const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
+
+			const Authority = Raw._authority ?? Raw.authority ?? "";
+
+			const Path = Raw._path ?? Raw.path ?? Raw.fsPath ?? "";
+
+			if (Path) return `${Scheme}://${Authority}${Path}`;
+
+			return null;
+		};
+
+		// Handle VS Code 0-based ranges (_start._line from extHostTypes)
+		// and already-1-based Monaco ranges (startLineNumber).
+		const ExtL2 = (Val: any, Fb: number): number =>
+			typeof Val?._line === "number"
+				? Val._line + 1
+				: typeof Val?.line === "number"
+					? Val.line + 1
+					: Fb;
+
+		const ExtC2 = (Val: any, Fb: number): number =>
+			typeof Val?._character === "number"
+				? Val._character + 1
+				: typeof Val?.character === "number"
+					? Val.character + 1
+					: Fb;
+
+		for (const Entry of edits) {
+			if (!Entry) continue;
+
+			const UriStr = ExtractUriString(Entry.uri ?? Entry.resource);
+
+			const TextEdits: any[] = Array.isArray(Entry?.edits)
+				? Entry.edits
+				: Array.isArray(Entry?.textEdits)
+					? Entry.textEdits
+					: [];
+
+			if (!UriStr || !TextEdits.length) continue;
+
+			try {
+				const Model =
+					ModelService?.getModel?.({
+						toString: () => UriStr,
+					}) ?? ModelService?.getModel?.(UriStr);
+
+				if (!Model) continue;
+
+				const Ops = TextEdits.map((E: any) => {
+					const R = E.range ?? E._range ?? {};
+
+					const S = R._start ?? R.start ?? {};
+
+					const En = R._end ?? R.end ?? {};
+
+					return {
+						range: {
+							startLineNumber:
+								R.startLineNumber ?? ExtL2(S, 1),
+							startColumn: R.startColumn ?? ExtC2(S, 1),
+							endLineNumber:
+								R.endLineNumber ?? ExtL2(En, 1),
+							endColumn: R.endColumn ?? ExtC2(En, 1),
+						},
+						text: E.newText ?? E.text ?? "",
+						forceMoveMarkers: true,
+					};
+				});
+
+				Model.applyEdits?.(Ops);
+			} catch {
+				/* skip bad entry */
+			}
+		}
 	});
 
 	await Register("sky://output/create", (Payload: any) => {

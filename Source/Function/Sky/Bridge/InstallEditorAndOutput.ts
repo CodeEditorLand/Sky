@@ -96,7 +96,8 @@ export default async (Dependencies: {
 					if (!Raw) return null;
 
 					// Try to hydrate into a real URI using workbench's URI ctor.
-					const UriCtor = Services?.URI ?? (globalThis as any).__cel_URI;
+					const UriCtor =
+						Services?.URI ?? (globalThis as any).__cel_URI;
 
 					const Scheme = Raw._scheme ?? Raw.scheme ?? "file";
 

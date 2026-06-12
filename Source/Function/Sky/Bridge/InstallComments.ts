@@ -36,6 +36,7 @@ type Handler = (Payload: any) => void;
 const GetCommentService = (): any => {
 	try {
 		const Services = (globalThis as any).__CEL_SERVICES__;
+
 		return Services?.CommentService ?? null;
 	} catch {
 		return null;
@@ -49,10 +50,12 @@ const GetCommentService = (): any => {
  */
 const ForwardToWorkbench = (Method: string, Args: any[]): void => {
 	const Svc = GetCommentService();
+
 	if (!Svc) return;
 
 	try {
 		const Fn = Svc[Method];
+
 		if (typeof Fn === "function") {
 			Fn.apply(Svc, Args);
 		}
@@ -69,6 +72,7 @@ const ToMountain = (Tag: string, Message: string): void => {
 		const Inv =
 			(globalThis as any).__TAURI__?.core?.invoke ??
 			(globalThis as any).__TAURI__?.invoke;
+
 		if (typeof Inv === "function") {
 			Inv("MountainIPCInvoke", {
 				method: "diagnostic:log",
@@ -102,25 +106,31 @@ const HandleThreadCreated: Handler = (Payload: any): void => {
 	}
 
 	const Svc = GetCommentService();
+
 	if (!Svc) {
 		// One-time log: gap is deterministic, don't spam every thread.
 		let Logged = false;
+
 		try {
 			Logged = !!(globalThis as any).__CEL_COMMENTS_GAP_LOGGED;
 		} catch {
 			/* use default false */
 		}
+
 		if (!Logged) {
 			ToMountain(
 				"sky-bridge",
+
 				"[Sky:Comments] ICommentService not exposed in __CEL_SERVICES__ — comment threads dispatched as cel:comments:* DOM events only (no inline gutter rendering)",
 			);
+
 			try {
 				(globalThis as any).__CEL_COMMENTS_GAP_LOGGED = true;
 			} catch {
 				/* best effort */
 			}
 		}
+
 		return;
 	}
 
@@ -132,7 +142,9 @@ const HandleThreadCreated: Handler = (Payload: any): void => {
 			// returns ICommentThread which accepts .comments
 			const Thread = Svc.createCommentThread(
 				controllerId ?? "cel-default",
+
 				uri,
+
 				range,
 			);
 
@@ -143,6 +155,7 @@ const HandleThreadCreated: Handler = (Payload: any): void => {
 	} catch (Error) {
 		ToMountain(
 			"sky-bridge",
+
 			`[Sky:Comments] HandleThreadCreated failed: ${String(Error)}`,
 		);
 	}
@@ -183,6 +196,7 @@ const HandleCommentsUpdated: Handler = (Payload: any): void => {
 
 	ForwardToWorkbench("updateComments", [
 		Payload?.threadId,
+
 		Payload?.comments,
 	]);
 };
@@ -209,12 +223,15 @@ const HandleControllerDisposed: Handler = (Payload: any): void => {
  */
 const ProbeCommentService = (): void => {
 	const Svc = GetCommentService();
+
 	if (Svc) {
-		const Methods = Object.keys(Svc).filter(
-			(K) => typeof Svc[K] === "function",
-		).join(",");
+		const Methods = Object.keys(Svc)
+			.filter((K) => typeof Svc[K] === "function")
+			.join(",");
+
 		ToMountain(
 			"cel-services",
+
 			`CommentService=object methods=${Methods || "(none)"}`,
 		);
 	}
@@ -244,6 +261,7 @@ export default async (Dependencies: {
 
 	await Register(
 		"sky://comments/controller-disposed",
+
 		HandleControllerDisposed,
 	);
 };

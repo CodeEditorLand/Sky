@@ -115,6 +115,18 @@ export default async (Dependencies: {
 			}
 		};
 
+		// Extension-provided options from `createWebviewPanel(viewType, title, showOptions, options)`.
+		// Cocoon's CreateWebviewPanel.ts forwards them as `Payload.options`. These override
+		// hardcoded defaults for `retainContextWhenHidden`, `enableFindWidget`, `enableScripts`,
+		// and `enableForms` so extensions that explicitly opt-out of context retention
+		// (e.g. lightweight stateless panels) aren't forced into the keep-alive path.
+		const ExtensionOptions: Record<string, unknown> =
+			Payload?.options != null &&
+			typeof Payload.options === "object" &&
+			!Array.isArray(Payload.options)
+				? (Payload.options as Record<string, unknown>)
+				: {};
+
 		let RealOverlayWebview: any = null;
 
 		let RealWebviewInput: any = null;
@@ -149,18 +161,32 @@ export default async (Dependencies: {
 						// the iframe handshake forever.
 						options: {
 							disableServiceWorker: true,
-							retainContextWhenHidden: true,
+							// Default to retaining DOM when hidden (matches upstream
+							// behaviour for most panels). Extensions can override via
+							// `options.retainContextWhenHidden: false`.
+							retainContextWhenHidden:
+								ExtensionOptions.retainContextWhenHidden !==
+								false,
+							// `enableFindWidget` defaults to false in upstream VS Code.
+							// Extensions that want the find widget in their webview
+							// can pass `enableFindWidget: true` in options.
+							enableFindWidget: Boolean(
+								ExtensionOptions.enableFindWidget,
+							),
 						},
 						contentOptions: {
-							allowScripts: true,
-							allowForms: true,
+							allowScripts:
+								ExtensionOptions.enableScripts !== false,
+							allowForms: ExtensionOptions.enableForms !== false,
 							// localResourceRoots default = no restrictions;
 							// extensions populate this via webview.setOptions
 							// once they've activated. Leaving it undefined
 							// (= unrestricted in upstream) prevents the
 							// "blocked extension resource" failure mode on
 							// first paint.
-							localResourceRoots: undefined,
+							localResourceRoots:
+								(ExtensionOptions as any).localResourceRoots ??
+								undefined,
 						},
 						extension: undefined,
 					},

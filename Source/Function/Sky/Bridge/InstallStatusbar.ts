@@ -88,12 +88,18 @@ export default async (Dependencies: {
 			/\$\([^)]*(?:~spin)?\)\s*/g,
 			"",
 		),
+
 		tooltip: Payload?.tooltip,
+
 		command: Payload?.command,
+
 		ariaLabel:
 			Payload?.accessibilityInformation?.label ?? Payload?.text ?? "",
+
 		role: Payload?.accessibilityInformation?.role,
+
 		backgroundColor: NormalizeColor(Payload?.backgroundColor),
+
 		color: NormalizeColor(Payload?.color),
 	});
 

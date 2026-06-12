@@ -712,6 +712,23 @@ async function _InstallSkyBridgeOnce(): Promise<void> {
 			}),
 		),
 
+		// ---- Tests bridge ----
+		// Cocoon's `vscode.tests.createTestController(id, label)` keeps
+		// controller state in `Context.ExtensionRegistry`. When test runs
+		// start/end/produce results, Mountain forwards the data via
+		// `sky://tests/*` channels. This bridge dispatches `cel:tests:*`
+		// DOM CustomEvents and probes `ITestService` in `__CEL_SERVICES__`.
+		// If `ITestService` is not exposed (current state), the bridge logs
+		// the gap and only dispatches DOM events. Once the workbench accessor
+		// plugin exposes `ITestService`, the Testing panel will render
+		// without code changes.
+		// Implementation in `Bridge/InstallTests.ts`.
+		RunInstaller("InstallTests", async () =>
+			(await import("./Bridge/InstallTests.js")).default({
+				Register,
+			}),
+		),
+
 		// Progress + Terminal + Workspaces relays - implementation in
 		// `Bridge/InstallProgressTerminalWorkspace.ts`. Most of these are
 		// thin DOM-event re-dispatchers keyed by Mountain's emit channel.

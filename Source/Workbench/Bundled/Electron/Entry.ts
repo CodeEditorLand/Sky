@@ -139,6 +139,7 @@ const LandDisabled = (() => {
 // components, in-page Wind tasks). Skipped under `Disable=true` so
 // the bisect mode keeps the workbench probe-free.
 if (!LandDisabled) {
+
 	window.addEventListener(
 		"cel:services-ready",
 
@@ -180,6 +181,7 @@ if (!LandDisabled) {
 }
 
 if (!LandDisabled) {
+
 	void (async () => {
 		const { RunCommandCatalogSmokeTest } =
 			await import("../../../Function/SmokeTest/Run/Command/Catalog/Smoke/Test.js");
@@ -189,6 +191,7 @@ if (!LandDisabled) {
 		await RunCommandCatalogSmokeTest();
 	})();
 } else {
+
 	// Under `Disable=true` we skip the smoke harness but install the
 	// hands-off auto-diagnose probe instead. It logs to console which
 	// editor instance has focus, classifies it (chat input / file

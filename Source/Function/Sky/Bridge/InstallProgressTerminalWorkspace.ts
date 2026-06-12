@@ -17,6 +17,7 @@
 type ExecResult = { catch?: (handler: () => unknown) => unknown };
 
 interface Workbench {
+
 	commands: { executeCommand: (id: string, ...args: unknown[]) => unknown };
 }
 
@@ -35,6 +36,7 @@ export default async (Dependencies: {
 
 	DismissProgress: (Id: string) => void;
 }): Promise<void> => {
+
 	const {
 		Register,
 
@@ -56,6 +58,7 @@ export default async (Dependencies: {
 	// `progress.cancel` notification keyed by the start handle.
 	const CancellableProgress = new Map<
 		string,
+
 		{
 			Resolve: () => void;
 
@@ -63,6 +66,7 @@ export default async (Dependencies: {
 				report(Value: { message?: string; increment?: number }): void;
 			};
 		}
+
 	>();
 
 	const NotifyProgressCancel = (Handle: string): void => {
@@ -158,6 +162,7 @@ export default async (Dependencies: {
 
 		({ id, title, cancellable }: any) => {
 			if (cancellable === true && StartCancellableProgress(id, title))
+
 				return;
 
 			ShowProgress(id, title, cancellable);
@@ -254,7 +259,9 @@ export default async (Dependencies: {
 	// OSC 633 ; D can carry full TerminalShellExecution context.
 	const InflightExecution = new globalThis.Map<
 		number,
+
 		{ commandLine: string; cwd: string }
+
 	>();
 
 	// Terminals for which `interactedWith=true` has been notified. Stock

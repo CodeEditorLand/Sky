@@ -20,6 +20,7 @@
 type Handler = (Payload: any) => void;
 
 const SimpleRelay = (DomEventName: string): Handler => {
+
 	return (Payload: any): void => {
 		document.dispatchEvent(
 			new CustomEvent(DomEventName, { detail: Payload }),
@@ -28,6 +29,7 @@ const SimpleRelay = (DomEventName: string): Handler => {
 };
 
 const PhaseRelay: Handler = (Payload: any): void => {
+
 	const Phase =
 		typeof Payload === "number"
 			? Payload
@@ -50,6 +52,7 @@ const PhaseRelay: Handler = (Payload: any): void => {
 // string makes the workbench fall back to `Info` and silently drops the
 // `error`/`warning` styling we want for `showErrorMessage` calls.
 const SeverityFromString = (Raw: unknown): number => {
+
 	if (typeof Raw === "number") return Raw;
 
 	const Str = String(Raw ?? "").toLowerCase();
@@ -62,6 +65,7 @@ const SeverityFromString = (Raw: unknown): number => {
 };
 
 const NotificationShowHandler: Handler = (Payload: any): void => {
+
 	document.dispatchEvent(
 		new CustomEvent("cel:notification:show", { detail: Payload }),
 	);
@@ -141,6 +145,7 @@ const Relays: Array<readonly [string, Handler]> = [
 		"sky://languages/setDocumentLanguage",
 
 		(Payload: any): void => {
+
 			document.dispatchEvent(
 				new CustomEvent("cel:languages:setDocumentLanguage", {
 					detail: Payload,
@@ -164,6 +169,7 @@ const Relays: Array<readonly [string, Handler]> = [
 				const ParsedUri =
 					Services?.URI && typeof Services.URI.parse === "function"
 						? Services.URI.parse(Uri)
+
 						: null;
 
 				const Model = (() => {
@@ -172,9 +178,11 @@ const Relays: Array<readonly [string, Handler]> = [
 							ParsedUri &&
 							typeof Services?.Models?.getModel === "function"
 						)
+
 							return Services.Models.getModel(ParsedUri);
 
 						if (Monaco?.editor?.getModel && ParsedUri)
+
 							return Monaco.editor.getModel(ParsedUri);
 					} catch {}
 
@@ -196,6 +204,7 @@ const Relays: Array<readonly [string, Handler]> = [
 		"sky://tree-view/reveal",
 
 		({ viewId }: any): void => {
+
 			if (!viewId) return;
 
 			document.dispatchEvent(
@@ -221,6 +230,7 @@ const Relays: Array<readonly [string, Handler]> = [
 		"sky://language/configure",
 
 		(Payload: any): void => {
+
 			document.dispatchEvent(
 				new CustomEvent("cel:language:configure", { detail: Payload }),
 			);
@@ -251,6 +261,7 @@ const Relays: Array<readonly [string, Handler]> = [
 export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
 }): Promise<void> => {
+
 	const { Register } = Dependencies;
 
 	for (const [Channel, Handle] of Relays) {

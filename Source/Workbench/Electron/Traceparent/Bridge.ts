@@ -19,6 +19,7 @@
  */
 
 export type TraceContext = {
+
 	readonly TraceId: string;
 
 	readonly ParentSpanId: string;
@@ -31,6 +32,7 @@ let CurrentContext: TraceContext | undefined;
 const VERSION = "00";
 
 export const Parse = (Header: string): TraceContext | undefined => {
+
 	const Parts = Header.split("-");
 
 	if (Parts.length !== 4) return undefined;
@@ -64,6 +66,7 @@ export const Parse = (Header: string): TraceContext | undefined => {
 export const ConsumeFromPayload = <Payload extends Record<string, unknown>>(
 	Payload: Payload | undefined,
 ): Payload => {
+
 	if (!import.meta.env.DEV) return Payload as Payload;
 
 	if (!Payload || typeof Payload !== "object") return Payload as Payload;
@@ -91,6 +94,7 @@ export const ConsumeFromPayload = <Payload extends Record<string, unknown>>(
  * inside a handler share the parent trace ID.
  */
 export const Current = (): TraceContext | undefined => {
+
 	if (!import.meta.env.DEV) return undefined;
 
 	return CurrentContext;
@@ -103,6 +107,7 @@ export const Current = (): TraceContext | undefined => {
  * trace ID.
  */
 export const Clear = (): void => {
+
 	if (!import.meta.env.DEV) return;
 
 	CurrentContext = undefined;
@@ -115,6 +120,7 @@ export const Clear = (): void => {
  * when no parent has registered yet (workbench-initiated action).
  */
 const RandomHex = (Bytes: number): string => {
+
 	const Buffer = new Uint8Array(Bytes);
 
 	crypto.getRandomValues(Buffer);
@@ -123,6 +129,7 @@ const RandomHex = (Bytes: number): string => {
 };
 
 export const Build = (): string => {
+
 	if (!import.meta.env.DEV) return "";
 
 	const TraceId = CurrentContext?.TraceId ?? RandomHex(16);

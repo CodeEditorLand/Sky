@@ -6,11 +6,13 @@
 import Install from "@codeeditorland/wind/Target/Function/Install/Function/Install";
 
 try {
+
 	performance.mark("land:browserproxy:preload:start");
 
 	await Install();
 
 	performance.mark("land:browserproxy:preload:done");
 } catch {
+
 	performance.mark("land:browserproxy:preload:error");
 }

@@ -20,10 +20,12 @@ type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 type ResolveUiRequest = (RequestId: string, Result: unknown) => unknown;
 
 interface CommandsService {
+
 	executeCommand(Id: string, ...Args: unknown[]): Promise<unknown>;
 }
 
 interface CommandRegistry {
+
 	registerCommand(
 		Id: string,
 
@@ -32,6 +34,7 @@ interface CommandRegistry {
 }
 
 interface ServicesProbe {
+
 	Commands?: CommandsService;
 
 	CommandRegistry?: CommandRegistry;
@@ -50,6 +53,7 @@ export default async (Dependencies: {
 
 	ResolveUiRequest: ResolveUiRequest;
 }): Promise<void> => {
+
 	const { Register, GetServices, Invoke, ResolveUiRequest } = Dependencies;
 
 	const RegisteredCommands = new Map<string, { dispose(): void }>();

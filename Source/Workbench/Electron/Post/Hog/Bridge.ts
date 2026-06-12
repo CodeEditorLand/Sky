@@ -57,6 +57,7 @@ const PostHogDistinctIdSeed =
 	((import.meta.env as any).Brand as string | undefined) ?? "";
 
 const GetOrCreateSkyIdentifier = (): string => {
+
 	const StorageKey = "land-posthog-id";
 
 	const Existing = localStorage.getItem(StorageKey);
@@ -71,6 +72,7 @@ const GetOrCreateSkyIdentifier = (): string => {
 };
 
 const LoadPostHog = async (): Promise<any> => {
+
 	if (!PostHogEnabled) return null;
 
 	try {
@@ -166,6 +168,7 @@ const LoadPostHog = async (): Promise<any> => {
 
 // Component mapping: mark prefix → PostHog $component value
 const ComponentMap: Record<string, string> = {
+
 	exthost: "extension-host",
 
 	cocoon: "cocoon",
@@ -188,6 +191,7 @@ const ComponentMap: Record<string, string> = {
 };
 
 interface BufferedMark {
+
 	Name: string;
 
 	Component: string;
@@ -252,6 +256,7 @@ let ExceptionGlobalResetAt = 0;
 let ExceptionGlobalDropped = 0;
 
 const ShouldThrottle = (Name: string): boolean => {
+
 	const Now = Date.now();
 
 	const Entry = ThrottleCounters.get(Name);
@@ -281,6 +286,7 @@ const ShouldThrottle = (Name: string): boolean => {
 // different call sites still collapse onto one counter. Avoids stack-trace
 // fingerprinting because addresses / minified names drift between builds.
 const ExceptionSignature = (Error: unknown): string => {
+
 	if (Error && typeof Error === "object" && "message" in Error) {
 		const Message = String((Error as { message: unknown }).message ?? "");
 
@@ -291,6 +297,7 @@ const ExceptionSignature = (Error: unknown): string => {
 };
 
 const ShouldThrottleException = (Signature: string): boolean => {
+
 	const Now = Date.now();
 
 	// Global exception cap first - posthog-js's `$exception` slot fills
@@ -337,6 +344,7 @@ const ShouldThrottleException = (Signature: string): boolean => {
 };
 
 const DrainThrottleMetrics = (PH: any): void => {
+
 	if (
 		ThrottleDropped.size === 0 &&
 		ExceptionDropped.size === 0 &&
@@ -380,6 +388,7 @@ const DrainThrottleMetrics = (PH: any): void => {
 };
 
 const Initialize = async (): Promise<void> => {
+
 	// Belt-and-braces production gate. The single caller below is already
 	// wrapped in `if (import.meta.env.DEV) {...}`, but Vite's tree-shake
 	// only drops Initialize entirely when nothing else references it.
@@ -642,6 +651,7 @@ const Initialize = async (): Promise<void> => {
 			Message.includes("[PostHog.js]") ||
 			Message.includes("sourceMappingURL")
 		)
+
 			return;
 
 		try {
@@ -763,6 +773,7 @@ const Initialize = async (): Promise<void> => {
 };
 
 if (import.meta.env.DEV) {
+
 	Initialize().catch(() => {});
 }
 

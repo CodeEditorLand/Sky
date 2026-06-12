@@ -6,13 +6,13 @@
  * registry so the sidebar refreshes live after a VSIX install/uninstall -
  * no workbench reload required.
  *
- * Design note: Wind exposes the merged typed stream as
- * `Effect/Extensions/ChangeStream.ts` (wave 6). This subscriber is a
+ * Design note: Wind exposes the merged subscription as
+ * `Effect/Extensions/ChangeStream.ts`. This subscriber is a
  * fire-and-forget adapter that:
  *
- *   1. Builds the stream from Wind's IPC layer.
- *   2. Runs it forever on an Effect.runFork so the boot path never
- *      blocks on a stream that by definition never completes.
+ *   1. Registers the merged install/uninstall watcher.
+ *   2. Stores the returned disposable so the subscription can be torn
+ *      down (and is replaced, not duplicated, if invoked twice).
  *   3. On each item, logs a performance.mark + attempts to call the
  *      bundled workbench's `ExtensionEnablementService` refresh hook
  *      when available. The hook isn't always present (browser / kernel
@@ -23,12 +23,14 @@
  */
 
 interface ExtensionChangeBase {
+
 	readonly Kind: "Installed" | "Uninstalled";
 
 	readonly Identifier: string;
 }
 
 interface WorkbenchRefreshHost {
+
 	readonly _servicesAccess?: {
 		readonly get?: (
 			Key: unknown,
@@ -37,6 +39,7 @@ interface WorkbenchRefreshHost {
 }
 
 const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
+
 	performance.mark(
 		`land:extensions:${Change.Kind.toLowerCase()}:${Change.Identifier}`,
 	);
@@ -60,7 +63,10 @@ const TryRefreshWorkbench = (Change: ExtensionChangeBase): void => {
 	}
 };
 
+let ActiveSubscription: { readonly dispose: () => void } | undefined;
+
 export default async (): Promise<void> => {
+
 	if (import.meta.env["Render"] === "false") {
 		performance.mark("land:extensions:subscriber:skipped-wind-disabled");
 
@@ -68,27 +74,17 @@ export default async (): Promise<void> => {
 	}
 
 	try {
-		const Stream =
-			(await import("@codeeditorland/wind/Target/Effect/Extensions/ChangeStream")) as {
-				readonly default: unknown;
-			};
+		const { default: WatchExtensionChanges } = (await import(
+			"@codeeditorland/wind/Target/Effect/Extensions/ChangeStream"
+		)) as {
+			readonly default: (
+				Callback: (Change: ExtensionChangeBase) => void,
+			) => Promise<{ readonly dispose: () => void }>;
+		};
 
-		const { Effect, Stream: EffectStream } = await import("effect");
+		ActiveSubscription?.dispose();
 
-		const Subscription = Effect.gen(function* () {
-			const Source = (yield* Stream.default as never) as unknown as {
-				readonly pipe: (..._: unknown[]) => unknown;
-			};
-
-			yield* EffectStream.runForEach(Source, (Change) =>
-				Effect.sync(() =>
-					TryRefreshWorkbench(Change as ExtensionChangeBase),
-				),
-			);
-		});
-
-		// Fire-and-forget - the stream runs until the webview unloads.
-		Effect.runFork(Subscription as never);
+		ActiveSubscription = await WatchExtensionChanges(TryRefreshWorkbench);
 
 		performance.mark("land:extensions:subscriber:started");
 	} catch {

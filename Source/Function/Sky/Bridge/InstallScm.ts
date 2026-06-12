@@ -21,6 +21,7 @@
  */
 
 type CelSCMGroupShim = {
+
 	GroupHandle: string;
 
 	GroupId: string;
@@ -35,6 +36,7 @@ type CelSCMGroupShim = {
 };
 
 type CelSCMShim = {
+
 	Provider: any;
 
 	Repository: any;
@@ -53,6 +55,7 @@ export default async (Dependencies: {
 		Handler: (Payload: any) => void,
 	) => Promise<void>;
 }): Promise<void> => {
+
 	const { Register } = Dependencies;
 
 	const ScmShimRegistry = new Map<string, CelSCMShim>();
@@ -144,6 +147,7 @@ export default async (Dependencies: {
 		const Services: any = (globalThis as any).__CEL_SERVICES__;
 
 		if (!Services || !Services.SCM || !Services.URI || !Services.Emitter)
+
 			return;
 
 		const ScmId: string = String(Payload?.scmId ?? Payload?.id ?? "");
@@ -180,6 +184,7 @@ export default async (Dependencies: {
 				typeof Payload?.rootUri === "string" &&
 				Payload.rootUri.length > 0
 					? Services.URI.parse(Payload.rootUri)
+
 					: undefined;
 
 			// Build a real `ITextModel` for the inputBox via
@@ -206,6 +211,7 @@ export default async (Dependencies: {
 
 				const Existing = Services.Models.getModel
 					? Services.Models.getModel(InputUri)
+
 					: null;
 
 				if (Existing) {
@@ -214,6 +220,7 @@ export default async (Dependencies: {
 					const LanguageSelection =
 						Services.Languages && Services.Languages.createById
 							? Services.Languages.createById("scminput")
+
 							: null;
 
 					InputModel = Services.Models.createModel(

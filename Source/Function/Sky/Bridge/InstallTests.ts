@@ -10,16 +10,15 @@
  *
  * ## `ITestService` availability
  *
- * The VS Code workbench's `ITestService` is NOT yet exposed in
- * `globalThis.__CEL_SERVICES__`. Without it we cannot drive the native
- * Testing panel's tree/renderer/results view. Until `ITestService` is
- * plumbed through the workbench accessor, this bridge:
+ * The VS Code workbench's `ITestService` is now exposed as
+ * `globalThis.__CEL_SERVICES__.TestService` via
+ * `Output/Source/Service/CEL/Expose/Accessor.ts`. This bridge:
  *  1. Dispatches `cel:tests:*` DOM CustomEvents so any Sky-side
  *     consumer (future Testing viewlet, monaco contribution) can
  *     react.
  *  2. Probes `__CEL_SERVICES__?.TestService` and, if found, invokes
  *     native `ITestService` methods (the probe path makes this
- *     forward-compatible — no code change needed once the workbench
+ *     forward-compatible - no code change needed once the workbench
  *     plugin exposes the service).
  *  3. Logs via `MountainIPCInvoke` when a service is missing so the gap
  *     is visible in Mountain's dev log.
@@ -113,7 +112,7 @@ const HandleControllerCreated: Handler = (Payload: any): void => {
 			ToMountain(
 				"sky-bridge",
 
-				"[Sky:Tests] ITestService not exposed in __CEL_SERVICES__ — test lifecycle dispatched as cel:tests:* DOM events only (no Testing panel rendering)",
+				"[Sky:Tests] ITestService not exposed in __CEL_SERVICES__ - test lifecycle dispatched as cel:tests:* DOM events only (no Testing panel rendering)",
 			);
 
 			try {

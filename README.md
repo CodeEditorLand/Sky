@@ -1,4 +1,4 @@
-# **Sky**&#x2001;☀️
+# **Sky**&#x2001;🌌
 
 <table>
 	<tr>
@@ -153,7 +153,7 @@ graph LR
     classDef external fill:#ebebeb,stroke:#888,stroke-dasharray:5 5,color:#333;
     classDef bridge   fill:#e8ffe8,stroke:#27ae60,stroke-width:1px,color:#0a3a0a;
 
-    subgraph SKY["Sky ☀️ - Astro UI Layer (Tauri WebView)"]
+    subgraph SKY["Sky 🌌 - Astro UI Layer (Tauri WebView)"]
         direction TB
         subgraph PAGES["pages/ - Route Entry Points"]
             IndexPage["index.astro - env-driven variant selector"]:::sky
@@ -170,7 +170,7 @@ graph LR
         SkyBridge["Function/Sky/Bridge.ts - ~100 sky:// event channels 🌉"]:::bridge
     end
 
-    subgraph WIND["Wind 🌬️ - Service Layer (same WebView)"]
+    subgraph WIND["Wind 🍃 - Service Layer (same WebView)"]
         WindPreload["Preload.ts - ipcRenderer shim + window.vscode"]:::wind
         WindServices["Effect/Layers/TauriLiveLayer - 40+ services ⚡"]:::wind
     end
@@ -431,11 +431,11 @@ Sky is designed to be compatible with:
 
 | Target                 | Integration                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------------- |
-| **Wind** 🌬️            | Consumes `Effect`-`TS` service layer directly within the same Tauri WebView                    |
+| **Wind** 🍃            | Consumes `Effect`-`TS` service layer directly within the same Tauri WebView                    |
 | **Mountain** ⛰️        | Connects via `SkyBridge` `sky://` Tauri events and `invoke` IPC                                |
 | **Cocoon** 🦋          | Shares the Tauri WebView; correlated frontend element for extension hosting                    |
-| **Output** 📦          | Loads VS Code `workbench.js` and `web.main.js` bundles from `@codeeditorland/output`           |
-| **Worker** ⚙️          | Integrates service worker for caching, offline support, and dynamic CSS loading                |
+| **Output** ⚫          | Loads VS Code `workbench.js` and `web.main.js` bundles from `@codeeditorland/output`           |
+| **Worker** 🍩          | Integrates service worker for caching, offline support, and dynamic CSS loading                |
 | **VS Code Extensions** | Renders extension-contributed UI (webviews, status bar items, tree views) with native fidelity |
 | **Tauri v2**           | Built against Tauri v2 API for window management and IPC                                       |
 
@@ -459,11 +459,11 @@ Sky is designed to be compatible with:
 - [Why Tauri](https://Editor.Land/Doc/why-tauri) - Design rationale for Tauri
 - [Land Documentation](../../Documentation/GitHub/README.md) - Complete
   documentation index
-- [Wind 🌬️](https://github.com/CodeEditorLand/Wind) - Service layer that `Sky`
+- [Wind 🍃](https://github.com/CodeEditorLand/Wind) - Service layer that `Sky`
   consumes
 - [Cocoon 🦋](https://github.com/CodeEditorLand/Cocoon) - Extension host sidecar
   (correlated frontend element)
-- [Worker ⚙️](https://github.com/CodeEditorLand/Worker) - Service worker for
+- [Worker 🍩](https://github.com/CodeEditorLand/Worker) - Service worker for
   caching and offline support
 - [Mountain ⛰️](https://github.com/CodeEditorLand/Mountain) - Native desktop
   shell and backend

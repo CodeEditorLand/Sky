@@ -42,7 +42,7 @@
 		"vite-plugin-top-level-await": "1.6.0"
 	},
 	"devDependencies": {
-		"@astrojs/compiler-rs": "0.2.3",
+		"@astrojs/compiler-rs": "0.3.0",
 		"@astrojs/ts-plugin": "1.10.9"
 	},
 	"publishConfig": {

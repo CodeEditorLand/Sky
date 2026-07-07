@@ -1,4 +1,4 @@
-# Sky: UI Component Layer ☁️
+# Sky: UI Component Layer&#x2001;☁️
 
 `Sky` is the UI component layer of `Land`.
 
@@ -41,7 +41,7 @@ graph TB
     BRIDGE -->|"channel dispatch"| WORKBENCH["VS Code Workbench"]
 ```
 
-## Overview 📋
+## Overview&#x2001;📋
 
 `Sky` is the rendering layer that presents the `Land` editor to the user.
 
@@ -59,7 +59,7 @@ graph TB
 
 ---
 
-## Architecture 🏗️
+## Architecture&#x2001;🏗️
 
 ```
 +------------------------------------------------------------------+
@@ -80,7 +80,7 @@ graph TB
 +------------------------------------------------------------------+
 ```
 
-### Module Map 🗺️
+### Module Map&#x2001;🗺️
 
 | Path                              | Purpose                        |
 | --------------------------------- | ------------------------------ |
@@ -100,7 +100,7 @@ graph TB
 
 ---
 
-## Page Structure 📄
+## Page Structure&#x2001;📄
 
 `Sky` provides multiple page entry points, each selecting a different workbench
 variant.
@@ -139,7 +139,7 @@ const WorkbenchComponent =
 
 ---
 
-## Workbench Variants 🖥️
+## Workbench Variants&#x2001;🖥️
 
 `Sky` supports multiple workbench variants compiled through `Vite`/`Rollup`:
 
@@ -169,7 +169,7 @@ const workbenchPath =
 
 ---
 
-## SkyBridge 🌉
+## SkyBridge&#x2001;🌉
 
 `SkyBridge` (`Source/Function/SkyBridge.ts`, ~2900 lines) is the runtime event
 routing bridge between `Tauri`'s IPC system and the VS Code workbench's internal
@@ -226,7 +226,7 @@ SkyBridge sets HTML content:
 
 ---
 
-## Build-time Variant Selection 🔧
+## Build-time Variant Selection&#x2001;🔧
 
 `Sky` uses `Vite`'s conditional dynamic imports to select the active workbench
 at build time:
@@ -258,7 +258,7 @@ Sky/Target/Static/
 
 ---
 
-## Static Asset Layout 📁
+## Static Asset Layout&#x2001;📁
 
 After a successful build, `Sky`'s output is organized as:
 
@@ -278,7 +278,7 @@ Sky/Target/
 
 ---
 
-## Related Documentation 📚
+## Related Documentation&#x2001;📚
 
 - [Wind](https://github.com/CodeEditorLand/Wind/tree/Current/Documentation/GitHub/Architecture.md) -
   Service layer (`Sky` consumes)

@@ -20,6 +20,7 @@
 type Handler = (Payload: any) => void;
 
 const SimpleRelay = (DomEventName: string): Handler => {
+
 	return (Payload: any): void => {
 		document.dispatchEvent(
 			new CustomEvent(DomEventName, { detail: Payload }),
@@ -54,6 +55,7 @@ export default async (Dependencies: {
 
 	GetServices: () => Record<string, unknown> | null;
 }): Promise<void> => {
+
 	const { Register, GetServices } = Dependencies;
 
 	for (const [Channel, Handle] of Relays) {
@@ -78,6 +80,7 @@ export default async (Dependencies: {
 			if (!DebugService?.addBreakpoints) return;
 
 			const Breakpoints = Array.isArray(Payload)
+
 				? Payload
 				: (Payload?.breakpoints ?? []);
 
@@ -129,6 +132,7 @@ export default async (Dependencies: {
 			if (!DebugService?.removeBreakpoints) return;
 
 			const Breakpoints = Array.isArray(Payload)
+
 				? Payload
 				: (Payload?.breakpoints ?? []);
 

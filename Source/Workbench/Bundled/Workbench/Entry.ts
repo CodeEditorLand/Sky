@@ -10,6 +10,7 @@
 if (
 	typeof (globalThis as never as { __name?: unknown }).__name !== "function"
 ) {
+
 	(globalThis as never as { __name: unknown }).__name = (
 		Target: object,
 

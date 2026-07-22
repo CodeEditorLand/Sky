@@ -14,6 +14,7 @@
  */
 
 interface BootstrapStage {
+
 	success: boolean;
 
 	stageName: string;
@@ -22,6 +23,7 @@ interface BootstrapStage {
 }
 
 interface BootstrapResult {
+
 	success: boolean;
 
 	totalDuration: number;
@@ -32,8 +34,10 @@ interface BootstrapResult {
 }
 
 if (import.meta.env["Render"] === "false") {
+
 	performance.mark("land:bootstrap:skipped-wind-disabled");
 } else {
+
 	try {
 		performance.mark("land:bootstrap:start");
 

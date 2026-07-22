@@ -21,6 +21,7 @@ export default async (Dependencies: {
 
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
+
 	const { GetServices, Invoke } = Dependencies;
 
 	const Services = GetServices();
@@ -78,6 +79,7 @@ export default async (Dependencies: {
 									triggerKind:
 										(_Context as any)?.triggerKind ?? 0,
 									selectedSuggestionInfo: (_Context as any)
+
 										?.selectedSuggestionInfo,
 								},
 							},
@@ -85,7 +87,9 @@ export default async (Dependencies: {
 					})) as { items?: unknown[] } | null | undefined;
 
 					const RawItems = Array.isArray(Response?.items)
+
 						? (Response!.items as any[])
+
 						: [];
 
 					const Items = RawItems.map((Item: any) => {
@@ -103,6 +107,7 @@ export default async (Dependencies: {
 						const InsertText =
 							Item?.isSnippet === true
 								? { snippet: RawText }
+
 								: RawText;
 
 						return {

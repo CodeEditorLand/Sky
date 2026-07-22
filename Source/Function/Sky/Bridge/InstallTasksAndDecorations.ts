@@ -17,6 +17,7 @@
 type Handler = (Payload: any) => void;
 
 const SimpleRelay = (DomEventName: string): Handler => {
+
 	return (Payload: any): void => {
 		document.dispatchEvent(
 			new CustomEvent(DomEventName, { detail: Payload }),
@@ -29,6 +30,7 @@ const DispatchDecorationBatch = (
 
 	Payload: { batch?: unknown[] } | unknown,
 ): void => {
+
 	const Maybe = (Payload as { batch?: unknown[] } | undefined)?.batch;
 
 	if (Array.isArray(Maybe)) {
@@ -45,6 +47,7 @@ const DispatchDecorationBatch = (
 export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
 }): Promise<void> => {
+
 	const { Register } = Dependencies;
 
 	// Tasks
@@ -76,6 +79,7 @@ export default async (Dependencies: {
 		(Payload: any) => {
 			// Batch may carry many decoration registrations in one tick.
 			const Entries: any[] = Array.isArray(Payload?.batch)
+
 				? Payload.batch
 				: [Payload];
 
@@ -112,6 +116,7 @@ export default async (Dependencies: {
 
 		(Payload: any) => {
 			const Entries: any[] = Array.isArray(Payload?.batch)
+
 				? Payload.batch
 				: [Payload];
 

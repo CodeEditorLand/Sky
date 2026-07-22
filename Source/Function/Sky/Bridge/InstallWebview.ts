@@ -35,6 +35,7 @@ export default async (Dependencies: {
 
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
+
 	const { Register, ApplyHtmlToWebview, Invoke } = Dependencies;
 
 	// Per-view pending HTML cache. setHtml notifications can race ahead of
@@ -64,6 +65,7 @@ export default async (Dependencies: {
 			Payload?.handle != null
 				? Payload.handle
 				: Array.isArray(Payload?.args)
+
 					? Payload.args[0]
 					: undefined;
 
@@ -124,7 +126,9 @@ export default async (Dependencies: {
 			Payload?.options != null &&
 			typeof Payload.options === "object" &&
 			!Array.isArray(Payload.options)
+
 				? (Payload.options as Record<string, unknown>)
+
 				: {};
 
 		let RealOverlayWebview: any = null;
@@ -473,6 +477,7 @@ export default async (Dependencies: {
 			const Webview = Entry?.webview ?? Entry;
 
 			if (typeof Webview?.setTitle === "function")
+
 				Webview.setTitle(Title);
 		} catch {}
 	});
@@ -506,9 +511,11 @@ export default async (Dependencies: {
 
 		try {
 			if (Payload?.title != null)
+
 				ParkedView.title = String(Payload.title);
 
 			if (Payload?.description != null)
+
 				ParkedView.description = String(Payload.description);
 
 			if (Payload?.badge != null) ParkedView.badge = Payload.badge;
@@ -784,6 +791,7 @@ export default async (Dependencies: {
 						const ApplyHtml = (globalThis as any)
 							.__CEL_WEBVIEW_APPLY_HTML__ as
 							| ((view: any, html: string) => string)
+
 							| undefined;
 
 						const PendingHtml =
@@ -994,6 +1002,7 @@ export default async (Dependencies: {
 					const HasResolver =
 						typeof Resolvers?.has === "function"
 							? Resolvers.has(ViewId)
+
 							: undefined;
 
 					const AwaitingRevival =
@@ -1002,6 +1011,7 @@ export default async (Dependencies: {
 					const HasPending =
 						typeof AwaitingRevival?.has === "function"
 							? AwaitingRevival.has(ViewId)
+
 							: undefined;
 
 					Invoke("MountainIPCInvoke", {
@@ -1040,6 +1050,7 @@ export default async (Dependencies: {
 					(RegisterError as any)?.message ?? String(RegisterError);
 
 				const Kind = String(Message).includes("already registered")
+
 					? "dup"
 					: "error";
 
@@ -1109,6 +1120,7 @@ export default async (Dependencies: {
 				const Webview = Entry?.webview ?? Entry;
 
 				if (typeof Webview?.focus === "function" && !PreserveFocus)
+
 					Webview.focus();
 			}
 		} catch {
@@ -1203,6 +1215,7 @@ export default async (Dependencies: {
 			const Services: any = (globalThis as any).__CEL_SERVICES__;
 
 			if (!Services?.CustomEditor?.registerCustomEditorCapabilities)
+
 				return;
 
 			// Resolve viewType from either payload format defensively.
@@ -1211,6 +1224,7 @@ export default async (Dependencies: {
 			// The old code read ONLY Args[1], which was always "" after Cocoon
 			// switched to named-key payloads, silently skipping registration.
 			const Args: unknown[] = Array.isArray(Payload?.args)
+
 				? Payload.args
 				: [];
 
@@ -1227,16 +1241,20 @@ export default async (Dependencies: {
 				Payload?.options !== null &&
 				typeof Payload?.options === "object"
 					? (Payload.options as Record<string, unknown>)
+
 					: Args[2] !== null && typeof Args[2] === "object"
 						? (Args[2] as Record<string, unknown>)
+
 						: {};
 
 			// Selector: glob patterns like [{ filenamePattern: "*.{png,...}" }]
 			const Selector: unknown[] = Array.isArray(Payload?.selector)
+
 				? Payload.selector
 				: [];
 
 			if (!ViewType || CustomEditorCapabilityHandles.has(ViewType))
+
 				return;
 
 			// Register capabilities (metadata used by VS Code's

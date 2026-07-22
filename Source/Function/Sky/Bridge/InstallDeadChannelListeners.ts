@@ -23,6 +23,7 @@ import { invoke } from "@tauri-apps/api/core";
 // so we stay decoupled from Bridge.ts's internal type without
 // re-importing it.
 interface ServicesProbe {
+
 	Configuration?: { reloadConfiguration?: () => unknown };
 
 	Notification?: {
@@ -49,6 +50,7 @@ export default async (Dependencies: {
 
 	SetOrUpdateEntry: (Payload: any) => void;
 }): Promise<void> => {
+
 	const { Register, GetServices, SetOrUpdateEntry } = Dependencies;
 
 	// Tree-view create. The DOM handler at `Bridge.ts ~line 2620`

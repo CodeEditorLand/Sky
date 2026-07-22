@@ -34,6 +34,7 @@ type Handler = (Payload: any) => void;
  * object or `null` so callers can gracefully degrade.
  */
 const GetCommentService = (): any => {
+
 	try {
 		const Services = (globalThis as any).__CEL_SERVICES__;
 
@@ -49,6 +50,7 @@ const GetCommentService = (): any => {
  * rest of the bridge.
  */
 const ForwardToWorkbench = (Method: string, Args: any[]): void => {
+
 	const Svc = GetCommentService();
 
 	if (!Svc) return;
@@ -68,6 +70,7 @@ const ForwardToWorkbench = (Method: string, Args: any[]): void => {
  * Log a diagnostic message to Mountain for post-mortem analysis.
  */
 const ToMountain = (Tag: string, Message: string): void => {
+
 	try {
 		const Inv =
 			(globalThis as any).__TAURI__?.core?.invoke ??
@@ -92,6 +95,7 @@ const ToMountain = (Tag: string, Message: string): void => {
  * available.
  */
 const HandleThreadCreated: Handler = (Payload: any): void => {
+
 	// Fire DOM event first so any consumer (Monaco contribution,
 	// comment-pane widget) can react regardless of ICommentService
 	// availability.
@@ -166,6 +170,7 @@ const HandleThreadCreated: Handler = (Payload: any): void => {
  * `thread.dispose()` or the controller is disposed.
  */
 const HandleThreadDisposed: Handler = (Payload: any): void => {
+
 	try {
 		document.dispatchEvent(
 			new CustomEvent("cel:comments:thread-disposed", {
@@ -184,6 +189,7 @@ const HandleThreadDisposed: Handler = (Payload: any): void => {
  * `thread.comments` which triggers this event.
  */
 const HandleCommentsUpdated: Handler = (Payload: any): void => {
+
 	try {
 		document.dispatchEvent(
 			new CustomEvent("cel:comments:updated", {
@@ -205,6 +211,7 @@ const HandleCommentsUpdated: Handler = (Payload: any): void => {
  * Controller disposed — all its threads should be removed from the UI.
  */
 const HandleControllerDisposed: Handler = (Payload: any): void => {
+
 	try {
 		document.dispatchEvent(
 			new CustomEvent("cel:comments:controller-disposed", {
@@ -222,6 +229,7 @@ const HandleControllerDisposed: Handler = (Payload: any): void => {
  * comment thread).
  */
 const ProbeCommentService = (): void => {
+
 	const Svc = GetCommentService();
 
 	if (Svc) {
@@ -249,6 +257,7 @@ const ProbeCommentService = (): void => {
 export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
 }): Promise<void> => {
+
 	const { Register } = Dependencies;
 
 	ProbeCommentService();

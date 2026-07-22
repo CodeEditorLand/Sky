@@ -31,6 +31,7 @@ export default async (Dependencies: {
 
 	Invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
 }): Promise<void> => {
+
 	const { Register, GetServices, Invoke } = Dependencies;
 
 	// ---- setDecorations (apply ranges to a decoration type) ----
@@ -45,6 +46,7 @@ export default async (Dependencies: {
 		const CodeEditorService = (Services as any)?.CodeEditorService;
 
 		const Entries: any[] = Array.isArray(Payload?.batch)
+
 			? Payload.batch
 			: [Payload];
 
@@ -320,6 +322,7 @@ export default async (Dependencies: {
 							const VisibleRanges =
 								typeof Ed.getVisibleRanges === "function"
 									? Ed.getVisibleRanges()
+
 									: [];
 
 							Invoke("MountainIPCInvoke", {
@@ -400,6 +403,7 @@ export default async (Dependencies: {
 		if (CodeEditorService) {
 			const PendingChanges = new Map<
 				string,
+
 				ReturnType<typeof setTimeout>
 			>();
 
@@ -443,6 +447,7 @@ export default async (Dependencies: {
 					if (!Uri) return;
 
 					if (PendingChanges.has(Uri))
+
 						clearTimeout(PendingChanges.get(Uri)!);
 
 					PendingChanges.set(
@@ -629,6 +634,7 @@ export default async (Dependencies: {
 							const Changes =
 								typeof Control.getLineChanges === "function"
 									? (Control.getLineChanges() ?? [])
+
 									: [];
 
 							Invoke("MountainIPCInvoke", {
@@ -772,6 +778,7 @@ export default async (Dependencies: {
 							label:
 								typeof E?.getName === "function"
 									? E.getName()
+
 									: (E?.name ?? ""),
 							uri:
 								E?.resource?.toString?.() ??

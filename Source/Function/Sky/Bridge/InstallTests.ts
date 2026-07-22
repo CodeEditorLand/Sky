@@ -31,6 +31,7 @@ type Handler = (Payload: any) => void;
  * object or `null` so callers can gracefully degrade.
  */
 const GetTestService = (): any => {
+
 	try {
 		const Services = (globalThis as any).__CEL_SERVICES__;
 
@@ -46,6 +47,7 @@ const GetTestService = (): any => {
  * rest of the bridge.
  */
 const ForwardToWorkbench = (Method: string, Args: any[]): void => {
+
 	const Svc = GetTestService();
 
 	if (!Svc) return;
@@ -65,6 +67,7 @@ const ForwardToWorkbench = (Method: string, Args: any[]): void => {
  * Log a diagnostic message to Mountain for post-mortem analysis.
  */
 const ToMountain = (Tag: string, Message: string): void => {
+
 	try {
 		const Inv =
 			(globalThis as any).__TAURI__?.core?.invoke ??
@@ -87,6 +90,7 @@ const ToMountain = (Tag: string, Message: string): void => {
  * the creation notification so Sky can prepare the Testing panel.
  */
 const HandleControllerCreated: Handler = (Payload: any): void => {
+
 	try {
 		document.dispatchEvent(
 			new CustomEvent("cel:tests:controller-created", {
@@ -145,6 +149,7 @@ const HandleControllerCreated: Handler = (Payload: any): void => {
  * which Cocoon forwards through Mountain → `sky://tests/run-started`.
  */
 const HandleRunStarted: Handler = (Payload: any): void => {
+
 	try {
 		document.dispatchEvent(
 			new CustomEvent("cel:tests:run-started", {
@@ -163,6 +168,7 @@ const HandleRunStarted: Handler = (Payload: any): void => {
  * emits `tests.didChangeTestResults` with accumulated results.
  */
 const HandleRunEnded: Handler = (Payload: any): void => {
+
 	try {
 		document.dispatchEvent(
 			new CustomEvent("cel:tests:run-ended", {
@@ -183,6 +189,7 @@ const HandleRunEnded: Handler = (Payload: any): void => {
  * update tree node icons incrementally rather than waiting for `run.end()`.
  */
 const HandleTestResult: Handler = (Payload: any): void => {
+
 	try {
 		document.dispatchEvent(
 			new CustomEvent("cel:tests:result", {
@@ -202,6 +209,7 @@ const HandleTestResult: Handler = (Payload: any): void => {
  * test controller).
  */
 const ProbeTestService = (): void => {
+
 	const Svc = GetTestService();
 
 	if (Svc) {
@@ -229,6 +237,7 @@ const ProbeTestService = (): void => {
 export default async (Dependencies: {
 	Register: (Channel: string, Handler: Handler) => Promise<void>;
 }): Promise<void> => {
+
 	const { Register } = Dependencies;
 
 	ProbeTestService();

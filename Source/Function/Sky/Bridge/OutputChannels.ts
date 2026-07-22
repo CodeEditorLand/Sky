@@ -19,10 +19,12 @@ export default (
 		commands: { executeCommand: (id: string) => unknown };
 	} | null,
 ): {
+
 	Channels: Map<string, string[]>;
 
 	GetOrCreate: (Id: string, Name?: string) => string[];
 } => {
+
 	const Channels = new Map<string, string[]>();
 
 	const GetOrCreate = (Id: string, Name?: string): string[] => {

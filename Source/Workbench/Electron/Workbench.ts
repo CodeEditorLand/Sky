@@ -8,6 +8,7 @@
 
 // WKWebView polyfills: requestIdleCallback, queryLocalFonts, __name.
 if (typeof window.requestIdleCallback !== "function") {
+
 	(window as any).requestIdleCallback = (
 		Callback: IdleRequestCallback,
 
@@ -28,16 +29,19 @@ if (typeof window.requestIdleCallback !== "function") {
 }
 
 if (typeof window.cancelIdleCallback !== "function") {
+
 	(window as any).cancelIdleCallback = (Id: number): void => {
 		clearTimeout(Id);
 	};
 }
 
 if (typeof (window as any).queryLocalFonts !== "function") {
+
 	(window as any).queryLocalFonts = () => Promise.resolve([]);
 }
 
 if (typeof (globalThis as any).__name !== "function") {
+
 	(globalThis as any).__name = (Target: any, Value: string) => {
 		Object.defineProperty(Target, "name", {
 			value: Value,
@@ -50,6 +54,7 @@ if (typeof (globalThis as any).__name !== "function") {
 
 // Blob patch: inject __name + rewrite vscode-file:// to http://localhost in worker blobs.
 {
+
 	const OriginalBlob = globalThis.Blob;
 
 	const NameShim =
@@ -95,6 +100,7 @@ if (typeof (globalThis as any).__name !== "function") {
 }
 
 try {
+
 	performance.mark("land:workbench:start");
 
 	const WorkbenchUrl =
@@ -125,6 +131,7 @@ try {
 		}, Delay);
 	}
 } catch {
+
 	performance.mark("land:workbench:error");
 }
 

@@ -21,6 +21,7 @@
 // circular `import type` from Bridge.ts which still evaluates at
 // compile-time and would couple this module's emit ordering.
 interface ServicesProbe {
+
 	URI?: {
 		from(parts: {
 			scheme: string;
@@ -41,6 +42,7 @@ export default (
 
 	Source: unknown,
 ): unknown => {
+
 	const Ctor = GetServices()?.URI;
 
 	const ExtractParts = (

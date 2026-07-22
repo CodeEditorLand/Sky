@@ -6,10 +6,12 @@
  */
 
 interface MountainProxyWindow extends Window {
+
 	__MOUNTAIN_PROXY__?: unknown;
 }
 
 try {
+
 	// Variable URL: Rollup only analyzes string literals - an identifier
 	// reference is treated as truly dynamic and never resolved at build time.
 	const WorkbenchUrl = "/vs/code/browser/workbench/workbench.js";

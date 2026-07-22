@@ -45,6 +45,7 @@ const ConfiguredPipe =
 const Pipe =
 	typeof (window as any).__TAURI_INTERNALS__ !== "undefined"
 		? `${ConfiguredPipe.replace(/\/$/, "")}/v1/traces`
+
 		: "/v1/traces";
 
 const BatchIntervalMs = 2000;
@@ -54,6 +55,7 @@ const TraceId = Array.from(crypto.getRandomValues(new Uint8Array(16)))
 	.join("");
 
 interface PendingSpan {
+
 	Name: string;
 
 	StartTimeUnixNano: string;
@@ -80,6 +82,7 @@ const HrTimeNano = (Ms: number): string =>
 	(BigInt(Math.floor(Ms)) * 1000000n).toString();
 
 const ScheduleFlush = (): void => {
+
 	if (FlushTimer) return;
 
 	// Don't re-arm once we know the collector is unreachable - stops the
@@ -90,6 +93,7 @@ const ScheduleFlush = (): void => {
 };
 
 const Flush = (): void => {
+
 	FlushTimer = null;
 
 	if (Batch.length === 0) return;
@@ -146,6 +150,7 @@ const Flush = (): void => {
 											),
 										},
 									}))
+
 								: [];
 
 							const Events = IsError
@@ -190,6 +195,7 @@ const Flush = (): void => {
 												DetailObj?.message || "",
 											).slice(0, 200),
 										}
+
 									: { code: 1 },
 							};
 						}),
@@ -247,6 +253,7 @@ const Observer = new PerformanceObserver((List) => {
 });
 
 if (import.meta.env.DEV && OTLPPipeEnabled) {
+
 	Observer.observe({ type: "mark", buffered: true });
 
 	Observer.observe({ type: "measure", buffered: true });

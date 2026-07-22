@@ -26,6 +26,7 @@ export default (
 
 	OnAction?: (Label: string | null) => void,
 ) => void) => {
+
 	return (
 		Severity: string,
 

@@ -34,7 +34,7 @@
 		"@codeeditorland/wind": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
 		"@playform/build": "0.3.4",
-		"@playform/compress": "0.2.3",
+		"@playform/compress": "0.2.5",
 		"@playform/inline": "0.1.4",
 		"astro": "7.2.0",
 		"typescript": "7.0.2",

@@ -43,7 +43,7 @@
 	},
 	"devDependencies": {
 		"@astrojs/compiler-rs": "0.4.0",
-		"@astrojs/ts-plugin": "1.10.10"
+		"@astrojs/ts-plugin": "1.10.11"
 	},
 	"publishConfig": {
 		"access": "restricted",

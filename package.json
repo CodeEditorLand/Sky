@@ -36,14 +36,14 @@
 		"@playform/build": "0.3.4",
 		"@playform/compress": "0.2.5",
 		"@playform/inline": "0.1.4",
-		"astro": "7.3.1",
+		"astro": "7.3.8",
 		"typescript": "7.0.2",
-		"vite": "8.2.2",
+		"vite": "8.3.4",
 		"vite-plugin-top-level-await": "1.6.0"
 	},
 	"devDependencies": {
-		"@astrojs/compiler-rs": "0.4.0",
-		"@astrojs/ts-plugin": "1.10.11"
+		"@astrojs/compiler-rs": "0.5.1",
+		"@astrojs/ts-plugin": "1.10.12"
 	},
 	"publishConfig": {
 		"access": "restricted",

@@ -33,16 +33,16 @@
 		"@codeeditorland/output": "0.0.1",
 		"@codeeditorland/wind": "0.0.1",
 		"@codeeditorland/worker": "0.0.1",
-		"@playform/build": "0.3.4",
+		"@playform/build": "0.3.5",
 		"@playform/compress": "0.2.5",
 		"@playform/inline": "0.1.4",
-		"astro": "7.3.8",
+		"astro": "7.4.3",
 		"typescript": "7.0.2",
-		"vite": "8.3.4",
+		"vite": "8.3.5",
 		"vite-plugin-top-level-await": "1.6.0"
 	},
 	"devDependencies": {
-		"@astrojs/compiler-rs": "0.5.1",
+		"@astrojs/compiler-rs": "0.5.2",
 		"@astrojs/ts-plugin": "1.10.12"
 	},
 	"publishConfig": {

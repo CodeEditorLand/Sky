@@ -49,33 +49,89 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 			// 8s / 23s phase timers. All Wind / Output / astro
 			// diagnostic call-sites use `{ method, params }` - this
 			// block must match.
-			const Advance = (PhaseNumber) =>
-				PhaseInvoke("MountainIPCInvoke", {
-					method: "lifecycle:advancePhase",
-					params: [PhaseNumber],
-				}).catch((Error) => {
-					console.warn(
-						`[Mountain.astro] advancePhase(${PhaseNumber}) failed:`,
-						Error,
-					);
+			// A failed advance must never be recorded as success. Warn through
+			// whatever logger the host exposes - a missing or throwing console.warn
+			// must not break the UI path or hide the failure mark.
+			const PhaseWarn = (PhaseNumber, Message, Detail) => {
+				const Warn =
+					globalThis.console?.warn ?? globalThis.console?.log ?? null;
+				if (typeof Warn === "function") {
+					try {
+						Warn(
+							`[Mountain.astro] phase ${PhaseNumber}: ${Message}`,
+							Detail,
+						);
+					} catch {
+						// logger threw - the error mark below still records it
+					}
+				}
+				try {
 					performance.mark(
 						`land:mountain:phase:${PhaseNumber}:error`,
 					);
-				});
+				} catch {
+					// marking unavailable - degrade silently, never throw
+				}
+			};
+			const Mark = (Name) => {
+				try {
+					performance.mark(Name);
+				} catch {
+					// marking unavailable - degrade silently, never throw
+				}
+			};
+			// Resolve true only when Mountain reports the phase is actually at or
+			// beyond the request. A rejection, a synchronous throw or a malformed
+			// response resolve false so no caller can record a false success.
+			const Advance = (PhaseNumber) => {
+				let Pending;
+				try {
+					Pending = PhaseInvoke("MountainIPCInvoke", {
+						method: "lifecycle:advancePhase",
+						params: [PhaseNumber],
+					});
+				} catch (Error) {
+					PhaseWarn(PhaseNumber, "advancePhase threw", Error);
+					return Promise.resolve(false);
+				}
+				return Promise.resolve(Pending).then(
+					(Response) => {
+						// lifecycle:advancePhase returns the current phase as a
+						// JSON number (>= the request only when it really moved).
+						if (
+							typeof Response === "number" &&
+							Number.isFinite(Response) &&
+							Response >= PhaseNumber
+						) {
+							return true;
+						}
+						PhaseWarn(
+							PhaseNumber,
+							"advancePhase returned an unexpected response",
+							Response,
+						);
+						return false;
+					},
+					(Error) => {
+						PhaseWarn(PhaseNumber, "advancePhase failed", Error);
+						return false;
+					},
+				);
+			};
 			// Phase 3 = Restored: workbench DOM is attached and
 			// first-paint is imminent. Fire early - Mountain rejects
 			// backwards / same-phase advances, so races are safe.
-			Advance(3).then(() =>
-				performance.mark("land:mountain:phase:restored"),
-			);
+			Advance(3).then((Succeeded) => {
+				if (Succeeded) Mark("land:mountain:phase:restored");
+			});
 			// Phase 4 = Eventually: long tail background work can
 			// start. Delayed so Mountain sees a monotonic 3 → 4
 			// progression even if both invokes enqueue near-
 			// simultaneously.
 			setTimeout(() => {
-				Advance(4).then(() =>
-					performance.mark("land:mountain:phase:eventually"),
-				);
+				Advance(4).then((Succeeded) => {
+					if (Succeeded) Mark("land:mountain:phase:eventually");
+				});
 			}, 1500);
 		}
 	</script>

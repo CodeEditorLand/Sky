@@ -3,7 +3,9 @@
  * Mountain.astro - Browser Workbench with Mountain Providers (Approach A2)
  *
  * Uses browser workbench with Wind services + Mountain-backed providers.
- * Zero console.* - all tracing via performance.mark().
+ * Normal-path tracing goes through performance.mark(); console.warn is used
+ * only when an optional integration is unavailable, so degradation stays
+ * visible in the console instead of being recorded solely as a mark.
  */
 
 import NLS from "./NLS.astro";
@@ -24,7 +26,7 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 	     If Mountain never hears from Sky, its fallback timers fire
 	     at +8s (Restored) and +23s (Eventually), which the dev log
 	     surfaces as `[Lifecycle] [Fallback] Sky did not advance
-	     within …`. That delay is harmless in the abstract, but it
+	     within ...`. That delay is harmless in the abstract, but it
 	     masks real issues and pushes everything gated on phase 3 /
 	     4 out by seconds. -->
 	<script type="module">
@@ -91,7 +93,11 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 				"land:mountain:preload:start",
 				"land:mountain:preload:done",
 			);
-		} catch {
+		} catch (Error) {
+			console.warn(
+				"[Mountain.astro] Wind preload import failed; continuing without preload:",
+				Error,
+			);
 			performance.mark("land:mountain:preload:error");
 		}
 	</script>
@@ -104,7 +110,11 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 				await import("@codeeditorland/wind/Target/Effect/Bootstrap");
 			await runBootstrap({ skipHealthCheck: true, debugMode: true });
 			performance.mark("land:mountain:bootstrap:done");
-		} catch {
+		} catch (Error) {
+			console.warn(
+				"[Mountain.astro] Wind bootstrap import failed; workbench continues without Effect services:",
+				Error,
+			);
 			performance.mark("land:mountain:bootstrap:error");
 		}
 	</script>
@@ -138,7 +148,11 @@ import TelemetryBridge from "./TelemetryBridge.astro";
 					performance.mark("land:mountain:skybridge:error");
 				}
 			}, 1000);
-		} catch {
+		} catch (Error) {
+			console.warn(
+				"[Mountain.astro] Browser workbench script failed to load:",
+				Error,
+			);
 			performance.mark("land:mountain:workbench:error");
 		}
 	</script>
